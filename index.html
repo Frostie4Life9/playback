@@ -520,6 +520,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.10.23-e', note:'YOUR RATED ARTISTS COME IN: importing your Rate Your Music file now also adds every artist you were missing, with just the albums you rated and those ratings already on them. They have no songs yet; tap Find on MusicBrainz on an artist to fill in the full tracklists, and your album ratings stay put.'},
   {v:'2026.10.23-d', note:'IMPORT YOUR RATE YOUR MUSIC RATINGS: on the Music tab, pick the CSV you exported from RYM and your album and EP ratings go onto the matching releases. Ratings for artists you have not imported yet are held and fill in by themselves the moment you import that artist. A rating you already set here is never overwritten, and the summary lists anything it could not place.'},
   {v:'2026.10.23-c', note:'RATE WHOLE ALBUMS: studio albums, EPs, live albums and compilations now have their own 1\u201310 rating under the title, separate from the song ratings. Next to it you see the average of your song ratings for that release and how far your overall rating is above or below it, which is handy when you are deciding what an album is worth. Singles and B-sides do not get one.'},
   {v:'2026.10.23-b', note:'IMPORT FIX: the discography import now only counts digital releases, so songs that only exist on CD, vinyl or Japan-only pressings (and so are not on Spotify) stay out. Albums show their standard tracklist instead of every bonus track from every edition (OK Computer is back to its 12 songs); bonus-edition songs only come in if you tick \u201cother versions\u201d. Re-run the import on an artist to apply it; checkmarks and ratings stay.'},
@@ -798,7 +799,8 @@ function mbMerge(art,incoming,versions,tidy){
   const manual=[];
   for(const g of a.groups){if(replaced(g))continue;
     const items=[];for(const i of g.items){const k=mbItemKey(i);if(placed.has(k))continue;placed.add(k);items.push(Object.assign({},i,{id:idFor(k)}))}
-    if(items.length)manual.push(Object.assign({},g,{items}))}
+    if(items.length)manual.push(Object.assign({},g,{items}));
+    else if(rating(g.id)&&!incoming.some(G=>nTitle(G.title)===nTitle(g.title)))manual.push(Object.assign({},g,{items}))}
   const kept=[];let dropped=0;
   for(const g of a.groups){if(!replaced(g))continue;
     for(const i of g.items){const k=mbItemKey(i);if(placed.has(k))continue;placed.add(k);
@@ -939,6 +941,22 @@ function applyPending(a){
   }
   return n;
 }
+/* artists you do not have yet come in with just the albums you rated (no songs
+   until you pull the tracklist from MusicBrainz); their ratings go straight on */
+function rymAddWaiting(){
+  const out={artists:0,albums:0},made=new Map();
+  for(const [key,p] of Object.entries(S.pendingR||{})){
+    const k=nArtist(p.a);let a=made.get(k);
+    if(!a){if(S.music.some(x=>p.n.includes(nArtist(x.name))))continue;
+      a={id:sid('artist',p.a),name:p.a,groups:[]};made.set(k,a)}
+    const g={id:sid(a.id,p.t),title:p.t,year:p.y&&p.y<9999?String(p.y):'—',kind:'Studio album',items:[]};
+    if(a.groups.some(x=>x.id===g.id))continue;
+    a.groups.push(g);S.marks[g.id]={...(S.marks[g.id]||{}),r:p.r};delete S.pendingR[key];out.albums++;
+  }
+  [...made.values()].sort((x,y)=>x.name.localeCompare(y.name)).forEach(a=>{a.groups.sort((x,y)=>(x.year>y.year)-(x.year<y.year));S.music.push(a);out.artists++});
+  return out;
+}
+const rymMissing=()=>Object.values(S.pendingR||{}).filter(p=>!S.music.some(x=>p.n.includes(nArtist(x.name)))).length;
 function rymImport(text){
   RYX.err='';RYX.report=null;
   try{
@@ -955,10 +973,11 @@ function rymImport(text){
         else if(cur===e.r)rp.same++;
         else rp.kept.push(e.a+' – '+e.t+': you have '+fmt(cur)+' here, RYM says '+fmt(e.r));
       }else{
-        S.pendingR[e.key]={a:e.a,t:e.t,r:e.r,n:e.n};
+        S.pendingR[e.key]={a:e.a,t:e.t,r:e.r,n:e.n,y:e.yr};
         (a?rp.notFound:rp.waiting).push(e);
       }
     }
+    rp.added=rymAddWaiting();
     RYX.report=rp;touch();
   }catch(err){
     RYX.err=err.message==='shape'?'That does not look like a Rate Your Music export (it needs Title, Rating and name columns). Nothing was changed.':'Could not read that file. Nothing was changed.';
@@ -969,7 +988,7 @@ function rymReport(){
   const r=RYX.report,cnt=(n,w)=>n+' '+w+(n===1?'':'s');
   const byArtist=l=>{const m={};l.forEach(e=>m[e.a]=(m[e.a]||0)+1);return Object.entries(m).sort((x,y)=>y[1]-x[1]||x[0].localeCompare(y[0])).map(([k,v])=>esc(k)+' ('+v+')').join(', ')};
   let h=`<div class="mbok rymrep" role="status"><span><b>${cnt(r.total,'rated album')}</b> in your file. ${r.filled} filled in now${r.same?', '+r.same+' already matched':''}.</span>`;
-  if(r.waiting.length)h+=`<span>${r.waiting.length} are for artists you have not imported yet. They fill in by themselves when you import that artist.</span><details><summary>Which artists</summary><p class="note">${byArtist(r.waiting)}</p></details>`;
+  if(r.added&&r.added.artists)h+=`<span>Added <b>${cnt(r.added.artists,'new artist')}</b> with just the ${cnt(r.added.albums,'album')} you rated. Open an artist and tap Find on MusicBrainz to fill in the songs; your ratings stay.</span><details><summary>Which artists</summary><p class="note">${byArtist(r.waiting)}</p></details>`;
   if(r.notFound.length)h+=`<span>${r.notFound.length} are for artists you have, but I could not find the album under the same name.</span><details><summary>Which albums</summary><ul>${r.notFound.map(e=>'<li>'+esc(e.a+' – '+e.t)+'</li>').join('')}</ul></details>`;
   if(r.kept.length)h+=`<span>${cnt(r.kept.length,'rating')} here already differed, so I kept yours.</span><details><summary>Which</summary><ul>${r.kept.map(x=>'<li>'+esc(x)+'</li>').join('')}</ul></details>`;
   if(r.dups.length)h+=`<details><summary>${cnt(r.dups.length,'album')} appeared twice in your file</summary><ul>${r.dups.map(x=>'<li>'+esc(x)+'</li>').join('')}</ul><p class="note">I used the earliest release.</p></details>`;
@@ -983,7 +1002,9 @@ function rymSide(){
     <div><label class="btn primary" for="rym-file">Choose CSV file</label><input type="file" id="rym-file" accept=".csv,text/csv,text/plain" hidden></div>`;
   if(RYX.err)h+=`<p class="mberr" role="alert">${esc(RYX.err)}</p>`;
   if(RYX.report)h+=rymReport();
-  else if(n)h+=`<p class="note">${cnt0(n)} waiting for their artist to be imported.</p>`;
+  const miss=rymMissing();
+  if(miss)h+=`<div><button class="btn" data-act="rymadd">Add the ${miss} waiting album${miss===1?'':'s'} and their artists</button></div>`;
+  if(!RYX.report&&n-miss>0)h+=`<p class="note">${cnt0(n-miss)} held for albums not found under an artist you have.</p>`;
   return h+'</div>';
 }
 const cnt0=n=>n+' rating'+(n===1?'':'s');
@@ -1164,8 +1185,9 @@ function artistView(a){
     return `<div class="group">
       <div class="ghead">${g.mbid?`<img class="art" src="https://coverartarchive.org/release-group/${esc(g.mbid)}/front-250" alt="" width="44" height="44" loading="lazy" decoding="async" onerror="this.remove()">`:''}<h3>${esc(g.title)}</h3><span class="label">${esc(g.kind)} · ${esc(g.year)}</span><span class="sp"></span>
         <span class="mono">${gd}/${g.items.length}</span><span class="bar"><i style="width:${g.items.length?gd/g.items.length*100:0}%"></i></span>
-        <button class="link" data-act="grpall" data-a="${a.id}" data-g="${g.id}">${full?'Clear':'Mark all heard'}</button></div>
+        ${g.items.length?`<button class="link" data-act="grpall" data-a="${a.id}" data-g="${g.id}">${full?'Clear':'Mark all heard'}</button>`:''}</div>
       ${albumRate(g)}
+      ${g.items.length?'':'<p class="note">No songs listed yet. Tap Find on MusicBrainz at the top to fill them in; your album rating stays.</p>'}
       ${rows.map(({i,k})=>`<div class="track ${isDone(i.id)?'done':''}"><span class="num">${k+1}</span>
         <button class="check" data-act="tog" data-id="${i.id}" aria-pressed="${isDone(i.id)}" aria-label="Heard ${esc(i.title)}"></button>
         <span class="ttl">${esc(i.title)}</span>${rateDots(i.id)}</div>`).join('')}
@@ -1235,6 +1257,7 @@ document.addEventListener('click',ev=>{
   else if(act==='go'){UI.tab=b.dataset.tab;UI.sel[UI.tab]=id;UI.filter='all'}
   else if(act==='filter'){UI.filter=b.dataset.v}
   else if(act==='tog'){S.marks[id]={...(S.marks[id]||{}),done:!isDone(id)};touch()}
+  else if(act==='rymadd'){const r=rymAddWaiting();RYX.report={total:r.albums,zero:0,filled:0,same:0,kept:[],waiting:[],notFound:[],dups:[],added:r};touch()}
   else if(act==='rate'){const v=+b.dataset.v;S.marks[id]={...(S.marks[id]||{}),r:rating(id)===v?0:v};touch()}
   else if(act==='grpall'){const a=S.music.find(x=>x.id===b.dataset.a),g=a.groups.find(x=>x.id===b.dataset.g),full=g.items.every(i=>isDone(i.id));
     g.items.forEach(i=>S.marks[i.id]={...(S.marks[i.id]||{}),done:!full});touch()}
