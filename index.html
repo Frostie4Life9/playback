@@ -512,6 +512,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.10.23-b', note:'IMPORT FIX: the discography import now only counts digital releases, so songs that only exist on CD, vinyl or Japan-only pressings (and so are not on Spotify) stay out. Albums show their standard tracklist instead of every bonus track from every edition (OK Computer is back to its 12 songs); bonus-edition songs only come in if you tick \u201cother versions\u201d. Re-run the import on an artist to apply it; checkmarks and ratings stay.'},
   {v:'2026.10.23-a', note:'IMPORT A DISCOGRAPHY: search an artist on MusicBrainz, pick the right one, and every official release comes in, sorted into studio albums, EPs, singles, compilations and the rest, with each song listed once (deluxe editions, remasters and repeats on singles fold into the original). Live albums, remixes and alternate versions stay out unless you tick the box. Cover art from the Cover Art Archive. Importing again only adds what’s new; checkmarks and ratings never move. Radiohead’s hand-typed B-side lists can be swapped for the verified list in one tap.'},
   {v:'2026.10.21-a', note:'JOINS THE SUITE: a teal P with a cassette for its home-screen icon, the same top bar and app grid as Kitchen, Grocery, Lift, DishLog, Protocol, The Rail and Game Log, and the new-version bar \u2014 when a newer copy is on GitHub, it slides down from the top; tap Reload.'}
 ];
@@ -603,8 +604,9 @@ function upNext(){
    Placement: studio albums claim their songs first, oldest first, using the
    edition most pressings share; then EPs, singles, compilations and the rest
    in release order, so a B-side lands on the release that first carried it;
-   then songs that only exist on another edition of a release join that
-   release. Live albums, remixes, demos and alternate versions are skipped
+   then (only with "other versions" ticked) songs that only exist on a
+   bonus edition of a release join that release. Only digital releases
+   count, since that is what streaming services carry. Live albums, remixes, demos and alternate versions are skipped
    unless asked for. Item IDs come from the title key, and an item that is
    already in the log keeps its ID, so checkmarks and ratings never move. */
 const MB_API='https://musicbrainz.org/ws/2/';
@@ -707,10 +709,16 @@ function mbBuild(rels,versions){
     if(!byRg.has(rg.id))byRg.set(rg.id,{rg,rels:[]});
     byRg.get(rg.id).rels.push(r);
   }
+  /* Spotify-style catalogs only carry digital releases. MusicBrainz also lists every CD, vinyl and
+     Japan-only pressing, which is where songs nobody can stream come from. If the artist has any
+     digital releases at all, only those count; a release group with none is skipped. */
+  const isDigi=r=>(r.media||[]).some(m=>m.format==='Digital Media');
+  const anyDigi=rels.some(isDigi);
   const fmtRank=r=>{const f=((r.media||[])[0]||{}).format||'';return f==='CD'?0:f==='Digital Media'?1:/vinyl|"/i.test(f)?2:3};
   const tracksOf=r=>(r.media||[]).filter(m=>!/dvd|blu-ray|vhs|video|laserdisc|umd/i.test(m.format||'')).flatMap(m=>m.tracks||[]);
   const entries=[];
-  for(const {rg,rels:rr} of byRg.values()){
+  for(const {rg,rels:rr0} of byRg.values()){
+    const rr=anyDigi?rr0.filter(isDigi):rr0;if(!rr.length)continue;
     const sec=(rg['secondary-types']||[]).map(s=>String(s).toLowerCase()),pt=rg['primary-type']||'Other';
     if(sec.some(s=>['interview','spokenword','audiobook','audio drama','field recording'].includes(s)))continue;
     const isLive=sec.includes('live')||pt==='Broadcast',isAlt=sec.some(s=>['remix','dj-mix','demo','mixtape/street'].includes(s));
@@ -721,13 +729,17 @@ function mbBuild(rels,versions){
     rr.forEach(r=>{const s=sig(r);sigCount.set(s,(sigCount.get(s)||0)+1)});
     const byAge=rr.slice().sort((a,b)=>mbDateKey(a.date)<mbDateKey(b.date)?-1:mbDateKey(a.date)>mbDateKey(b.date)?1:fmtRank(a)-fmtRank(b));
     const usable=byAge.filter(r=>tracksOf(r).length);if(!usable.length)continue;
-    const rep=usable.slice().sort((a,b)=>(sigCount.get(sig(b))-sigCount.get(sig(a)))||(usable.indexOf(a)-usable.indexOf(b)))[0];
+    /* for albums, deluxe and anniversary editions can outnumber the standard one, so only editions
+       within a few tracks of the shortest one compete for "standard" */
+    const minLen=Math.min(...usable.map(r=>tracksOf(r).length));
+    const cands=kind==='Studio album'?usable.filter(r=>tracksOf(r).length<=minLen+3):usable;
+    const rep=cands.slice().sort((a,b)=>(sigCount.get(sig(b))-sigCount.get(sig(a)))||(usable.indexOf(a)-usable.indexOf(b)))[0];
     const date=rg['first-release-date']||usable[0].date||'';
     /* albums: the standard edition first, bonus editions later. Singles and EPs
        often came as CD1/CD2, so every edition counts as the release itself. */
     const whole=kind!=='Studio album',restR=usable.filter(r=>r!==rep);
     entries.push({rgid:rg.id,title:rg.title||rep.title,year:date.slice(0,4)||'—',kind,date:mbDateKey(date),
-      rep:(whole?[rep,...restR]:[rep]).flatMap(tracksOf),others:whole?[]:restR.flatMap(tracksOf),items:[]});
+      rep:(whole?[rep,...restR]:[rep]).flatMap(tracksOf),others:whole||!versions?[]:restR.flatMap(tracksOf),items:[]});
   }
   const albums=entries.filter(e=>e.kind==='Studio album').sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
   const rest=entries.filter(e=>e.kind!=='Studio album').sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:MB_KIND_ORDER.indexOf(a.kind)-MB_KIND_ORDER.indexOf(b.kind));
