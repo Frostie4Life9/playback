@@ -102,6 +102,11 @@ textarea{min-height:110px;resize:vertical;font-size:14px}
 .bar i{display:block;height:100%;background:var(--done)}
 .link{border:0;background:none;color:var(--accent);font-weight:600;font-size:13px;padding:0}
 .link:disabled{opacity:.45;cursor:default}
+.arate{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap;padding:2px 0 6px;border-bottom:1px solid var(--line)}
+.avg{font:500 12px var(--mono);color:var(--muted)}
+.avg .of{opacity:.8}
+.diff{font:600 12px var(--mono);color:var(--muted)}
+.diff.up,.diff.down{color:var(--accent)}
 .ghead .art{width:44px;height:44px;border-radius:5px;object-fit:cover;background:var(--sunk);flex:0 0 auto;align-self:center;box-shadow:0 0 0 1px var(--line)}
 
 /* MusicBrainz import */
@@ -512,6 +517,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.10.23-c', note:'RATE WHOLE ALBUMS: studio albums, EPs, live albums and compilations now have their own 1\u201310 rating under the title, separate from the song ratings. Next to it you see the average of your song ratings for that release and how far your overall rating is above or below it, which is handy when you are deciding what an album is worth. Singles and B-sides do not get one.'},
   {v:'2026.10.23-b', note:'IMPORT FIX: the discography import now only counts digital releases, so songs that only exist on CD, vinyl or Japan-only pressings (and so are not on Spotify) stay out. Albums show their standard tracklist instead of every bonus track from every edition (OK Computer is back to its 12 songs); bonus-edition songs only come in if you tick \u201cother versions\u201d. Re-run the import on an artist to apply it; checkmarks and ratings stay.'},
   {v:'2026.10.23-a', note:'IMPORT A DISCOGRAPHY: search an artist on MusicBrainz, pick the right one, and every official release comes in, sorted into studio albums, EPs, singles, compilations and the rest, with each song listed once (deluxe editions, remasters and repeats on singles fold into the original). Live albums, remixes and alternate versions stay out unless you tick the box. Cover art from the Cover Art Archive. Importing again only adds what’s new; checkmarks and ratings never move. Radiohead’s hand-typed B-side lists can be swapped for the verified list in one tap.'},
   {v:'2026.10.21-a', note:'JOINS THE SUITE: a teal P with a cassette for its home-screen icon, the same top bar and app grid as Kitchen, Grocery, Lift, DishLog, Protocol, The Rail and Game Log, and the new-version bar \u2014 when a newer copy is on GitHub, it slides down from the top; tap Reload.'}
@@ -1023,6 +1029,18 @@ function rateDots(id){const r=rating(id);
   return `<span class="rate" role="group" aria-label="Rating out of 10"><span class="dots">${[1,2,3,4,5,6,7,8,9,10].map(d=>`<span class="dot ${r>=d?'full':r>=d-.5?'half':''}"><button data-act="rate" data-id="${id}" data-v="${d-.5}" aria-label="Rate ${fmt(d-.5)}"></button><button data-act="rate" data-id="${id}" data-v="${d}" aria-label="Rate ${d}"></button></span>`).join('')}</span><span class="rv ${r?'set':''}">${r?fmt(r):'–'}</span></span>`}
 function delBtn(id,label){const armed=UI.armed===id;return `<button class="btn danger ${armed?'armed':''}" data-act="del" data-id="${id}">${armed?'Tap again to delete':label}</button>`}
 
+/* Albums and EPs (and live/compilation albums) get an overall rating; singles and
+   the other odds and ends do not. The rating lives in marks under the release's own
+   ID, so it syncs and survives a re-import like song ratings do. */
+const RATEABLE=['Studio album','EP','Live','Compilation'];
+function albumRate(g){
+  if(!RATEABLE.includes(g.kind))return '';
+  const rs=g.items.map(i=>rating(i.id)).filter(Boolean),n=rs.length,r=rating(g.id);
+  const avg=n?rs.reduce((x,y)=>x+y,0)/n:0,d=r&&n?r-avg:null,f1=v=>v.toFixed(1);
+  return `<div class="arate"><span class="label">Your ${g.kind==='EP'?'EP':'album'} rating</span>${rateDots(g.id)}
+    <span class="avg">${n?'Song average '+f1(avg)+' <span class="of">('+n+' of '+g.items.length+' rated)</span>':'No songs rated yet'}</span>
+    ${d===null?'':`<span class="diff ${Math.abs(d)<.05?'even':d>0?'up':'down'}">${Math.abs(d)<.05?'Same as the songs':(d>0?'+':'\u2212')+f1(Math.abs(d))+' vs the songs'}</span>`}</div>`}
+
 function artistView(a){
   const all=artistItems(a),done=all.filter(i=>isDone(i.id)).length,rated=all.filter(i=>rating(i.id)).length,p=pct(all.map(i=>i.id));
   const groups=a.groups.map(g=>{
@@ -1033,6 +1051,7 @@ function artistView(a){
       <div class="ghead">${g.mbid?`<img class="art" src="https://coverartarchive.org/release-group/${esc(g.mbid)}/front-250" alt="" width="44" height="44" loading="lazy" decoding="async" onerror="this.remove()">`:''}<h3>${esc(g.title)}</h3><span class="label">${esc(g.kind)} · ${esc(g.year)}</span><span class="sp"></span>
         <span class="mono">${gd}/${g.items.length}</span><span class="bar"><i style="width:${g.items.length?gd/g.items.length*100:0}%"></i></span>
         <button class="link" data-act="grpall" data-a="${a.id}" data-g="${g.id}">${full?'Clear':'Mark all heard'}</button></div>
+      ${albumRate(g)}
       ${rows.map(({i,k})=>`<div class="track ${isDone(i.id)?'done':''}"><span class="num">${k+1}</span>
         <button class="check" data-act="tog" data-id="${i.id}" aria-pressed="${isDone(i.id)}" aria-label="Heard ${esc(i.title)}"></button>
         <span class="ttl">${esc(i.title)}</span>${rateDots(i.id)}</div>`).join('')}
@@ -1112,7 +1131,7 @@ document.addEventListener('click',ev=>{
     if(UI.armed!==id){UI.armed=id}
     else{
       const inMusic=S.music.find(x=>x.id===id);
-      if(inMusic){artistItems(inMusic).forEach(i=>delete S.marks[i.id]);S.music=S.music.filter(x=>x.id!==id);if(id===sid('artist','radiohead'))S.flags.rhDeleted=true}
+      if(inMusic){artistItems(inMusic).forEach(i=>delete S.marks[i.id]);inMusic.groups.forEach(g=>delete S.marks[g.id]);S.music=S.music.filter(x=>x.id!==id);if(id===sid('artist','radiohead'))S.flags.rhDeleted=true}
       else{const s=S.screen.find(x=>x.id===id);if(s){epIds(s).forEach(i=>delete S.marks[i]);S.screen=S.screen.filter(x=>x.id!==id)}}
       UI.armed=null;UI.sel[UI.tab]=null;touch();
     }
