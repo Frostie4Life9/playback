@@ -101,6 +101,30 @@ textarea{min-height:110px;resize:vertical;font-size:14px}
 .bar{height:4px;background:var(--sunk);border-radius:2px;overflow:hidden;width:80px}
 .bar i{display:block;height:100%;background:var(--done)}
 .link{border:0;background:none;color:var(--accent);font-weight:600;font-size:13px;padding:0}
+.link:disabled{opacity:.45;cursor:default}
+.ghead .art{width:44px;height:44px;border-radius:5px;object-fit:cover;background:var(--sunk);flex:0 0 auto;align-self:center;box-shadow:0 0 0 1px var(--line)}
+
+/* MusicBrainz import */
+.mbres{display:flex;flex-direction:column;gap:4px}
+.mbhit{display:flex;flex-direction:column;align-items:flex-start;gap:1px;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px}
+.mbhit:hover{border-color:var(--accent)}
+.mbhit b{font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mbsub{display:block;color:var(--muted);font-size:12.5px;line-height:1.35;overflow-wrap:anywhere}
+.tag{font:500 10px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--accent);border:1px solid currentColor;border-radius:4px;padding:0 4px}
+.mbpick{display:flex;flex-direction:column;gap:10px;border:1px solid var(--accent);background:var(--surface);border-radius:10px;padding:12px}
+.mbpick .note{margin:0}
+.tick{display:flex;gap:8px;align-items:flex-start;font-size:14px;cursor:pointer}
+.tick input{width:18px;height:18px;flex:0 0 auto;margin:1px 0 0;accent-color:var(--accent)}
+.mbprog{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:12px}
+.bar.wide{width:100%;height:6px;border-radius:3px}
+.bar.wide i{background:var(--accent);transition:width .4s}
+.mberr,.mbok{margin:0;border-radius:8px;padding:10px 12px;font-size:14px;line-height:1.45}
+.mberr{border:1px solid var(--warn);color:var(--warn);background:var(--surface)}
+.mbok{border:1px solid var(--done);background:var(--done-soft);color:var(--ink)}
+.mbok .link{margin-left:8px}
+.mbsrc{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
+.mbsrc.warn{flex-direction:column;align-items:flex-start;border:1px dashed var(--line);border-radius:10px;padding:12px}
+.mbsrc.warn .note{margin:0}
 
 .track{display:grid;grid-template-columns:28px 26px minmax(0,1fr) auto;align-items:center;gap:8px;padding:5px 4px;border-radius:6px}
 .track:hover{background:var(--bg)}
@@ -488,6 +512,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.10.23-a', note:'IMPORT A DISCOGRAPHY: search an artist on MusicBrainz, pick the right one, and every official release comes in, sorted into studio albums, EPs, singles, compilations and the rest, with each song listed once (deluxe editions, remasters and repeats on singles fold into the original). Live albums, remixes and alternate versions stay out unless you tick the box. Cover art from the Cover Art Archive. Importing again only adds what’s new; checkmarks and ratings never move. Radiohead’s hand-typed B-side lists can be swapped for the verified list in one tap.'},
   {v:'2026.10.21-a', note:'JOINS THE SUITE: a teal P with a cassette for its home-screen icon, the same top bar and app grid as Kitchen, Grocery, Lift, DishLog, Protocol, The Rail and Game Log, and the new-version bar \u2014 when a newer copy is on GitHub, it slides down from the top; tap Reload.'}
 ];
 const BUILD=CHANGELOG[0].v;
@@ -523,7 +548,7 @@ function seedAll(){
   const aid=sid('artist','radiohead');
   let a=S.music.find(x=>x.id===aid);
   if(!a&&!S.flags.rhDeleted){a={id:aid,name:'Radiohead',groups:[]};S.music.push(a)}
-  if(a){
+  if(a&&!a.mbid){   /* once Radiohead comes from MusicBrainz, the hand-typed lists are retired */
     for(const [title,year,kind,tracks] of RADIOHEAD){
       const gid=sid(aid,title);
       let g=a.groups.find(x=>x.id===gid);
@@ -541,6 +566,9 @@ function seedAll(){
     [1,2,3].forEach(e=>S.marks[sid(id,'s',1,'e',e)]={done:true});
     S.flags.exSeverance=true;
   }
+  /* imported artists: fold back anything that duplicates a MusicBrainz song
+     (an older copy of the app re-adding the hand-typed lists, say) */
+  S.music.forEach(x=>{if(x.mbid)mbTidy(x)});
   save();
 }
 
@@ -564,6 +592,268 @@ function upNext(){
     if(found)out.push({tab:'screen',id:s.id,t:s.title,s:sxe(found[0],found[1])+' is next'});
   }
   return out;
+}
+
+/* ---------- MusicBrainz discography import ----------
+   One paged sweep of the artist's official releases, each page carrying full
+   tracklists, at no more than one request a second (MusicBrainz's rule).
+   A song is identified by its normalized title (case, punctuation, "&"/"and",
+   subtitles in brackets and "remastered"-type tags ignored), so the same song
+   on an album, a single, a deluxe edition and a remaster is ONE item.
+   Placement: studio albums claim their songs first, oldest first, using the
+   edition most pressings share; then EPs, singles, compilations and the rest
+   in release order, so a B-side lands on the release that first carried it;
+   then songs that only exist on another edition of a release join that
+   release. Live albums, remixes, demos and alternate versions are skipped
+   unless asked for. Item IDs come from the title key, and an item that is
+   already in the log keeps its ID, so checkmarks and ratings never move. */
+const MB_API='https://musicbrainz.org/ws/2/';
+const RH_MBID='a74b1b7f-71a5-4011-9441-d0b5e4122711';
+const MBX={q:'',results:null,pick:null,versions:false,searching:false,busy:false,cancel:false,where:'side',aid:null,name:'',step:'',n:0,of:0,note:'',err:'',report:'',errWhere:'side'};
+const mbSleep=ms=>new Promise(r=>setTimeout(r,ms));
+let mbLast=0;
+function MBError(code,status){const e=new Error(code);e.code=code;e.status=status;return e}
+async function mbGet(path,params){
+  for(let tries=0;;tries++){
+    const wait=mbLast+1100-Date.now();if(wait>0)await mbSleep(wait);
+    if(MBX.cancel)throw MBError('cancel');
+    mbLast=Date.now();
+    let r;
+    /* no custom headers: browsers won't let a page set User-Agent, and any
+       extra header would force a CORS preflight. fmt=json is all it needs. */
+    try{r=await fetch(MB_API+path+'?'+new URLSearchParams(Object.assign({},params,{fmt:'json'})))}
+    catch(e){throw MBError(navigator.onLine===false?'offline':'network')}
+    if(r.status===503||r.status===429){
+      if(tries>=4)throw MBError('busy');
+      const ra=parseInt(r.headers.get('retry-after'),10);
+      MBX.note='MusicBrainz asked us to slow down, waiting a moment';mbProgress();
+      await mbSleep((ra>0?Math.min(ra,20):2+tries*3)*1000);
+      MBX.note='';continue;
+    }
+    if(!r.ok)throw MBError('http',r.status);
+    try{return await r.json()}catch(e){throw MBError('http',r.status)}
+  }
+}
+function mbMessage(e,q){
+  const c=e&&e.code;
+  if(c==='offline')return "You're offline. Connect to the internet and try again. Nothing in your log was changed.";
+  if(c==='network')return "Couldn't reach MusicBrainz. Check your connection; if that's fine, MusicBrainz may be down for a few minutes. Nothing in your log was changed.";
+  if(c==='busy')return 'MusicBrainz is limiting requests right now (it allows about one a second, shared by everyone). Wait a minute and try again. Nothing in your log was changed.';
+  if(c==='http')return 'MusicBrainz sent back an error ('+e.status+'). Try again in a few minutes. Nothing in your log was changed.';
+  if(c==='nomatch')return 'No artists on MusicBrainz match “'+q+'”. Check the spelling, or try fewer words.';
+  if(c==='empty')return 'MusicBrainz has no official releases with tracklists for this artist, so there was nothing to import.';
+  if(c==='cancel')return 'Import cancelled. Nothing in your log was changed.';
+  return 'Something went wrong while reading MusicBrainz. Nothing in your log was changed.';
+}
+
+/* ---- titles ---- */
+function mbNorm(s){return String(s).normalize('NFKD').replace(/[̀-ͯ]/g,'').toLowerCase()
+  .replace(/[‘’`´']/g,'').replace(/[&+]/g,' ').replace(/[^a-z0-9]+/g,' ')
+  .replace(/\band\b/g,' ').replace(/\s+/g,' ').trim()}
+/* what a tag in brackets (or after " - ") means: 'alt' = a different version,
+   'same' = the same song (remasters, edits, mono), null = part of the title */
+function mbVClass(d){
+  const s=String(d).toLowerCase().replace(/["“”‘’']/g,'').replace(/\s+/g,' ').trim();
+  if(!s)return null;
+  if(/\b(live|demo|remix|rmx|rework|reworked|acoustic|instrumental|session|sessions|rehearsal|unplugged|orchestral|a ?cappella|karaoke|alternate|outtake|early)\b/.test(s))return 'alt';
+  if(/\bremaster(ed)?\b|\b(mono|stereo|explicit|clean|bonus)\b/.test(s))return 'same';
+  if(/^(radio|single|album|lp|original|short|long|full[- ]?length|7|7 inch|12|12 inch)? ?(edit|version|mix)$/.test(s))return 'same';
+  if(/\b(mix|version|edit|take|dub)\b/.test(s))return 'alt';
+  return null;
+}
+function mbSplit(title){
+  const descs=[];let base=String(title);
+  const stripped=base.replace(/\s*[\(\[]([^\)\]]*)[\)\]]/g,(m,inner)=>{descs.push(inner);return ' '});
+  if(stripped.trim())base=stripped;else descs.length=0;            /* "(Nice Dream)" is the whole title */
+  const dash=base.match(/^(.*\S)\s+[-–—]\s+(.+)$/);
+  if(dash&&mbVClass(dash[2])){descs.push(dash[2]);base=dash[1]}
+  return{base:base.replace(/\s+/g,' ').trim(),descs};
+}
+const mbK=s=>mbNorm(s).replace(/ /g,'');
+function mbKeyOf(title){return mbK(mbSplit(title).base)||mbK(title)}
+function mbTrack(t,rgid){
+  const rec=t.recording||{};if(rec.video)return null;
+  const title=String(rec.title||t.title||'').trim();
+  if(!title||/^\[[^\]]*\]$/.test(title))return null;               /* [untitled], [silence], [data track] */
+  const sp=mbSplit(title),key=mbK(sp.base)||mbK(title);if(!key)return null;
+  let alt=null,fromDis=false;
+  for(const d of sp.descs)if(mbVClass(d)==='alt'){alt=d;break}
+  const dis=String(rec.disambiguation||'');
+  if(!alt&&dis&&mbVClass(dis)==='alt'){alt=dis;fromDis=true}
+  if(!alt)return{key,title};
+  const live=/\blive\b/i.test(alt);
+  return{key,title:fromDis?title+' ('+(live?'live':dis)+')':title,alt:true,altKey:key+'~'+(live?'live@'+rgid:mbK(alt)),
+    take:/\b(live|demo|acoustic|session|sessions|rehearsal|unplugged|early|outtake)\b/i.test(alt)};   /* remixes and "versions" never stand in for the song */
+}
+
+/* ---- fetch + build ---- */
+async function mbFetchCatalog(mbid){
+  const rels=[];let off=0,total=0;
+  do{
+    const j=await mbGet('release',{artist:mbid,status:'official',inc:'recordings+release-groups',limit:100,offset:off});
+    const got=j.releases||[];total=j['release-count']||0;rels.push(...got);off+=got.length;
+    MBX.step='Reading releases';MBX.n=Math.min(off,total);MBX.of=total;mbProgress();
+    if(!got.length)break;
+  }while(off<total);
+  return rels;
+}
+const MB_KIND_ORDER=['Studio album','EP','Single','Compilation','Live','Other'];
+function mbDateKey(d){d=String(d||'');const p=d.split('-');return d?(p[0]||'9999')+'-'+(p[1]||'99')+'-'+(p[2]||'99'):'9999-99-99'}
+function mbBuild(rels,versions){
+  const byRg=new Map();
+  for(const r of rels){
+    if(r.status&&r.status!=='Official')continue;
+    const rg=r['release-group'];if(!rg||!rg.id)continue;
+    if(!byRg.has(rg.id))byRg.set(rg.id,{rg,rels:[]});
+    byRg.get(rg.id).rels.push(r);
+  }
+  const fmtRank=r=>{const f=((r.media||[])[0]||{}).format||'';return f==='CD'?0:f==='Digital Media'?1:/vinyl|"/i.test(f)?2:3};
+  const tracksOf=r=>(r.media||[]).filter(m=>!/dvd|blu-ray|vhs|video|laserdisc|umd/i.test(m.format||'')).flatMap(m=>m.tracks||[]);
+  const entries=[];
+  for(const {rg,rels:rr} of byRg.values()){
+    const sec=(rg['secondary-types']||[]).map(s=>String(s).toLowerCase()),pt=rg['primary-type']||'Other';
+    if(sec.some(s=>['interview','spokenword','audiobook','audio drama','field recording'].includes(s)))continue;
+    const isLive=sec.includes('live')||pt==='Broadcast',isAlt=sec.some(s=>['remix','dj-mix','demo','mixtape/street'].includes(s));
+    if((isLive||isAlt)&&!versions)continue;
+    const kind=isLive?'Live':sec.includes('compilation')?'Compilation':isAlt||sec.includes('soundtrack')?'Other':pt==='Album'?'Studio album':pt==='EP'?'EP':pt==='Single'?'Single':'Other';
+    /* the edition most pressings share is the "real" tracklist; ties go to the oldest */
+    const sigCount=new Map(),sig=r=>tracksOf(r).map(t=>mbKeyOf((t.recording&&t.recording.title)||t.title)).join('|');
+    rr.forEach(r=>{const s=sig(r);sigCount.set(s,(sigCount.get(s)||0)+1)});
+    const byAge=rr.slice().sort((a,b)=>mbDateKey(a.date)<mbDateKey(b.date)?-1:mbDateKey(a.date)>mbDateKey(b.date)?1:fmtRank(a)-fmtRank(b));
+    const usable=byAge.filter(r=>tracksOf(r).length);if(!usable.length)continue;
+    const rep=usable.slice().sort((a,b)=>(sigCount.get(sig(b))-sigCount.get(sig(a)))||(usable.indexOf(a)-usable.indexOf(b)))[0];
+    const date=rg['first-release-date']||usable[0].date||'';
+    /* albums: the standard edition first, bonus editions later. Singles and EPs
+       often came as CD1/CD2, so every edition counts as the release itself. */
+    const whole=kind!=='Studio album',restR=usable.filter(r=>r!==rep);
+    entries.push({rgid:rg.id,title:rg.title||rep.title,year:date.slice(0,4)||'—',kind,date:mbDateKey(date),
+      rep:(whole?[rep,...restR]:[rep]).flatMap(tracksOf),others:whole?[]:restR.flatMap(tracksOf),items:[]});
+  }
+  const albums=entries.filter(e=>e.kind==='Studio album').sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
+  const rest=entries.filter(e=>e.kind!=='Studio album').sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:MB_KIND_ORDER.indexOf(a.kind)-MB_KIND_ORDER.indexOf(b.kind));
+  const order=[...albums,...rest],claimed=new Set(),alts=[];
+  const add=(E,key,title)=>{if(claimed.has(key))return;claimed.add(key);E.items.push({k:key,title})};
+  const take=(E,t)=>{const x=mbTrack(t,E.rgid);if(!x)return;if(x.alt)alts.push({E,x});else add(E,x.key,x.title)};
+  order.forEach(E=>E.rep.forEach(t=>take(E,t)));                          /* pass 1: the standard tracklists */
+  order.forEach(E=>E.others.forEach(t=>take(E,t)));                       /* pass 2: songs only on other editions */
+  for(const {E,x} of alts){                                               /* pass 3: other versions */
+    if(!claimed.has(x.key)&&x.take)add(E,x.key,x.title);                  /* a song only ever released live or as a demo IS the song */
+    else if(versions)add(E,x.altKey,x.title);
+  }
+  return order.filter(E=>E.items.length)
+    .sort((a,b)=>(MB_KIND_ORDER.indexOf(a.kind)-MB_KIND_ORDER.indexOf(b.kind))||(a.date<b.date?-1:a.date>b.date?1:0))
+    .map(E=>({rgid:E.rgid,title:E.title,year:E.year,kind:E.kind,items:E.items}));
+}
+
+/* ---- merge into the log: safe to repeat, never drops a mark ---- */
+const mbItemKey=i=>i.k||mbKeyOf(i.title);
+const mbMarked=id=>{const m=S.marks[id];return !!(m&&(m.done||m.r))};
+function mbFold(into,from){            /* a duplicate's checkmark/rating moves onto the item that stays */
+  if(into===from||!S.marks[from])return;
+  const a=S.marks[into]||{},b=S.marks[from],m=Object.assign({},a);
+  if(b.done)m.done=true;if(!m.r&&b.r)m.r=b.r;S.marks[into]=m;
+}
+function mbMerge(art,incoming,versions,tidy){
+  let a=S.music.find(x=>x.mbid===art.id);
+  if(!a){const id0=sid('artist',art.name),hit=S.music.find(x=>x.id===id0);
+    if(hit&&!hit.mbid)a=hit;
+    else{a={id:hit?sid('artist',art.name,art.id):id0,name:art.name,groups:[]};S.music.push(a)}}
+  const seedIds=a.id===sid('artist','radiohead')?new Set(RADIOHEAD.map(r=>sid(a.id,r[0]))):new Set();
+  const replaced=g=>g.src==='mb'||g.src==='kept'||seedIds.has(g.id);
+  /* one ID per song: an imported item's ID wins, then the first one found */
+  const canon=new Map(),before=new Set();
+  for(const g of [...a.groups.filter(g=>g.src==='mb'),...a.groups.filter(g=>g.src!=='mb')])
+    for(const i of g.items){before.add(i.id);const k=mbItemKey(i);if(!canon.has(k))canon.set(k,i.id);else mbFold(canon.get(k),i.id)}
+  const placed=new Set(),idFor=k=>canon.get(k)||sid(a.id,'song',k);
+  const groups=[];
+  for(const G of incoming){
+    const items=[];
+    for(const t of G.items){if(placed.has(t.k))continue;placed.add(t.k);items.push({id:idFor(t.k),title:t.title,k:t.k})}
+    if(items.length)groups.push({id:sid(a.id,'rg',G.rgid),src:'mb',mbid:G.rgid,title:G.title,year:G.year,kind:G.kind,items});
+  }
+  const manual=[];
+  for(const g of a.groups){if(replaced(g))continue;
+    const items=[];for(const i of g.items){const k=mbItemKey(i);if(placed.has(k))continue;placed.add(k);items.push(Object.assign({},i,{id:idFor(k)}))}
+    if(items.length)manual.push(Object.assign({},g,{items}))}
+  const kept=[];let dropped=0;
+  for(const g of a.groups){if(!replaced(g))continue;
+    for(const i of g.items){const k=mbItemKey(i);if(placed.has(k))continue;placed.add(k);
+      const id=idFor(k);
+      if(mbMarked(id)||(tidy&&g.src==='kept'))kept.push({id,title:i.title,k});else dropped++}}
+  a.groups=[...groups,...manual];
+  if(kept.length)a.groups.push({id:sid(a.id,'kept'),src:'kept',title:'Kept from your earlier list',year:'—',kind:'Not in the MusicBrainz import',items:kept});
+  a.mbid=art.id;if(!tidy){a.name=art.name;a.mbVersions=!!versions;a.mbAt=Date.now()}
+  const all=groups.flatMap(g=>g.items),kinds={};groups.forEach(g=>kinds[g.kind]=(kinds[g.kind]||0)+1);
+  return{aid:a.id,name:a.name,kinds,songs:all.length,added:all.filter(i=>!before.has(i.id)).length,kept:kept.length,dropped};
+}
+function mbTidy(a){
+  const inc=a.groups.filter(g=>g.src==='mb').map(g=>({rgid:g.mbid,title:g.title,year:g.year,kind:g.kind,items:g.items.map(i=>({k:mbItemKey(i),title:i.title}))}));
+  mbMerge({id:a.mbid,name:a.name},inc,a.mbVersions,true);
+}
+function mbReportText(r){
+  const names={'Studio album':['studio album','studio albums'],'EP':['EP','EPs'],'Single':['single','singles'],'Compilation':['compilation','compilations'],'Live':['live release','live releases'],'Other':['other release','other releases']};
+  const parts=MB_KIND_ORDER.filter(k=>r.kinds[k]).map(k=>r.kinds[k]+' '+names[k][r.kinds[k]===1?0:1]);
+  let s=r.name+': '+parts.join(', ')+' · '+r.songs+' songs'+(r.added===r.songs?'.':'. '+r.added+' new, '+(r.songs-r.added)+' were already in your log with their checkmarks and ratings.');
+  if(r.kept)s+=' '+r.kept+' song'+(r.kept===1?'':'s')+' you had marked '+(r.kept===1?"isn't":"aren't")+' on MusicBrainz, so '+(r.kept===1?'it stays':'they stay')+' in “Kept from your earlier list”.';
+  if(r.dropped)s+=' '+r.dropped+' unmarked song'+(r.dropped===1?' from the old list was':'s from the old list were')+' not found and removed.';
+  return s;
+}
+
+/* ---- the flow ---- */
+async function mbSearch(q){
+  if(MBX.busy||MBX.searching)return;
+  Object.assign(MBX,{q,err:'',report:'',results:null,pick:null,searching:true,errWhere:'side'});render();
+  try{
+    const lq=q.replace(/([+\-&|!(){}\[\]^"~*?:\\\/])/g,'\\$1');
+    const j=await mbGet('artist',{query:lq,limit:8});
+    const list=j.artists||[];if(!list.length)throw MBError('nomatch');
+    MBX.results=list.map(x=>({id:x.id,name:x.name,dis:x.disambiguation||'',country:x.country||(x.area&&x.area.name)||'',type:x.type||'',begin:String((x['life-span']&&x['life-span'].begin)||'').slice(0,4)}));
+  }catch(e){MBX.err=mbMessage(e,q)}
+  MBX.searching=false;MBX.cancel=false;render();
+}
+async function mbImport(art,where){
+  if(MBX.busy)return;
+  const existing=S.music.find(x=>x.mbid===art.id)||S.music.find(x=>x.id===sid('artist',art.name)&&!x.mbid);
+  Object.assign(MBX,{busy:true,cancel:false,err:'',report:'',where,errWhere:where,aid:existing?existing.id:null,name:art.name,step:'Asking MusicBrainz',n:0,of:0,note:''});render();
+  try{
+    const rels=await mbFetchCatalog(art.id);
+    if(MBX.cancel)throw MBError('cancel');
+    MBX.step='Sorting out duplicates';mbProgress();
+    const groups=mbBuild(rels,MBX.versions);
+    if(!groups.length)throw MBError('empty');
+    const r=mbMerge(art,groups,MBX.versions,false);
+    touch();
+    UI.tab='music';UI.sel.music=r.aid;UI.filter='all';
+    try{localStorage.setItem(KEY+'_tab','music')}catch(e){}
+    Object.assign(MBX,{report:mbReportText(r),results:null,pick:null,q:'',errWhere:'sheet',aid:r.aid});
+  }catch(e){MBX.err=mbMessage(e,art.name)}
+  finally{MBX.busy=false;MBX.cancel=false;render()}
+  /* on a phone the sheet sits below the sidebar: bring the result into view */
+  if(MBX.errWhere==='sheet'&&window.innerWidth<=760){const el=document.querySelector('.mbok,.sheet .mberr');if(el)el.scrollIntoView({behavior:'smooth',block:'center'})}
+}
+function mbProgHtml(){
+  const p=MBX.of?Math.round(MBX.n/MBX.of*100):0,left=MBX.of?Math.ceil((MBX.of-MBX.n)/100)*1.2:0;
+  return `<div class="mbprog" id="mbprog" role="status" aria-live="polite">
+    <span class="label">Importing ${esc(MBX.name)}</span>
+    <span class="bar wide"><i style="width:${MBX.step==='Sorting out duplicates'?100:p}%"></i></span>
+    <span class="note">${esc(MBX.step)}${MBX.of&&MBX.step==='Reading releases'?` · ${MBX.n} of ${MBX.of}${left>=2?' · about '+Math.round(left)+' s left':''}`:''}${MBX.note?' · '+esc(MBX.note):''}</span>
+    <div><button class="btn" data-act="mbcancel">Cancel</button></div></div>`;
+}
+function mbProgress(){const el=document.getElementById('mbprog');if(el)el.outerHTML=mbProgHtml()}
+function mbSide(){
+  if(MBX.busy&&MBX.where==='side')return mbProgHtml();
+  let h=`<form class="add" data-form="mbsearch">
+    <label class="label" for="mb-q">Import a discography</label>
+    <div class="row2"><input id="mb-q" name="q" placeholder="Search MusicBrainz" value="${esc(MBX.q)}" required autocomplete="off" ${MBX.busy?'disabled':''}>
+      <button class="btn primary" ${MBX.searching||MBX.busy?'disabled':''}>${MBX.searching?'Searching…':'Search'}</button></div></form>`;
+  if(MBX.err&&MBX.errWhere==='side')h+=`<p class="mberr" role="alert">${esc(MBX.err)}</p>`;
+  if(MBX.pick){const x=MBX.pick,have=S.music.find(a=>a.mbid===x.id)||S.music.find(a=>a.id===sid('artist',x.name)&&!a.mbid);
+    h+=`<div class="mbpick"><div><b>${esc(x.name)}</b><span class="mbsub">${esc([x.dis,x.country,x.begin&&'since '+x.begin].filter(Boolean).join(' · '))}</span></div>
+      <label class="tick"><input type="checkbox" id="mb-ver" ${MBX.versions?'checked':''} ${MBX.busy?'disabled':''}> Include live albums, remixes and alternate versions</label>
+      <p class="note">${have?'You already have '+esc(have.name)+'. Missing releases get added and every checkmark and rating stays where it is.':'Every official release, sorted into albums, EPs, singles and the rest, with each song listed once.'}</p>
+      <div class="tools"><button type="button" class="btn primary" data-act="mbgo" ${MBX.busy?'disabled':''}>${have?'Update '+esc(have.name):'Import'}</button><button type="button" class="btn" data-act="mbback">Back</button></div></div>`}
+  else if(MBX.results)h+=`<div class="mbres" role="list">${MBX.results.map((x,k)=>`<button type="button" class="mbhit" role="listitem" data-act="mbpick" data-i="${k}"><b>${esc(x.name)}${k===0?'<span class="tag">Best match</span>':''}</b><span class="mbsub">${esc([x.dis,x.type,x.country,x.begin&&'since '+x.begin].filter(Boolean).join(' · ')||'No details on MusicBrainz')}</span></button>`).join('')}</div>`;
+  return h;
 }
 
 /* ---------- UI state ---------- */
@@ -671,8 +961,9 @@ function render(){
       <div>${list.map(x=>{const ids=UI.tab==='music'?artistItems(x).map(i=>i.id):epIds(x);
         return `<button class="entry" data-act="sel" data-id="${x.id}" aria-current="${e&&e.id===x.id}"><span class="n">${esc(x.name||x.title)}${x.example?'<span class="ex">Example</span>':''}</span><span class="p">${pct(ids)}%</span></button>`}).join('')||'<p class="note">Nothing here yet.</p>'}</div>
       ${UI.tab==='music'?`
+      ${mbSide()}
       <form class="add" data-form="artist">
-        <label class="label" for="new-artist">Add an artist</label>
+        <label class="label" for="new-artist">Or add an artist by hand</label>
         <input id="new-artist" name="name" placeholder="e.g. Thom Yorke" required>
         <button class="btn primary">Add artist</button>
       </form>`:`
@@ -727,7 +1018,7 @@ function artistView(a){
     const rows=g.items.map((i,k)=>({i,k})).filter(({i})=>UI.filter==='all'||!isDone(i.id));
     if(UI.filter==='open'&&!rows.length)return '';
     return `<div class="group">
-      <div class="ghead"><h3>${esc(g.title)}</h3><span class="label">${esc(g.kind)} · ${esc(g.year)}</span><span class="sp"></span>
+      <div class="ghead">${g.mbid?`<img class="art" src="https://coverartarchive.org/release-group/${esc(g.mbid)}/front-250" alt="" width="44" height="44" loading="lazy" decoding="async" onerror="this.remove()">`:''}<h3>${esc(g.title)}</h3><span class="label">${esc(g.kind)} · ${esc(g.year)}</span><span class="sp"></span>
         <span class="mono">${gd}/${g.items.length}</span><span class="bar"><i style="width:${g.items.length?gd/g.items.length*100:0}%"></i></span>
         <button class="link" data-act="grpall" data-a="${a.id}" data-g="${g.id}">${full?'Clear':'Mark all heard'}</button></div>
       ${rows.map(({i,k})=>`<div class="track ${isDone(i.id)?'done':''}"><span class="num">${k+1}</span>
@@ -737,16 +1028,34 @@ function artistView(a){
   return `<div class="head"><div class="ring" style="--p:${p}"><span>${p}%</span></div>
     <div class="meta"><h2>${esc(a.name)}</h2><span class="mono">${done} of ${all.length} tracks heard · ${rated} rated · ${a.groups.length} releases</span></div></div>
     <div class="tools"><button class="chip" data-act="filter" data-v="all" aria-pressed="${UI.filter==='all'}">Everything</button><button class="chip" data-act="filter" data-v="open" aria-pressed="${UI.filter==='open'}">Still to hear</button></div>
+    ${mbArtistBar(a)}
     ${groups||'<p class="empty">You have heard every track listed here.</p>'}
-    ${a.id===sid('artist','radiohead')?'<p class="note">The non-album lists are a starting set, not a verified complete discography. Add anything missing below.</p>':''}
     <details class="more"><summary>Add a release</summary>
       <form data-form="group" data-a="${a.id}">
         <div class="row2"><input id="g-title" name="title" placeholder="Release title" required><input id="g-year" name="year" placeholder="Year" style="max-width:90px"></div>
-        <select id="g-kind" name="kind" aria-label="Release type"><option>Studio album</option><option>EP</option><option>B-sides &amp; singles</option><option>Live</option><option>Archival release</option><option>Other</option></select>
+        <select id="g-kind" name="kind" aria-label="Release type"><option>Studio album</option><option>EP</option><option>Single</option><option>B-sides &amp; singles</option><option>Compilation</option><option>Live</option><option>Archival release</option><option>Other</option></select>
+        <p class="note">A song that's already listed for this artist is skipped, so nothing shows up twice.</p>
         <textarea id="g-tracks" name="tracks" placeholder="One track per line" required></textarea>
         <button class="btn primary">Add release</button>
       </form></details>
     <div>${delBtn(a.id,'Delete artist')}</div>`;
+}
+
+/* where this artist's list came from, and the button to (re)import it */
+function mbArtistBar(a){
+  const isRH=a.id===sid('artist','radiohead');
+  let h='';
+  if(MBX.busy&&MBX.where==='sheet'&&MBX.aid===a.id)h+=mbProgHtml();
+  else if(a.mbid)h+=`<div class="mbsrc"><span class="label">From MusicBrainz · ${a.mbAt?'updated '+esc(new Date(a.mbAt).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'})):'imported'}${a.mbVersions?' · with other versions':''}</span>
+      <button class="link" data-act="mbrefresh" data-a="${a.id}" ${MBX.busy?'disabled':''}>Check for new releases</button></div>`;
+  else if(isRH)h+=`<div class="mbsrc warn"><p class="note">The non-album lists here were typed by hand and aren't verified. Replacing them with MusicBrainz's list keeps every checkmark and rating you have.</p>
+      <div><button class="btn primary" data-act="mbrefresh" data-a="${a.id}" ${MBX.busy?'disabled':''}>Replace with the verified MusicBrainz list</button></div></div>`;
+  else h+=`<div class="mbsrc"><span class="label">Added by hand</span><button class="link" data-act="mbprefill" data-a="${a.id}" ${MBX.busy?'disabled':''}>Find on MusicBrainz</button></div>`;
+  if(MBX.aid===a.id&&MBX.errWhere==='sheet'){
+    if(MBX.err)h+=`<p class="mberr" role="alert">${esc(MBX.err)}</p>`;
+    if(MBX.report)h+=`<p class="mbok" role="status">${esc(MBX.report)}<button class="link" data-act="mbdismiss">Got it</button></p>`;
+  }
+  return h;
 }
 
 function showView(s){
@@ -796,6 +1105,16 @@ document.addEventListener('click',ev=>{
       UI.armed=null;UI.sel[UI.tab]=null;touch();
     }
   }
+  else if(act==='mbpick'){MBX.pick=MBX.results&&MBX.results[+b.dataset.i]||null;MBX.err=''}
+  else if(act==='mbback'){MBX.pick=null}
+  else if(act==='mbgo'){if(MBX.pick)mbImport({id:MBX.pick.id,name:MBX.pick.name},'side');return}
+  else if(act==='mbcancel'){MBX.cancel=true;MBX.note='cancelling';mbProgress();return}
+  else if(act==='mbdismiss'){MBX.report='';MBX.err=''}
+  else if(act==='mbrefresh'){const a=S.music.find(x=>x.id===b.dataset.a);if(!a)return;
+    const mbid=a.mbid||(a.id===sid('artist','radiohead')?RH_MBID:null);if(!mbid)return;
+    MBX.versions=!!a.mbVersions;mbImport({id:mbid,name:a.name},'sheet');return}
+  else if(act==='mbprefill'){const a=S.music.find(x=>x.id===b.dataset.a);if(!a)return;
+    mbSearch(a.name).then(()=>{const el=document.getElementById('mb-q');if(el)el.scrollIntoView({behavior:'smooth',block:'center'})});return}
   else if(act==='opensync'){UI.syncOpen=true;render();const p=document.getElementById('syncpanel');if(p)p.scrollIntoView({behavior:'smooth',block:'center'});return}
   else if(act==='pushnow'){push(false);return}
   else if(act==='pullnow'){pull();return}
@@ -818,11 +1137,13 @@ document.addEventListener('click',ev=>{
 
 document.addEventListener('change',ev=>{
   if(ev.target.id==='new-type'){UI.addType=ev.target.value;render();return}
+  if(ev.target.id==='mb-ver'){MBX.versions=ev.target.checked;return}
 });
 
 document.addEventListener('submit',ev=>{
   ev.preventDefault();
   const f=ev.target,d=Object.fromEntries(new FormData(f)),kind=f.dataset.form;
+  if(kind==='mbsearch'){const q=(d.q||'').trim();if(q)mbSearch(q);return}
   if(kind==='artist'){const name=d.name.trim();if(!name)return;const id=sid('artist',name);
     if(!S.music.some(x=>x.id===id))S.music.push({id,name,groups:[]});UI.sel.music=id}
   else if(kind==='screen'){const title=d.title.trim();if(!title)return;
@@ -831,7 +1152,9 @@ document.addEventListener('submit',ev=>{
       const id=sid('show',title);if(!S.screen.some(x=>x.id===id))S.screen.push({id,type:'show',title,year:d.year.trim(),seasons:eps.map((n,k)=>({n:k+1,eps:n}))});UI.sel.screen=id}}
   else if(kind==='group'){const a=S.music.find(x=>x.id===f.dataset.a),title=d.title.trim();if(!a||!title)return;
     const gid=sid(a.id,title);let g=a.groups.find(x=>x.id===gid);if(!g){g={id:gid,title,year:d.year.trim()||'—',kind:d.kind,items:[]};a.groups.push(g)}
-    d.tracks.split('\n').map(t=>t.trim()).filter(Boolean).forEach(t=>{const id=sid(a.id,title,t);if(!g.items.some(i=>i.id===id))g.items.push({id,title:t})})}
+    const have=new Set(artistItems(a).map(mbItemKey));
+    d.tracks.split('\n').map(t=>t.trim()).filter(Boolean).forEach(t=>{const k=mbKeyOf(t);if(have.has(k))return;have.add(k);g.items.push({id:sid(a.id,title,t),title:t})});
+    if(!g.items.length)a.groups=a.groups.filter(x=>x!==g)}
   else if(kind==='sync'){
     const url=(d.url||'').trim(),key=(d.key||'').trim();
     if(!/^https:\/\//.test(url)||!key){SYS.status='error';SYS.msg='Enter your Worker URL (starting with https://) and the sync key.';render();return}
