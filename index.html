@@ -107,6 +107,9 @@ textarea{min-height:110px;resize:vertical;font-size:14px}
 .avg .of{opacity:.8}
 .diff{font:600 12px var(--mono);color:var(--muted)}
 .diff.up,.diff.down{color:var(--accent)}
+.rymrep{display:flex;flex-direction:column;gap:6px}
+.rymrep ul{margin:4px 0 0;padding-left:18px;font-size:13px;line-height:1.5}
+.rymrep summary{cursor:pointer;font-weight:600;font-size:13px}
 .ghead .art{width:44px;height:44px;border-radius:5px;object-fit:cover;background:var(--sunk);flex:0 0 auto;align-self:center;box-shadow:0 0 0 1px var(--line)}
 
 /* MusicBrainz import */
@@ -517,6 +520,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.10.23-d', note:'IMPORT YOUR RATE YOUR MUSIC RATINGS: on the Music tab, pick the CSV you exported from RYM and your album and EP ratings go onto the matching releases. Ratings for artists you have not imported yet are held and fill in by themselves the moment you import that artist. A rating you already set here is never overwritten, and the summary lists anything it could not place.'},
   {v:'2026.10.23-c', note:'RATE WHOLE ALBUMS: studio albums, EPs, live albums and compilations now have their own 1\u201310 rating under the title, separate from the song ratings. Next to it you see the average of your song ratings for that release and how far your overall rating is above or below it, which is handy when you are deciding what an album is worth. Singles and B-sides do not get one.'},
   {v:'2026.10.23-b', note:'IMPORT FIX: the discography import now only counts digital releases, so songs that only exist on CD, vinyl or Japan-only pressings (and so are not on Spotify) stay out. Albums show their standard tracklist instead of every bonus track from every edition (OK Computer is back to its 12 songs); bonus-edition songs only come in if you tick \u201cother versions\u201d. Re-run the import on an artist to apply it; checkmarks and ratings stay.'},
   {v:'2026.10.23-a', note:'IMPORT A DISCOGRAPHY: search an artist on MusicBrainz, pick the right one, and every official release comes in, sorted into studio albums, EPs, singles, compilations and the rest, with each song listed once (deluxe editions, remasters and repeats on singles fold into the original). Live albums, remixes and alternate versions stay out unless you tick the box. Cover art from the Cover Art Archive. Importing again only adds what’s new; checkmarks and ratings never move. Radiohead’s hand-typed B-side lists can be swapped for the verified list in one tap.'},
@@ -552,6 +556,7 @@ const RADIOHEAD=[
 ];
 
 function seedAll(){
+  S.pendingR=S.pendingR||{};
   const aid=sid('artist','radiohead');
   let a=S.music.find(x=>x.id===aid);
   if(!a&&!S.flags.rhDeleted){a={id:aid,name:'Radiohead',groups:[]};S.music.push(a)}
@@ -576,6 +581,7 @@ function seedAll(){
   /* imported artists: fold back anything that duplicates a MusicBrainz song
      (an older copy of the app re-adding the hand-typed lists, say) */
   S.music.forEach(x=>{if(x.mbid)mbTidy(x)});
+  S.music.forEach(x=>applyPending(x));
   save();
 }
 
@@ -798,9 +804,12 @@ function mbMerge(art,incoming,versions,tidy){
     for(const i of g.items){const k=mbItemKey(i);if(placed.has(k))continue;placed.add(k);
       const id=idFor(k);
       if(mbMarked(id)||(tidy&&g.src==='kept'))kept.push({id,title:i.title,k});else dropped++}}
+  const oldR=a.groups.map(g=>[nTitle(g.title),rating(g.id)]).filter(x=>x[1]);
   a.groups=[...groups,...manual];
   if(kept.length)a.groups.push({id:sid(a.id,'kept'),src:'kept',title:'Kept from your earlier list',year:'—',kind:'Not in the MusicBrainz import',items:kept});
   a.mbid=art.id;if(!tidy){a.name=art.name;a.mbVersions=!!versions;a.mbAt=Date.now()}
+  for(const g of a.groups){if(rating(g.id))continue;const o=oldR.find(x=>x[0]===nTitle(g.title));if(o)S.marks[g.id]={...(S.marks[g.id]||{}),r:o[1]}}
+  applyPending(a);
   const all=groups.flatMap(g=>g.items),kinds={};groups.forEach(g=>kinds[g.kind]=(kinds[g.kind]||0)+1);
   return{aid:a.id,name:a.name,kinds,songs:all.length,added:all.filter(i=>!before.has(i.id)).length,kept:kept.length,dropped};
 }
@@ -873,6 +882,111 @@ function mbSide(){
   else if(MBX.results)h+=`<div class="mbres" role="list">${MBX.results.map((x,k)=>`<button type="button" class="mbhit" role="listitem" data-act="mbpick" data-i="${k}"><b>${esc(x.name)}${k===0?'<span class="tag">Best match</span>':''}</b><span class="mbsub">${esc([x.dis,x.type,x.country,x.begin&&'since '+x.begin].filter(Boolean).join(' · ')||'No details on MusicBrainz')}</span></button>`).join('')}</div>`;
   return h;
 }
+
+/* ---------- Rate Your Music album ratings ----------
+   RYM's export is one row per rated release (ratings already run 1-10). Each
+   rating goes onto the matching album or EP here; anything not here yet waits in
+   S.pendingR and fills in the moment that artist is imported. Matching is by
+   artist and title, never by year: RYM often carries a reissue date. */
+const RATEABLE=['Studio album','EP','Live','Compilation','Other'];
+const RYX={err:'',report:null};
+const decodeEnt=x=>{const t=document.createElement('textarea');t.innerHTML=x;return t.value};
+const nrm=x=>decodeEnt(String(x)).normalize('NFKD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/&/g,' and ').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+const nArtist=x=>nrm(x).replace(/^the /,'');
+const nTitle=x=>nrm(String(x).replace(/\s*[\(\[][^)\]]*(deluxe|remaster|edition|version|anniversary|expanded)[^)\]]*[\)\]]/ig,''));
+function parseCSV(t){
+  t=t.replace(/^﻿/,'');const rows=[];let row=[],f='',q=false;
+  for(let i=0;i<t.length;i++){const c=t[i];
+    if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+    else if(c==='"')q=true;
+    else if(c===','){row.push(f);f=''}
+    else if(c==='\n'||c==='\r'){if(c==='\r'&&t[i+1]==='\n')i++;row.push(f);f='';if(row.length>1||row[0]!=='')rows.push(row);row=[]}
+    else f+=c}
+  if(f!==''||row.length){row.push(f);rows.push(row)}
+  return rows;
+}
+function rymEntries(text){
+  const rows=parseCSV(text);if(rows.length<2)throw new Error('shape');
+  const H=rows[0].map(h=>h.trim().toLowerCase()),ix=n=>H.indexOf(n);
+  if(['title','rating','last name'].some(n=>ix(n)<0))throw new Error('shape');
+  const get=(r,n)=>ix(n)<0?'':String(r[ix(n)]||'').trim();
+  const by=new Map();let zero=0;
+  for(const r of rows.slice(1)){
+    const title=decodeEnt(get(r,'title')),rate=parseFloat(get(r,'rating'));
+    if(!title)continue;
+    if(!(rate>0)){zero++;continue}
+    const prim=decodeEnt([get(r,'first name'),get(r,'last name')].filter(Boolean).join(' ')),br=prim.match(/\[(.+)\]\s*$/);
+    const fl=get(r,'first name localized'),ll=get(r,'last name localized');
+    const display=br?br[1]:prim;
+    const names=[...new Set([display,prim,fl&&ll?fl+' '+ll:'',fl&&ll?ll+' '+fl:'',ll].filter(Boolean).map(nArtist))];
+    const key=nArtist(display)+'|'+nTitle(title),yr=parseInt(get(r,'release_date'))||9999;
+    const e={key,a:display,t:title,r:Math.min(10,rate),n:names,yr};
+    const o=by.get(key);if(!o)by.set(key,{...e,dups:[]});
+    else{const keep=e.yr<o.yr?e:o,drop=keep===e?o:e;
+      by.set(key,{...keep,dups:[...o.dups,...(drop.r!==keep.r?[drop.r]:[])]})}
+  }
+  return{list:[...by.values()],zero};
+}
+const pendingFor=a=>{const k=nArtist(a.name);return Object.entries(S.pendingR||{}).filter(([,p])=>p.n.includes(k))};
+function rymGroup(a,tk){return a.groups.find(g=>RATEABLE.includes(g.kind)&&nTitle(g.title)===tk)}
+/* ratings that were waiting for this artist's albums land on them now */
+function applyPending(a){
+  let n=0;
+  for(const [key,p] of pendingFor(a)){
+    const g=rymGroup(a,key.split('|')[1]);if(!g)continue;
+    if(!rating(g.id)){S.marks[g.id]={...(S.marks[g.id]||{}),r:p.r};n++}
+    delete S.pendingR[key];
+  }
+  return n;
+}
+function rymImport(text){
+  RYX.err='';RYX.report=null;
+  try{
+    const {list,zero}=rymEntries(text);
+    S.pendingR=S.pendingR||{};
+    const rp={total:list.length,zero,filled:0,same:0,kept:[],waiting:[],notFound:[],dups:[]};
+    for(const e of list){
+      if(e.dups.length)rp.dups.push(e.a+' – '+e.t+': kept '+fmt(e.r)+' (also '+e.dups.map(fmt).join(', ')+')');
+      const a=S.music.find(x=>e.n.includes(nArtist(x.name)));
+      const g=a&&rymGroup(a,e.key.split('|')[1]);
+      if(g){
+        const cur=rating(g.id);delete S.pendingR[e.key];
+        if(!cur){S.marks[g.id]={...(S.marks[g.id]||{}),r:e.r};rp.filled++}
+        else if(cur===e.r)rp.same++;
+        else rp.kept.push(e.a+' – '+e.t+': you have '+fmt(cur)+' here, RYM says '+fmt(e.r));
+      }else{
+        S.pendingR[e.key]={a:e.a,t:e.t,r:e.r,n:e.n};
+        (a?rp.notFound:rp.waiting).push(e);
+      }
+    }
+    RYX.report=rp;touch();
+  }catch(err){
+    RYX.err=err.message==='shape'?'That does not look like a Rate Your Music export (it needs Title, Rating and name columns). Nothing was changed.':'Could not read that file. Nothing was changed.';
+  }
+  render();
+}
+function rymReport(){
+  const r=RYX.report,cnt=(n,w)=>n+' '+w+(n===1?'':'s');
+  const byArtist=l=>{const m={};l.forEach(e=>m[e.a]=(m[e.a]||0)+1);return Object.entries(m).sort((x,y)=>y[1]-x[1]||x[0].localeCompare(y[0])).map(([k,v])=>esc(k)+' ('+v+')').join(', ')};
+  let h=`<div class="mbok rymrep" role="status"><span><b>${cnt(r.total,'rated album')}</b> in your file. ${r.filled} filled in now${r.same?', '+r.same+' already matched':''}.</span>`;
+  if(r.waiting.length)h+=`<span>${r.waiting.length} are for artists you have not imported yet. They fill in by themselves when you import that artist.</span><details><summary>Which artists</summary><p class="note">${byArtist(r.waiting)}</p></details>`;
+  if(r.notFound.length)h+=`<span>${r.notFound.length} are for artists you have, but I could not find the album under the same name.</span><details><summary>Which albums</summary><ul>${r.notFound.map(e=>'<li>'+esc(e.a+' – '+e.t)+'</li>').join('')}</ul></details>`;
+  if(r.kept.length)h+=`<span>${cnt(r.kept.length,'rating')} here already differed, so I kept yours.</span><details><summary>Which</summary><ul>${r.kept.map(x=>'<li>'+esc(x)+'</li>').join('')}</ul></details>`;
+  if(r.dups.length)h+=`<details><summary>${cnt(r.dups.length,'album')} appeared twice in your file</summary><ul>${r.dups.map(x=>'<li>'+esc(x)+'</li>').join('')}</ul><p class="note">I used the earliest release.</p></details>`;
+  if(r.zero)h+=`<span class="note">${cnt(r.zero,'row')} had no rating (singles and the like) and were skipped.</span>`;
+  return h+'</div>';
+}
+function rymSide(){
+  const n=Object.keys(S.pendingR||{}).length;
+  let h=`<div class="add"><span class="label">Import ratings from Rate Your Music</span>
+    <p class="note">Pick the CSV you exported from RYM. Album and EP ratings land on the releases you already have here; the rest wait for that artist.</p>
+    <div><label class="btn primary" for="rym-file">Choose CSV file</label><input type="file" id="rym-file" accept=".csv,text/csv,text/plain" hidden></div>`;
+  if(RYX.err)h+=`<p class="mberr" role="alert">${esc(RYX.err)}</p>`;
+  if(RYX.report)h+=rymReport();
+  else if(n)h+=`<p class="note">${cnt0(n)} waiting for their artist to be imported.</p>`;
+  return h+'</div>';
+}
+const cnt0=n=>n+' rating'+(n===1?'':'s');
 
 /* ---------- UI state ---------- */
 let S=load();seedAll();
@@ -980,6 +1094,7 @@ function render(){
         return `<button class="entry" data-act="sel" data-id="${x.id}" aria-current="${e&&e.id===x.id}"><span class="n">${esc(x.name||x.title)}${x.example?'<span class="ex">Example</span>':''}</span><span class="p">${pct(ids)}%</span></button>`}).join('')||'<p class="note">Nothing here yet.</p>'}</div>
       ${UI.tab==='music'?`
       ${mbSide()}
+      ${rymSide()}
       <form class="add" data-form="artist">
         <label class="label" for="new-artist">Or add an artist by hand</label>
         <input id="new-artist" name="name" placeholder="e.g. Thom Yorke" required>
@@ -1032,7 +1147,6 @@ function delBtn(id,label){const armed=UI.armed===id;return `<button class="btn d
 /* Albums and EPs (and live/compilation albums) get an overall rating; singles and
    the other odds and ends do not. The rating lives in marks under the release's own
    ID, so it syncs and survives a re-import like song ratings do. */
-const RATEABLE=['Studio album','EP','Live','Compilation'];
 function albumRate(g){
   if(!RATEABLE.includes(g.kind))return '';
   const rs=g.items.map(i=>rating(i.id)).filter(Boolean),n=rs.length,r=rating(g.id);
@@ -1169,6 +1283,8 @@ document.addEventListener('click',ev=>{
 document.addEventListener('change',ev=>{
   if(ev.target.id==='new-type'){UI.addType=ev.target.value;render();return}
   if(ev.target.id==='mb-ver'){MBX.versions=ev.target.checked;return}
+  if(ev.target.id==='rym-file'){const f=ev.target.files&&ev.target.files[0];ev.target.value='';
+    if(f)f.text().then(rymImport).catch(()=>{RYX.err='Could not read that file. Nothing was changed.';RYX.report=null;render()});return}
 });
 
 document.addEventListener('submit',ev=>{
