@@ -2,7 +2,7 @@
    The page itself is network-first so updates show up right away;
    icons and the manifest are cache-first. Sync requests to the Worker
    are cross-origin and pass straight through. */
-const CACHE = 'playback-2026.10.23-e';   // keep in step with BUILD in index.html
+const CACHE = 'playback-2026.10.24-a';   // keep in step with BUILD in index.html
 const V = '?v=20261021a';
 const SHELL = ['./', './index.html', './manifest.webmanifest' + V, './icon-192.png' + V, './icon-512.png' + V, './icon-maskable-512.png' + V, './apple-touch-icon.png' + V, './favicon-32.png' + V];
 
