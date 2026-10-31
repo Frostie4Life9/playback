@@ -716,6 +716,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.10.31-a', note:'SONG RATINGS FROM RATE YOUR MUSIC: RYM\u2019s file only has album ratings, so there is now a helper for Tampermonkey on your computer. Open your album pages on RYM (a batch of tabs at a time) and each one saves your song ratings; back on the Music tab, tap Import song ratings. Albums that came in from the file with no songs get RYM\u2019s tracklist, and a later MusicBrainz import keeps those ratings. A song rating you already set here is never overwritten. The helper never loads RYM pages by itself.'},
   {v:'2026.10.24-a', note:'IDEAS BUTTON: a lightbulb in the top bar opens a list for writing down features you want in this app. Tick them off or delete them. They save on this device and sync in the background, so Claude can read them. On a narrow computer window the tabs other than the current app show just their icons so the button fits.'},
   {v:'2026.10.23-e', note:'YOUR RATED ARTISTS COME IN: importing your Rate Your Music file now also adds every artist you were missing, with just the albums you rated and those ratings already on them. They have no songs yet; tap Find on MusicBrainz on an artist to fill in the full tracklists, and your album ratings stay put.'},
   {v:'2026.10.23-d', note:'IMPORT YOUR RATE YOUR MUSIC RATINGS: on the Music tab, pick the CSV you exported from RYM and your album and EP ratings go onto the matching releases. Ratings for artists you have not imported yet are held and fill in by themselves the moment you import that artist. A rating you already set here is never overwritten, and the summary lists anything it could not place.'},
@@ -1206,6 +1207,78 @@ function rymSide(){
 }
 const cnt0=n=>n+' rating'+(n===1?'':'s');
 
+/* ---------- Rate Your Music song ratings ----------
+   RYM's CSV export has no song ratings, so a small Tampermonkey script
+   (rym-helper.user.js in this repo) reads them off the album pages you open on
+   RYM and queues them. It hands the queue over with postMessage; anything that
+   lands goes back as "done" and leaves the queue, the rest waits for that artist
+   or album to be here. A song rating you already set is never overwritten. */
+const RTX={bridge:false,queue:[],report:null};
+const HELPER_URL='https://frostie4life9.github.io/playback/rym-helper.user.js';
+const rtClean=x=>{                        /* the queue comes from outside the app: check every field */
+  if(!x||typeof x!=='object'||typeof x.url!=='string'||!/^https:\/\/rateyourmusic\.com\/release\//.test(x.url))return null;
+  const str=(v,n)=>typeof v==='string'?v.slice(0,n):'';
+  const artists=(Array.isArray(x.artists)?x.artists:[]).map(a=>str(a,200)).filter(Boolean).slice(0,10);
+  const tracks=(Array.isArray(x.tracks)?x.tracks:[]).map(t=>({t:str(t&&t.t,300),r:Math.round(Math.min(10,Math.max(0,+(t&&t.r)||0))*2)/2})).filter(t=>t.t&&t.r>0).slice(0,200);
+  const title=str(x.title,300);
+  if(!title||!artists.length||!tracks.length)return null;
+  return{url:x.url,title,artists,tracks,tracklist:(Array.isArray(x.tracklist)?x.tracklist:[]).map(t=>str(t,300)).filter(Boolean).slice(0,200)};
+};
+window.addEventListener('message',e=>{
+  if(e.source!==window||e.origin!==location.origin)return;
+  const d=e.data;if(!d||d.src!=='rym-bridge'||d.type!=='queue'||!Array.isArray(d.items))return;
+  RTX.bridge=true;RTX.queue=d.items.map(rtClean).filter(Boolean);
+  if(UI.tab==='music')render();
+});
+const rtAsk=()=>window.postMessage({src:'playback',type:'ask'},location.origin);
+setTimeout(rtAsk,300);setTimeout(rtAsk,2000);           /* the helper loads after the page */
+function rtArtist(names){const ns=names.map(nArtist);return S.music.find(x=>ns.includes(nArtist(x.name)))}
+function rtGroup(a,title){const k=nTitle(title),hits=a.groups.filter(g=>nTitle(g.title)===k);return hits.find(g=>RATEABLE.includes(g.kind))||hits[0]}
+function rtImport(){
+  const rp={albums:0,filled:0,same:0,kept:[],missing:[],songs:[],made:0},done=[];
+  for(const e of RTX.queue){
+    const a=rtArtist(e.artists),g=a&&rtGroup(a,e.title);
+    if(!g){rp.missing.push(e.artists[0]+' – '+e.title+(a?' (album not found under '+a.name+')':' (artist not here yet)'));continue}
+    /* an album that came in from the CSV has no songs yet: give it RYM's tracklist,
+       with the same song IDs a later MusicBrainz import uses, so nothing doubles */
+    if(!g.items.length){
+      const seen=new Map();a.groups.forEach(x=>x.items.forEach(i=>seen.set(mbItemKey(i),i.id)));
+      for(const t of (e.tracklist.length?e.tracklist:e.tracks.map(x=>x.t))){const k=mbKeyOf(t);if(!k||seen.has(k))continue;
+        const id=sid(a.id,'song',k);seen.set(k,id);g.items.push({id,title:t,k});rp.made++}
+    }
+    const byKey=new Map();g.items.forEach(i=>byKey.set(mbItemKey(i),i));
+    const other=new Map();a.groups.forEach(x=>x.items.forEach(i=>{const k=mbItemKey(i);if(!other.has(k))other.set(k,i)}));
+    for(const t of e.tracks){
+      const i=byKey.get(mbKeyOf(t.t))||other.get(mbKeyOf(t.t));
+      if(!i){rp.songs.push(e.artists[0]+' – '+e.title+': '+t.t);continue}
+      const cur=rating(i.id);
+      if(!cur){S.marks[i.id]={...(S.marks[i.id]||{}),r:t.r};rp.filled++}
+      else if(cur===t.r)rp.same++;
+      else rp.kept.push(i.title+': you have '+fmt(cur)+' here, RYM says '+fmt(t.r));
+    }
+    rp.albums++;done.push(e.url);
+  }
+  RTX.report=rp;
+  if(done.length){RTX.queue=RTX.queue.filter(e=>!done.includes(e.url));window.postMessage({src:'playback',type:'done',urls:done},location.origin);touch()}
+}
+function rtSide(){
+  const cnt=(n,w)=>n+' '+w+(n===1?'':'s');
+  let h=`<div class="add"><span class="label">Song ratings from Rate Your Music</span>`;
+  if(!RTX.bridge)h+=`<p class="note">RYM's file has no song ratings. On a computer, install the Playback RYM helper in Tampermonkey, then open your album pages on RYM; each one you open is saved for here. It never loads pages on its own.</p>
+    <div><a class="btn" href="${HELPER_URL}" target="_blank" rel="noopener">Install the helper</a></div>`;
+  else if(!RTX.queue.length)h+=`<p class="note">The helper is on. Open your album pages on RYM, 10 to 15 tabs at a time, and they will wait here.</p>`;
+  else{const n=RTX.queue.reduce((x,e)=>x+e.tracks.length,0);
+    h+=`<p class="note">${cnt(RTX.queue.length,'album')} waiting, ${cnt(n,'song rating')}.</p><div><button class="btn primary" data-act="rtimport">Import song ratings</button></div>`}
+  const r=RTX.report;
+  if(r){h+=`<div class="mbok rymrep" role="status"><span><b>${r.filled} song rating${r.filled===1?'':'s'}</b> filled in across ${cnt(r.albums,'album')}${r.same?', '+r.same+' already matched':''}.</span>`;
+    if(r.made)h+=`<span>${cnt(r.made,'song')} added from RYM's tracklists to albums that had none yet.</span>`;
+    if(r.kept.length)h+=`<details><summary>${cnt(r.kept.length,'rating')} differed, so I kept yours</summary><ul>${r.kept.map(x=>'<li>'+esc(x)+'</li>').join('')}</ul></details>`;
+    if(r.songs.length)h+=`<details><summary>${cnt(r.songs.length,'song')} not found on the album here</summary><ul>${r.songs.map(x=>'<li>'+esc(x)+'</li>').join('')}</ul></details>`;
+    if(r.missing.length)h+=`<details><summary>${cnt(r.missing.length,'album')} still waiting</summary><ul>${r.missing.map(x=>'<li>'+esc(x)+'</li>').join('')}</ul><p class="note">Import that artist (or the RYM file) and tap Import again.</p></details>`;
+    h+='</div>'}
+  return h+'</div>';
+}
+
 /* ---------- UI state ---------- */
 let S=load();seedAll();
 if(!S.flags.r10){for(const k in S.marks){if(S.marks[k].r)S.marks[k].r=S.marks[k].r*2}S.flags.r10=true;save()}
@@ -1313,6 +1386,7 @@ function render(){
       ${UI.tab==='music'?`
       ${mbSide()}
       ${rymSide()}
+      ${rtSide()}
       <form class="add" data-form="artist">
         <label class="label" for="new-artist">Or add an artist by hand</label>
         <input id="new-artist" name="name" placeholder="e.g. Thom Yorke" required>
@@ -1454,6 +1528,7 @@ document.addEventListener('click',ev=>{
   else if(act==='go'){UI.tab=b.dataset.tab;UI.sel[UI.tab]=id;UI.filter='all'}
   else if(act==='filter'){UI.filter=b.dataset.v}
   else if(act==='tog'){S.marks[id]={...(S.marks[id]||{}),done:!isDone(id)};touch()}
+  else if(act==='rtimport'){rtImport()}
   else if(act==='rymadd'){const r=rymAddWaiting();RYX.report={total:r.albums,zero:0,filled:0,same:0,kept:[],waiting:[],notFound:[],dups:[],added:r};touch()}
   else if(act==='rate'){const v=+b.dataset.v;S.marks[id]={...(S.marks[id]||{}),r:rating(id)===v?0:v};touch()}
   else if(act==='grpall'){const a=S.music.find(x=>x.id===b.dataset.a),g=a.groups.find(x=>x.id===b.dataset.g),full=g.items.every(i=>isDone(i.id));
