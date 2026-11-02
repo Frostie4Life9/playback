@@ -165,9 +165,6 @@ textarea{min-height:110px;resize:vertical;font-size:14px}
 @media (pointer:coarse){.dot{width:18px;height:18px}.dots{gap:4px}}
 @media (max-width:560px){.track{grid-template-columns:28px 26px minmax(0,1fr)}.track .rate{grid-column:3}}
 
-.eps{display:flex;flex-wrap:wrap;gap:6px}
-.ep{font:500 12px var(--mono);border:1px solid var(--line);background:transparent;border-radius:6px;padding:6px 8px;min-width:58px;font-variant-numeric:tabular-nums}
-.ep[aria-pressed="true"]{background:var(--done-soft);border-color:var(--done);color:var(--done)}
 
 details.more{border-top:1px solid var(--line);padding-top:12px}
 details.more summary{cursor:pointer;font-weight:600;color:var(--accent)}
@@ -727,6 +724,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.02-b', note:'RATE EPISODES ONE BY ONE: on a show, each episode is now its own row with a checkmark and a 1\u201310 rating, like songs on an album. Each season still has its own overall rating, and next to it you see the average of the episodes you rated and how far your season rating is above or below it. The show header counts how many episodes you have rated.'},
   {v:'2026.11.02-a', note:'SHOWS AND FILMS FROM TMDB: on the Screen tab, search The Movie Database and tap a result. Shows come in with their poster and every season, counting only the episodes that are out, plus the date of the next one. Films get their poster, year and runtime. It needs a free TMDB key once (the steps are on the Screen tab), and it syncs to your other devices. Shows still airing check for new episodes by themselves once a day, or tap Check for new episodes. Shows you added by hand can be linked with Find on TMDB, and every checkmark and rating stays.'},
   {v:'2026.10.31-a', note:'SONG RATINGS FROM RATE YOUR MUSIC: RYM\u2019s file only has album ratings, so there is now a helper for Tampermonkey on your computer. Open your album pages on RYM (a batch of tabs at a time) and each one saves your song ratings; back on the Music tab, tap Import song ratings. Albums that came in from the file with no songs get RYM\u2019s tracklist, and a later MusicBrainz import keeps those ratings. A song rating you already set here is never overwritten. The helper never loads RYM pages by itself.'},
   {v:'2026.10.24-a', note:'IDEAS BUTTON: a lightbulb in the top bar opens a list for writing down features you want in this app. Tick them off or delete them. They save on this device and sync in the background, so Claude can read them. On a narrow computer window the tabs other than the current app show just their icons so the button fits.'},
@@ -1694,18 +1692,32 @@ function mbArtistBar(a){
   return h;
 }
 
+/* Each episode gets its own 1\u201310 rating, like songs. The season keeps its own
+   overall rating too, shown beside the average of the episodes you rated, the same
+   way albums sit beside their song average. Episode ratings live in marks under the
+   episode ID, so they sync and survive a TMDB refresh. */
+function seasonRate(sk,sids){
+  const rs=sids.map(rating).filter(Boolean),n=rs.length,r=rating(sk);
+  const avg=n?rs.reduce((x,y)=>x+y,0)/n:0,d=r&&n?r-avg:null,f1=v=>v.toFixed(1);
+  return `<div class="arate"><span class="label">Your season rating</span>${rateDots(sk)}
+    <span class="avg">${n?'Episode average '+f1(avg)+' <span class="of">('+n+' of '+sids.length+' rated)</span>':'No episodes rated yet'}</span>
+    ${d===null?'':`<span class="diff ${Math.abs(d)<.05?'even':d>0?'up':'down'}">${Math.abs(d)<.05?'Same as the episodes':(d>0?'+':'\u2212')+f1(Math.abs(d))+' vs the episodes'}</span>`}</div>`}
+
 function showView(s){
   const ids=epIds(s),p=pct(ids),done=ids.filter(isDone).length;
-  const out=s.seasons.filter(se=>se.eps).length;
+  const out=s.seasons.filter(se=>se.eps).length,rated=ids.filter(i=>rating(i)).length;
   return `<div class="head">${tmPoster(s)}<div class="ring" style="--p:${p}"><span>${p}%</span></div>
-    <div class="meta"><h2>${esc(s.title)}${s.example?'<span class="ex">Example</span>':''}</h2><span class="mono">${s.year?esc(s.year)+' · ':''}${done} of ${ids.length} episodes watched · ${out} season${out===1?'':'s'}</span>
+    <div class="meta"><h2>${esc(s.title)}${s.example?'<span class="ex">Example</span>':''}</h2><span class="mono">${s.year?esc(s.year)+' · ':''}${done} of ${ids.length} episodes watched · ${rated} rated · ${out} season${out===1?'':'s'}</span>
       ${s.next&&s.next.d?`<span class="note airs">Next: ${sxe(s.next.n,s.next.e)} on ${esc(tmDay(s.next.d))}</span>`:''}</div></div>
     ${tmBar(s)}
     ${s.seasons.map(se=>{const sids=Array.from({length:se.eps},(_,k)=>sid(s.id,'s',se.n,'e',k+1)),sd=sids.filter(isDone).length,sk=sid(s.id,'s',se.n),more=(se.total||0)-se.eps;
       if(!se.eps)return `<div class="group"><div class="ghead"><h3>Season ${se.n}</h3><span class="sp"></span><span class="label">Not out yet${se.total?' · '+se.total+' episode'+(se.total===1?'':'s')+' planned':''}</span></div></div>`;
-      return `<div class="group"><div class="ghead"><h3>Season ${se.n}</h3><span class="sp"></span>${more>0?`<span class="label">${more} more coming</span>`:''}<span class="mono">${sd}/${se.eps}</span>${rateDots(sk)}
+      return `<div class="group"><div class="ghead"><h3>Season ${se.n}</h3><span class="sp"></span>${more>0?`<span class="label">${more} more coming</span>`:''}<span class="mono">${sd}/${se.eps}</span><span class="bar"><i style="width:${sd/se.eps*100}%"></i></span>
         <button class="link" data-act="seasonall" data-s="${s.id}" data-n="${se.n}">${sd===se.eps?'Clear':'Mark season watched'}</button></div>
-        <div class="eps">${sids.map((id,k)=>`<button class="ep" data-act="tog" data-id="${id}" aria-pressed="${isDone(id)}">${sxe(se.n,k+1)}</button>`).join('')}</div></div>`}).join('')}
+        ${seasonRate(sk,sids)}
+        ${sids.map((id,k)=>`<div class="track ${isDone(id)?'done':''}"><span class="num">${k+1}</span>
+          <button class="check" data-act="tog" data-id="${id}" aria-pressed="${isDone(id)}" aria-label="Watched ${sxe(se.n,k+1)}"></button>
+          <span class="ttl mono">${sxe(se.n,k+1)}</span>${rateDots(id)}</div>`).join('')}</div>`}).join('')}
     ${s.tmdb?'':`<details class="more"><summary>Add a season</summary>
       <form data-form="season" data-s="${s.id}"><input id="season-eps" name="eps" type="number" min="1" max="200" placeholder="Number of episodes" required><button class="btn primary">Add season ${s.seasons.length+1}</button></form></details>`}
     <div>${delBtn(s.id,'Delete show')}</div>`;
