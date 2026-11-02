@@ -133,6 +133,17 @@ textarea{min-height:110px;resize:vertical;font-size:14px}
 .mbsrc{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}
 .mbsrc.warn{flex-direction:column;align-items:flex-start;border:1px dashed var(--line);border-radius:10px;padding:12px}
 .mbsrc.warn .note{margin:0}
+/* TMDB (Screen tab) */
+.tmhit{flex-direction:row;align-items:center;gap:10px}
+.tmhit img,.tmhit>span:first-child:empty{width:34px;height:51px;border-radius:4px;object-fit:cover;background:var(--sunk);flex:0 0 auto;box-shadow:0 0 0 1px var(--line)}
+.tmhit>span:last-child{display:flex;flex-direction:column;gap:1px;min-width:0}
+.tmhit i{font-style:normal;color:var(--accent)}
+.mbhit:disabled{opacity:.6}
+.poster{width:62px;height:93px;border-radius:6px;object-fit:cover;background:var(--sunk);flex:0 0 auto;box-shadow:0 0 0 1px var(--line)}
+.steps{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.steps a,.tmcredit a{color:var(--accent)}
+.tmcredit{font-size:12px;margin:0}
+.airs{color:var(--accent);font-weight:600}
 
 .track{display:grid;grid-template-columns:28px 26px minmax(0,1fr) auto;align-items:center;gap:8px;padding:5px 4px;border-radius:6px}
 .track:hover{background:var(--bg)}
@@ -716,6 +727,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.02-a', note:'SHOWS AND FILMS FROM TMDB: on the Screen tab, search The Movie Database and tap a result. Shows come in with their poster and every season, counting only the episodes that are out, plus the date of the next one. Films get their poster, year and runtime. It needs a free TMDB key once (the steps are on the Screen tab), and it syncs to your other devices. Shows still airing check for new episodes by themselves once a day, or tap Check for new episodes. Shows you added by hand can be linked with Find on TMDB, and every checkmark and rating stays.'},
   {v:'2026.10.31-a', note:'SONG RATINGS FROM RATE YOUR MUSIC: RYM\u2019s file only has album ratings, so there is now a helper for Tampermonkey on your computer. Open your album pages on RYM (a batch of tabs at a time) and each one saves your song ratings; back on the Music tab, tap Import song ratings. Albums that came in from the file with no songs get RYM\u2019s tracklist, and a later MusicBrainz import keeps those ratings. A song rating you already set here is never overwritten. The helper never loads RYM pages by itself.'},
   {v:'2026.10.24-a', note:'IDEAS BUTTON: a lightbulb in the top bar opens a list for writing down features you want in this app. Tick them off or delete them. They save on this device and sync in the background, so Claude can read them. On a narrow computer window the tabs other than the current app show just their icons so the button fits.'},
   {v:'2026.10.23-e', note:'YOUR RATED ARTISTS COME IN: importing your Rate Your Music file now also adds every artist you were missing, with just the albums you rated and those ratings already on them. They have no songs yet; tap Find on MusicBrainz on an artist to fill in the full tracklists, and your album ratings stay put.'},
@@ -802,6 +814,7 @@ function upNext(){
     let found=null;
     for(const se of s.seasons){for(let e=1;e<=se.eps;e++){if(!isDone(sid(s.id,'s',se.n,'e',e))){found=[se.n,e];break}}if(found)break}
     if(found)out.push({tab:'screen',id:s.id,t:s.title,s:sxe(found[0],found[1])+' is next'});
+    else if(s.next&&s.next.d&&s.next.d>=new Date().toISOString().slice(0,10))out.push({tab:'screen',id:s.id,t:s.title,s:sxe(s.next.n,s.next.e)+' out '+tmDay(s.next.d)});
   }
   return out;
 }
@@ -1279,6 +1292,201 @@ function rtSide(){
   return h+'</div>';
 }
 
+/* ---------- TMDB for the Screen tab ----------
+   Search shows and films on The Movie Database and bring in the poster, year,
+   seasons and episode counts. The TMDB key lives in the log (S.cfg.tmdb), so it
+   reaches the other devices through the playback-sync Worker and never sits in
+   this public repo.
+   Episode IDs come from show ID + season + episode number, exactly like shows
+   added by hand, so importing over a hand-added show keeps every checkmark.
+   Only aired episodes are counted (an airing season would otherwise sit below
+   100% for episodes that don't exist yet). "Check for new episodes", plus a
+   quiet once-a-day check of shows still airing, adds them as they come out.
+   Specials (season 0) stay out. An episode that is checked or rated is never
+   dropped, even if TMDB's count goes down. */
+const TM_API='https://api.themoviedb.org/3/',TM_IMG='https://image.tmdb.org/t/p/';
+const TMX={q:'',results:null,searching:false,busy:false,err:'',errWhere:'side',report:'',sid:null,keyOpen:false,keyErr:'',keyBusy:false,auto:false};
+const tmKey=()=>(S.cfg&&S.cfg.tmdb)||'';
+function TMError(code,status){const e=new Error(code);e.code=code;e.status=status;return e}
+async function tmGet(path,params,key){
+  key=key||tmKey();if(!key)throw TMError('nokey');
+  const u=new URL(TM_API+path);Object.entries(params||{}).forEach(([k,v])=>u.searchParams.set(k,v));
+  const h={accept:'application/json'};
+  if(/^eyJ/.test(key))h.authorization='Bearer '+key;else u.searchParams.set('api_key',key);   /* read access token or v3 key */
+  let r;try{r=await fetch(u,{headers:h})}catch(e){throw TMError(navigator.onLine===false?'offline':'network')}
+  if(r.status===401)throw TMError('badkey',401);
+  if(r.status===404)throw TMError('gone',404);
+  if(r.status===429)throw TMError('busy',429);
+  if(!r.ok)throw TMError('http',r.status);
+  return r.json();
+}
+function tmMessage(e,q){
+  switch(e.code){
+    case 'nokey':return 'Add your TMDB key first.';
+    case 'badkey':return 'TMDB did not accept that key. Copy it again from themoviedb.org under Settings › API.';
+    case 'offline':return 'You look offline. Try again once you are connected.';
+    case 'network':return 'Could not reach TMDB. Check your connection and try again.';
+    case 'busy':return 'TMDB is asking for a short break. Try again in a few seconds.';
+    case 'nomatch':return 'Nothing on TMDB matches “'+q+'”. Try the original title or fewer words.';
+    case 'gone':return 'TMDB no longer has that title.';
+    default:return 'TMDB had a problem ('+(e.status||e.message)+'). Try again in a moment.';
+  }
+}
+const tmYear=d=>String(d||'').slice(0,4);
+const tmDay=d=>{const t=new Date(d+'T12:00:00');return isNaN(t)?'':t.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'})};
+
+/* the entry a TMDB title belongs to: already linked, or added by hand under the same title */
+function tmExisting(kind,tid,title,year){
+  return S.screen.find(x=>x.type===kind&&x.tmdb===tid)
+    ||S.screen.find(x=>x.type===kind&&!x.tmdb&&x.id===(kind==='show'?sid('show',title):sid('film',title,year||'')))
+    ||S.screen.find(x=>x.type===kind&&!x.tmdb&&nrm(x.title)===nrm(title)&&(!x.year||!year||x.year===year));
+}
+
+async function tmFetchShow(tid){
+  const j=await tmGet('tv/'+tid,{language:'en-US'});
+  const last=j.last_episode_to_air,nxt=j.next_episode_to_air,seasons=[];
+  for(const se of (j.seasons||[])){
+    const n=se.season_number;if(!(n>0))continue;
+    const total=se.episode_count||0;
+    const aired=!last?0:n<last.season_number?total:n===last.season_number?last.episode_number:0;
+    seasons.push({n,aired,total:Math.max(total,aired)});
+  }
+  return{title:j.name||j.original_name||'Untitled',year:tmYear(j.first_air_date),poster:j.poster_path||'',status:j.status||'',seasons,
+    next:nxt&&nxt.air_date?{n:nxt.season_number,e:nxt.episode_number,d:nxt.air_date}:null};
+}
+async function tmFetchFilm(tid){
+  const j=await tmGet('movie/'+tid,{language:'en-US'});
+  return{title:j.title||j.original_title||'Untitled',year:tmYear(j.release_date),poster:j.poster_path||'',runtime:j.runtime||0};
+}
+const tmMarked=id=>{const m=S.marks[id];return !!(m&&(m.done||m.r))};
+function tmMergeShow(tid,d){
+  let s=tmExisting('show',tid,d.title,d.year),isNew=false;
+  if(!s){let id=sid('show',d.title);if(S.screen.some(x=>x.id===id))id=sid('show',d.title,'tmdb',tid);
+    s={id,type:'show',title:d.title,year:d.year,seasons:[]};S.screen.push(s);isNew=true}
+  const before=epIds(s).length,old=new Map(s.seasons.map(x=>[x.n,x])),out=[];
+  const lastMarked=(n,upto)=>{for(let e=upto;e>0;e--)if(tmMarked(sid(s.id,'s',n,'e',e)))return e;return 0};
+  for(const t of d.seasons){const cur=old.get(t.n);old.delete(t.n);
+    out.push({n:t.n,eps:Math.max(t.aired,cur?lastMarked(t.n,cur.eps):0),total:t.total})}
+  for(const cur of old.values()){const k=lastMarked(cur.n,cur.eps);if(k)out.push({n:cur.n,eps:k})}   /* not on TMDB: kept only if you checked something */
+  s.seasons=out.sort((a,b)=>a.n-b.n);
+  Object.assign(s,{title:d.title,year:d.year||s.year||'',tmdb:tid,poster:d.poster,status:d.status,next:d.next,tmAt:Date.now()});
+  delete s.example;
+  return{sid:s.id,isNew,added:epIds(s).length-before};
+}
+function tmMergeFilm(tid,d){
+  let f=tmExisting('film',tid,d.title,d.year),isNew=false;
+  if(!f){let id=sid('film',d.title,d.year||'');if(S.screen.some(x=>x.id===id))id=sid('film',d.title,'tmdb',tid);
+    f={id,type:'film'};S.screen.push(f);isNew=true}
+  Object.assign(f,{title:d.title,year:d.year||f.year||'',tmdb:tid,poster:d.poster,runtime:d.runtime,tmAt:Date.now()});
+  delete f.example;
+  return{sid:f.id,isNew};
+}
+function tmShowReport(r,d){
+  const s=S.screen.find(x=>x.id===r.sid),n=epIds(s).length,seas=s.seasons.filter(x=>x.eps).length;
+  let t=r.isNew?`Added ${d.title}: ${seas} season${seas===1?'':'s'}, ${n} episode${n===1?'':'s'} out so far.`
+    :r.added>0?`${r.added} new episode${r.added===1?'':'s'} added to ${d.title}. Your checkmarks stayed put.`
+    :`${d.title} is up to date. Your checkmarks stayed put.`;
+  if(d.next)t+=` Next up: ${sxe(d.next.n,d.next.e)} on ${tmDay(d.next.d)}.`;
+  return t;
+}
+
+async function tmSearch(q){
+  if(TMX.searching||TMX.busy)return;
+  Object.assign(TMX,{q,err:'',report:'',results:null,searching:true,errWhere:'side'});render();
+  try{
+    const j=await tmGet('search/multi',{query:q,include_adult:'false',language:'en-US',page:'1'});
+    const list=(j.results||[]).filter(x=>x.media_type==='tv'||x.media_type==='movie').slice(0,8);
+    if(!list.length)throw TMError('nomatch');
+    TMX.results=list.map(x=>{const t=x.name||x.title||'Untitled',o=x.original_name||x.original_title||'';
+      return{id:x.id,kind:x.media_type==='tv'?'show':'film',title:t,year:tmYear(x.first_air_date||x.release_date),poster:x.poster_path||'',orig:o&&o!==t?o:''}});
+  }catch(e){TMX.err=tmMessage(e,q)}
+  TMX.searching=false;render();
+}
+async function tmImport(pick,where){
+  if(TMX.busy)return;
+  Object.assign(TMX,{busy:true,err:'',report:'',errWhere:where,sid:pick.sid||null});render();
+  try{
+    let r,txt;
+    if(pick.kind==='show'){const d=await tmFetchShow(pick.id);r=tmMergeShow(pick.id,d);txt=tmShowReport(r,d)}
+    else{const d=await tmFetchFilm(pick.id);r=tmMergeFilm(pick.id,d);txt=`${r.isNew?'Added':'Updated'} ${d.title}${d.year?' ('+d.year+')':''}.`}
+    touch();
+    UI.tab='screen';UI.sel.screen=r.sid;try{localStorage.setItem(KEY+'_tab','screen')}catch(e){}
+    Object.assign(TMX,{report:txt,results:null,q:'',errWhere:'sheet',sid:r.sid});
+  }catch(e){TMX.err=tmMessage(e,pick.title)}
+  finally{TMX.busy=false;render()}
+  if(window.innerWidth<=760){const el=document.querySelector('.sheet .mbok,.sheet .mberr');if(el)el.scrollIntoView({behavior:'smooth',block:'center'})}
+}
+/* once a day, quietly: shows that are still airing pick up new episodes */
+async function tmAutoRefresh(){
+  if(!tmKey()||TMX.busy||TMX.auto)return;
+  const due=S.screen.filter(s=>s.type==='show'&&s.tmdb&&!/^(Ended|Canceled)$/.test(s.status||'')&&Date.now()-(s.tmAt||0)>20*3600e3);
+  if(!due.length)return;
+  TMX.auto=true;let changed=false;
+  try{for(const s of due){
+    if(TMX.busy)break;
+    try{tmMergeShow(s.tmdb,await tmFetchShow(s.tmdb));changed=true}
+    catch(e){if(e.code!=='gone'&&e.code!=='http')break}
+  }}finally{TMX.auto=false}
+  if(changed){touch();render()}
+}
+async function tmSaveKey(k){
+  k=(k||'').trim();if(!k)return;
+  TMX.keyBusy=true;TMX.keyErr='';render();
+  try{await tmGet('configuration',{},k);S.cfg={...(S.cfg||{}),tmdb:k};TMX.keyOpen=false;touch()}
+  catch(e){TMX.keyErr=tmMessage(e)}
+  TMX.keyBusy=false;render();
+  if(tmKey()===k)tmAutoRefresh();
+}
+
+function tmSide(){
+  const key=tmKey();
+  const manual=`<details class="more"${key?'':' open'}><summary>Add by hand</summary>
+      <form class="add" data-form="screen" style="border:0;padding:0">
+        <select id="new-type" name="type" aria-label="Type">
+          <option value="show" ${UI.addType==='show'?'selected':''}>TV show</option>
+          <option value="film" ${UI.addType==='film'?'selected':''}>Film</option>
+        </select>
+        <div class="row2"><input id="new-title" name="title" placeholder="Title" required><input id="new-year" name="year" placeholder="Year" style="max-width:80px"></div>
+        ${UI.addType==='show'?'<input id="new-seasons" name="seasons" placeholder="Episodes per season, e.g. 9, 10" required>':''}
+        <button class="btn primary">Add</button>
+      </form></details>`;
+  if(!key||TMX.keyOpen)return `<form class="add" data-form="tmkey">
+      <span class="label">${key?'Change your TMDB key':'Search shows and films'}</span>
+      ${key?'<p class="note">Paste the new key. The old one stays until the new one checks out.</p>':`<p class="note">Seasons, episode counts and posters come from The Movie Database (TMDB). It needs a free key, once:</p>
+      <ol class="note steps"><li>Make a free account at <a href="https://www.themoviedb.org/signup" target="_blank" rel="noopener">themoviedb.org</a>.</li>
+        <li>Go to <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">Settings › API</a> and request a key (Developer, personal use).</li>
+        <li>Copy the <b>API Read Access Token</b> (the API key works too) and paste it here.</li></ol>`}
+      <input id="tm-key" name="key" type="password" autocomplete="off" placeholder="TMDB read access token or API key" required ${TMX.keyBusy?'disabled':''}>
+      <div class="tools"><button class="btn primary" ${TMX.keyBusy?'disabled':''}>${TMX.keyBusy?'Checking…':'Save key'}</button>${key?'<button type="button" class="btn" data-act="tmkeycancel">Cancel</button><button type="button" class="btn danger" data-act="tmkeydel">Remove key</button>':''}</div>
+      ${TMX.keyErr?`<p class="mberr" role="alert">${esc(TMX.keyErr)}</p>`:''}
+      <p class="note">It is saved with your log, so your other devices get it when they sync.</p>
+    </form>${key?'':manual}`;
+  let h=`<form class="add" data-form="tmsearch">
+      <label class="label" for="tm-q">Add a show or film</label>
+      <div class="row2"><input id="tm-q" name="q" placeholder="Search TMDB" value="${esc(TMX.q)}" required autocomplete="off" ${TMX.busy?'disabled':''}>
+        <button class="btn primary" ${TMX.searching||TMX.busy?'disabled':''}>${TMX.searching?'Searching…':'Search'}</button></div></form>`;
+  if(TMX.busy&&TMX.errWhere==='side')h+='<p class="note" role="status">Bringing it in…</p>';
+  if(TMX.err&&TMX.errWhere==='side')h+=`<p class="mberr" role="alert">${esc(TMX.err)}</p>`;
+  if(TMX.results)h+=`<div class="mbres" role="list">${TMX.results.map((x,k)=>{const have=tmExisting(x.kind,x.id,x.title,x.year);
+      return `<button type="button" class="mbhit tmhit" role="listitem" data-act="tmpick" data-i="${k}" ${TMX.busy?'disabled':''}>${x.poster?`<img src="${TM_IMG}w92${esc(x.poster)}" alt="" width="34" height="51" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'">`:'<span></span>'}<span><b>${esc(x.title)}${k===0?'<span class="tag">Best match</span>':''}</b><span class="mbsub">${esc([x.kind==='show'?'TV show':'Film',x.year,x.orig].filter(Boolean).join(' · '))}${have?' · <i>already here, tap to update</i>':''}</span></span></button>`}).join('')}
+      <div><button type="button" class="link" data-act="tmclear">Clear results</button></div></div>`;
+  h+=manual;
+  h+=`<p class="note tmcredit">Show and film data from <a href="https://www.themoviedb.org" target="_blank" rel="noopener">TMDB</a>. This app uses the TMDB API but is not endorsed or certified by TMDB. <button type="button" class="link" data-act="tmkeyedit">Change key</button></p>`;
+  return h;
+}
+/* where a show or film came from, and the button to refresh it */
+function tmBar(x){
+  let h='';
+  if(x.tmdb)h+=`<div class="mbsrc"><span class="label">From TMDB${x.tmAt?' · checked '+esc(new Date(x.tmAt).toLocaleDateString([],{month:'short',day:'numeric'})):''}${x.type==='show'&&x.status?' · '+esc(x.status):''}</span>${tmKey()?`<button class="link" data-act="tmrefresh" data-s="${x.id}" ${TMX.busy?'disabled':''}>${TMX.busy&&TMX.sid===x.id?'Checking…':x.type==='show'?'Check for new episodes':'Refresh from TMDB'}</button>`:''}</div>`;
+  else if(tmKey())h+=`<div class="mbsrc"><span class="label">${x.example?'Example':'Added by hand'}</span><button class="link" data-act="tmprefill" data-s="${x.id}" ${TMX.busy?'disabled':''}>Find on TMDB</button></div>`;
+  if(TMX.sid===x.id&&TMX.errWhere==='sheet'){
+    if(TMX.err)h+=`<p class="mberr" role="alert">${esc(TMX.err)}</p>`;
+    if(TMX.report)h+=`<p class="mbok" role="status">${esc(TMX.report)}<button class="link" data-act="tmdismiss">Got it</button></p>`;
+  }
+  return h;
+}
+const tmPoster=x=>x.poster?`<img class="poster" src="${TM_IMG}w154${esc(x.poster)}" alt="" width="62" height="93" decoding="async" onerror="this.remove()">`:'';
+
 /* ---------- UI state ---------- */
 let S=load();seedAll();
 if(!S.flags.r10){for(const k in S.marks){if(S.marks[k].r)S.marks[k].r=S.marks[k].r*2}S.flags.r10=true;save()}
@@ -1391,17 +1599,7 @@ function render(){
         <label class="label" for="new-artist">Or add an artist by hand</label>
         <input id="new-artist" name="name" placeholder="e.g. Thom Yorke" required>
         <button class="btn primary">Add artist</button>
-      </form>`:`
-      <form class="add" data-form="screen">
-        <span class="label">Add a show or film</span>
-        <select id="new-type" name="type" aria-label="Type">
-          <option value="show" ${UI.addType==='show'?'selected':''}>TV show</option>
-          <option value="film" ${UI.addType==='film'?'selected':''}>Film</option>
-        </select>
-        <div class="row2"><input id="new-title" name="title" placeholder="Title" required><input id="new-year" name="year" placeholder="Year" style="max-width:80px"></div>
-        ${UI.addType==='show'?'<input id="new-seasons" name="seasons" placeholder="Episodes per season, e.g. 9, 10" required>':''}
-        <button class="btn primary">Add</button>
-      </form>`}
+      </form>`:tmSide()}
     </aside>
 
     <section class="sheet" aria-live="polite">${e?(UI.tab==='music'?artistView(e):e.type==='film'?filmView(e):showView(e)):'<p class="empty">Add your first entry on the left.</p>'}</section>
@@ -1498,21 +1696,26 @@ function mbArtistBar(a){
 
 function showView(s){
   const ids=epIds(s),p=pct(ids),done=ids.filter(isDone).length;
-  return `<div class="head"><div class="ring" style="--p:${p}"><span>${p}%</span></div>
-    <div class="meta"><h2>${esc(s.title)}${s.example?'<span class="ex">Example</span>':''}</h2><span class="mono">${s.year?esc(s.year)+' · ':''}${done} of ${ids.length} episodes watched · ${s.seasons.length} season${s.seasons.length===1?'':'s'}</span></div></div>
-    ${s.seasons.map(se=>{const sids=Array.from({length:se.eps},(_,k)=>sid(s.id,'s',se.n,'e',k+1)),sd=sids.filter(isDone).length,sk=sid(s.id,'s',se.n);
-      return `<div class="group"><div class="ghead"><h3>Season ${se.n}</h3><span class="sp"></span><span class="mono">${sd}/${se.eps}</span>${rateDots(sk)}
+  const out=s.seasons.filter(se=>se.eps).length;
+  return `<div class="head">${tmPoster(s)}<div class="ring" style="--p:${p}"><span>${p}%</span></div>
+    <div class="meta"><h2>${esc(s.title)}${s.example?'<span class="ex">Example</span>':''}</h2><span class="mono">${s.year?esc(s.year)+' · ':''}${done} of ${ids.length} episodes watched · ${out} season${out===1?'':'s'}</span>
+      ${s.next&&s.next.d?`<span class="note airs">Next: ${sxe(s.next.n,s.next.e)} on ${esc(tmDay(s.next.d))}</span>`:''}</div></div>
+    ${tmBar(s)}
+    ${s.seasons.map(se=>{const sids=Array.from({length:se.eps},(_,k)=>sid(s.id,'s',se.n,'e',k+1)),sd=sids.filter(isDone).length,sk=sid(s.id,'s',se.n),more=(se.total||0)-se.eps;
+      if(!se.eps)return `<div class="group"><div class="ghead"><h3>Season ${se.n}</h3><span class="sp"></span><span class="label">Not out yet${se.total?' · '+se.total+' episode'+(se.total===1?'':'s')+' planned':''}</span></div></div>`;
+      return `<div class="group"><div class="ghead"><h3>Season ${se.n}</h3><span class="sp"></span>${more>0?`<span class="label">${more} more coming</span>`:''}<span class="mono">${sd}/${se.eps}</span>${rateDots(sk)}
         <button class="link" data-act="seasonall" data-s="${s.id}" data-n="${se.n}">${sd===se.eps?'Clear':'Mark season watched'}</button></div>
         <div class="eps">${sids.map((id,k)=>`<button class="ep" data-act="tog" data-id="${id}" aria-pressed="${isDone(id)}">${sxe(se.n,k+1)}</button>`).join('')}</div></div>`}).join('')}
-    <details class="more"><summary>Add a season</summary>
-      <form data-form="season" data-s="${s.id}"><input id="season-eps" name="eps" type="number" min="1" max="200" placeholder="Number of episodes" required><button class="btn primary">Add season ${s.seasons.length+1}</button></form></details>
+    ${s.tmdb?'':`<details class="more"><summary>Add a season</summary>
+      <form data-form="season" data-s="${s.id}"><input id="season-eps" name="eps" type="number" min="1" max="200" placeholder="Number of episodes" required><button class="btn primary">Add season ${s.seasons.length+1}</button></form></details>`}
     <div>${delBtn(s.id,'Delete show')}</div>`;
 }
 
 function filmView(f){
   const d=isDone(f.id);
-  return `<div class="head"><div class="ring" style="--p:${d?100:0}"><span>${d?'Seen':'—'}</span></div>
-    <div class="meta"><h2>${esc(f.title)}</h2><span class="mono">Film${f.year?' · '+esc(f.year):''}</span></div></div>
+  return `<div class="head">${tmPoster(f)}<div class="ring" style="--p:${d?100:0}"><span>${d?'Seen':'—'}</span></div>
+    <div class="meta"><h2>${esc(f.title)}</h2><span class="mono">Film${f.year?' · '+esc(f.year):''}${f.runtime?' · '+Math.floor(f.runtime/60)+'h '+(f.runtime%60)+'m':''}</span></div></div>
+    ${tmBar(f)}
     <div class="tools"><button class="btn ${d?'':'primary'}" data-act="tog" data-id="${f.id}">${d?'Mark unwatched':'Mark watched'}</button><span class="label">Your rating</span>${rateDots(f.id)}</div>
     <div>${delBtn(f.id,'Delete film')}</div>`;
 }
@@ -1555,6 +1758,15 @@ document.addEventListener('click',ev=>{
     MBX.versions=!!a.mbVersions;mbImport({id:mbid,name:a.name},'sheet');return}
   else if(act==='mbprefill'){const a=S.music.find(x=>x.id===b.dataset.a);if(!a)return;
     mbSearch(a.name).then(()=>{const el=document.getElementById('mb-q');if(el)el.scrollIntoView({behavior:'smooth',block:'center'})});return}
+  else if(act==='tmpick'){const x=TMX.results&&TMX.results[+b.dataset.i];if(x)tmImport(x,'side');return}
+  else if(act==='tmclear'){TMX.results=null;TMX.q='';TMX.err=''}
+  else if(act==='tmdismiss'){TMX.report='';TMX.err=''}
+  else if(act==='tmrefresh'){const s=S.screen.find(x=>x.id===b.dataset.s);if(!s||!s.tmdb)return;tmImport({id:s.tmdb,kind:s.type,title:s.title,sid:s.id},'sheet');return}
+  else if(act==='tmprefill'){const s=S.screen.find(x=>x.id===b.dataset.s);if(!s)return;
+    tmSearch(s.title).then(()=>{const el=document.getElementById('tm-q');if(el)el.scrollIntoView({behavior:'smooth',block:'center'})});return}
+  else if(act==='tmkeyedit'){TMX.keyOpen=true;TMX.keyErr=''}
+  else if(act==='tmkeycancel'){TMX.keyOpen=false;TMX.keyErr=''}
+  else if(act==='tmkeydel'){if(S.cfg)delete S.cfg.tmdb;TMX.keyOpen=false;TMX.keyErr='';TMX.results=null;touch()}
   else if(act==='opensync'){UI.syncOpen=true;render();const p=document.getElementById('syncpanel');if(p)p.scrollIntoView({behavior:'smooth',block:'center'});return}
   else if(act==='pushnow'){push(false);return}
   else if(act==='pullnow'){pull();return}
@@ -1586,6 +1798,8 @@ document.addEventListener('submit',ev=>{
   ev.preventDefault();
   const f=ev.target,d=Object.fromEntries(new FormData(f)),kind=f.dataset.form;
   if(kind==='mbsearch'){const q=(d.q||'').trim();if(q)mbSearch(q);return}
+  if(kind==='tmsearch'){const q=(d.q||'').trim();if(q)tmSearch(q);return}
+  if(kind==='tmkey'){tmSaveKey(d.key);return}
   if(kind==='artist'){const name=d.name.trim();if(!name)return;const id=sid('artist',name);
     if(!S.music.some(x=>x.id===id))S.music.push({id,name,groups:[]});UI.sel.music=id}
   else if(kind==='screen'){const title=d.title.trim();if(!title)return;
@@ -1606,7 +1820,8 @@ document.addEventListener('submit',ev=>{
 });
 
 render();
-pull();
+pull().finally(()=>tmAutoRefresh());
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(tmAutoRefresh,3000)});
 
 /* ---------- is there a newer copy? ---------- */
 /* 2026.10.21-a -> sortable; a two-letter suffix (after z) still sorts after one */
