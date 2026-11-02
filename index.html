@@ -144,6 +144,17 @@ textarea{min-height:110px;resize:vertical;font-size:14px}
 .steps a,.tmcredit a{color:var(--accent)}
 .tmcredit{font-size:12px;margin:0}
 .airs{color:var(--accent);font-weight:600}
+.genres{font-size:13px;color:var(--muted)}
+.overview{margin:0;max-width:70ch;line-height:1.5}
+.srate{border-bottom:0;padding:10px 12px;background:var(--bg);border-radius:8px}
+.track.ep{align-items:start}
+.track.ep .num,.track.ep .check{margin-top:2px}
+.eptl{all:unset;cursor:pointer;font-weight:500;overflow-wrap:anywhere}
+.eptl:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+.eptl[aria-expanded="false"]::after{content:" \203A";color:var(--muted)}
+.epm{display:block;font:12px var(--mono);color:var(--muted);margin-top:2px}
+.epo{margin:6px 0 2px;font-size:13px;color:var(--muted);line-height:1.5;max-width:62ch}
+.track.done .eptl{color:var(--muted)}
 
 .track{display:grid;grid-template-columns:28px 26px minmax(0,1fr) auto;align-items:center;gap:8px;padding:5px 4px;border-radius:6px}
 .track:hover{background:var(--bg)}
@@ -724,6 +735,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.02-c', note:'RATE THE WHOLE SHOW, AND EPISODE DETAILS: every show now has its own overall rating at the top, next to the average of your season ratings and of your episode ratings. Shows from TMDB also bring in their description, genres, network and creators, and each episode shows its name, air date and runtime. Tap an episode name to read its description; they stay folded so nothing is spoiled. Films from TMDB get their description and genres too (tap Refresh from TMDB on a film you already added).'},
   {v:'2026.11.02-b', note:'RATE EPISODES ONE BY ONE: on a show, each episode is now its own row with a checkmark and a 1\u201310 rating, like songs on an album. Each season still has its own overall rating, and next to it you see the average of the episodes you rated and how far your season rating is above or below it. The show header counts how many episodes you have rated.'},
   {v:'2026.11.02-a', note:'SHOWS AND FILMS FROM TMDB: on the Screen tab, search The Movie Database and tap a result. Shows come in with their poster and every season, counting only the episodes that are out, plus the date of the next one. Films get their poster, year and runtime. It needs a free TMDB key once (the steps are on the Screen tab), and it syncs to your other devices. Shows still airing check for new episodes by themselves once a day, or tap Check for new episodes. Shows you added by hand can be linked with Find on TMDB, and every checkmark and rating stays.'},
   {v:'2026.10.31-a', note:'SONG RATINGS FROM RATE YOUR MUSIC: RYM\u2019s file only has album ratings, so there is now a helper for Tampermonkey on your computer. Open your album pages on RYM (a batch of tabs at a time) and each one saves your song ratings; back on the Music tab, tap Import song ratings. Albums that came in from the file with no songs get RYM\u2019s tracklist, and a later MusicBrainz import keeps those ratings. A song rating you already set here is never overwritten. The helper never loads RYM pages by itself.'},
@@ -1349,12 +1361,49 @@ async function tmFetchShow(tid){
     const aired=!last?0:n<last.season_number?total:n===last.season_number?last.episode_number:0;
     seasons.push({n,aired,total:Math.max(total,aired)});
   }
-  return{title:j.name||j.original_name||'Untitled',year:tmYear(j.first_air_date),poster:j.poster_path||'',status:j.status||'',seasons,
+  return{title:j.name||j.original_name||'Untitled',year:tmYear(j.first_air_date),poster:j.poster_path||'',status:j.status||'',seasons,...tmInfo(j),
     next:nxt&&nxt.air_date?{n:nxt.season_number,e:nxt.episode_number,d:nxt.air_date}:null};
 }
 async function tmFetchFilm(tid){
   const j=await tmGet('movie/'+tid,{language:'en-US'});
-  return{title:j.title||j.original_title||'Untitled',year:tmYear(j.release_date),poster:j.poster_path||'',runtime:j.runtime||0};
+  return{title:j.title||j.original_title||'Untitled',year:tmYear(j.release_date),poster:j.poster_path||'',runtime:j.runtime||0,...tmInfo(j)};
+}
+/* the short facts about a title: small, so they live on the entry and sync */
+function tmInfo(j){
+  return{overview:j.overview||'',genres:(j.genres||[]).map(g=>g.name).slice(0,4),
+    network:((j.networks||[])[0]||{}).name||'',creators:(j.created_by||[]).map(c=>c.name).slice(0,3)};
+}
+
+/* Episode names, descriptions, air dates and runtimes. A long show is a lot of text,
+   so this does NOT go in the synced log: each device keeps its own copy in
+   localStorage and fetches it from TMDB (up to 20 seasons per request) the first
+   time a show is opened, and again after the show is checked for new episodes. */
+const TMC_KEY=KEY+'_eps';
+let TMC=(()=>{try{return JSON.parse(localStorage.getItem(TMC_KEY))||{}}catch(e){return{}}})();
+const TME={busy:null,failed:{}};
+function tmcSave(){try{localStorage.setItem(TMC_KEY,JSON.stringify(TMC))}catch(e){TMC={};try{localStorage.removeItem(TMC_KEY)}catch(_){}}}
+function epInfo(s,n,e){const c=s.tmdb&&TMC[s.tmdb];const l=c&&c.s[n];return l&&l[e-1]||null}
+function tmNeedsEps(s){
+  if(!s.tmdb||!tmKey()||TME.busy||TME.failed[s.tmdb])return false;
+  const c=TMC[s.tmdb];return !c||c.at<(s.tmAt||0)||(!s.hasInfo);
+}
+async function tmLoadEps(s){
+  if(!tmNeedsEps(s))return;
+  TME.busy=s.tmdb;
+  try{
+    const nums=s.seasons.map(x=>x.n),out={};let info=null;
+    for(let i=0;i<Math.max(nums.length,1);i+=20){
+      const chunk=nums.slice(i,i+20);
+      const j=await tmGet('tv/'+s.tmdb,{language:'en-US',...(chunk.length?{append_to_response:chunk.map(n=>'season/'+n).join(',')}:{})});
+      if(!info)info=tmInfo(j);
+      for(const n of chunk){const se=j['season/'+n];if(!se)continue;
+        out[n]=(se.episodes||[]).sort((a,b)=>a.episode_number-b.episode_number)
+          .map(e=>({t:e.name||'',o:e.overview||'',d:e.air_date||'',rt:e.runtime||0}))}
+    }
+    TMC[s.tmdb]={at:Date.now(),s:out};tmcSave();
+    if(info){Object.assign(s,info,{hasInfo:true});touch()}
+  }catch(e){TME.failed[s.tmdb]=true}
+  finally{TME.busy=null;render()}
 }
 const tmMarked=id=>{const m=S.marks[id];return !!(m&&(m.done||m.r))};
 function tmMergeShow(tid,d){
@@ -1367,7 +1416,8 @@ function tmMergeShow(tid,d){
     out.push({n:t.n,eps:Math.max(t.aired,cur?lastMarked(t.n,cur.eps):0),total:t.total})}
   for(const cur of old.values()){const k=lastMarked(cur.n,cur.eps);if(k)out.push({n:cur.n,eps:k})}   /* not on TMDB: kept only if you checked something */
   s.seasons=out.sort((a,b)=>a.n-b.n);
-  Object.assign(s,{title:d.title,year:d.year||s.year||'',tmdb:tid,poster:d.poster,status:d.status,next:d.next,tmAt:Date.now()});
+  Object.assign(s,{title:d.title,year:d.year||s.year||'',tmdb:tid,poster:d.poster,status:d.status,next:d.next,tmAt:Date.now(),overview:d.overview,genres:d.genres,network:d.network,creators:d.creators,hasInfo:true});
+  delete TME.failed[tid];
   delete s.example;
   return{sid:s.id,isNew,added:epIds(s).length-before};
 }
@@ -1375,7 +1425,7 @@ function tmMergeFilm(tid,d){
   let f=tmExisting('film',tid,d.title,d.year),isNew=false;
   if(!f){let id=sid('film',d.title,d.year||'');if(S.screen.some(x=>x.id===id))id=sid('film',d.title,'tmdb',tid);
     f={id,type:'film'};S.screen.push(f);isNew=true}
-  Object.assign(f,{title:d.title,year:d.year||f.year||'',tmdb:tid,poster:d.poster,runtime:d.runtime,tmAt:Date.now()});
+  Object.assign(f,{title:d.title,year:d.year||f.year||'',tmdb:tid,poster:d.poster,runtime:d.runtime,tmAt:Date.now(),overview:d.overview,genres:d.genres});
   delete f.example;
   return{sid:f.id,isNew};
 }
@@ -1550,7 +1600,7 @@ async function push(force){
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pull()});
 window.addEventListener('online',()=>pull());
 document.addEventListener('toggle',ev=>{if(ev.target.id==='syncpanel')UI.syncOpen=ev.target.open},true);
-const UI={tab:'music',sel:{music:null,screen:null},filter:'all',armed:null,addType:'show',copied:false};
+const UI={tab:'music',sel:{music:null,screen:null},filter:'all',armed:null,addType:'show',copied:false,epOpen:{}};
 try{const t=localStorage.getItem(KEY+'_tab');if(t==='screen')UI.tab='screen'}catch(e){}
 
 function current(){
@@ -1696,6 +1746,27 @@ function mbArtistBar(a){
    overall rating too, shown beside the average of the episodes you rated, the same
    way albums sit beside their song average. Episode ratings live in marks under the
    episode ID, so they sync and survive a TMDB refresh. */
+/* the whole show: your own overall rating, shown beside the average of your season
+   ratings and of your episode ratings */
+function showRate(s){
+  const avgOf=ids=>{const rs=ids.map(rating).filter(Boolean);return{n:rs.length,of:ids.length,a:rs.length?rs.reduce((x,y)=>x+y,0)/rs.length:0}};
+  const se=avgOf(s.seasons.filter(x=>x.eps).map(x=>sid(s.id,'s',x.n))),ep=avgOf(epIds(s)),r=rating(s.id),f1=v=>v.toFixed(1);
+  const d=r&&ep.n?r-ep.a:null;
+  return `<div class="arate srate"><span class="label">Your show rating</span>${rateDots(s.id)}
+    <span class="avg">${se.n?'Season average '+f1(se.a)+' <span class="of">('+se.n+' of '+se.of+')</span>':'No seasons rated yet'}</span>
+    <span class="avg">${ep.n?'Episode average '+f1(ep.a)+' <span class="of">('+ep.n+' of '+ep.of+')</span>':'No episodes rated yet'}</span>
+    ${d===null?'':`<span class="diff ${Math.abs(d)<.05?'even':d>0?'up':'down'}">${Math.abs(d)<.05?'Same as the episodes':(d>0?'+':'\u2212')+f1(Math.abs(d))+' vs the episodes'}</span>`}</div>`}
+
+function epRow(s,n,e){
+  const id=sid(s.id,'s',n,'e',e),x=epInfo(s,n,e),open=!!UI.epOpen[id];
+  const day=x&&x.d?new Date(x.d+'T12:00:00').toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'}):'';
+  const meta=[sxe(n,e),day,x&&x.rt?x.rt+'m':''].filter(Boolean).join(' · ');
+  const title=x&&x.t?(x.o?`<button class="eptl" data-act="epx" data-id="${id}" aria-expanded="${open}">${esc(x.t)}</button>`:`<span class="eptl">${esc(x.t)}</span>`)+`<span class="epm">${esc(meta)}</span>`
+    :`<span class="mono">${sxe(n,e)}</span>`;
+  return `<div class="track ep ${isDone(id)?'done':''}"><span class="num">${e}</span>
+    <button class="check" data-act="tog" data-id="${id}" aria-pressed="${isDone(id)}" aria-label="Watched ${sxe(n,e)}"></button>
+    <div class="ttl">${title}${open&&x&&x.o?`<p class="epo">${esc(x.o)}</p>`:''}</div>${rateDots(id)}</div>`}
+
 function seasonRate(sk,sids){
   const rs=sids.map(rating).filter(Boolean),n=rs.length,r=rating(sk);
   const avg=n?rs.reduce((x,y)=>x+y,0)/n:0,d=r&&n?r-avg:null,f1=v=>v.toFixed(1);
@@ -1704,20 +1775,23 @@ function seasonRate(sk,sids){
     ${d===null?'':`<span class="diff ${Math.abs(d)<.05?'even':d>0?'up':'down'}">${Math.abs(d)<.05?'Same as the episodes':(d>0?'+':'\u2212')+f1(Math.abs(d))+' vs the episodes'}</span>`}</div>`}
 
 function showView(s){
+  if(tmNeedsEps(s))setTimeout(()=>tmLoadEps(s),0);
   const ids=epIds(s),p=pct(ids),done=ids.filter(isDone).length;
   const out=s.seasons.filter(se=>se.eps).length,rated=ids.filter(i=>rating(i)).length;
   return `<div class="head">${tmPoster(s)}<div class="ring" style="--p:${p}"><span>${p}%</span></div>
     <div class="meta"><h2>${esc(s.title)}${s.example?'<span class="ex">Example</span>':''}</h2><span class="mono">${s.year?esc(s.year)+' · ':''}${done} of ${ids.length} episodes watched · ${rated} rated · ${out} season${out===1?'':'s'}</span>
+      ${s.genres&&s.genres.length||s.network?`<span class="genres">${esc([(s.genres||[]).join(', '),s.network,s.creators&&s.creators.length?'Created by '+s.creators.join(', '):''].filter(Boolean).join(' · '))}</span>`:''}
       ${s.next&&s.next.d?`<span class="note airs">Next: ${sxe(s.next.n,s.next.e)} on ${esc(tmDay(s.next.d))}</span>`:''}</div></div>
+    ${s.overview?`<p class="overview">${esc(s.overview)}</p>`:''}
+    ${showRate(s)}
     ${tmBar(s)}
+    ${TME.busy===s.tmdb?'<p class="note">Getting episode names and descriptions from TMDB…</p>':''}
     ${s.seasons.map(se=>{const sids=Array.from({length:se.eps},(_,k)=>sid(s.id,'s',se.n,'e',k+1)),sd=sids.filter(isDone).length,sk=sid(s.id,'s',se.n),more=(se.total||0)-se.eps;
       if(!se.eps)return `<div class="group"><div class="ghead"><h3>Season ${se.n}</h3><span class="sp"></span><span class="label">Not out yet${se.total?' · '+se.total+' episode'+(se.total===1?'':'s')+' planned':''}</span></div></div>`;
       return `<div class="group"><div class="ghead"><h3>Season ${se.n}</h3><span class="sp"></span>${more>0?`<span class="label">${more} more coming</span>`:''}<span class="mono">${sd}/${se.eps}</span><span class="bar"><i style="width:${sd/se.eps*100}%"></i></span>
         <button class="link" data-act="seasonall" data-s="${s.id}" data-n="${se.n}">${sd===se.eps?'Clear':'Mark season watched'}</button></div>
         ${seasonRate(sk,sids)}
-        ${sids.map((id,k)=>`<div class="track ${isDone(id)?'done':''}"><span class="num">${k+1}</span>
-          <button class="check" data-act="tog" data-id="${id}" aria-pressed="${isDone(id)}" aria-label="Watched ${sxe(se.n,k+1)}"></button>
-          <span class="ttl mono">${sxe(se.n,k+1)}</span>${rateDots(id)}</div>`).join('')}</div>`}).join('')}
+        ${sids.map((id,k)=>epRow(s,se.n,k+1)).join('')}</div>`}).join('')}
     ${s.tmdb?'':`<details class="more"><summary>Add a season</summary>
       <form data-form="season" data-s="${s.id}"><input id="season-eps" name="eps" type="number" min="1" max="200" placeholder="Number of episodes" required><button class="btn primary">Add season ${s.seasons.length+1}</button></form></details>`}
     <div>${delBtn(s.id,'Delete show')}</div>`;
@@ -1728,6 +1802,8 @@ function filmView(f){
   return `<div class="head">${tmPoster(f)}<div class="ring" style="--p:${d?100:0}"><span>${d?'Seen':'—'}</span></div>
     <div class="meta"><h2>${esc(f.title)}</h2><span class="mono">Film${f.year?' · '+esc(f.year):''}${f.runtime?' · '+Math.floor(f.runtime/60)+'h '+(f.runtime%60)+'m':''}</span></div></div>
     ${tmBar(f)}
+    ${f.genres&&f.genres.length?`<span class="genres">${esc(f.genres.join(', '))}</span>`:''}
+    ${f.overview?`<p class="overview">${esc(f.overview)}</p>`:''}
     <div class="tools"><button class="btn ${d?'':'primary'}" data-act="tog" data-id="${f.id}">${d?'Mark unwatched':'Mark watched'}</button><span class="label">Your rating</span>${rateDots(f.id)}</div>
     <div>${delBtn(f.id,'Delete film')}</div>`;
 }
@@ -1742,6 +1818,7 @@ document.addEventListener('click',ev=>{
   else if(act==='sel'){UI.sel[UI.tab]=id}
   else if(act==='go'){UI.tab=b.dataset.tab;UI.sel[UI.tab]=id;UI.filter='all'}
   else if(act==='filter'){UI.filter=b.dataset.v}
+  else if(act==='epx'){UI.epOpen[id]=!UI.epOpen[id]}
   else if(act==='tog'){S.marks[id]={...(S.marks[id]||{}),done:!isDone(id)};touch()}
   else if(act==='rtimport'){rtImport()}
   else if(act==='rymadd'){const r=rymAddWaiting();RYX.report={total:r.albums,zero:0,filled:0,same:0,kept:[],waiting:[],notFound:[],dups:[],added:r};touch()}
@@ -1756,7 +1833,7 @@ document.addEventListener('click',ev=>{
     else{
       const inMusic=S.music.find(x=>x.id===id);
       if(inMusic){artistItems(inMusic).forEach(i=>delete S.marks[i.id]);inMusic.groups.forEach(g=>delete S.marks[g.id]);S.music=S.music.filter(x=>x.id!==id);if(id===sid('artist','radiohead'))S.flags.rhDeleted=true}
-      else{const s=S.screen.find(x=>x.id===id);if(s){epIds(s).forEach(i=>delete S.marks[i]);S.screen=S.screen.filter(x=>x.id!==id)}}
+      else{const s=S.screen.find(x=>x.id===id);if(s){epIds(s).forEach(i=>delete S.marks[i]);delete S.marks[s.id];(s.seasons||[]).forEach(x=>delete S.marks[sid(s.id,'s',x.n)]);if(s.tmdb){delete TMC[s.tmdb];tmcSave()}S.screen=S.screen.filter(x=>x.id!==id)}}
       UI.armed=null;UI.sel[UI.tab]=null;touch();
     }
   }
