@@ -753,6 +753,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.03-c', note:'TRACKLISTS STRAIGHT FROM SPOTIFY: with Spotify connected, importing or updating an artist now reads their albums, EPs and singles from Spotify itself, so every song listed is one you can actually play, and deluxe or bonus songs Spotify carries show up under their album. Marked songs Spotify doesn\u2019t have move to \u201cKept from your earlier list\u201d. Open an artist and tap Rebuild from Spotify to switch them over; checkmarks and ratings stay. Paste the updated sync Worker into Cloudflare first (one more time). Also fixed for every import: albums no longer lose a song because an earlier album has one with the same name (a second \u201cIntro\u201d), and \u201cSong (Reprise)\u201d or \u201c(Part 2)\u201d no longer disappear into \u201cSong\u201d.'},
   {v:'2026.11.03-b', note:'SPOTIFY CHECKS OFF WHAT YOU PLAY, AND WHERE TO WATCH: on the Music tab, connect Spotify once (on your PC) and songs you play there get checked off as heard here, matched to the artists and songs already in your log. Ratings stay yours to set. Once you paste the new sync Worker into Cloudflare and turn on its hourly check, your Worker keeps watching even when the app is closed. On the Screen tab, every show and film from TMDB now shows where it is streaming in the US, plus where to rent or buy it (data from JustWatch), and Up next says which service a show is on.'},
   {v:'2026.11.03-a', note:'ROOM TO GROW: your log now saves in your browser\u2019s built-in database, which holds hundreds of MB, instead of the roughly 5 MB space it used before (smallest on iPhone), so big discographies and long shows won\u2019t quietly stop saving. If a save ever does fail, a red banner tells you right away. Sync now sends the log compressed, about 5 times smaller, once you paste the new sync Worker code into Cloudflare. Backup & restore shows how big your log is.'},
   {v:'2026.11.02-c', note:'RATE THE WHOLE SHOW, AND EPISODE DETAILS: every show now has its own overall rating at the top, next to the average of your season ratings and of your episode ratings. Shows from TMDB also bring in their description, genres, network and creators, and each episode shows its name, air date and runtime. Tap an episode name to read its description; they stay folded so nothing is spoiled. Films from TMDB get their description and genres too (tap Refresh from TMDB on a film you already added).'},
@@ -862,6 +863,14 @@ function seedAll(){
   }
   /* imported artists: fold back anything that duplicates a MusicBrainz song
      (an older copy of the app re-adding the hand-typed lists, say) */
+  /* 2026.11.03-c: titles keep meaningful brackets now. Stored keys move to the new
+     rule once (IDs stay, so checkmarks and ratings don't move). */
+  if(!S.flags.key2){
+    for(const a of S.music){const have=new Set(artistItems(a).map(mbItemKey));
+      for(const g of a.groups)for(const i of g.items){const k=mbItemKey(i);if(k.includes('~')||k.includes('@'))continue;
+        const nk=mbKeyOf(i.title);if(nk&&nk!==k&&!have.has(nk)){have.add(nk);i.k=nk}}}
+    S.flags.key2=true;
+  }
   S.music.forEach(x=>{if(x.mbid)mbTidy(x)});
   S.music.forEach(x=>applyPending(x));
   S.sp=S.sp||{after:0,miss:[]};
@@ -960,12 +969,16 @@ function mbVClass(d){
   if(/\b(mix|version|edit|take|dub)\b/.test(s))return 'alt';
   return null;
 }
+/* brackets that are just credits ("feat. X", "with Y", "from the film") */
+const MB_CREDIT=/^\s*(feat\.?|ft\.?|featuring|with|prod\.?|produced by|from)\s/i;
+/* only version tags and credits come off the title; anything else in brackets
+   is part of it, so "Song (Reprise)" and "Song (Part 2)" stay separate songs */
 function mbSplit(title){
   const descs=[];let base=String(title);
-  const stripped=base.replace(/\s*[\(\[]([^\)\]]*)[\)\]]/g,(m,inner)=>{descs.push(inner);return ' '});
+  const stripped=base.replace(/\s*[\(\[]([^\)\]]*)[\)\]]/g,(m,inner)=>{if(mbVClass(inner)||MB_CREDIT.test(inner)){descs.push(inner);return ' '}return m});
   if(stripped.trim())base=stripped;else descs.length=0;            /* "(Nice Dream)" is the whole title */
   const dash=base.match(/^(.*\S)\s+[-–—]\s+(.+)$/);
-  if(dash&&mbVClass(dash[2])){descs.push(dash[2]);base=dash[1]}
+  if(dash&&(mbVClass(dash[2])||MB_CREDIT.test(dash[2]))){descs.push(dash[2]);base=dash[1]}
   return{base:base.replace(/\s+/g,' ').trim(),descs};
 }
 const mbK=s=>mbNorm(s).replace(/ /g,'');
@@ -1038,20 +1051,32 @@ function mbBuild(rels,versions){
     entries.push({rgid:rg.id,title:rg.title||rep.title,year:date.slice(0,4)||'—',kind,date:mbDateKey(date),
       rep:(whole?[rep,...restR]:[rep]).flatMap(tracksOf),others:whole||!versions?[]:restR.flatMap(tracksOf),items:[]});
   }
+  return mbClaim(entries,versions);
+}
+/* Who gets each song. Studio albums go first, oldest first, and every studio album
+   keeps its whole tracklist: a title already used by an earlier album (a second
+   "Intro", a re-recording) becomes its own song on this album (key@album). Everything
+   else (EPs, singles, compilations) only adds songs no release has yet, so a B-side
+   lands on the release that first carried it and singles don't repeat the album. */
+function mbClaim(entries,versions){
   const albums=entries.filter(e=>e.kind==='Studio album').sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
   const rest=entries.filter(e=>e.kind!=='Studio album').sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:MB_KIND_ORDER.indexOf(a.kind)-MB_KIND_ORDER.indexOf(b.kind));
-  const order=[...albums,...rest],claimed=new Set(),alts=[];
-  const add=(E,key,title)=>{if(claimed.has(key))return;claimed.add(key);E.items.push({k:key,title})};
-  const take=(E,t)=>{const x=mbTrack(t,E.rgid);if(!x)return;if(x.alt)alts.push({E,x});else add(E,x.key,x.title)};
-  order.forEach(E=>E.rep.forEach(t=>take(E,t)));                          /* pass 1: the standard tracklists */
-  order.forEach(E=>E.others.forEach(t=>take(E,t)));                       /* pass 2: songs only on other editions */
+  const order=[...albums,...rest],claimed=new Map(),alts=[];
+  const add=(E,key,title,full)=>{
+    const by=claimed.get(key);
+    if(by){if(!full||by===E||E.kind!=='Studio album'||by.kind!=='Studio album')return;
+      key=key+'@'+mbK(nTitle(E.title));if(claimed.has(key))return}
+    claimed.set(key,E);E.items.push({k:key,title})};
+  const take=(E,t,full)=>{const x=mbTrack(t,E.rgid);if(!x)return;if(x.alt)alts.push({E,x});else add(E,x.key,x.title,full)};
+  order.forEach(E=>E.rep.forEach(t=>take(E,t,true)));                     /* pass 1: the standard tracklists */
+  order.forEach(E=>E.others.forEach(t=>take(E,t,false)));                 /* pass 2: songs only on other editions */
   for(const {E,x} of alts){                                               /* pass 3: other versions */
-    if(!claimed.has(x.key)&&x.take)add(E,x.key,x.title);                  /* a song only ever released live or as a demo IS the song */
-    else if(versions)add(E,x.altKey,x.title);
+    if(!claimed.has(x.key)&&x.take)add(E,x.key,x.title,false);            /* a song only ever released live or as a demo IS the song */
+    else if(versions)add(E,x.altKey,x.title,false);
   }
   return order.filter(E=>E.items.length)
     .sort((a,b)=>(MB_KIND_ORDER.indexOf(a.kind)-MB_KIND_ORDER.indexOf(b.kind))||(a.date<b.date?-1:a.date>b.date?1:0))
-    .map(E=>({rgid:E.rgid,title:E.title,year:E.year,kind:E.kind,items:E.items}));
+    .map(E=>({rgid:E.rgid,title:E.title,year:E.year,kind:E.kind,img:E.img||'',items:E.items}));
 }
 
 /* ---- merge into the log: safe to repeat, never drops a mark ---- */
@@ -1062,7 +1087,7 @@ function mbFold(into,from){            /* a duplicate's checkmark/rating moves o
   const a=S.marks[into]||{},b=S.marks[from],m=Object.assign({},a);
   if(b.done)m.done=true;if(!m.r&&b.r)m.r=b.r;S.marks[into]=m;
 }
-function mbMerge(art,incoming,versions,tidy){
+function mbMerge(art,incoming,versions,tidy,sp){
   let a=S.music.find(x=>x.mbid===art.id);
   if(!a){const id0=sid('artist',art.name),hit=S.music.find(x=>x.id===id0);
     if(hit&&!hit.mbid)a=hit;
@@ -1078,37 +1103,40 @@ function mbMerge(art,incoming,versions,tidy){
   for(const G of incoming){
     const items=[];
     for(const t of G.items){if(placed.has(t.k))continue;placed.add(t.k);items.push({id:idFor(t.k),title:t.title,k:t.k})}
-    if(items.length)groups.push({id:sid(a.id,'rg',G.rgid),src:'mb',mbid:G.rgid,title:G.title,year:G.year,kind:G.kind,items});
+    if(items.length)groups.push({id:sid(a.id,'rg',G.rgid),src:'mb',mbid:G.rgid,title:G.title,year:G.year,kind:G.kind,...(G.img?{img:G.img}:{}),items});
   }
   const manual=[];
   for(const g of a.groups){if(replaced(g))continue;
     const items=[];for(const i of g.items){const k=mbItemKey(i);if(placed.has(k))continue;placed.add(k);items.push(Object.assign({},i,{id:idFor(k)}))}
     if(items.length)manual.push(Object.assign({},g,{items}));
     else if(rating(g.id)&&!incoming.some(G=>nTitle(G.title)===nTitle(g.title)))manual.push(Object.assign({},g,{items}))}
-  const kept=[];let dropped=0;
+  const kept=[];let dropped=0;const usedIds=new Set([...groups,...manual].flatMap(g=>g.items.map(i=>i.id)));
   for(const g of a.groups){if(!replaced(g))continue;
     for(const i of g.items){const k=mbItemKey(i);if(placed.has(k))continue;placed.add(k);
-      const id=idFor(k);
+      const id=idFor(k);if(usedIds.has(id))continue;
       if(mbMarked(id)||(tidy&&g.src==='kept'))kept.push({id,title:i.title,k});else dropped++}}
   const oldR=a.groups.map(g=>[nTitle(g.title),rating(g.id)]).filter(x=>x[1]);
   a.groups=[...groups,...manual];
-  if(kept.length)a.groups.push({id:sid(a.id,'kept'),src:'kept',title:'Kept from your earlier list',year:'—',kind:'Not in the MusicBrainz import',items:kept});
-  a.mbid=art.id;if(!tidy){a.name=art.name;a.mbVersions=!!versions;a.mbAt=Date.now()}
+  const fromSp=tidy?a.src==='sp':!!sp;
+  if(kept.length)a.groups.push({id:sid(a.id,'kept'),src:'kept',title:'Kept from your earlier list',year:'—',kind:fromSp?'Not on Spotify':'Not in the MusicBrainz import',items:kept});
+  a.mbid=art.id;if(!tidy){a.name=art.name;a.mbVersions=!!versions;a.mbAt=Date.now();a.src=sp?'sp':'mb';if(sp)a.spid=sp.id}
   for(const g of a.groups){if(rating(g.id))continue;const o=oldR.find(x=>x[0]===nTitle(g.title));if(o)S.marks[g.id]={...(S.marks[g.id]||{}),r:o[1]}}
   applyPending(a);
   const all=groups.flatMap(g=>g.items),kinds={};groups.forEach(g=>kinds[g.kind]=(kinds[g.kind]||0)+1);
-  return{aid:a.id,name:a.name,kinds,songs:all.length,added:all.filter(i=>!before.has(i.id)).length,kept:kept.length,dropped};
+  return{aid:a.id,name:a.name,kinds,songs:all.length,added:all.filter(i=>!before.has(i.id)).length,kept:kept.length,dropped,src:fromSp?'sp':'mb'};
 }
 function mbTidy(a){
-  const inc=a.groups.filter(g=>g.src==='mb').map(g=>({rgid:g.mbid,title:g.title,year:g.year,kind:g.kind,items:g.items.map(i=>({k:mbItemKey(i),title:i.title}))}));
+  const inc=a.groups.filter(g=>g.src==='mb').map(g=>({rgid:g.mbid,title:g.title,year:g.year,kind:g.kind,img:g.img||'',items:g.items.map(i=>({k:mbItemKey(i),title:i.title}))}));
   mbMerge({id:a.mbid,name:a.name},inc,a.mbVersions,true);
 }
 function mbReportText(r){
   const names={'Studio album':['studio album','studio albums'],'EP':['EP','EPs'],'Single':['single','singles'],'Compilation':['compilation','compilations'],'Live':['live release','live releases'],'Other':['other release','other releases']};
   const parts=MB_KIND_ORDER.filter(k=>r.kinds[k]).map(k=>r.kinds[k]+' '+names[k][r.kinds[k]===1?0:1]);
   let s=r.name+': '+parts.join(', ')+' · '+r.songs+' songs'+(r.added===r.songs?'.':'. '+r.added+' new, '+(r.songs-r.added)+' were already in your log with their checkmarks and ratings.');
-  if(r.kept)s+=' '+r.kept+' song'+(r.kept===1?'':'s')+' you had marked '+(r.kept===1?"isn't":"aren't")+' on MusicBrainz, so '+(r.kept===1?'it stays':'they stay')+' in “Kept from your earlier list”.';
-  if(r.dropped)s+=' '+r.dropped+' unmarked song'+(r.dropped===1?' from the old list was':'s from the old list were')+' not found and removed.';
+  const where=r.src==='sp'?'on Spotify':'on MusicBrainz';
+  if(r.src==='sp')s=r.name+' (tracklists from Spotify): '+s.slice(r.name.length+2);
+  if(r.kept)s+=' '+r.kept+' song'+(r.kept===1?'':'s')+' you had marked '+(r.kept===1?"isn't":"aren't")+' '+where+', so '+(r.kept===1?'it stays':'they stay')+' in “Kept from your earlier list”.';
+  if(r.dropped)s+=' '+r.dropped+' unmarked song'+(r.dropped===1?' from the old list was':'s from the old list were')+' not '+(r.src==='sp'?'on Spotify':'found')+' and removed.';
   return s;
 }
 
@@ -1128,18 +1156,31 @@ async function mbImport(art,where){
   if(MBX.busy)return;
   const existing=S.music.find(x=>x.mbid===art.id)||S.music.find(x=>x.id===sid('artist',art.name)&&!x.mbid);
   Object.assign(MBX,{busy:true,cancel:false,err:'',report:'',where,errWhere:where,aid:existing?existing.id:null,name:art.name,step:'Asking MusicBrainz',n:0,of:0,note:''});render();
+  let phase='mb',hint='';
   try{
-    const rels=await mbFetchCatalog(art.id);
-    if(MBX.cancel)throw MBError('cancel');
-    MBX.step='Sorting out duplicates';mbProgress();
-    const groups=mbBuild(rels,MBX.versions);
-    if(!groups.length)throw MBError('empty');
-    const r=mbMerge(art,groups,MBX.versions,false);
+    let groups=null,sp=null;
+    if(spCanImport()){
+      phase='sp';
+      try{const c=await spFetchCatalog(art,existing);
+        MBX.step='Sorting out duplicates';mbProgress();
+        groups=spBuild(c.albums,c.artist.id,MBX.versions);sp=c.artist;
+        if(!groups.length){groups=null;sp=null;hint=' Spotify had no releases for this artist, so this came from MusicBrainz.'}}
+      catch(e){if(e.code!=='nomatch')throw e;hint=' Could not find '+art.name+' on Spotify, so this came from MusicBrainz.'}
+      phase='mb';
+    }else if(spCid()&&syncOn()&&(SY.wv||0)===3)hint=' Paste the updated sync Worker into Cloudflare to get tracklists straight from Spotify.';
+    if(!groups){
+      const rels=await mbFetchCatalog(art.id);
+      if(MBX.cancel)throw MBError('cancel');
+      MBX.step='Sorting out duplicates';mbProgress();
+      groups=mbBuild(rels,MBX.versions);
+      if(!groups.length)throw MBError('empty');
+    }
+    const r=mbMerge(art,groups,MBX.versions,false,sp);
     touch();
     UI.tab='music';UI.sel.music=r.aid;UI.filter='all';
     try{localStorage.setItem(KEY+'_tab','music')}catch(e){}
-    Object.assign(MBX,{report:mbReportText(r),results:null,pick:null,q:'',errWhere:'sheet',aid:r.aid});
-  }catch(e){MBX.err=mbMessage(e,art.name)}
+    Object.assign(MBX,{report:mbReportText(r)+hint,results:null,pick:null,q:'',errWhere:'sheet',aid:r.aid});
+  }catch(e){MBX.err=phase==='sp'&&e.code!=='cancel'?spImportMessage(e):mbMessage(e,art.name)}
   finally{MBX.busy=false;MBX.cancel=false;render()}
   /* on a phone the sheet sits below the sidebar: bring the result into view */
   if(MBX.errWhere==='sheet'&&window.innerWidth<=760){const el=document.querySelector('.mbok,.sheet .mberr');if(el)el.scrollIntoView({behavior:'smooth',block:'center'})}
@@ -1149,7 +1190,7 @@ function mbProgHtml(){
   return `<div class="mbprog" id="mbprog" role="status" aria-live="polite">
     <span class="label">Importing ${esc(MBX.name)}</span>
     <span class="bar wide"><i style="width:${MBX.step==='Sorting out duplicates'?100:p}%"></i></span>
-    <span class="note">${esc(MBX.step)}${MBX.of&&MBX.step==='Reading releases'?` · ${MBX.n} of ${MBX.of}${left>=2?' · about '+Math.round(left)+' s left':''}`:''}${MBX.note?' · '+esc(MBX.note):''}</span>
+    <span class="note">${esc(MBX.step)}${MBX.of&&MBX.step==='Reading releases'?` · ${MBX.n} of ${MBX.of}${left>=2?' · about '+Math.round(left)+' s left':''}`:''}${MBX.of&&MBX.step==='Reading tracklists'?` · ${MBX.n} of ${MBX.of}${MBX.of-MBX.n>=10?' · about '+Math.round((MBX.of-MBX.n)*.3)+' s left':''}`:''}${MBX.note?' · '+esc(MBX.note):''}</span>
     <div><button class="btn" data-act="mbcancel">Cancel</button></div></div>`;
 }
 function mbProgress(){const el=document.getElementById('mbprog');if(el)el.outerHTML=mbProgHtml()}
@@ -1163,7 +1204,7 @@ function mbSide(){
   if(MBX.pick){const x=MBX.pick,have=S.music.find(a=>a.mbid===x.id)||S.music.find(a=>a.id===sid('artist',x.name)&&!a.mbid);
     h+=`<div class="mbpick"><div><b>${esc(x.name)}</b><span class="mbsub">${esc([x.dis,x.country,x.begin&&'since '+x.begin].filter(Boolean).join(' · '))}</span></div>
       <label class="tick"><input type="checkbox" id="mb-ver" ${MBX.versions?'checked':''} ${MBX.busy?'disabled':''}> Include live albums, remixes and alternate versions</label>
-      <p class="note">${have?'You already have '+esc(have.name)+'. Missing releases get added and every checkmark and rating stays where it is.':'Every official release, sorted into albums, EPs, singles and the rest, with each song listed once.'}</p>
+      <p class="note">${have?'You already have '+esc(have.name)+'. Missing releases get added and every checkmark and rating stays where it is.':'Every official release, sorted into albums, EPs, singles and the rest.'}${spCanImport()?' Tracklists come from Spotify, so only songs you can play there are listed.':''}</p>
       <div class="tools"><button type="button" class="btn primary" data-act="mbgo" ${MBX.busy?'disabled':''}>${have?'Update '+esc(have.name):'Import'}</button><button type="button" class="btn" data-act="mbback">Back</button></div></div>`}
   else if(MBX.results)h+=`<div class="mbres" role="list">${MBX.results.map((x,k)=>`<button type="button" class="mbhit" role="listitem" data-act="mbpick" data-i="${k}"><b>${esc(x.name)}${k===0?'<span class="tag">Best match</span>':''}</b><span class="mbsub">${esc([x.dis,x.type,x.country,x.begin&&'since '+x.begin].filter(Boolean).join(' · ')||'No details on MusicBrainz')}</span></button>`).join('')}</div>`;
   return h;
@@ -1425,6 +1466,7 @@ async function wkSp(method,body,q){
   const u=SY.url.replace(/\/+$/,'')+'/spotify'+(q?'?'+q:'');
   let r;try{r=await fetch(u,{method,cache:'no-store',headers:{'x-sync-key':SY.key,...(body?{'content-type':'application/json'}:{})},body:body?JSON.stringify(body):undefined})}catch(e){throw SPError('network')}
   const j=await r.json().catch(()=>null);
+  const wv=+(r.headers.get('x-pb-worker')||0);if(r.ok&&wv>(SY.wv||0)){SY.wv=wv;saveSync()}
   if(r.status===401)throw SPError('synckey',401);
   if(!r.ok)throw SPError('worker',r.status);
   return j;
@@ -1440,11 +1482,14 @@ async function spFinish(cb){
   if(spViaWorker())await spHandOff(tok);else{SPL=tok;splSave()}
 }
 const spSlim=items=>items.map(x=>{const t=x.track||{};return{p:Date.parse(x.played_at)||0,t:t.name||'',a:(t.artists||[]).map(a=>a.name).filter(Boolean),al:(t.album&&t.album.name)||''}}).filter(x=>x.p&&x.t);
-async function spLocalPlays(retried){
+async function spLocalToken(){
   if(!SPL.at||Date.now()>(SPL.exp||0)-60e3){
     const j=await spToken({grant_type:'refresh_token',refresh_token:SPL.rt,client_id:SPL.cid||spCid()});
     SPL.at=j.access_token;SPL.exp=Date.now()+(j.expires_in||3600)*1000;if(j.refresh_token)SPL.rt=j.refresh_token;splSave();
   }
+}
+async function spLocalPlays(retried){
+  await spLocalToken();
   let r;try{r=await fetch(SP_API+'me/player/recently-played?limit=50',{headers:{authorization:'Bearer '+SPL.at}})}catch(e){throw SPError('network')}
   if(r.status===401&&!retried){SPL.exp=0;splSave();return spLocalPlays(true)}
   if(r.status===403)throw SPError('forbidden',403);
@@ -1453,19 +1498,122 @@ async function spLocalPlays(retried){
   if(!r.ok)throw SPError('http',r.status);
   const j=await r.json().catch(()=>({}));return spSlim(j.items||[]);
 }
+/* ---------- Spotify catalog: tracklists exactly as Spotify carries them ----------
+   When Spotify is connected, a discography import reads the artist's albums,
+   singles and compilations from Spotify itself (market=from_token, so only what
+   plays in your country), one album at a time. With sync Worker v4 the requests go
+   through the Worker's sign-in (/spotify/api); without a Worker, this device's own.
+   Editions of one release (deluxe, remaster, clean/explicit) fold into one: the
+   standard one's tracklist, then any songs only the other editions carry. */
+function spCanImport(){
+  if(!spCid())return false;
+  if(spViaWorker())return (SY.wv||0)>=4&&!(SPX.wk&&SPX.wk.connected===false);
+  return !!SPL.rt;
+}
+let spLast=0;
+const spRel=u=>String(u||'').replace(/^https:\/\/api\.spotify\.com\/v1\//,'');
+async function spApi(path){
+  for(let tries=0;;tries++){
+    const wait=spLast+150-Date.now();if(wait>0)await mbSleep(wait);
+    if(MBX.cancel)throw MBError('cancel');
+    spLast=Date.now();
+    const viaW=spViaWorker();let r;
+    try{
+      if(viaW)r=await fetch(SY.url.replace(/\/+$/,'')+'/spotify/api?p='+encodeURIComponent(path),{cache:'no-store',headers:{'x-sync-key':SY.key}});
+      else{await spLocalToken();r=await fetch(SP_API+path,{headers:{authorization:'Bearer '+SPL.at}})}
+    }catch(e){if(e&&e.code)throw e;throw SPError('network')}
+    if(r.status===429||r.status===503||r.status===502){
+      if(tries>=5)throw SPError('busy',r.status);
+      const ra=parseInt(r.headers.get('retry-after'),10);
+      MBX.note='Spotify asked for a short pause';mbProgress();
+      await mbSleep((ra>0?Math.min(ra,30):2+tries*3)*1000);MBX.note='';continue;
+    }
+    if(r.status===401){if(viaW)throw SPError('synckey',401);if(tries<1){SPL.exp=0;splSave();continue}throw SPError('reconnect',401)}
+    if(r.status===409){const j=await r.json().catch(()=>({}));throw SPError(j.error==='reconnect'?'reconnect':'notconnected',409)}
+    if(r.status===403)throw SPError('forbidden',403);
+    if(!r.ok)throw SPError('http',r.status);
+    try{return await r.json()}catch(e){throw SPError('http',r.status)}
+  }
+}
+function spImportMessage(e){
+  if(e.code==='notconnected')return 'Spotify is not connected on your Worker, so the import could not read Spotify. Connect it in the Spotify box, then try again. Nothing in your log was changed.';
+  return 'Spotify import stopped: '+spMessage(e)+' Nothing in your log was changed.';
+}
+function spPickImg(imgs){
+  const im=(Array.isArray(imgs)?imgs:[]).filter(x=>x&&/^https:\/\/i\.scdn\.co\//.test(x.url||'')).sort((a,b)=>(a.width||0)-(b.width||0));
+  return (im.find(x=>(x.width||0)>=100)||im[im.length-1]||{}).url||'';
+}
+async function spFetchCatalog(art,existing){
+  let id=existing&&existing.spid,name=art.name;
+  MBX.step='Finding the artist on Spotify';MBX.n=0;MBX.of=0;mbProgress();
+  if(!id){
+    const j=await spApi('search?'+new URLSearchParams({q:art.name,type:'artist',limit:10}));
+    const list=(j.artists&&j.artists.items)||[],n=nArtist(art.name);
+    const hit=list.find(x=>x&&x.id&&nArtist(x.name)===n);
+    if(!hit)throw SPError('nomatch');
+    id=hit.id;name=hit.name;
+  }
+  const albums=[],seen=new Set();let off=0,lim=50;
+  MBX.step='Reading releases';mbProgress();
+  for(let guard=0;guard<60;guard++){
+    let j;
+    try{j=await spApi('artists/'+id+'/albums?'+new URLSearchParams({include_groups:'album,single,compilation',market:'from_token',limit:lim,offset:off}))}
+    catch(e){if(e.code==='http'&&e.status===400&&lim>10){lim=10;continue}throw e}
+    const got=j.items||[];
+    for(const x of got)if(x&&x.id&&!seen.has(x.id)){seen.add(x.id);albums.push(x)}
+    off+=got.length;MBX.n=albums.length;MBX.of=Math.max(j.total||0,albums.length);mbProgress();
+    if(!got.length||!j.next)break;                 /* Spotify's next/total can run past the end: an empty page stops it */
+  }
+  MBX.step='Reading tracklists';MBX.n=0;MBX.of=albums.length;mbProgress();
+  for(const al of albums){
+    const j=await spApi('albums/'+al.id+'?market=from_token');
+    const tr=((j.tracks&&j.tracks.items)||[]).slice();let next=j.tracks&&j.tracks.next,g=0;
+    while(next&&g++<20){const k=await spApi(spRel(next));tr.push(...(k.items||[]));next=k.next}
+    al.tracks=tr;al.img=spPickImg(j.images||al.images);MBX.n++;mbProgress();
+  }
+  return{artist:{id,name},albums};
+}
+const SP_ED=/\b(deluxe|remaster(ed)?|edition|anniversary|expanded|bonus|special|explicit|clean|reissue)\b/i;
+const spEd=s=>nrm(String(s).replace(/\s*[\(\[]([^\)\]]*)[\)\]]/g,(m,x)=>SP_ED.test(x)?' ':m).replace(/\s+[-–—]\s+(.+)$/,(m,x)=>SP_ED.test(x)?'':m))||nrm(s);
+const SP_LIVE=/[\(\[]\s*live\b|\s[-–—]\s*live\b|\blive (at|in|from|on)\b|^live$/i;
+function spBuild(albums,artistId,versions){
+  const byEd=new Map();
+  for(const al of albums){
+    const nm=String(al.name||''),type=al.album_type||'album';
+    const tr=(al.tracks||[]).filter(t=>t&&t.name&&t.is_playable!==false&&t.type!=='episode'&&(type!=='compilation'||(t.artists||[]).some(x=>x.id===artistId)));
+    if(!tr.length)continue;
+    const live=SP_LIVE.test(nm)||(tr.length>2&&tr.filter(t=>SP_LIVE.test(t.name)).length>tr.length/2);
+    const alt=/\b(remix(es|ed)?|instrumentals|karaoke|demos)\b/i.test(nm);
+    if((live||alt)&&!versions)continue;
+    const kind=live?'Live':type==='compilation'?'Compilation':alt?'Other':type==='album'?'Studio album':(/\bEP\b/.test(nm)||tr.length>=4)?'EP':'Single';
+    const ek=kind+'|'+spEd(nm);
+    if(!byEd.has(ek))byEd.set(ek,[]);
+    byEd.get(ek).push({al,tr,kind,date:mbDateKey(al.release_date)});
+  }
+  const T=t=>({title:t.name,recording:{title:t.name}});
+  const entries=[];
+  for(const eds of byEd.values()){
+    const tagged=e=>spEd(e.al.name)!==nrm(e.al.name)?1:0,ex=e=>e.tr.filter(t=>t.explicit).length;
+    eds.sort((a,b)=>(tagged(a)-tagged(b))||(ex(b)-ex(a))||(a.tr.length-b.tr.length)||(a.date<b.date?-1:a.date>b.date?1:0));
+    const rep=eds[0],first=eds.map(e=>e.date).sort()[0];
+    entries.push({rgid:'sp:'+rep.al.id,title:rep.al.name,year:first.startsWith('9999')?'—':first.slice(0,4),kind:rep.kind,date:first,img:rep.al.img||'',
+      rep:rep.tr.map(T),others:eds.slice(1).flatMap(e=>e.tr.map(T)),items:[]});
+  }
+  return mbClaim(entries,versions);
+}
 /* artist name -> songs, keyed the same way the MusicBrainz import keys them */
 function spIndex(){
   const m=new Map();
   for(const a of S.music){const base=new Map(),alt=[];
     for(const g of a.groups){const gk=nTitle(g.title);for(const i of g.items){const k=mbItemKey(i);
-      if(k.includes('~'))alt.push({k,g:gk,id:i.id});else{if(!base.has(k))base.set(k,[]);base.get(k).push({g:gk,id:i.id})}}}
+      if(k.includes('~'))alt.push({k,g:gk,id:i.id});else{const b=k.split('@')[0];if(!base.has(b))base.set(b,[]);base.get(b).push({g:gk,id:i.id})}}}
     const n=nArtist(a.name);if(!m.has(n))m.set(n,{base,alt})}
   return m;
 }
 function spFind(idx,x){
   let e=null;for(const n of x.a){e=idx.get(nArtist(n));if(e)break}
   if(!e)return{why:'artist'};
-  const sp=mbSplit(x.t),key=mbK(sp.base)||mbK(x.t),al=nTitle(x.al);
+  const sp=mbSplit(x.t),key=mbKeyOf(x.t),al=nTitle(x.al);
   if(sp.descs.some(d=>mbVClass(d)==='alt')){
     const hits=e.alt.filter(h=>h.k.startsWith(key+'~')),h=hits.find(h=>h.g===al)||(hits.length===1?hits[0]:null);
     return h?{id:h.id}:{why:'version'};
@@ -1542,6 +1690,7 @@ function spSide(){
     const err=viaW&&w&&w.err;
     h+=`<span class="sp-on${err||SPX.err?' err':''}"><i></i>Spotify connected</span>
       <p class="note">${viaW?'Your Worker checks every hour'+(w.polled?', last at '+esc(new Date(w.polled).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})):'')+'.':'Checked when you open the app on this device.'}${S.sp&&S.sp.last?' Last new plays: '+S.sp.last.plays+', '+S.sp.last.marked+' song'+(S.sp.last.marked===1?'':'s')+' checked off ('+esc(new Date(S.sp.last.at).toLocaleDateString([],{month:'short',day:'numeric'}))+').':''}</p>`;
+    if(viaW&&(SY.wv||0)<4)h+=`<p class="note">Paste the updated sync Worker (worker/playback-sync.js) into Cloudflare so discography imports can use Spotify’s own tracklists.</p>`;
     if(err)h+=`<p class="mberr" role="alert">${esc(err==='reconnect'?spMessage({code:'reconnect'}):'Your Worker could not reach Spotify last time ('+err+'). It will try again on its next check.')}</p>`;
     if(viaW&&w&&(!w.cronAt||Date.now()-w.cronAt>3*3600e3))h+=`<div class="mbsrc warn"><p class="note">Your Worker's hourly check is not on yet, so plays are only picked up when you open the app. In Cloudflare open <b>playback-sync</b> › <b>Settings</b> › <b>Trigger events</b> › <b>Add</b> › <b>Cron trigger</b>, choose every hour (<code class="uri">0 * * * *</code>) and save.</p></div>`;
     if(!viaW&&syncOn())h+=`<p class="note">Paste the new worker/playback-sync.js into your Worker and it will take over and check every hour, even with the app closed.</p>`;
@@ -2019,7 +2168,7 @@ function artistView(a){
     const rows=g.items.map((i,k)=>({i,k})).filter(({i})=>UI.filter==='all'||!isDone(i.id));
     if(UI.filter==='open'&&!rows.length)return '';
     return `<div class="group">
-      <div class="ghead">${g.mbid?`<img class="art" src="https://coverartarchive.org/release-group/${esc(g.mbid)}/front-250" alt="" width="44" height="44" loading="lazy" decoding="async" onerror="this.remove()">`:''}<h3>${esc(g.title)}</h3><span class="label">${esc(g.kind)} · ${esc(g.year)}</span><span class="sp"></span>
+      <div class="ghead">${g.img?`<img class="art" src="${esc(g.img)}" alt="" width="44" height="44" loading="lazy" decoding="async" onerror="this.remove()">`:g.mbid&&!/^sp:/.test(g.mbid)?`<img class="art" src="https://coverartarchive.org/release-group/${esc(g.mbid)}/front-250" alt="" width="44" height="44" loading="lazy" decoding="async" onerror="this.remove()">`:''}<h3>${esc(g.title)}</h3><span class="label">${esc(g.kind)} · ${esc(g.year)}</span><span class="sp"></span>
         <span class="mono">${gd}/${g.items.length}</span><span class="bar"><i style="width:${g.items.length?gd/g.items.length*100:0}%"></i></span>
         ${g.items.length?`<button class="link" data-act="grpall" data-a="${a.id}" data-g="${g.id}">${full?'Clear':'Mark all heard'}</button>`:''}</div>
       ${albumRate(g)}
@@ -2049,8 +2198,8 @@ function mbArtistBar(a){
   const isRH=a.id===sid('artist','radiohead');
   let h='';
   if(MBX.busy&&MBX.where==='sheet'&&MBX.aid===a.id)h+=mbProgHtml();
-  else if(a.mbid)h+=`<div class="mbsrc"><span class="label">From MusicBrainz · ${a.mbAt?'updated '+esc(new Date(a.mbAt).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'})):'imported'}${a.mbVersions?' · with other versions':''}</span>
-      <button class="link" data-act="mbrefresh" data-a="${a.id}" ${MBX.busy?'disabled':''}>Check for new releases</button></div>`;
+  else if(a.mbid)h+=`<div class="mbsrc"><span class="label">From ${a.src==='sp'?'Spotify':'MusicBrainz'} · ${a.mbAt?'updated '+esc(new Date(a.mbAt).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'})):'imported'}${a.mbVersions?' · with other versions':''}</span>
+      <button class="link" data-act="mbrefresh" data-a="${a.id}" ${MBX.busy?'disabled':''}>${a.src!=='sp'&&spCanImport()?'Rebuild from Spotify':'Check for new releases'}</button></div>`;
   else if(isRH)h+=`<div class="mbsrc warn"><p class="note">The non-album lists here were typed by hand and aren't verified. Replacing them with MusicBrainz's list keeps every checkmark and rating you have.</p>
       <div><button class="btn primary" data-act="mbrefresh" data-a="${a.id}" ${MBX.busy?'disabled':''}>Replace with the verified MusicBrainz list</button></div></div>`;
   else h+=`<div class="mbsrc"><span class="label">Added by hand</span><button class="link" data-act="mbprefill" data-a="${a.id}" ${MBX.busy?'disabled':''}>Find on MusicBrainz</button></div>`;

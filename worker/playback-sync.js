@@ -1,5 +1,5 @@
 /* =========================================================
-   Playback — sync  (worker version 3, 2026.11.03)
+   Playback — sync  (worker version 4, 2026.11.03)
    Cloudflare Worker + KV. Same setup pattern as protocol-sync
    and gamelog-sync.
 
@@ -39,8 +39,8 @@
    Compressed uploads are stored as-is and never unpacked here, which keeps
    each request well inside the free plan's CPU limit. The log's mtime rides
    along as KV metadata so the newer-copy check needs no parsing.
-   Every response carries x-pb-worker: 3 so the app knows what this Worker
-   can do (2 = compressed sync, 3 = Spotify too).
+   Every response carries x-pb-worker: 4 so the app knows what this Worker
+   can do (2 = compressed sync, 3 = Spotify plays, 4 = Spotify catalog too).
 
    SPOTIFY (version 3)
    PUT    /spotify  {cid, rt, at, exp} -> the app hands over its Spotify sign-in
@@ -50,10 +50,15 @@
                     plays newer than <ms>, oldest first. Checks Spotify first if
                     the last check is over a minute old.
    DELETE /spotify  -> forgets the sign-in and the stored plays.
+   GET    /spotify/api?p=<path> (version 4) -> a read-only Spotify catalog request
+                    (artist search, an artist's albums, an album and its tracks)
+                    made with the stored sign-in, so the app can build tracklists
+                    from exactly what Spotify carries. Nothing else is allowed through.
    The hourly Cron Trigger checks Spotify's recently played (it only keeps your
    last 50 plays) and adds new ones to a list of the last 3000.
    Spotify rotates the refresh token on every refresh, so only the hourly check
-   refreshes it while that check is running; app requests just use the current
+   refreshes it while that check is running (it renews it every hour, so the
+   catalog route always has a live token); app requests just use the current
    access token. The sign-in (spotify-auth) and the check results (spotify-meta)
    are separate keys so a check can never write back an old refresh token.
    ========================================================= */
@@ -68,9 +73,9 @@ const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'content-type, x-sync-key',
-  'Access-Control-Expose-Headers': 'x-pb-worker',
+  'Access-Control-Expose-Headers': 'x-pb-worker, retry-after',
   'Access-Control-Max-Age': '86400',
-  'x-pb-worker': '3'
+  'x-pb-worker': '4'
 };
 const JSON_H = Object.assign({ 'content-type': 'application/json', 'cache-control': 'no-store' }, CORS);
 const GZ_H = Object.assign({ 'content-type': 'application/gzip', 'cache-control': 'no-store' }, CORS);
@@ -110,6 +115,41 @@ function sendStored(st, wantGz, status) {
 /* ---------- Spotify ---------- */
 async function getJSON(env, k) { try { return JSON.parse(await env.STATE.get(k)) } catch (e) { return null } }
 
+async function spRefresh(env, auth) {
+  const r = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: auth.rt, client_id: auth.cid })
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) return { err: j.error === 'invalid_grant' ? 'reconnect' : 'sign-in ' + r.status };
+  await env.STATE.put(SP_AUTH, JSON.stringify({ cid: auth.cid, rt: j.refresh_token || auth.rt, at: j.access_token, exp: Date.now() + (j.expires_in || 3600) * 1000 }));
+  return { at: j.access_token };
+}
+
+/* read-only catalog requests for building tracklists */
+const CAT_OK = /^(search|artists\/[A-Za-z0-9]{22}\/albums|albums\/[A-Za-z0-9]{22}(\/tracks)?)\?[A-Za-z0-9_=&%.,:+*'()\-]{0,600}$/;
+async function spCatalog(env, url) {
+  const p = url.searchParams.get('p') || '';
+  if (!CAT_OK.test(p)) return reply({ error: 'path not allowed' }, 400);
+  const auth = await getJSON(env, SP_AUTH);
+  if (!auth) return reply({ error: 'not connected' }, 409);
+  let at = auth.at;
+  if (!at || Date.now() > (auth.exp || 0) - 60000) {
+    const meta = (await getJSON(env, SP_META)) || {};
+    if (meta.err === 'reconnect') return reply({ error: 'reconnect' }, 409);
+    const cronOff = !meta.cronAt || Date.now() - meta.cronAt > 3 * 3600 * 1000;
+    if (!cronOff) return new Response(JSON.stringify({ error: 'token' }), { status: 503, headers: Object.assign({ 'retry-after': '30' }, JSON_H) });
+    const t = await spRefresh(env, auth);
+    if (t.err) { if (t.err === 'reconnect') { meta.err = 'reconnect'; await env.STATE.put(SP_META, JSON.stringify(meta)); } return reply({ error: t.err }, 409); }
+    at = t.at;
+  }
+  const r = await fetch('https://api.spotify.com/v1/' + p, { headers: { authorization: 'Bearer ' + at } });
+  if (r.status === 401) return new Response(JSON.stringify({ error: 'token' }), { status: 503, headers: Object.assign({ 'retry-after': '30' }, JSON_H) });
+  const h = Object.assign({}, JSON_H);
+  const ra = r.headers.get('retry-after'); if (ra) h['retry-after'] = ra;
+  return new Response(await r.text(), { status: r.status, headers: h });
+}
+
 /* one check of Spotify's recently played. mayRefresh: allowed to swap the refresh
    token (only the hourly check, or the app when the hourly check is not running) */
 async function spCheck(env, mayRefresh, fromCron) {
@@ -121,16 +161,12 @@ async function spCheck(env, mayRefresh, fromCron) {
   if (meta.err === 'reconnect') return done();
 
   let at = auth.at;
-  if (!at || Date.now() > (auth.exp || 0) - 60000) {
+  /* the hourly check always renews, so the token never lapses between checks */
+  if (!at || Date.now() > (auth.exp || 0) - 60000 || fromCron) {
     if (!mayRefresh) return done();
-    const r = await fetch('https://accounts.spotify.com/api/token', {
-      method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: auth.rt, client_id: auth.cid })
-    });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok) { meta.err = j.error === 'invalid_grant' ? 'reconnect' : 'sign-in ' + r.status; return done(); }
-    at = j.access_token;
-    await env.STATE.put(SP_AUTH, JSON.stringify({ cid: auth.cid, rt: j.refresh_token || auth.rt, at, exp: Date.now() + (j.expires_in || 3600) * 1000 }));
+    const t = await spRefresh(env, auth);
+    if (t.err) { meta.err = t.err; return done(); }
+    at = t.at;
   }
 
   const r = await fetch('https://api.spotify.com/v1/me/player/recently-played?limit=50', { headers: { authorization: 'Bearer ' + at } });
@@ -193,6 +229,7 @@ export default {
     const url = new URL(request.url);
     const given = (request.headers.get('x-sync-key') || '').trim();
     if (!keyMatches(given, String(env.SECRET).trim())) return reply({ error: 'unauthorized' }, 401);
+    if (url.pathname === '/spotify/api') return request.method === 'GET' ? spCatalog(env, url) : reply({ error: 'method not allowed' }, 405);
     if (url.pathname === '/spotify') return spotify(request, env, url);
     if (url.pathname !== '/') return reply({ error: 'not found' }, 404);
     const wantGz = url.searchParams.get('gz') === '1';
