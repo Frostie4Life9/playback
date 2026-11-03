@@ -165,6 +165,8 @@ textarea{min-height:110px;resize:vertical;font-size:14px}
 .sp-on.err i{background:var(--warn)}
 .spmiss ul{margin:6px 0 0;padding-left:18px;font-size:13px;display:flex;flex-direction:column;gap:2px}
 .spmiss .why{color:var(--muted)}
+.splog li.old>.link{color:var(--muted)}
+.splog li .link{font-size:13px}
 code.uri{font:500 12px var(--mono);background:var(--sunk);border-radius:4px;padding:2px 5px;word-break:break-all;user-select:all}
 .track.ep .num,.track.ep .check{margin-top:2px}
 .eptl{all:unset;cursor:pointer;font-weight:500;overflow-wrap:anywhere}
@@ -753,6 +755,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.03-d', note:'SEE WHAT SPOTIFY CHECKED OFF: the Spotify box on the Music tab now lists the songs it matched, newest first, with the artist, album, when you played it and how many times. Songs it newly checked off have an Uncheck button in case a play shouldn\u2019t count; ones you had already heard are greyed out. Tap a song to jump to that artist. The list starts from your next Spotify check.'},
   {v:'2026.11.03-c', note:'TRACKLISTS STRAIGHT FROM SPOTIFY: with Spotify connected, importing or updating an artist now reads their albums, EPs and singles from Spotify itself, so every song listed is one you can actually play, and deluxe or bonus songs Spotify carries show up under their album. Marked songs Spotify doesn\u2019t have move to \u201cKept from your earlier list\u201d. Open an artist and tap Rebuild from Spotify to switch them over; checkmarks and ratings stay. Paste the updated sync Worker into Cloudflare first (one more time). Also fixed for every import: albums no longer lose a song because an earlier album has one with the same name (a second \u201cIntro\u201d), and \u201cSong (Reprise)\u201d or \u201c(Part 2)\u201d no longer disappear into \u201cSong\u201d.'},
   {v:'2026.11.03-b', note:'SPOTIFY CHECKS OFF WHAT YOU PLAY, AND WHERE TO WATCH: on the Music tab, connect Spotify once (on your PC) and songs you play there get checked off as heard here, matched to the artists and songs already in your log. Ratings stay yours to set. Once you paste the new sync Worker into Cloudflare and turn on its hourly check, your Worker keeps watching even when the app is closed. On the Screen tab, every show and film from TMDB now shows where it is streaming in the US, plus where to rent or buy it (data from JustWatch), and Up next says which service a show is on.'},
   {v:'2026.11.03-a', note:'ROOM TO GROW: your log now saves in your browser\u2019s built-in database, which holds hundreds of MB, instead of the roughly 5 MB space it used before (smallest on iPhone), so big discographies and long shows won\u2019t quietly stop saving. If a save ever does fail, a red banner tells you right away. Sync now sends the log compressed, about 5 times smaller, once you paste the new sync Worker code into Cloudflare. Backup & restore shows how big your log is.'},
@@ -1625,14 +1628,19 @@ function spApply(plays){
   SPX.checked=Date.now();S.sp=S.sp||{after:0,miss:[]};
   const after=S.sp.after||0,fresh=plays.filter(x=>x&&x.p>after&&x.t&&Array.isArray(x.a)).sort((a,b)=>a.p-b.p);
   if(!fresh.length)return;
-  const idx=spIndex(),miss=S.sp.miss||[];let marked=0,matched=0;
+  const idx=spIndex(),miss=S.sp.miss||[],log=S.sp.log||[];let marked=0,matched=0;
+  const who=new Map();for(const a of S.music)for(const g of a.groups)for(const i of g.items)if(!who.has(i.id))who.set(i.id,{t:i.title,a:a.name,aid:a.id,g:g.title});
   for(const x of fresh){
     const f=spFind(idx,x);
-    if(f.id){matched++;if(!isDone(f.id)){S.marks[f.id]={...(S.marks[f.id]||{}),done:true};marked++}continue}
+    if(f.id){matched++;const n=!isDone(f.id);if(n){S.marks[f.id]={...(S.marks[f.id]||{}),done:true};marked++}
+      /* the songs it matched, newest first; a song played again moves to the top */
+      const i=log.findIndex(e=>e.id===f.id),was=i>=0?log.splice(i,1)[0]:null,w=who.get(f.id)||{};
+      log.unshift({id:f.id,t:w.t||x.t,a:w.a||x.a[0]||'',aid:w.aid||'',g:w.g||'',p:x.p,n:n||!!(was&&was.n),c:((was&&was.c)||0)+1});
+      continue}
     const k=nArtist(x.a[0]||'')+'|'+mbK(x.t),i=miss.findIndex(m=>m.k===k);if(i>=0)miss.splice(i,1);
     miss.unshift({k,t:x.t,a:x.a[0]||'',al:x.al,why:f.why});
   }
-  S.sp.miss=miss.slice(0,40);S.sp.after=fresh[fresh.length-1].p;
+  S.sp.miss=miss.slice(0,40);S.sp.log=log.slice(0,100);S.sp.after=fresh[fresh.length-1].p;
   S.sp.last={at:Date.now(),plays:fresh.length,matched,marked};
   touch();
 }
@@ -1697,6 +1705,12 @@ function spSide(){
     h+=`<div class="tools"><button class="btn" data-act="spnow" ${SPX.busy?'disabled':''}>${SPX.busy?'Checking…':'Check now'}</button><button class="btn danger" data-act="spoff" ${SPX.busy?'disabled':''}>Disconnect</button></div>`;
   }
   if(SPX.err)h+=`<p class="mberr" role="alert">${esc(SPX.err)}</p>`;
+  const lg=S.sp&&S.sp.log||[];
+  if(lg.length){const nw=lg.filter(e=>e.n).length;
+    const when=p=>{const d=new Date(p),t=new Date();return d.toDateString()===t.toDateString()?d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):d.toLocaleDateString([],{month:'short',day:'numeric'})};
+    h+=`<details class="spmiss splog" ${UI.spLogOpen?'open':''}><summary class="note">Checked off from Spotify: ${nw} new${lg.length>nw?', '+(lg.length-nw)+' already heard':''}</summary>
+      <ul>${lg.map(e=>`<li class="${e.n?'':'old'}"><button type="button" class="link" data-act="splgo" data-a="${esc(e.aid)}">${esc(e.t)}</button> <span class="why">\u2013 ${esc(e.a)}${e.g?' \u00b7 '+esc(e.g):''} \u00b7 ${esc(when(e.p))}${e.c>1?' \u00b7 '+e.c+' plays':''}${e.n?'':' \u00b7 already heard'}</span>${e.n&&isDone(e.id)?` <button type="button" class="link" data-act="spundo" data-id="${esc(e.id)}">Uncheck</button>`:e.n?' <span class="why">(unchecked)</span>':''}</li>`).join('')}</ul>
+      <div><button type="button" class="link" data-act="splogclear">Clear this list</button></div></details>`}
   const m=S.sp&&S.sp.miss||[];
   if(m.length){const why={artist:'artist not here yet',song:'song not in the list',version:'that version is not in the list'};
     h+=`<details class="spmiss"><summary class="note">${m.length} song${m.length===1?'':'s'} you played that are not in Playback</summary>
@@ -2064,7 +2078,7 @@ async function push(force){
 }
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pull()});
 window.addEventListener('online',()=>pull());
-document.addEventListener('toggle',ev=>{if(ev.target.id==='syncpanel')UI.syncOpen=ev.target.open},true);
+document.addEventListener('toggle',ev=>{if(ev.target.id==='syncpanel')UI.syncOpen=ev.target.open;else if(ev.target.classList&&ev.target.classList.contains('splog'))UI.spLogOpen=ev.target.open},true);
 const UI={tab:'music',sel:{music:null,screen:null},filter:'all',armed:null,addType:'show',copied:false,epOpen:{}};
 try{const t=localStorage.getItem(KEY+'_tab');if(t==='screen')UI.tab='screen'}catch(e){}
 
@@ -2299,6 +2313,9 @@ document.addEventListener('click',ev=>{
   else if(act==='spcid'){SPX.cidOpen=true;SPX.err=''}
   else if(act==='spcidcancel'){SPX.cidOpen=false;SPX.err=''}
   else if(act==='spmissclear'){if(S.sp)S.sp.miss=[];touch()}
+  else if(act==='splogclear'){if(S.sp)S.sp.log=[];UI.spLogOpen=false;touch()}
+  else if(act==='spundo'){UI.spLogOpen=true;S.marks[id]={...(S.marks[id]||{}),done:false};touch()}
+  else if(act==='splgo'){UI.spLogOpen=true;if(b.dataset.a){UI.tab='music';UI.sel.music=b.dataset.a;UI.filter='all'}}
   else if(act==='spcopy'){const t=SP_REDIRECT;if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>{SPX.copied=true;render()},()=>{});return}
   else if(act==='rymadd'){const r=rymAddWaiting();RYX.report={total:r.albums,zero:0,filled:0,same:0,kept:[],waiting:[],notFound:[],dups:[],added:r};touch()}
   else if(act==='rate'){const v=+b.dataset.v;S.marks[id]={...(S.marks[id]||{}),r:rating(id)===v?0:v};touch()}
