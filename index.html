@@ -148,6 +148,24 @@ textarea{min-height:110px;resize:vertical;font-size:14px}
 .overview{margin:0;max-width:70ch;line-height:1.5}
 .srate{border-bottom:0;padding:10px 12px;background:var(--bg);border-radius:8px}
 .track.ep{align-items:start}
+/* where to watch */
+.watch{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--surface)}
+.provrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.provrow .pk{font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);min-width:52px}
+.prov{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:3px 10px 3px 4px;font-size:13px;font-weight:600;background:var(--bg)}
+.prov img{width:20px;height:20px;border-radius:5px;flex:0 0 auto}
+.prov.noimg{padding-left:10px}
+.watch details summary{cursor:pointer;font-size:13px;color:var(--muted)}
+.watch details[open]{display:flex;flex-direction:column;gap:6px}
+.watch .note{margin:0}
+.card .on{color:var(--accent)}
+/* Spotify */
+.sp-on{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px}
+.sp-on i{width:8px;height:8px;border-radius:50%;background:var(--done);flex:0 0 auto}
+.sp-on.err i{background:var(--warn)}
+.spmiss ul{margin:6px 0 0;padding-left:18px;font-size:13px;display:flex;flex-direction:column;gap:2px}
+.spmiss .why{color:var(--muted)}
+code.uri{font:500 12px var(--mono);background:var(--sunk);border-radius:4px;padding:2px 5px;word-break:break-all;user-select:all}
 .track.ep .num,.track.ep .check{margin-top:2px}
 .eptl{all:unset;cursor:pointer;font-weight:500;overflow-wrap:anywhere}
 .eptl:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
@@ -735,6 +753,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.03-b', note:'SPOTIFY CHECKS OFF WHAT YOU PLAY, AND WHERE TO WATCH: on the Music tab, connect Spotify once (on your PC) and songs you play there get checked off as heard here, matched to the artists and songs already in your log. Ratings stay yours to set. Once you paste the new sync Worker into Cloudflare and turn on its hourly check, your Worker keeps watching even when the app is closed. On the Screen tab, every show and film from TMDB now shows where it is streaming in the US, plus where to rent or buy it (data from JustWatch), and Up next says which service a show is on.'},
   {v:'2026.11.03-a', note:'ROOM TO GROW: your log now saves in your browser\u2019s built-in database, which holds hundreds of MB, instead of the roughly 5 MB space it used before (smallest on iPhone), so big discographies and long shows won\u2019t quietly stop saving. If a save ever does fail, a red banner tells you right away. Sync now sends the log compressed, about 5 times smaller, once you paste the new sync Worker code into Cloudflare. Backup & restore shows how big your log is.'},
   {v:'2026.11.02-c', note:'RATE THE WHOLE SHOW, AND EPISODE DETAILS: every show now has its own overall rating at the top, next to the average of your season ratings and of your episode ratings. Shows from TMDB also bring in their description, genres, network and creators, and each episode shows its name, air date and runtime. Tap an episode name to read its description; they stay folded so nothing is spoiled. Films from TMDB get their description and genres too (tap Refresh from TMDB on a film you already added).'},
   {v:'2026.11.02-b', note:'RATE EPISODES ONE BY ONE: on a show, each episode is now its own row with a checkmark and a 1\u201310 rating, like songs on an album. Each season still has its own overall rating, and next to it you see the average of the episodes you rated and how far your season rating is above or below it. The show header counts how many episodes you have rated.'},
@@ -845,6 +864,7 @@ function seedAll(){
      (an older copy of the app re-adding the hand-typed lists, say) */
   S.music.forEach(x=>{if(x.mbid)mbTidy(x)});
   S.music.forEach(x=>applyPending(x));
+  S.sp=S.sp||{after:0,miss:[]};
   save();
 }
 
@@ -862,11 +882,12 @@ function upNext(){
     for(const g of a.groups){const i=g.items.find(x=>!isDone(x.id));if(i){out.push({tab:'music',id:a.id,t:i.title,s:a.name+' · '+g.title});break}}
   }
   for(const s of S.screen){
-    if(s.type==='film'){if(!isDone(s.id))out.push({tab:'screen',id:s.id,t:s.title,s:'Film'+(s.year?' · '+s.year:'')});continue}
+    const on=s.watch&&s.watch.s&&s.watch.s[0]?s.watch.s[0][0]:'';
+    if(s.type==='film'){if(!isDone(s.id))out.push({tab:'screen',id:s.id,t:s.title,s:'Film'+(s.year?' · '+s.year:''),on});continue}
     let found=null;
     for(const se of s.seasons){for(let e=1;e<=se.eps;e++){if(!isDone(sid(s.id,'s',se.n,'e',e))){found=[se.n,e];break}}if(found)break}
-    if(found)out.push({tab:'screen',id:s.id,t:s.title,s:sxe(found[0],found[1])+' is next'});
-    else if(s.next&&s.next.d&&s.next.d>=new Date().toISOString().slice(0,10))out.push({tab:'screen',id:s.id,t:s.title,s:sxe(s.next.n,s.next.e)+' out '+tmDay(s.next.d)});
+    if(found)out.push({tab:'screen',id:s.id,t:s.title,s:sxe(found[0],found[1])+' is next',on});
+    else if(s.next&&s.next.d&&s.next.d>=new Date().toISOString().slice(0,10))out.push({tab:'screen',id:s.id,t:s.title,s:sxe(s.next.n,s.next.e)+' out '+tmDay(s.next.d),on});
   }
   return out;
 }
@@ -1344,6 +1365,197 @@ function rtSide(){
   return h+'</div>';
 }
 
+/* ---------- Spotify: songs you play get checked off ----------
+   Your own Spotify app (Client ID in S.cfg.spotify, which syncs; it is not a secret)
+   signs in with PKCE, so there is no client secret anywhere. Scope:
+   user-read-recently-played only. Spotify keeps just your last 50 plays, so:
+   - with sync Worker v3 the sign-in is handed to the Worker, which checks every hour
+     on its own (Cron Trigger) and keeps the plays; the app reads them from there.
+   - otherwise this device keeps the sign-in (localStorage, never synced) and checks
+     when the app opens.
+   S.sp.after (synced) is the newest play already applied, so a play is used once:
+   un-checking a song by hand sticks, and two devices never double up.
+   A play checks off the matching song for that artist (same title key as the
+   MusicBrainz import, so remasters and edits count). Live, demo, acoustic and other
+   versions only check off that version if it is in your list. Ratings are never
+   touched. Plays that match nothing are listed so you can see what to add. */
+const SP_AUTH='https://accounts.spotify.com/authorize',SP_TOKEN='https://accounts.spotify.com/api/token',SP_API='https://api.spotify.com/v1/';
+const SP_REDIRECT=location.origin+location.pathname.replace(/index\.html$/,'');
+const SPL_KEY=KEY+'_spotify';
+let SPL=(()=>{try{return JSON.parse(localStorage.getItem(SPL_KEY))||{}}catch(e){return{}}})();
+const splSave=()=>{try{localStorage.setItem(SPL_KEY,JSON.stringify(SPL))}catch(e){}};
+const SPX={busy:false,err:'',wk:null,last:0,cidOpen:false,checked:0,copied:false,started:false};
+const spCid=()=>(S.cfg&&S.cfg.spotify)||'';
+const spViaWorker=()=>syncOn()&&(SY.wv||0)>=3;
+/* the sign-in coming back from Spotify: read it and clean the address bar right away */
+const SP_CB=(()=>{try{const q=new URLSearchParams(location.search);if(!q.has('state')||!(q.has('code')||q.has('error')))return null;
+  const o={code:q.get('code'),error:q.get('error'),state:q.get('state')};history.replaceState(null,'',SP_REDIRECT+location.hash);return o}catch(e){return null}})();
+function SPError(code,status){const e=new Error(code);e.code=code;e.status=status;return e}
+function spMessage(e){
+  switch(e.code){
+    case 'network':return 'Could not reach Spotify. It will try again next time you open the app.';
+    case 'reconnect':return 'Spotify signed Playback out (that happens if you remove access or change your Spotify password). Tap Connect Spotify to sign in again.';
+    case 'badcid':return 'Spotify did not recognize that Client ID. Copy it again from your app’s Settings on developer.spotify.com.';
+    case 'forbidden':return 'Spotify refused (403). On developer.spotify.com, open your app › User Management and add the email of your Spotify account, and check that Premium is active.';
+    case 'busy':return 'Spotify is asking for a short break. It will try again in a few minutes.';
+    case 'synckey':return 'Your Worker did not accept the sync key, so it could not check Spotify. Re-enter the key under Sync.';
+    case 'worker':return 'Your Worker had a problem checking Spotify ('+(e.status||'?')+'). Try again in a moment.';
+    case 'state':return 'That Spotify sign-in did not start in this browser. Tap Connect Spotify again here. (On iPhone, connect from your PC instead: the home-screen app does not get the sign-in back.)';
+    default:return 'Spotify had a problem ('+(e.status||e.message)+'). Try again in a moment.';
+  }
+}
+const b64u=buf=>btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+async function spConnect(){
+  const cid=spCid();if(!cid)return;
+  const v=b64u(crypto.getRandomValues(new Uint8Array(48)));
+  const ch=b64u(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v)));
+  const st=b64u(crypto.getRandomValues(new Uint8Array(16)));
+  SPL.pkce={v,st,cid,at:Date.now()};splSave();
+  const u=new URL(SP_AUTH);
+  Object.entries({response_type:'code',client_id:cid,scope:'user-read-recently-played',redirect_uri:SP_REDIRECT,code_challenge_method:'S256',code_challenge:ch,state:st}).forEach(([k,x])=>u.searchParams.set(k,x));
+  location.assign(u.toString());
+}
+async function spToken(body){
+  let r;try{r=await fetch(SP_TOKEN,{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded'},body:new URLSearchParams(body)})}catch(e){throw SPError('network')}
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw SPError(j.error==='invalid_grant'?'reconnect':j.error==='invalid_client'?'badcid':'http',r.status);
+  return j;
+}
+async function wkSp(method,body,q){
+  const u=SY.url.replace(/\/+$/,'')+'/spotify'+(q?'?'+q:'');
+  let r;try{r=await fetch(u,{method,cache:'no-store',headers:{'x-sync-key':SY.key,...(body?{'content-type':'application/json'}:{})},body:body?JSON.stringify(body):undefined})}catch(e){throw SPError('network')}
+  const j=await r.json().catch(()=>null);
+  if(r.status===401)throw SPError('synckey',401);
+  if(!r.ok)throw SPError('worker',r.status);
+  return j;
+}
+/* the Worker takes over the sign-in; this device forgets it so only one place ever refreshes it */
+async function spHandOff(tok){SPX.wk=await wkSp('PUT',tok);SPL={};splSave()}
+async function spFinish(cb){
+  const p=SPL.pkce;delete SPL.pkce;splSave();
+  if(cb.error){SPX.err=cb.error==='access_denied'?'You said no on Spotify, so nothing was connected.':'Spotify said: '+cb.error;return}
+  if(!p||p.st!==cb.state)throw SPError('state');
+  const j=await spToken({grant_type:'authorization_code',code:cb.code,redirect_uri:SP_REDIRECT,client_id:p.cid,code_verifier:p.v});
+  const tok={cid:p.cid,rt:j.refresh_token,at:j.access_token,exp:Date.now()+(j.expires_in||3600)*1000};
+  if(spViaWorker())await spHandOff(tok);else{SPL=tok;splSave()}
+}
+const spSlim=items=>items.map(x=>{const t=x.track||{};return{p:Date.parse(x.played_at)||0,t:t.name||'',a:(t.artists||[]).map(a=>a.name).filter(Boolean),al:(t.album&&t.album.name)||''}}).filter(x=>x.p&&x.t);
+async function spLocalPlays(retried){
+  if(!SPL.at||Date.now()>(SPL.exp||0)-60e3){
+    const j=await spToken({grant_type:'refresh_token',refresh_token:SPL.rt,client_id:SPL.cid||spCid()});
+    SPL.at=j.access_token;SPL.exp=Date.now()+(j.expires_in||3600)*1000;if(j.refresh_token)SPL.rt=j.refresh_token;splSave();
+  }
+  let r;try{r=await fetch(SP_API+'me/player/recently-played?limit=50',{headers:{authorization:'Bearer '+SPL.at}})}catch(e){throw SPError('network')}
+  if(r.status===401&&!retried){SPL.exp=0;splSave();return spLocalPlays(true)}
+  if(r.status===403)throw SPError('forbidden',403);
+  if(r.status===429)throw SPError('busy',429);
+  if(r.status===204)return [];
+  if(!r.ok)throw SPError('http',r.status);
+  const j=await r.json().catch(()=>({}));return spSlim(j.items||[]);
+}
+/* artist name -> songs, keyed the same way the MusicBrainz import keys them */
+function spIndex(){
+  const m=new Map();
+  for(const a of S.music){const base=new Map(),alt=[];
+    for(const g of a.groups){const gk=nTitle(g.title);for(const i of g.items){const k=mbItemKey(i);
+      if(k.includes('~'))alt.push({k,g:gk,id:i.id});else{if(!base.has(k))base.set(k,[]);base.get(k).push({g:gk,id:i.id})}}}
+    const n=nArtist(a.name);if(!m.has(n))m.set(n,{base,alt})}
+  return m;
+}
+function spFind(idx,x){
+  let e=null;for(const n of x.a){e=idx.get(nArtist(n));if(e)break}
+  if(!e)return{why:'artist'};
+  const sp=mbSplit(x.t),key=mbK(sp.base)||mbK(x.t),al=nTitle(x.al);
+  if(sp.descs.some(d=>mbVClass(d)==='alt')){
+    const hits=e.alt.filter(h=>h.k.startsWith(key+'~')),h=hits.find(h=>h.g===al)||(hits.length===1?hits[0]:null);
+    return h?{id:h.id}:{why:'version'};
+  }
+  const hits=e.base.get(key);if(!hits)return{why:'song'};
+  return{id:(hits.find(h=>h.g===al)||hits[0]).id};
+}
+function spApply(plays){
+  SPX.checked=Date.now();S.sp=S.sp||{after:0,miss:[]};
+  const after=S.sp.after||0,fresh=plays.filter(x=>x&&x.p>after&&x.t&&Array.isArray(x.a)).sort((a,b)=>a.p-b.p);
+  if(!fresh.length)return;
+  const idx=spIndex(),miss=S.sp.miss||[];let marked=0,matched=0;
+  for(const x of fresh){
+    const f=spFind(idx,x);
+    if(f.id){matched++;if(!isDone(f.id)){S.marks[f.id]={...(S.marks[f.id]||{}),done:true};marked++}continue}
+    const k=nArtist(x.a[0]||'')+'|'+mbK(x.t),i=miss.findIndex(m=>m.k===k);if(i>=0)miss.splice(i,1);
+    miss.unshift({k,t:x.t,a:x.a[0]||'',al:x.al,why:f.why});
+  }
+  S.sp.miss=miss.slice(0,40);S.sp.after=fresh[fresh.length-1].p;
+  S.sp.last={at:Date.now(),plays:fresh.length,matched,marked};
+  touch();
+}
+async function spPoll(force){
+  if(!READY||SPX.busy||!spCid())return;
+  const viaW=spViaWorker();
+  if(!viaW&&!SPL.rt)return;
+  if(!force&&Date.now()-SPX.last<120e3)return;
+  SPX.busy=true;SPX.last=Date.now();if(force)render();
+  try{
+    if(viaW&&SPL.rt)await spHandOff({cid:SPL.cid||spCid(),rt:SPL.rt,at:SPL.at||'',exp:SPL.exp||0});   /* the Worker was just updated: it takes over */
+    let plays;
+    if(viaW){const j=await wkSp('GET',null,'after='+((S.sp&&S.sp.after)||0));SPX.wk=j;plays=j&&j.connected?j.plays||[]:[]}
+    else plays=await spLocalPlays();
+    SPX.err='';spApply(plays);
+  }catch(e){SPX.err=spMessage(e);if(e.code==='reconnect'&&!viaW){SPL={};splSave()}}
+  finally{SPX.busy=false;render()}
+}
+async function spBoot(){
+  if(SPX.started)return;SPX.started=true;
+  if(SP_CB){SPX.busy=true;render();
+    try{await spFinish(SP_CB);UI.tab='music'}catch(e){SPX.err=spMessage(e)}
+    finally{SPX.busy=false}}
+  if(spViaWorker()&&!SPX.wk&&!SPL.rt){try{SPX.wk=await wkSp('GET',null,'after='+((S.sp&&S.sp.after)||0));SPX.last=Date.now();spApply(SPX.wk&&SPX.wk.connected?SPX.wk.plays||[]:[])}catch(e){SPX.err=spMessage(e)}render();return}
+  await spPoll(true);
+}
+async function spDisconnect(){
+  SPX.busy=true;render();
+  try{if(spViaWorker())SPX.wk=await wkSp('DELETE');SPL={};splSave();SPX.err=''}
+  catch(e){SPX.err=spMessage(e)}
+  finally{SPX.busy=false;render()}
+}
+function spSide(){
+  const cid=spCid(),viaW=spViaWorker(),w=SPX.wk;
+  const on=viaW?!!(w&&w.connected):!!SPL.rt;
+  let h=`<div class="add"><span class="label">Check off what you play on Spotify</span>`;
+  if(!cid||SPX.cidOpen){
+    h+=`<form data-form="spcid" style="display:flex;flex-direction:column;gap:8px">
+      ${cid?'<p class="note">Paste the new Client ID.</p>':`<p class="note">Songs you play on Spotify get checked off here as heard. It needs your own free Spotify developer app, once. Do this on your PC:</p>
+      <ol class="note steps"><li>Go to <a href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener">developer.spotify.com/dashboard</a>, log in with your Spotify account and tap <b>Create app</b>.</li>
+        <li>Name it Playback. Under <b>Redirect URIs</b> add exactly <code class="uri">${esc(SP_REDIRECT)}</code> <button type="button" class="link" data-act="spcopy">${SPX.copied?'Copied':'Copy'}</button></li>
+        <li>Tick <b>Web API</b>, agree, and save. Open the app's <b>Settings</b> and copy the <b>Client ID</b>.</li></ol>`}
+      <input name="cid" autocomplete="off" spellcheck="false" placeholder="Spotify Client ID" required ${SPX.busy?'disabled':''}>
+      <div class="tools"><button class="btn primary">Save Client ID</button>${cid?'<button type="button" class="btn" data-act="spcidcancel">Cancel</button>':''}</div>
+      </form>`;
+    if(SPX.err)h+=`<p class="mberr" role="alert">${esc(SPX.err)}</p>`;
+    return h+'</div>';
+  }
+  if(viaW&&!w&&!SPX.err)h+=`<p class="note" role="status">Asking your Worker…</p>`;
+  else if(!on){
+    h+=`<p class="note">${viaW?'Your Worker will check Spotify every hour, so plays are caught even while the app is closed.':'This device will check Spotify each time you open the app. Spotify only remembers your last 50 plays, so open it at least every few hours of listening, or update your sync Worker and it checks every hour for you.'}</p>
+      <div class="tools"><button class="btn primary" data-act="spgo" ${SPX.busy?'disabled':''}>${SPX.busy?'Connecting…':'Connect Spotify'}</button><button type="button" class="link" data-act="spcid">Change Client ID</button></div>
+      <p class="note">Connect on your PC. On iPhone the home-screen app does not get the sign-in back from Spotify.</p>`;
+  }else{
+    const err=viaW&&w&&w.err;
+    h+=`<span class="sp-on${err||SPX.err?' err':''}"><i></i>Spotify connected</span>
+      <p class="note">${viaW?'Your Worker checks every hour'+(w.polled?', last at '+esc(new Date(w.polled).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})):'')+'.':'Checked when you open the app on this device.'}${S.sp&&S.sp.last?' Last new plays: '+S.sp.last.plays+', '+S.sp.last.marked+' song'+(S.sp.last.marked===1?'':'s')+' checked off ('+esc(new Date(S.sp.last.at).toLocaleDateString([],{month:'short',day:'numeric'}))+').':''}</p>`;
+    if(err)h+=`<p class="mberr" role="alert">${esc(err==='reconnect'?spMessage({code:'reconnect'}):'Your Worker could not reach Spotify last time ('+err+'). It will try again on its next check.')}</p>`;
+    if(viaW&&w&&(!w.cronAt||Date.now()-w.cronAt>3*3600e3))h+=`<div class="mbsrc warn"><p class="note">Your Worker's hourly check is not on yet, so plays are only picked up when you open the app. In Cloudflare open <b>playback-sync</b> › <b>Settings</b> › <b>Trigger events</b> › <b>Add</b> › <b>Cron trigger</b>, choose every hour (<code class="uri">0 * * * *</code>) and save.</p></div>`;
+    if(!viaW&&syncOn())h+=`<p class="note">Paste the new worker/playback-sync.js into your Worker and it will take over and check every hour, even with the app closed.</p>`;
+    h+=`<div class="tools"><button class="btn" data-act="spnow" ${SPX.busy?'disabled':''}>${SPX.busy?'Checking…':'Check now'}</button><button class="btn danger" data-act="spoff" ${SPX.busy?'disabled':''}>Disconnect</button></div>`;
+  }
+  if(SPX.err)h+=`<p class="mberr" role="alert">${esc(SPX.err)}</p>`;
+  const m=S.sp&&S.sp.miss||[];
+  if(m.length){const why={artist:'artist not here yet',song:'song not in the list',version:'that version is not in the list'};
+    h+=`<details class="spmiss"><summary class="note">${m.length} song${m.length===1?'':'s'} you played that are not in Playback</summary>
+      <ul>${m.map(x=>`<li>${esc(x.a)} – ${esc(x.t)} <span class="why">(${why[x.why]||x.why})</span></li>`).join('')}</ul>
+      <div><button type="button" class="link" data-act="spmissclear">Clear this list</button></div></details>`}
+  return h+'</div>';
+}
+
 /* ---------- TMDB for the Screen tab ----------
    Search shows and films on The Movie Database and bring in the poster, year,
    seasons and episode counts. The TMDB key lives in the log (S.cfg.tmdb), so it
@@ -1395,7 +1607,7 @@ function tmExisting(kind,tid,title,year){
 }
 
 async function tmFetchShow(tid){
-  const j=await tmGet('tv/'+tid,{language:'en-US'});
+  const j=await tmGet('tv/'+tid,{language:'en-US',append_to_response:'watch/providers'});
   const last=j.last_episode_to_air,nxt=j.next_episode_to_air,seasons=[];
   for(const se of (j.seasons||[])){
     const n=se.season_number;if(!(n>0))continue;
@@ -1403,12 +1615,53 @@ async function tmFetchShow(tid){
     const aired=!last?0:n<last.season_number?total:n===last.season_number?last.episode_number:0;
     seasons.push({n,aired,total:Math.max(total,aired)});
   }
-  return{title:j.name||j.original_name||'Untitled',year:tmYear(j.first_air_date),poster:j.poster_path||'',status:j.status||'',seasons,...tmInfo(j),
+  return{title:j.name||j.original_name||'Untitled',year:tmYear(j.first_air_date),poster:j.poster_path||'',status:j.status||'',seasons,...tmInfo(j),watch:tmWatch(j['watch/providers']),
     next:nxt&&nxt.air_date?{n:nxt.season_number,e:nxt.episode_number,d:nxt.air_date}:null};
 }
 async function tmFetchFilm(tid){
-  const j=await tmGet('movie/'+tid,{language:'en-US'});
-  return{title:j.title||j.original_title||'Untitled',year:tmYear(j.release_date),poster:j.poster_path||'',runtime:j.runtime||0,...tmInfo(j)};
+  const j=await tmGet('movie/'+tid,{language:'en-US',append_to_response:'watch/providers'});
+  return{title:j.title||j.original_title||'Untitled',year:tmYear(j.release_date),poster:j.poster_path||'',runtime:j.runtime||0,...tmInfo(j),watch:tmWatch(j['watch/providers'])};
+}
+/* Where to watch. TMDB passes on JustWatch's list per country: stream (subscription),
+   free or with ads, rent, buy. It is a handful of names, so it lives on the entry and
+   syncs. Shows still airing refresh it with their daily check; anything else picks it
+   up again when you open it and it is over a week old. */
+const tmRegion=()=>(S.cfg&&S.cfg.region)||'US';
+function tmWatch(wp){
+  const w=wp&&wp.results&&wp.results[tmRegion()]||{},seen=new Set();
+  const pick=(...lists)=>lists.flatMap(a=>a||[]).sort((x,y)=>(x.display_priority??99)-(y.display_priority??99))
+    .filter(p=>p&&p.provider_name&&!seen.has(p.provider_name)&&seen.add(p.provider_name)).slice(0,8).map(p=>[p.provider_name,p.logo_path||'']);
+  const s=pick(w.flatrate),f=pick(w.free,w.ads);
+  seen.clear();const r=pick(w.rent);seen.clear();const b=pick(w.buy);
+  return{at:Date.now(),c:tmRegion(),link:w.link||'',s,f,r,b};
+}
+const TMW={busy:null,failed:{}};
+const tmwKey=x=>x.type+':'+x.tmdb;
+function tmNeedsWatch(x){
+  if(!x.tmdb||!tmKey()||TMW.busy||TMW.failed[tmwKey(x)])return false;
+  return !x.watch||x.watch.c!==tmRegion()||Date.now()-(x.watch.at||0)>7*864e5;
+}
+async function tmLoadWatch(x){
+  if(!tmNeedsWatch(x))return;
+  TMW.busy=x.id;render();
+  try{x.watch=tmWatch(await tmGet((x.type==='film'?'movie/':'tv/')+x.tmdb+'/watch/providers'));touch()}
+  catch(e){TMW.failed[tmwKey(x)]=true}
+  finally{TMW.busy=null;render()}
+}
+function watchBlock(x){
+  if(!x.tmdb)return '';
+  const w=x.watch;
+  if(!w)return TMW.busy===x.id?'<p class="note">Checking where it\u2019s streaming\u2026</p>':'';
+  const chips=a=>a.map(([n,l])=>`<span class="prov${l?'':' noimg'}">${l?`<img src="${TM_IMG}w45${esc(l)}" alt="" width="20" height="20" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('noimg');this.remove()">`:''}${esc(n)}</span>`).join('');
+  const row=(k,a)=>`<div class="provrow"><span class="pk">${k}</span>${chips(a)}</div>`;
+  const free=[w.s.length?row('Stream',w.s):'',w.f.length?row('Free',w.f):''].join('');
+  const pay=[w.r.length?row('Rent',w.r):'',w.b.length?row('Buy',w.b):''].join('');
+  let h=`<div class="watch"><span class="label">Where to watch \u00b7 ${esc(w.c||'US')}</span>`;
+  if(!free&&!pay)h+=`<p class="note">Not streaming, for rent or for sale anywhere in the ${esc(w.c||'US')} right now.</p>`;
+  else if(free)h+=free+(pay?`<details><summary>Rent or buy</summary>${pay}</details>`:'');
+  else h+=`<p class="note">Not on any streaming service right now. You can rent or buy it:</p>`+pay;
+  h+=`<p class="note tmcredit">Streaming data from JustWatch, via TMDB \u00b7 checked ${esc(new Date(w.at).toLocaleDateString([],{month:'short',day:'numeric'}))}${w.link?` \u00b7 <a href="${esc(w.link)}" target="_blank" rel="noopener">See the links</a>`:''}</p></div>`;
+  return h;
 }
 /* the short facts about a title: small, so they live on the entry and sync */
 function tmInfo(j){
@@ -1458,7 +1711,7 @@ function tmMergeShow(tid,d){
     out.push({n:t.n,eps:Math.max(t.aired,cur?lastMarked(t.n,cur.eps):0),total:t.total})}
   for(const cur of old.values()){const k=lastMarked(cur.n,cur.eps);if(k)out.push({n:cur.n,eps:k})}   /* not on TMDB: kept only if you checked something */
   s.seasons=out.sort((a,b)=>a.n-b.n);
-  Object.assign(s,{title:d.title,year:d.year||s.year||'',tmdb:tid,poster:d.poster,status:d.status,next:d.next,tmAt:Date.now(),overview:d.overview,genres:d.genres,network:d.network,creators:d.creators,hasInfo:true});
+  Object.assign(s,{title:d.title,year:d.year||s.year||'',tmdb:tid,poster:d.poster,status:d.status,next:d.next,tmAt:Date.now(),overview:d.overview,genres:d.genres,network:d.network,creators:d.creators,hasInfo:true,...(d.watch?{watch:d.watch}:{})});
   delete TME.failed[tid];
   delete s.example;
   return{sid:s.id,isNew,added:epIds(s).length-before};
@@ -1467,7 +1720,7 @@ function tmMergeFilm(tid,d){
   let f=tmExisting('film',tid,d.title,d.year),isNew=false;
   if(!f){let id=sid('film',d.title,d.year||'');if(S.screen.some(x=>x.id===id))id=sid('film',d.title,'tmdb',tid);
     f={id,type:'film'};S.screen.push(f);isNew=true}
-  Object.assign(f,{title:d.title,year:d.year||f.year||'',tmdb:tid,poster:d.poster,runtime:d.runtime,tmAt:Date.now(),overview:d.overview,genres:d.genres});
+  Object.assign(f,{title:d.title,year:d.year||f.year||'',tmdb:tid,poster:d.poster,runtime:d.runtime,tmAt:Date.now(),overview:d.overview,genres:d.genres,...(d.watch?{watch:d.watch}:{})});
   delete f.example;
   return{sid:f.id,isNew};
 }
@@ -1620,7 +1873,7 @@ async function api(method,body,force){
   }
   const u=SY.url.replace(/\/+$/,'')+'/'+(q.length?'?'+q.join('&'):'');
   const r=await fetch(u,{method,cache:'no-store',headers,body:payload});
-  const gz=+(r.headers.get('x-pb-worker')||0)>=2,sentGz=headers['content-type']==='application/gzip';if(gz!==!!SY.gz){SY.gz=gz;saveSync()}
+  const wv=+(r.headers.get('x-pb-worker')||0),gz=wv>=2,sentGz=headers['content-type']==='application/gzip';if(gz!==!!SY.gz||(r.ok&&wv!==(SY.wv||0))){SY.gz=gz;if(r.ok)SY.wv=wv;saveSync()}
   if(r.status===413&&gz&&GZ_OK&&!sentGz)return api(method,body,force);   /* just learned the Worker takes gzip */
   let j=null;
   try{j=/gzip/.test(r.headers.get('content-type')||'')?JSON.parse(await gunzip(await r.arrayBuffer())):await r.json()}catch(e){}
@@ -1696,7 +1949,7 @@ function render(){
 
   <section class="next" aria-label="Up next">
     <span class="label">Up next · ${next.length} open thread${next.length===1?'':'s'}</span>
-    <div class="strip">${next.length?next.map(n=>`<button class="card" data-act="go" data-tab="${n.tab}" data-id="${n.id}"><span class="label">${n.tab==='music'?'Listen':'Watch'}</span><span class="t">${esc(n.t)}</span><span class="s">${esc(n.s)}</span></button>`).join(''):'<span class="note">Everything is finished. Add something new.</span>'}</div>
+    <div class="strip">${next.length?next.map(n=>`<button class="card" data-act="go" data-tab="${n.tab}" data-id="${n.id}"><span class="label">${n.tab==='music'?'Listen':'Watch'}</span><span class="t">${esc(n.t)}</span><span class="s">${esc(n.s)}${n.on?` <span class="on">\u00b7 ${esc(n.on)}</span>`:''}</span></button>`).join(''):'<span class="note">Everything is finished. Add something new.</span>'}</div>
   </section>
 
   <div class="shell">
@@ -1708,6 +1961,7 @@ function render(){
       ${mbSide()}
       ${rymSide()}
       ${rtSide()}
+      ${spSide()}
       <form class="add" data-form="artist">
         <label class="label" for="new-artist">Or add an artist by hand</label>
         <input id="new-artist" name="name" placeholder="e.g. Thom Yorke" required>
@@ -1841,6 +2095,7 @@ function seasonRate(sk,sids){
 
 function showView(s){
   if(tmNeedsEps(s))setTimeout(()=>tmLoadEps(s),0);
+  else if(tmNeedsWatch(s))setTimeout(()=>tmLoadWatch(s),0);
   const ids=epIds(s),p=pct(ids),done=ids.filter(isDone).length;
   const out=s.seasons.filter(se=>se.eps).length,rated=ids.filter(i=>rating(i)).length;
   return `<div class="head">${tmPoster(s)}<div class="ring" style="--p:${p}"><span>${p}%</span></div>
@@ -1848,6 +2103,7 @@ function showView(s){
       ${s.genres&&s.genres.length||s.network?`<span class="genres">${esc([(s.genres||[]).join(', '),s.network,s.creators&&s.creators.length?'Created by '+s.creators.join(', '):''].filter(Boolean).join(' · '))}</span>`:''}
       ${s.next&&s.next.d?`<span class="note airs">Next: ${sxe(s.next.n,s.next.e)} on ${esc(tmDay(s.next.d))}</span>`:''}</div></div>
     ${s.overview?`<p class="overview">${esc(s.overview)}</p>`:''}
+    ${watchBlock(s)}
     ${showRate(s)}
     ${tmBar(s)}
     ${TME.busy===s.tmdb?'<p class="note">Getting episode names and descriptions from TMDB…</p>':''}
@@ -1863,12 +2119,14 @@ function showView(s){
 }
 
 function filmView(f){
+  if(tmNeedsWatch(f))setTimeout(()=>tmLoadWatch(f),0);
   const d=isDone(f.id);
   return `<div class="head">${tmPoster(f)}<div class="ring" style="--p:${d?100:0}"><span>${d?'Seen':'—'}</span></div>
     <div class="meta"><h2>${esc(f.title)}</h2><span class="mono">Film${f.year?' · '+esc(f.year):''}${f.runtime?' · '+Math.floor(f.runtime/60)+'h '+(f.runtime%60)+'m':''}</span></div></div>
     ${tmBar(f)}
     ${f.genres&&f.genres.length?`<span class="genres">${esc(f.genres.join(', '))}</span>`:''}
     ${f.overview?`<p class="overview">${esc(f.overview)}</p>`:''}
+    ${watchBlock(f)}
     <div class="tools"><button class="btn ${d?'':'primary'}" data-act="tog" data-id="${f.id}">${d?'Mark unwatched':'Mark watched'}</button><span class="label">Your rating</span>${rateDots(f.id)}</div>
     <div>${delBtn(f.id,'Delete film')}</div>`;
 }
@@ -1886,6 +2144,13 @@ document.addEventListener('click',ev=>{
   else if(act==='epx'){UI.epOpen[id]=!UI.epOpen[id]}
   else if(act==='tog'){S.marks[id]={...(S.marks[id]||{}),done:!isDone(id)};touch()}
   else if(act==='rtimport'){rtImport()}
+  else if(act==='spgo'){spConnect().catch(()=>{SPX.err='This browser could not start the Spotify sign-in.';render()});return}
+  else if(act==='spnow'){spPoll(true);return}
+  else if(act==='spoff'){spDisconnect();return}
+  else if(act==='spcid'){SPX.cidOpen=true;SPX.err=''}
+  else if(act==='spcidcancel'){SPX.cidOpen=false;SPX.err=''}
+  else if(act==='spmissclear'){if(S.sp)S.sp.miss=[];touch()}
+  else if(act==='spcopy'){const t=SP_REDIRECT;if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>{SPX.copied=true;render()},()=>{});return}
   else if(act==='rymadd'){const r=rymAddWaiting();RYX.report={total:r.albums,zero:0,filled:0,same:0,kept:[],waiting:[],notFound:[],dups:[],added:r};touch()}
   else if(act==='rate'){const v=+b.dataset.v;S.marks[id]={...(S.marks[id]||{}),r:rating(id)===v?0:v};touch()}
   else if(act==='grpall'){const a=S.music.find(x=>x.id===b.dataset.a),g=a.groups.find(x=>x.id===b.dataset.g),full=g.items.every(i=>isDone(i.id));
@@ -1954,6 +2219,9 @@ document.addEventListener('submit',ev=>{
   if(kind==='mbsearch'){const q=(d.q||'').trim();if(q)mbSearch(q);return}
   if(kind==='tmsearch'){const q=(d.q||'').trim();if(q)tmSearch(q);return}
   if(kind==='tmkey'){tmSaveKey(d.key);return}
+  if(kind==='spcid'){const c=(d.cid||'').trim();
+    if(!/^[0-9a-f]{32}$/i.test(c)){SPX.err='That does not look like a Client ID. It is 32 letters and numbers, under Settings on your Spotify app\u2019s page.';render();return}
+    S.cfg={...(S.cfg||{}),spotify:c};SPX.cidOpen=false;SPX.err='';touch();render();return}
   if(kind==='artist'){const name=d.name.trim();if(!name)return;const id=sid('artist',name);
     if(!S.music.some(x=>x.id===id))S.music.push({id,name,groups:[]});UI.sel.music=id}
   else if(kind==='screen'){const title=d.title.trim();if(!title)return;
@@ -1973,10 +2241,10 @@ document.addEventListener('submit',ev=>{
   touch();render();
 });
 
-function start(){render();pull().finally(()=>tmAutoRefresh())}
+function start(){render();pull().finally(()=>{spBoot();tmAutoRefresh()})}
 if(READY){start();save()}   /* save() also copies a localStorage-only log into IndexedDB */
 else{render();IDB.get(KEY).then(t=>{const o=t?JSON.parse(t):null;if(o&&o.v===1){S=o;SV.idb=true;SV.bytes=t.length}},()=>{}).finally(()=>{boot();start()})}
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(tmAutoRefresh,3000)});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){setTimeout(tmAutoRefresh,3000);setTimeout(()=>spPoll(false),4000)}});
 
 /* ---------- is there a newer copy? ---------- */
 /* 2026.10.21-a -> sortable; a two-letter suffix (after z) still sorts after one */
