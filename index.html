@@ -735,6 +735,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.03-a', note:'ROOM TO GROW: your log now saves in your browser\u2019s built-in database, which holds hundreds of MB, instead of the roughly 5 MB space it used before (smallest on iPhone), so big discographies and long shows won\u2019t quietly stop saving. If a save ever does fail, a red banner tells you right away. Sync now sends the log compressed, about 5 times smaller, once you paste the new sync Worker code into Cloudflare. Backup & restore shows how big your log is.'},
   {v:'2026.11.02-c', note:'RATE THE WHOLE SHOW, AND EPISODE DETAILS: every show now has its own overall rating at the top, next to the average of your season ratings and of your episode ratings. Shows from TMDB also bring in their description, genres, network and creators, and each episode shows its name, air date and runtime. Tap an episode name to read its description; they stay folded so nothing is spoiled. Films from TMDB get their description and genres too (tap Refresh from TMDB on a film you already added).'},
   {v:'2026.11.02-b', note:'RATE EPISODES ONE BY ONE: on a show, each episode is now its own row with a checkmark and a 1\u201310 rating, like songs on an album. Each season still has its own overall rating, and next to it you see the average of the episodes you rated and how far your season rating is above or below it. The show header counts how many episodes you have rated.'},
   {v:'2026.11.02-a', note:'SHOWS AND FILMS FROM TMDB: on the Screen tab, search The Movie Database and tap a result. Shows come in with their poster and every season, counting only the episodes that are out, plus the date of the next one. Films get their poster, year and runtime. It needs a free TMDB key once (the steps are on the Screen tab), and it syncs to your other devices. Shows still airing check for new episodes by themselves once a day, or tap Check for new episodes. Shows you added by hand can be linked with Find on TMDB, and every checkmark and rating stays.'},
@@ -751,8 +752,49 @@ const BUILD=CHANGELOG[0].v;
 const KEY='playback_v1';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function sid(...p){const s=p.join('|').toLowerCase();let x=5381;for(let i=0;i<s.length;i++)x=((x<<5)+x+s.charCodeAt(i))>>>0;return 'i'+x.toString(36)}
-function load(){try{const r=localStorage.getItem(KEY);if(r){const o=JSON.parse(r);if(o&&o.v===1)return o}}catch(e){}return{v:1,music:[],screen:[],marks:{},flags:{}}}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+/* ---------- saving on this device ----------
+   The log lives in IndexedDB, which holds hundreds of MB. localStorage (about
+   5 MB per site, tightest on iPhone) keeps a quick-start copy only while the
+   log is small; once it grows past LS_MAX characters, or localStorage refuses
+   it, that copy is removed so a stale one can never load. If a save fails
+   everywhere, a banner says so instead of failing silently. A missing
+   localStorage copy at startup means: wait for IndexedDB before showing the
+   log (READY), and never save until then. */
+let READY=false;
+const LS_MAX=1500000;
+const blank=()=>({v:1,music:[],screen:[],marks:{},flags:{}});
+function load(){try{const r=localStorage.getItem(KEY);if(r){const o=JSON.parse(r);if(o&&o.v===1){READY=true;return o}}}catch(e){}return blank()}
+const IDB=(()=>{let p=null;
+  const open=()=>p||(p=new Promise((res,rej)=>{
+    if(!window.indexedDB)return rej(new Error('no IndexedDB'));
+    const r=indexedDB.open('playback',1);
+    r.onupgradeneeded=()=>r.result.createObjectStore('kv');
+    r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);r.onblocked=()=>rej(new Error('blocked'));
+  }).catch(e=>{p=null;throw e}));
+  const run=(mode,fn)=>open().then(db=>new Promise((res,rej)=>{
+    const t=db.transaction('kv',mode),q=fn(t.objectStore('kv'));let out;
+    q.onsuccess=()=>{out=q.result};t.oncomplete=()=>res(out);t.onerror=t.onabort=()=>rej(t.error||new Error('aborted'));
+  }));
+  return{get:k=>run('readonly',s=>s.get(k)),put:(k,v)=>run('readwrite',s=>s.put(v,k))};
+})();
+const SV={idb:null,ls:false,err:false,bytes:0};   /* idb: true saved / false failed / null not tried */
+let idbNext=null,idbBusy=false;
+function idbSave(txt){
+  idbNext=txt;if(idbBusy)return;idbBusy=true;
+  (function step(){const t=idbNext;idbNext=null;
+    IDB.put(KEY,t).then(()=>{SV.idb=true},()=>{SV.idb=false}).finally(()=>{saveState();if(idbNext!==null)step();else idbBusy=false})})();
+}
+function saveState(){const err=SV.idb===false&&!SV.ls;if(err!==SV.err){SV.err=err;if(READY)render()}}
+function save(){
+  if(!READY)return;
+  const txt=JSON.stringify(S);SV.bytes=txt.length;
+  idbSave(txt);
+  SV.ls=false;
+  if(txt.length<=LS_MAX||SV.idb!==true){try{localStorage.setItem(KEY,txt);SV.ls=true}catch(e){}}
+  if(!SV.ls){try{localStorage.removeItem(KEY)}catch(e){}}
+  saveState();
+}
+const mb=n=>(n/1048576).toFixed(n<1048576?2:1)+' MB';
 
 /* ---------- seed data ---------- */
 const RADIOHEAD=[
@@ -1536,8 +1578,12 @@ function tmBar(x){
 const tmPoster=x=>x.poster?`<img class="poster" src="${TM_IMG}w154${esc(x.poster)}" alt="" width="62" height="93" decoding="async" onerror="this.remove()">`:'';
 
 /* ---------- UI state ---------- */
-let S=load();seedAll();
-if(!S.flags.r10){for(const k in S.marks){if(S.marks[k].r)S.marks[k].r=S.marks[k].r*2}S.flags.r10=true;save()}
+let S=load();
+function boot(){
+  seedAll();READY=true;
+  if(!S.flags.r10){for(const k in S.marks){if(S.marks[k].r)S.marks[k].r=S.marks[k].r*2}S.flags.r10=true;save()}
+}
+if(READY)boot();
 
 /* ---------- sync (playback-sync Worker) ----------
    S.mtime = when you last changed something. SY.last = the mtime the server
@@ -1558,22 +1604,39 @@ function syncLabel(){
   return 'Sync ready';
 }
 function touch(){S.mtime=Date.now();save();if(syncOn()){clearTimeout(pushTimer);pushTimer=setTimeout(()=>push(false),1500)}}
+/* Compressed sync: a Worker from 2026.11.03 on answers with x-pb-worker: 2 and
+   takes the log gzipped (about 5x smaller, up to 20 MB after compression).
+   Until the Worker is updated, plain JSON still works under its old 1 MB cap. */
+const GZ_OK=typeof CompressionStream==='function'&&typeof DecompressionStream==='function';
+const gzip=txt=>new Response(new Blob([txt]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();
+const gunzip=buf=>new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
 async function api(method,body,force){
-  const u=SY.url.replace(/\/+$/,'')+'/'+(force?'?force=1':'');
-  const r=await fetch(u,{method,cache:'no-store',headers:Object.assign({'x-sync-key':SY.key},body?{'content-type':'application/json'}:{}),body:body?JSON.stringify(body):undefined});
-  let j=null;try{j=await r.json()}catch(e){}
+  const q=[];if(force)q.push('force=1');if(GZ_OK)q.push('gz=1');
+  const headers={'x-sync-key':SY.key};let payload;
+  if(body){
+    const txt=JSON.stringify(body);
+    if(GZ_OK&&SY.gz){payload=await gzip(txt);headers['content-type']='application/gzip';q.push('mtime='+(body.mtime||0))}
+    else{payload=txt;headers['content-type']='application/json'}
+  }
+  const u=SY.url.replace(/\/+$/,'')+'/'+(q.length?'?'+q.join('&'):'');
+  const r=await fetch(u,{method,cache:'no-store',headers,body:payload});
+  const gz=+(r.headers.get('x-pb-worker')||0)>=2,sentGz=headers['content-type']==='application/gzip';if(gz!==!!SY.gz){SY.gz=gz;saveSync()}
+  if(r.status===413&&gz&&GZ_OK&&!sentGz)return api(method,body,force);   /* just learned the Worker takes gzip */
+  let j=null;
+  try{j=/gzip/.test(r.headers.get('content-type')||'')?JSON.parse(await gunzip(await r.arrayBuffer())):await r.json()}catch(e){}
   return{status:r.status,j};
 }
 function fail(status,j){
   SYS.status='error';
   SYS.msg=status===401?'The sync key does not match the SECRET on your Worker. Re-enter it and save.'
     :status===500&&j&&j.error?'The Worker is not set up yet: '+j.error+'.'
+    :status===413?'Your log ('+mb(SV.bytes)+') is too big for this version of the sync Worker. Paste the new worker/playback-sync.js from GitHub into your Worker and deploy; the newer one takes the log compressed, so it fits logs many times larger.'
     :'Sync failed ('+status+'). Try again in a moment.';
 }
 function ok(){SYS.status='ok';SYS.msg='';SY.at=Date.now();saveSync()}
-function adopt(j){S=j;S.flags=S.flags||{};S.marks=S.marks||{};S.music=S.music||[];S.screen=S.screen||[];seedAll();SY.last=S.mtime||0;ok();render()}
+function adopt(j){S=j;S.flags=S.flags||{};S.marks=S.marks||{};S.music=S.music||[];S.screen=S.screen||[];seedAll();SY.last=S.mtime||0;save();ok();render()}
 async function pull(){
-  if(!syncOn()||inflight)return;inflight=true;SYS.status='busy';render();
+  if(!READY||!syncOn()||inflight)return;inflight=true;SYS.status='busy';render();
   try{
     const{status,j}=await api('GET');
     if(status!==200){fail(status,j);return}
@@ -1588,7 +1651,7 @@ async function pull(){
   finally{inflight=false;render()}
 }
 async function push(force){
-  if(!syncOn()||inflight)return;inflight=true;SYS.status='busy';render();
+  if(!READY||!syncOn()||inflight)return;inflight=true;SYS.status='busy';render();
   try{
     const{status,j}=await api('PUT',S,force);
     if(status===200){SY.last=S.mtime||0;ok()}
@@ -1612,6 +1675,7 @@ function current(){
 
 /* ---------- render ---------- */
 function render(){
+  if(!READY){document.getElementById('app').innerHTML='<p class="empty">Loading your log\u2026</p>';return}
   const e=current();
   const next=upNext();
   const list=S[UI.tab];
@@ -1626,6 +1690,7 @@ function render(){
       </div>
     </div>
   </header>
+  ${SV.err?`<div class="banner" role="alert"><p>This browser would not save your last change. It is still on screen, but it will be gone if you close the app. ${syncOn()?'Tap Upload now in Sync at the bottom so it is safe on your Worker, or copy a backup.':'Copy a backup at the bottom to keep it safe.'}</p></div>`:''}
   ${SYS.status==='conflict'?`<div class="banner" role="alert"><p>This device and your other device both changed the log since the last sync. Which version should win?</p>
     <button class="btn primary" data-act="keeplocal">Keep this device</button><button class="btn" data-act="keepremote">Use synced version</button></div>`:''}
 
@@ -1668,7 +1733,7 @@ function render(){
     </details>
     <details id="backup">
       <summary class="label" style="cursor:pointer">Backup &amp; restore</summary>
-      <p class="note">Your log is saved in this browser only. Copy the backup to keep it somewhere safe, or paste one back in to restore it.</p>
+      <p class="note">Your log${SV.bytes?' ('+mb(SV.bytes)+')':''} is saved in this browser${SV.idb?'\u2019s database':''}${syncOn()?' and on your Worker':' only'}. Copy the backup to keep it somewhere safe, or paste one back in to restore it.</p>
       <textarea id="backup-text" aria-label="Backup data"></textarea>
       <div class="tools"><button class="btn" data-act="copy">${UI.copied?'Copied':'Copy backup'}</button><button class="btn" data-act="restore">Restore from pasted text</button></div>
     </details>
@@ -1908,8 +1973,9 @@ document.addEventListener('submit',ev=>{
   touch();render();
 });
 
-render();
-pull().finally(()=>tmAutoRefresh());
+function start(){render();pull().finally(()=>tmAutoRefresh())}
+if(READY){start();save()}   /* save() also copies a localStorage-only log into IndexedDB */
+else{render();IDB.get(KEY).then(t=>{const o=t?JSON.parse(t):null;if(o&&o.v===1){S=o;SV.idb=true;SV.bytes=t.length}},()=>{}).finally(()=>{boot();start()})}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(tmAutoRefresh,3000)});
 
 /* ---------- is there a newer copy? ---------- */
