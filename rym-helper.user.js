@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Playback RYM helper
 // @namespace    https://frostie4life9.github.io/playback/
-// @version      2026.11.03.1
+// @version      2026.11.03.2
 // @description  Saves your own song ratings from the Rate Your Music album pages you open, so Playback can import them. It never loads pages by itself.
 // @match        https://rateyourmusic.com/release/*
 // @match        https://frostie4life9.github.io/playback/*
@@ -27,7 +27,7 @@
   const setQ = q => GM_setValue(QKEY, JSON.stringify(q));
   /* 2026.11.03: early versions could save too many ratings per album, so
      anything they saved is thrown out once */
-  if (GM_getValue('qv', 0) < 2) { setQ({}); GM_setValue('qv', 2); }
+  if (GM_getValue('qv', 0) < 3) { setQ({}); GM_setValue('qv', 3); }
 
   if (location.hostname === 'rateyourmusic.com') rymPage();
   else playbackPage();
@@ -44,7 +44,11 @@
     function release() {
       const h = document.querySelector('.album_title');
       let title = '';
-      if (h) { const c = h.cloneNode(true); c.querySelectorAll('input, .album_shortcut, script, style').forEach(x => x.remove()); title = txt(c); }
+      if (h) {
+        title = [...h.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join(' ').replace(/\s+/g, ' ').trim();
+        if (!title) { const c = h.cloneNode(true); c.querySelectorAll('input, .album_shortcut, script, style').forEach(x => x.remove()); title = txt(c); }
+        title = title.replace(/\s+By\s+.*$/i, '').trim();
+      }
       const og = (document.querySelector('meta[property="og:title"]') || {}).content || '';
       const artistEls = [...document.querySelectorAll('.album_info a.artist, span[itemprop="byArtist"] a.artist')];
       let artists = [...new Set(artistEls.map(firstText).filter(Boolean))];
@@ -69,20 +73,19 @@
     function rawRating(li) {
       const n = li.querySelector('.rating_num');
       if (n) { const v = parseFloat(n.textContent); if (v > 0) return v; }
-      for (const img of li.querySelectorAll('.track_rating_disp img, [class*="track_rating"] img, img[title*="star"]')) {
-        const v = parseFloat(img.getAttribute('title') || img.getAttribute('alt') || '');
-        if (v > 0) return v;
-      }
-      const d = li.querySelector('.track_rating_disp');
-      if (d) { const v = parseFloat(d.textContent); if (v > 0) return v; }
+      const st = li.querySelector('.rating_stars');                 // class "star-8m" = 8 half-stars
+      const m = st && st.className.match(/star-(\d+)m/);
+      if (m && +m[1] > 0) return +m[1] / 2;
       return 0;
     }
 
     function capture() {
       const list = [...document.querySelectorAll('#tracks li.track')].filter(li => txt(li.querySelector('.tracklist_num')));
       const titles = list.map(cleanTitle);
-      const rlis = [...document.querySelectorAll('#track_ratings li.track, .track_rating_hide li.track, .track_rating_hide ul > li')]
-        .filter((li, i, a) => a.indexOf(li) === i);
+      /* only the "my track ratings" box: the .track_rating_hide lists under
+         reviews are other people's ratings */
+      const box = document.querySelector('#my_track_ratings') || document;
+      const rlis = [...box.querySelectorAll('#track_ratings li.track')];
       const raw = [];
       if (rlis.length) {
         rlis.forEach((li, i) => {
@@ -90,10 +93,8 @@
           const own = cleanTitle(li);
           raw.push({ t: own || titles[i] || '', v });
         });
-      } else {                               // ratings shown inline in the tracklist
-        list.forEach((li, i) => { const v = rawRating(li); if (v > 0) raw.push({ t: titles[i], v }); });
       }
-      const stars = raw.every(x => x.v <= 5);
+      const stars = true;                    // RYM shows track ratings as 0.5-5 stars
       const tracks = raw.filter(x => x.t).map(x => ({ t: x.t.slice(0, 300), r: Math.min(10, Math.round((stars ? x.v * 2 : x.v) * 2) / 2) }));
       return { tracks, tracklist: titles.filter(Boolean).slice(0, 200), stars };
     }
@@ -134,7 +135,7 @@
     run();
     /* rate a track while the page is open and the saved copy updates too */
     let t = null;
-    const host = document.querySelector('#track_ratings') || document.querySelector('.track_rating_hide') || document.querySelector('#tracks');
+    const host = document.querySelector('#track_ratings');
     if (host) new MutationObserver(() => { clearTimeout(t); t = setTimeout(run, 800); }).observe(host, { subtree: true, childList: true, attributes: true, characterData: true });
   }
 
