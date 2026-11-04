@@ -1,12 +1,14 @@
 // ==UserScript==
 // @name         Playback RYM helper
 // @namespace    https://frostie4life9.github.io/playback/
-// @version      2026.11.03.2
+// @version      2026.11.03.3
 // @description  Saves your own song ratings from the Rate Your Music album pages you open, so Playback can import them. It never loads pages by itself.
 // @match        https://rateyourmusic.com/release/*
 // @match        https://frostie4life9.github.io/playback/*
 // @grant        GM_getValue
 // @grant        GM_setValue
+// @grant        GM_listValues
+// @grant        GM_deleteValue
 // @grant        GM_setClipboard
 // @run-at       document-idle
 // @noframes
@@ -23,11 +25,19 @@
 (function () {
   'use strict';
   const QKEY = 'queue';
-  const getQ = () => { try { return JSON.parse(GM_getValue(QKEY, '{}')) || {}; } catch (e) { return {}; } };
-  const setQ = q => GM_setValue(QKEY, JSON.stringify(q));
-  /* 2026.11.03: early versions could save too many ratings per album, so
-     anything they saved is thrown out once */
-  if (GM_getValue('qv', 0) < 3) { setQ({}); GM_setValue('qv', 3); }
+  /* Each album is its own stored value ("a:" + page URL). A batch of tabs
+     saving at the same moment then can't overwrite each other, which a single
+     shared list did. */
+  const PFX = 'a:';
+  const getQ = () => { const q = {}; for (const k of GM_listValues()) if (k.startsWith(PFX)) { try { const v = JSON.parse(GM_getValue(k, 'null')); if (v) q[v.url] = v; } catch (e) {} } return q; };
+  const putA = a => GM_setValue(PFX + a.url, JSON.stringify(a));
+  const delA = url => GM_deleteValue(PFX + url);
+  const count = () => GM_listValues().filter(k => k.startsWith(PFX)).length;
+  if (GM_getValue('qv', 0) < 3) { GM_setValue(QKEY, '{}'); GM_setValue('qv', 3); }
+  if (GM_getValue('qv', 0) < 4) {            // move the old shared list over to one value per album
+    try { Object.values(JSON.parse(GM_getValue(QKEY, '{}')) || {}).forEach(a => a && a.url && putA(a)); } catch (e) {}
+    GM_deleteValue(QKEY); GM_setValue('qv', 4);
+  }
 
   if (location.hostname === 'rateyourmusic.com') rymPage();
   else playbackPage();
@@ -108,14 +118,14 @@
       const rel = release(), cap = capture(), url = location.origin + location.pathname.replace(/\/*$/, '/');
       badge.textContent = '';
       const head = document.createElement('b'); head.textContent = 'Playback'; badge.append(head, document.createElement('br'));
-      const q = getQ(), n = cap.tracks.length, total = cap.tracklist.length;
+      const n = cap.tracks.length, total = cap.tracklist.length;
       const tooMany = total > 0 && n > total;
       if (rel.title && rel.artists.length && n && !tooMany) {
-        q[url] = { url, title: rel.title.slice(0, 300), artists: rel.artists.map(a => a.slice(0, 200)).slice(0, 10), type: rel.type.slice(0, 60), tracks: cap.tracks, tracklist: cap.tracklist, at: Date.now() };
-        setQ(q);
-        badge.append(`Saved ${n} song rating${n === 1 ? '' : 's'} (of ${total || '?'} songs) for ${rel.title}. ${Object.keys(q).length} album${Object.keys(q).length === 1 ? '' : 's'} waiting for Playback.`);
+        putA({ url, title: rel.title.slice(0, 300), artists: rel.artists.map(a => a.slice(0, 200)).slice(0, 10), type: rel.type.slice(0, 60), tracks: cap.tracks, tracklist: cap.tracklist, at: Date.now() });
+        const c = count();
+        badge.append(`Saved ${n} song rating${n === 1 ? '' : 's'} (of ${total || '?'} songs) for ${rel.title}. ${c} album${c === 1 ? '' : 's'} waiting for Playback.`);
       } else if (tooMany) {
-        delete q[url]; setQ(q);
+        delA(url);
         badge.append(`Found ${n} ratings but only ${total} songs, so something is off. Nothing saved for this album.`);
       } else {
         badge.append(rel.title ? 'No song ratings of yours found on this page.' : 'Could not read this page.');
@@ -147,7 +157,7 @@
       const d = e.data;
       if (!d || d.src !== 'playback') return;
       if (d.type === 'ask') send();
-      else if (d.type === 'done' && Array.isArray(d.urls)) { const q = getQ(); d.urls.forEach(u => delete q[u]); setQ(q); send(); }
+      else if (d.type === 'done' && Array.isArray(d.urls)) { d.urls.forEach(u => typeof u === 'string' && delA(u)); send(); }
     });
     send();
   }
