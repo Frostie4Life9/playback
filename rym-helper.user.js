@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Playback RYM helper
 // @namespace    https://frostie4life9.github.io/playback/
-// @version      2026.10.31.1
+// @version      2026.11.03.1
 // @description  Saves your own song ratings from the Rate Your Music album pages you open, so Playback can import them. It never loads pages by itself.
 // @match        https://rateyourmusic.com/release/*
 // @match        https://frostie4life9.github.io/playback/*
@@ -25,6 +25,9 @@
   const QKEY = 'queue';
   const getQ = () => { try { return JSON.parse(GM_getValue(QKEY, '{}')) || {}; } catch (e) { return {}; } };
   const setQ = q => GM_setValue(QKEY, JSON.stringify(q));
+  /* 2026.11.03: early versions could save too many ratings per album, so
+     anything they saved is thrown out once */
+  if (GM_getValue('qv', 0) < 2) { setQ({}); GM_setValue('qv', 2); }
 
   if (location.hostname === 'rateyourmusic.com') rymPage();
   else playbackPage();
@@ -104,21 +107,29 @@
       const rel = release(), cap = capture(), url = location.origin + location.pathname.replace(/\/*$/, '/');
       badge.textContent = '';
       const head = document.createElement('b'); head.textContent = 'Playback'; badge.append(head, document.createElement('br'));
-      const q = getQ();
-      if (rel.title && rel.artists.length && cap.tracks.length) {
+      const q = getQ(), n = cap.tracks.length, total = cap.tracklist.length;
+      const tooMany = total > 0 && n > total;
+      if (rel.title && rel.artists.length && n && !tooMany) {
         q[url] = { url, title: rel.title.slice(0, 300), artists: rel.artists.map(a => a.slice(0, 200)).slice(0, 10), type: rel.type.slice(0, 60), tracks: cap.tracks, tracklist: cap.tracklist, at: Date.now() };
         setQ(q);
-        badge.append(`Saved ${cap.tracks.length} song rating${cap.tracks.length === 1 ? '' : 's'} for ${rel.title}. ${Object.keys(q).length} album${Object.keys(q).length === 1 ? '' : 's'} waiting for Playback.`);
-        badge.append(btn('Hide', () => badge.remove()));
+        badge.append(`Saved ${n} song rating${n === 1 ? '' : 's'} (of ${total || '?'} songs) for ${rel.title}. ${Object.keys(q).length} album${Object.keys(q).length === 1 ? '' : 's'} waiting for Playback.`);
+      } else if (tooMany) {
+        delete q[url]; setQ(q);
+        badge.append(`Found ${n} ratings but only ${total} songs, so something is off. Nothing saved for this album.`);
       } else {
         badge.append(rel.title ? 'No song ratings of yours found on this page.' : 'Could not read this page.');
-        const copy = btn('Copy debug info for Claude', () => {
-          const pick = s => { const e = document.querySelector(s); return e ? e.outerHTML.slice(0, 20000) : '(none)'; };
-          GM_setClipboard(['URL: ' + location.href, 'Release: ' + JSON.stringify(rel), '--- .album_info', pick('.album_info'), '--- #tracks', pick('#tracks'), '--- #track_ratings', pick('#track_ratings'), '--- .track_rating_hide', pick('.track_rating_hide')].join('\n'));
-          copy.textContent = 'Copied. Paste it to Claude.';
-        });
-        badge.append(document.createElement('br'), copy, btn('Hide', () => badge.remove()));
       }
+      const copy = btn('Copy debug info for Claude', () => {
+        const pick = s => { const e = document.querySelector(s); return e ? e.outerHTML.slice(0, 15000) : '(none)'; };
+        const path = e => { const out = []; for (let i = 0; i < 7 && e; i++, e = e.parentElement) out.push(e.tagName.toLowerCase() + (e.id ? '#' + e.id : '') + (typeof e.className === 'string' && e.className.trim() ? '.' + e.className.trim().split(/\s+/).join('.') : '')); return out.join(' < '); };
+        const sels = ['#tracks li.track', '#tracks_mobile li.track', '#track_ratings li.track', '.track_rating_hide ul > li', '.rating_num', '.track_rating_disp', '.tracklist_num'];
+        GM_setClipboard(['URL: ' + location.href, 'Release: ' + JSON.stringify(rel), 'Captured: ' + JSON.stringify(cap.tracks),
+          'Counts: ' + sels.map(x => x + '=' + document.querySelectorAll(x).length).join(', '),
+          'Where .rating_num lives: ' + [...document.querySelectorAll('.rating_num')].slice(0, 4).map(path).join(' || '),
+          '--- #tracks', pick('#tracks'), '--- #track_ratings', pick('#track_ratings'), '--- .track_rating_hide', pick('.track_rating_hide')].join('\n'));
+        copy.textContent = 'Copied. Paste it to Claude.';
+      });
+      badge.append(document.createElement('br'), copy, btn('Hide', () => badge.remove()));
     }
     run();
     /* rate a track while the page is open and the saved copy updates too */
