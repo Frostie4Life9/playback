@@ -755,6 +755,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.03-e', note:'RATED MEANS HEARD: giving a song a rating now checks it off as heard automatically, and every song you had already rated (including RYM imports) is checked off too. Same for anything else you rate, like an episode or film. To uncheck something, clear its rating first.'},
   {v:'2026.11.03-d', note:'SEE WHAT SPOTIFY CHECKED OFF: the Spotify box on the Music tab now lists the songs it matched, newest first, with the artist, album, when you played it and how many times. Songs it newly checked off have an Uncheck button in case a play shouldn\u2019t count; ones you had already heard are greyed out. Tap a song to jump to that artist. The list starts from your next Spotify check.'},
   {v:'2026.11.03-c', note:'TRACKLISTS STRAIGHT FROM SPOTIFY: with Spotify connected, importing or updating an artist now reads their albums, EPs and singles from Spotify itself, so every song listed is one you can actually play, and deluxe or bonus songs Spotify carries show up under their album. Marked songs Spotify doesn\u2019t have move to \u201cKept from your earlier list\u201d. Open an artist and tap Rebuild from Spotify to switch them over; checkmarks and ratings stay. Paste the updated sync Worker into Cloudflare first (one more time). Also fixed for every import: albums no longer lose a song because an earlier album has one with the same name (a second \u201cIntro\u201d), and \u201cSong (Reprise)\u201d or \u201c(Part 2)\u201d no longer disappear into \u201cSong\u201d.'},
   {v:'2026.11.03-b', note:'SPOTIFY CHECKS OFF WHAT YOU PLAY, AND WHERE TO WATCH: on the Music tab, connect Spotify once (on your PC) and songs you play there get checked off as heard here, matched to the artists and songs already in your log. Ratings stay yours to set. Once you paste the new sync Worker into Cloudflare and turn on its hourly check, your Worker keeps watching even when the app is closed. On the Screen tab, every show and film from TMDB now shows where it is streaming in the US, plus where to rent or buy it (data from JustWatch), and Up next says which service a show is on.'},
@@ -808,8 +809,13 @@ function idbSave(txt){
     IDB.put(KEY,t).then(()=>{SV.idb=true},()=>{SV.idb=false}).finally(()=>{saveState();if(idbNext!==null)step();else idbBusy=false})})();
 }
 function saveState(){const err=SV.idb===false&&!SV.ls;if(err!==SV.err){SV.err=err;if(READY)render()}}
+/* A rating means you've heard/watched it, so anything with a rating is always
+   checked off. Runs on every save, which covers tapping a rating, the RYM
+   imports, merges and synced data, and backfills items rated before this. */
+function rateImpliesDone(){const m=S.marks;for(const k in m){const x=m[k];if(x&&x.r&&!x.done)m[k]={...x,done:true}}}
 function save(){
   if(!READY)return;
+  rateImpliesDone();
   const txt=JSON.stringify(S);SV.bytes=txt.length;
   idbSave(txt);
   SV.ls=false;
