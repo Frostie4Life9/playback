@@ -769,6 +769,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.05-a', note:'EXPORT YOUR RATINGS: at the bottom of the page, Export ratings downloads spreadsheets of your album ratings (with the song average beside each), every song rating, and your show, season, episode and film ratings. Below them, Not yet in Rate Your Music lists the ratings you added or changed here, so you know exactly what to type into RYM. Tap Everything is on RYM now once to start tracking, and importing your RYM file or song ratings again keeps it up to date.'},
   {v:'2026.11.03-f', note:'FIND ARTISTS FAST: the artist list (and shows & films) now has a search box, filters for All, Started, New and Done with counts, and four sorts: Progress (in progress first, then new, then done), A\u2013Z (with letter headings, ignoring \u201cThe\u201d and symbols, so $uicideboy$ sits under S), Rating (your album ratings, or song ratings if you have no album ratings) and Size. Each row shows your average rating and a progress bar. The list scrolls in its own box so the rest of the page stays close, keeps its place when you open an artist, and on your phone jumps you down to the artist you tapped. Enter opens the top search match; Esc clears it. Sort and filter are remembered per tab.'},
   {v:'2026.11.03-e', note:'RATED MEANS HEARD: giving a song a rating now checks it off as heard automatically, and every song you had already rated (including RYM imports) is checked off too. Same for anything else you rate, like an episode or film. To uncheck something, clear its rating first.'},
   {v:'2026.11.03-d', note:'SEE WHAT SPOTIFY CHECKED OFF: the Spotify box on the Music tab now lists the songs it matched, newest first, with the artist, album, when you played it and how many times. Songs it newly checked off have an Uncheck button in case a play shouldn\u2019t count; ones you had already heard are greyed out. Tap a song to jump to that artist. The list starts from your next Spotify check.'},
@@ -1286,7 +1287,7 @@ function applyPending(a){
   for(const [key,p] of pendingFor(a)){
     const g=rymGroup(a,key.split('|')[1]);if(!g)continue;
     if(!rating(g.id)){S.marks[g.id]={...(S.marks[g.id]||{}),r:p.r};n++}
-    delete S.pendingR[key];
+    rymNote(g.id,p.r);delete S.pendingR[key];
   }
   return n;
 }
@@ -1300,7 +1301,7 @@ function rymAddWaiting(){
       a={id:sid('artist',p.a),name:p.a,groups:[]};made.set(k,a)}
     const g={id:sid(a.id,p.t),title:p.t,year:p.y&&p.y<9999?String(p.y):'—',kind:'Studio album',items:[]};
     if(a.groups.some(x=>x.id===g.id))continue;
-    a.groups.push(g);S.marks[g.id]={...(S.marks[g.id]||{}),r:p.r};delete S.pendingR[key];out.albums++;
+    a.groups.push(g);S.marks[g.id]={...(S.marks[g.id]||{}),r:p.r};rymNote(g.id,p.r);delete S.pendingR[key];out.albums++;
   }
   [...made.values()].sort((x,y)=>x.name.localeCompare(y.name)).forEach(a=>{a.groups.sort((x,y)=>(x.year>y.year)-(x.year<y.year));S.music.push(a);out.artists++});
   return out;
@@ -1317,7 +1318,7 @@ function rymImport(text){
       const a=S.music.find(x=>e.n.includes(nArtist(x.name)));
       const g=a&&rymGroup(a,e.key.split('|')[1]);
       if(g){
-        const cur=rating(g.id);delete S.pendingR[e.key];
+        const cur=rating(g.id);delete S.pendingR[e.key];rymNote(g.id,e.r);
         if(!cur){S.marks[g.id]={...(S.marks[g.id]||{}),r:e.r};rp.filled++}
         else if(cur===e.r)rp.same++;
         else rp.kept.push(e.a+' – '+e.t+': you have '+fmt(cur)+' here, RYM says '+fmt(e.r));
@@ -1402,7 +1403,7 @@ function rtImport(){
     for(const t of e.tracks){
       const i=byKey.get(mbKeyOf(t.t))||other.get(mbKeyOf(t.t));
       if(!i){rp.songs.push(e.artists[0]+' – '+e.title+': '+t.t);continue}
-      const cur=rating(i.id);
+      const cur=rating(i.id);rymNote(i.id,t.r);
       if(!cur){S.marks[i.id]={...(S.marks[i.id]||{}),r:t.r};rp.filled++}
       else if(cur===t.r)rp.same++;
       else rp.kept.push(i.title+': you have '+fmt(cur)+' here, RYM says '+fmt(t.r));
@@ -1429,6 +1430,99 @@ function rtSide(){
     h+='</div>'}
   return h+'</div>';
 }
+
+/* ---------- Export your ratings ----------
+   Spreadsheets (CSV) of everything you rated, plus a "Not yet in Rate Your Music"
+   list, since RYM has no import and those are the ones you type in by hand.
+   S.rymSeen remembers the rating RYM had for each album and song the last time it
+   came from RYM (the RYM file or the song-ratings helper). Anything rated here that
+   was never there, or differs from it, is "not yet in RYM". S.flags.rymBase is set
+   once you tell Playback the ratings it already has are on RYM. */
+const EXP={open:false};
+function rymNote(id,r){(S.rymSeen=S.rymSeen||{})[id]=r}
+const csvCell=(v,text)=>{let s=v==null?'':String(v);if(text&&/^[=+\-@\t\r]/.test(s))s="'"+s;return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
+const csvText=(head,rows)=>'﻿'+[head,...rows].map(r=>r.map(c=>csvCell(c,typeof c==='string')).join(',')).join('\r\n')+'\r\n';
+function dlCSV(name,text){
+  const day=new Date().toISOString().slice(0,10),url=URL.createObjectURL(new Blob([text],{type:'text/csv;charset=utf-8'}));
+  const a=document.createElement('a');a.href=url;a.download=name.replace('.csv','-'+day+'.csv');
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);
+}
+const xYear=g=>/^\d{4}/.test(g.year||'')?String(g.year).slice(0,4):'';
+const xArtists=()=>[...S.music].sort((x,y)=>x.name.localeCompare(y.name));
+const xGroups=a=>[...a.groups].sort((x,y)=>(xYear(x)||'9999').localeCompare(xYear(y)||'9999')||x.title.localeCompare(y.title));
+const r2=v=>Math.round(v*100)/100;
+function csvAlbums(){
+  const rows=[];
+  for(const a of xArtists())for(const g of xGroups(a)){
+    if(!RATEABLE.includes(g.kind))continue;
+    const r=rating(g.id),rs=g.items.map(i=>rating(i.id)).filter(Boolean);
+    if(!r&&!rs.length)continue;
+    rows.push([a.name,g.title,xYear(g),g.kind,r||'',rs.length?r2(rs.reduce((x,y)=>x+y,0)/rs.length):'',rs.length,g.items.length]);
+  }
+  return csvText(['Artist','Release','Year','Type','Album rating','Song average','Songs rated','Songs in list'],rows);
+}
+function csvSongs(){
+  const rows=[],seen=new Set();
+  for(const a of xArtists())for(const g of xGroups(a))for(const i of g.items){
+    const r=rating(i.id);if(!r||seen.has(i.id))continue;seen.add(i.id);
+    rows.push([a.name,g.title,xYear(g),g.kind,i.title,r]);
+  }
+  return csvText(['Artist','Release','Year','Type','Song','Rating'],rows);
+}
+function csvScreen(){
+  const rows=[];
+  for(const s of [...S.screen].sort((x,y)=>x.title.localeCompare(y.title))){
+    const y=/^\d{4}/.test(s.year||'')?String(s.year).slice(0,4):'';
+    if(s.type==='film'){if(rating(s.id))rows.push(['Film',s.title,y,'','',rating(s.id)]);continue}
+    if(rating(s.id))rows.push(['Show',s.title,y,'','',rating(s.id)]);
+    for(const se of s.seasons){
+      const sr=rating(sid(s.id,'s',se.n));if(sr)rows.push(['Season',s.title,y,se.n,'',sr]);
+      for(let e=1;e<=se.eps;e++){const er=rating(sid(s.id,'s',se.n,'e',e));if(er)rows.push(['Episode',s.title,y,se.n,e,er])}
+    }
+  }
+  return csvText(['Type','Title','Year','Season','Episode','Rating'],rows);
+}
+function rymTodo(){
+  const seen=S.rymSeen||{},out=[],done=new Set();
+  const add=(a,g,i)=>{const id=i?i.id:g.id,r=rating(id);if(!r||seen[id]===r||done.has(id))return;done.add(id);
+    out.push({a:a.name,rel:g.title,song:i?i.title:'',r,was:seen[id]||0})};
+  for(const a of xArtists())for(const g of xGroups(a)){if(RATEABLE.includes(g.kind))add(a,g,null);g.items.forEach(i=>add(a,g,i))}
+  return out;
+}
+function rymMark(){
+  S.rymSeen=S.rymSeen||{};
+  for(const a of S.music)for(const g of a.groups){
+    if(RATEABLE.includes(g.kind)&&rating(g.id))S.rymSeen[g.id]=rating(g.id);
+    for(const i of g.items)if(rating(i.id))S.rymSeen[i.id]=rating(i.id);
+  }
+  S.flags=S.flags||{};S.flags.rymBase=true;
+}
+const csvTodo=()=>csvText(['Artist','Release','Song','What','Your rating','On RYM now','Status'],
+  rymTodo().map(x=>[x.a,x.rel,x.song,x.song?'Song rating':'Album rating',x.r,x.was||'',x.was?'Changed here':'New here']));
+function expSide(){
+  const head=`<summary class="label" style="cursor:pointer">Export ratings</summary>`;
+  if(!EXP.open)return `<details id="export">${head}</details>`;
+  const cnt=(n,w)=>n+' '+w+(n===1?'':'s');
+  let h=`<details id="export" open>${head}
+    <p class="note">Download your ratings as spreadsheets (CSV). They double as a backup, since Rate Your Music has no import.</p>
+    <div class="tools"><button type="button" class="btn" data-act="expalbums">Albums</button><button type="button" class="btn" data-act="expsongs">Songs</button><button type="button" class="btn" data-act="expscreen">Shows &amp; films</button></div>
+    <div class="add"><span class="label">Not yet in Rate Your Music</span>`;
+  if(!(S.flags&&S.flags.rymBase)){
+    h+=`<p class="note">Playback does not know yet which of your ratings are already on RYM. If they all are, tap below and it will list what you add or change from now on. Importing your RYM file or song ratings again also updates what it knows.</p>
+      <div><button type="button" class="btn primary" data-act="rymbase">Everything is on RYM now</button></div>`;
+  }else{
+    const t=rymTodo();
+    if(!t.length)h+=`<p class="note">Nothing waiting. Every rating here matches RYM.</p>`;
+    else{
+      const nw=t.filter(x=>!x.was).length,ch=t.length-nw;
+      h+=`<div class="rymrep"><span><b>${cnt(t.length,'rating')}</b> to enter on RYM: ${nw} new${ch?', '+ch+' changed':''}.</span>
+        <details><summary>Show them</summary><ul>${t.slice(0,150).map(x=>'<li>'+esc(x.a+' – '+x.rel+(x.song?': '+x.song:'')+' – '+fmt(x.r)+(x.was?' (RYM has '+fmt(x.was)+')':''))+'</li>').join('')}</ul>${t.length>150?'<p class="note">Showing the first 150. The CSV has all of them.</p>':''}</details></div>
+        <div class="tools"><button type="button" class="btn" data-act="exptodo">Download this list</button><button type="button" class="btn" data-act="rymbase">I entered these on RYM</button></div>`;
+    }
+  }
+  return h+'</div></details>';
+}
+document.addEventListener('toggle',ev=>{const t=ev.target;if(t&&t.id==='export'&&t.open!==EXP.open){EXP.open=t.open;render()}},true);
 
 /* ---------- Spotify: songs you play get checked off ----------
    Your own Spotify app (Client ID in S.cfg.spotify, which syncs; it is not a secret)
@@ -2235,6 +2329,7 @@ function renderMain(){
         <span class="msg ${SYS.status==='error'?'err':''}">${esc(SYS.msg||'')}</span>
       </form>
     </details>
+    ${expSide()}
     <details id="backup">
       <summary class="label" style="cursor:pointer">Backup &amp; restore</summary>
       <p class="note">Your log${SV.bytes?' ('+mb(SV.bytes)+')':''} is saved in this browser${SV.idb?'\u2019s database':''}${syncOn()?' and on your Worker':' only'}. Copy the backup to keep it somewhere safe, or paste one back in to restore it.</p>
@@ -2448,6 +2543,11 @@ document.addEventListener('click',ev=>{
   else if(act==='keeplocal'){SYS.remote=null;push(true);return}
   else if(act==='keepremote'){const j=SYS.remote;SYS.remote=null;if(j)adopt(j);return}
   else if(act==='unsync'){SY={url:'',key:'',last:0,at:0};saveSync();SYS.status='off';SYS.msg=''}
+  else if(act==='expalbums'){dlCSV('playback-albums.csv',csvAlbums());return}
+  else if(act==='expsongs'){dlCSV('playback-songs.csv',csvSongs());return}
+  else if(act==='expscreen'){dlCSV('playback-shows-films.csv',csvScreen());return}
+  else if(act==='exptodo'){dlCSV('playback-not-yet-in-rym.csv',csvTodo());return}
+  else if(act==='rymbase'){rymMark();EXP.open=true;touch()}
   else if(act==='copy'){
     const txt=JSON.stringify(S);const ta=document.getElementById('backup-text');ta.value=txt;
     const done=()=>{UI.copied=true;render();document.getElementById('backup').open=true;document.getElementById('backup-text').value=txt};
