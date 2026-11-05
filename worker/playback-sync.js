@@ -1,5 +1,5 @@
 /* =========================================================
-   Playback — sync  (worker version 4, 2026.11.03)
+   Playback — sync  (worker version 5, 2026.11.05)
    Cloudflare Worker + KV. Same setup pattern as protocol-sync
    and gamelog-sync.
 
@@ -39,8 +39,24 @@
    Compressed uploads are stored as-is and never unpacked here, which keeps
    each request well inside the free plan's CPU limit. The log's mtime rides
    along as KV metadata so the newer-copy check needs no parsing.
-   Every response carries x-pb-worker: 4 so the app knows what this Worker
-   can do (2 = compressed sync, 3 = Spotify plays, 4 = Spotify catalog too).
+   Every response carries x-pb-worker: 5 so the app knows what this Worker
+   can do (2 = compressed sync, 3 = Spotify plays, 4 = Spotify catalog too,
+   5 = the morning-brief list).
+
+   MORNING BRIEF (version 5)
+   The app keeps a tiny list of the next episode of each show you follow
+   (title, season, episode, air date) under its own key, so this Worker never
+   has to unpack your log.
+   PUT  /brief  (x-sync-key as usual) -> the app saves that list.
+   GET  /brief?k=<BRIEF_KEY> -> {today, tomorrow, timezone, updated, tonight:[],
+                    tomorrowEps:[], thisWeek:[]}, with "today" worked out in
+                    America/Denver. This one route does NOT use the sync key:
+                    it takes a second, read-only secret so your morning brief
+                    can fetch it. To turn it on: Settings > Variables and
+                    Secrets > Add > Type: Secret, Name: BRIEF_KEY, Value: a long
+                    random string you invent (not the SECRET). Without BRIEF_KEY
+                    the route answers 404. It only ever holds show titles and
+                    air dates.
 
    SPOTIFY (version 3)
    PUT    /spotify  {cid, rt, at, exp} -> the app hands over its Spotify sign-in
@@ -75,7 +91,7 @@ const CORS = {
   'Access-Control-Allow-Headers': 'content-type, x-sync-key',
   'Access-Control-Expose-Headers': 'x-pb-worker, retry-after',
   'Access-Control-Max-Age': '86400',
-  'x-pb-worker': '4'
+  'x-pb-worker': '5'
 };
 const JSON_H = Object.assign({ 'content-type': 'application/json', 'cache-control': 'no-store' }, CORS);
 const GZ_H = Object.assign({ 'content-type': 'application/gzip', 'cache-control': 'no-store' }, CORS);
@@ -110,6 +126,42 @@ function sendStored(st, wantGz, status) {
     return new Response(plain, { status: status || 200, headers: JSON_H });
   }
   return new Response(st.buf, { status: status || 200, headers: st.enc === 'gzip' ? GZ_H : JSON_H });
+}
+
+/* ---------- Morning brief ---------- */
+const BRIEF = 'brief', BRIEF_TZ = 'America/Denver', MAX_BRIEF = 64 * 1024;
+const addDay = (s, n) => { const d = new Date(s + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+
+async function briefPut(request, env) {
+  const body = await request.text();
+  if (body.length > MAX_BRIEF) return reply({ error: 'payload too large' }, 413);
+  let p; try { p = JSON.parse(body); } catch (e) { return reply({ error: 'body is not valid JSON' }, 400); }
+  if (!p || p.v !== 1 || !Array.isArray(p.shows)) return reply({ error: 'not a brief list' }, 400);
+  const shows = [];
+  for (const x of p.shows.slice(0, 100)) {
+    if (!x || typeof x.t !== 'string' || !/^\d{4}-\d\d-\d\d$/.test(String(x.d))) continue;
+    shows.push({ t: x.t.slice(0, 200), n: Math.max(0, parseInt(x.n, 10) || 0), e: Math.max(0, parseInt(x.e, 10) || 0), d: x.d, behind: !!x.behind });
+  }
+  await env.STATE.put(BRIEF, JSON.stringify({ at: Date.now(), shows }));
+  return reply({ ok: true, shows: shows.length });
+}
+
+async function briefGet(env, url) {
+  const want = env.BRIEF_KEY ? String(env.BRIEF_KEY).trim() : '';
+  if (!want) return reply({ error: 'not found' }, 404);
+  if (!keyMatches((url.searchParams.get('k') || '').trim(), want)) return reply({ error: 'unauthorized' }, 401);
+  const b = (await getJSON(env, BRIEF)) || { at: null, shows: [] };
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: BRIEF_TZ, year: 'numeric', month: 'numeric', day: 'numeric' })
+    .formatToParts(new Date()).reduce((o, x) => (o[x.type] = x.value, o), {});
+  const t0 = today.year + '-' + String(today.month).padStart(2, '0') + '-' + String(today.day).padStart(2, '0');
+  const t1 = addDay(t0, 1), t7 = addDay(t0, 7);
+  const shows = (b.shows || []).filter(x => x.d >= t0);
+  return reply({
+    today: t0, tomorrow: t1, timezone: BRIEF_TZ, updated: b.at,
+    tonight: shows.filter(x => x.d === t0),
+    tomorrowEps: shows.filter(x => x.d === t1),
+    thisWeek: shows.filter(x => x.d > t1 && x.d <= t7)
+  });
 }
 
 /* ---------- Spotify ---------- */
@@ -227,10 +279,12 @@ export default {
     if (!env.SECRET) return reply({ error: 'missing the SECRET variable' }, 500);
 
     const url = new URL(request.url);
+    if (url.pathname === '/brief' && request.method === 'GET') return briefGet(env, url);   /* its own read-only key */
     const given = (request.headers.get('x-sync-key') || '').trim();
     if (!keyMatches(given, String(env.SECRET).trim())) return reply({ error: 'unauthorized' }, 401);
     if (url.pathname === '/spotify/api') return request.method === 'GET' ? spCatalog(env, url) : reply({ error: 'method not allowed' }, 405);
     if (url.pathname === '/spotify') return spotify(request, env, url);
+    if (url.pathname === '/brief') return request.method === 'PUT' ? briefPut(request, env) : reply({ error: 'method not allowed' }, 405);
     if (url.pathname !== '/') return reply({ error: 'not found' }, 404);
     const wantGz = url.searchParams.get('gz') === '1';
 

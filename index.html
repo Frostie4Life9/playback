@@ -772,6 +772,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.05-c', note:'MORNING BRIEF HOOK: Playback now sends a short list of the next episode of each show you follow (title, episode, air date, nothing else) to your sync Worker, so your morning brief can say which episodes land tonight. It needs the new worker/playback-sync.js pasted into Cloudflare (version 5) and a BRIEF_KEY secret added; the steps are at the top of that file. Until then nothing changes.'},
   {v:'2026.11.05-b', note:'WHERE YOU STOPPED: every season of a show now says Finished, Caught up (everything out so far is watched, more is on the way) or Stopped at the last episode you watched. The top of the show says where you stopped overall and how many seasons you have finished, and the show list shows the same under each name, so you can see where to pick back up.'},
   {v:'2026.11.05-a', note:'EXPORT YOUR RATINGS: at the bottom of the page, Export ratings downloads spreadsheets of your album ratings (with the song average beside each), every song rating, and your show, season, episode and film ratings. Below them, Not yet in Rate Your Music lists the ratings you added or changed here, so you know exactly what to type into RYM. Tap Everything is on RYM now once to start tracking, and importing your RYM file or song ratings again keeps it up to date.'},
   {v:'2026.11.03-f', note:'FIND ARTISTS FAST: the artist list (and shows & films) now has a search box, filters for All, Started, New and Done with counts, and four sorts: Progress (in progress first, then new, then done), A\u2013Z (with letter headings, ignoring \u201cThe\u201d and symbols, so $uicideboy$ sits under S), Rating (your album ratings, or song ratings if you have no album ratings) and Size. Each row shows your average rating and a progress bar. The list scrolls in its own box so the rest of the page stays close, keeps its place when you open an artist, and on your phone jumps you down to the artist you tapped. Enter opens the top search match; Esc clears it. Sort and filter are remembered per tab.'},
@@ -2209,16 +2210,42 @@ async function pull(){
       if(!SY.last&&remote){adopt(j);return}            /* first sync on this device: take the saved log */
       if(remote>local){ if(local>SY.last){SYS.status='conflict';SYS.remote=j;return} adopt(j);return }
       if(local>remote){inflight=false;await push(false);return}
-      SY.last=local;ok();
+      SY.last=local;ok();briefPush();
     }else{inflight=false;await push(false);return}       /* nothing saved yet: upload this device */
   }catch(e){SYS.status='error';SYS.msg='Could not reach your Worker. Check the URL and your connection.'}
   finally{inflight=false;render()}
+}
+/* ---------- list for your morning brief ----------
+   A Worker from 2026.11.05 on (x-pb-worker 5) keeps a tiny list of the next episode
+   of each show you follow, so your morning brief can say what lands tonight. The app
+   works it out and sends it after a sync; the Worker never opens your log. A show
+   counts as followed once you have watched something, or when it is a premiere you
+   added. "behind" means you still have episodes that are already out. */
+let briefSig='';
+function briefData(){
+  const shows=[];
+  for(const s of S.screen){
+    if(s.type!=='show'||s.example||!s.next||!s.next.d)continue;
+    const st=showStatus(s);
+    if(!st.watched&&!(s.next.n===1&&s.next.e===1))continue;
+    shows.push({t:s.title,n:s.next.n,e:s.next.e,d:s.next.d,behind:st.watched>0&&!st.done&&!st.caught});
+  }
+  shows.sort((a,b)=>a.d.localeCompare(b.d)||a.t.localeCompare(b.t));
+  return{v:1,shows:shows.slice(0,100)};
+}
+async function briefPush(){
+  if(!syncOn()||(SY.wv||0)<5)return;
+  try{
+    const txt=JSON.stringify(briefData());if(txt===briefSig)return;
+    const r=await fetch(SY.url.replace(/\/+$/,'')+'/brief',{method:'PUT',cache:'no-store',headers:{'x-sync-key':SY.key,'content-type':'application/json'},body:txt});
+    if(r.ok)briefSig=txt;
+  }catch(e){}
 }
 async function push(force){
   if(!READY||!syncOn()||inflight)return;inflight=true;SYS.status='busy';render();
   try{
     const{status,j}=await api('PUT',S,force);
-    if(status===200){SY.last=S.mtime||0;ok()}
+    if(status===200){SY.last=S.mtime||0;ok();briefPush()}
     else if(status===409&&j){ if((S.mtime||0)>SY.last){SYS.status='conflict';SYS.remote=j} else adopt(j) }
     else fail(status,j);
   }catch(e){SYS.status='error';SYS.msg='Could not reach your Worker. Your changes are saved here and will upload next time.'}
