@@ -80,6 +80,9 @@ button{cursor:pointer}
 @media (max-width:760px){.llist{max-height:42vh}}
 .lsec{position:sticky;top:-4px;z-index:1;background:var(--bg);font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:8px 10px 4px;display:flex;justify-content:space-between}
 .entry .bar{width:44px;flex:0 0 auto}
+.entry .nw{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.entry .nw .n{flex:none}
+.entry .sub{font-size:12px;font-weight:500;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .entry .r{font-family:var(--mono);font-size:12px;color:var(--accent);font-variant-numeric:tabular-nums;min-width:26px;text-align:right}
 .lempty{padding:14px 10px;color:var(--muted);font-size:13px}
 .ex{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--warn);border:1px solid currentColor;border-radius:4px;padding:0 4px;margin-left:6px}
@@ -769,6 +772,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.05-b', note:'WHERE YOU STOPPED: every season of a show now says Finished, Caught up (everything out so far is watched, more is on the way) or Stopped at the last episode you watched. The top of the show says where you stopped overall and how many seasons you have finished, and the show list shows the same under each name, so you can see where to pick back up.'},
   {v:'2026.11.05-a', note:'EXPORT YOUR RATINGS: at the bottom of the page, Export ratings downloads spreadsheets of your album ratings (with the song average beside each), every song rating, and your show, season, episode and film ratings. Below them, Not yet in Rate Your Music lists the ratings you added or changed here, so you know exactly what to type into RYM. Tap Everything is on RYM now once to start tracking, and importing your RYM file or song ratings again keeps it up to date.'},
   {v:'2026.11.03-f', note:'FIND ARTISTS FAST: the artist list (and shows & films) now has a search box, filters for All, Started, New and Done with counts, and four sorts: Progress (in progress first, then new, then done), A\u2013Z (with letter headings, ignoring \u201cThe\u201d and symbols, so $uicideboy$ sits under S), Rating (your album ratings, or song ratings if you have no album ratings) and Size. Each row shows your average rating and a progress bar. The list scrolls in its own box so the rest of the page stays close, keeps its place when you open an artist, and on your phone jumps you down to the artist you tapped. Enter opens the top search match; Esc clears it. Sort and filter are remembered per tab.'},
   {v:'2026.11.03-e', note:'RATED MEANS HEARD: giving a song a rating now checks it off as heard automatically, and every song you had already rated (including RYM imports) is checked off too. Same for anything else you rate, like an episode or film. To uncheck something, clear its rating first.'},
@@ -909,6 +913,35 @@ function artistItems(a){return a.groups.flatMap(g=>g.items)}
 function epIds(s){return s.type==='film'?[s.id]:s.seasons.flatMap(se=>Array.from({length:se.eps},(_,k)=>sid(s.id,'s',se.n,'e',k+1)))}
 function pct(ids){if(!ids.length)return 0;return Math.round(ids.filter(isDone).length/ids.length*100)}
 const sxe=(n,e)=>'S'+String(n).padStart(2,'0')+'E'+String(e).padStart(2,'0');
+
+/* Where you are in a show. A season is Finished when every episode is watched and
+   nothing more is coming in it, Caught up when everything out so far is watched but
+   more is on the way, and otherwise it shows the last episode you watched. The show
+   as a whole stops at the furthest episode you have watched, which is not always
+   the first unwatched one (you may have skipped a few). */
+function showStatus(s){
+  const seasons=[];let stop=null,watched=0;
+  for(const se of s.seasons){
+    if(!se.eps)continue;
+    let d=0,last=0;
+    for(let e=1;e<=se.eps;e++)if(isDone(sid(s.id,'s',se.n,'e',e))){d++;last=e}
+    seasons.push({n:se.n,eps:se.eps,d,last,state:d===se.eps?((se.total||0)>se.eps?'caught':'done'):d?'going':'new'});
+    if(last)stop=[se.n,last];
+    watched+=d;
+  }
+  const more=s.seasons.some(se=>(se.total||0)>se.eps)||!!(s.next&&s.next.d);
+  const all=seasons.length>0&&seasons.every(x=>x.d===x.eps);
+  return{seasons,stop,watched,finished:seasons.filter(x=>x.state==='done').length,caught:all&&more,done:all&&!more};
+}
+function stopText(s,st){
+  if(!st.watched)return '';
+  const f=st.finished,fs=f?' · '+f+' season'+(f===1?'':'s')+' finished':'';
+  if(st.done)return st.seasons.length===1?'Finished':'All '+st.seasons.length+' seasons finished';
+  if(st.caught)return 'Caught up at '+sxe(st.stop[0],st.stop[1])+fs;
+  return 'Stopped at '+sxe(st.stop[0],st.stop[1])+fs;
+}
+const seasonTag=(st,n)=>{const x=st.seasons.find(y=>y.n===n);
+  return !x?'':x.state==='done'?'<span class="tag">Finished</span>':x.state==='caught'?'<span class="tag">Caught up</span>':x.state==='going'?'<span class="tag">Stopped at E'+x.last+'</span>':''};
 
 function upNext(){
   const out=[];
@@ -2224,7 +2257,7 @@ function lSum(x){
   let rs=music?x.groups.map(g=>rating(g.id)).filter(Boolean):[rating(x.id)].filter(Boolean);
   if(!rs.length)rs=ids.map(rating).filter(Boolean);
   const r=rs.length?rs.reduce((a,b)=>a+b,0)/rs.length:0;
-  return{x,p,n:ids.length,r,st:p>=100?'done':p>0?'going':'fresh'}}
+  return{x,p,n:ids.length,r,st:p>=100?'done':p>0?'going':'fresh',sub:!music&&x.type==='show'?stopText(x,showStatus(x)):''}}
 function sideFinder(list){
   const P=lPrefs(),sums=list.map(lSum),c={all:sums.length,going:0,fresh:0,done:0};
   sums.forEach(s=>c[s.st]++);
@@ -2257,7 +2290,7 @@ function sideList(list,e){
   let last=null,h='';
   for(const s of sums){const k=sec(s),x=s.x;
     if(k!==last){h+=`<div class="lsec"><span>${esc(k)}</span><span>${cnt[k]}</span></div>`;last=k}
-    h+=`<button class="entry" data-act="sel" data-id="${x.id}" aria-current="${!!(e&&e.id===x.id)}"><span class="n">${esc(x.name||x.title)}${x.example?'<span class="ex">Example</span>':''}</span>${s.r?`<span class="r" title="Your average rating">${fmt(Math.round(s.r*10)/10)}</span>`:''}<span class="bar" aria-hidden="true"><i style="width:${s.p}%"></i></span><span class="p">${s.p}%</span></button>`}
+    h+=`<button class="entry" data-act="sel" data-id="${x.id}" aria-current="${!!(e&&e.id===x.id)}">${s.sub?'<span class="nw">':''}<span class="n">${esc(x.name||x.title)}${x.example?'<span class="ex">Example</span>':''}</span>${s.sub?'<span class="sub">'+esc(s.sub)+'</span></span>':''}${s.r?`<span class="r" title="Your average rating">${fmt(Math.round(s.r*10)/10)}</span>`:''}<span class="bar" aria-hidden="true"><i style="width:${s.p}%"></i></span><span class="p">${s.p}%</span></button>`}
   return h}
 function lRedraw(){const el=document.getElementById('llist');if(el)el.innerHTML=sideList(S[UI.tab],current());
   const q=document.querySelector('.lfind .q');if(q){const has=!!UI.lq[UI.tab],btn=q.querySelector('button');
@@ -2442,10 +2475,11 @@ function showView(s){
   if(tmNeedsEps(s))setTimeout(()=>tmLoadEps(s),0);
   else if(tmNeedsWatch(s))setTimeout(()=>tmLoadWatch(s),0);
   const ids=epIds(s),p=pct(ids),done=ids.filter(isDone).length;
-  const out=s.seasons.filter(se=>se.eps).length,rated=ids.filter(i=>rating(i)).length;
+  const out=s.seasons.filter(se=>se.eps).length,rated=ids.filter(i=>rating(i)).length,ss=showStatus(s),stopLine=stopText(s,ss);
   return `<div class="head">${tmPoster(s)}<div class="ring" style="--p:${p}"><span>${p}%</span></div>
     <div class="meta"><h2>${esc(s.title)}${s.example?'<span class="ex">Example</span>':''}</h2><span class="mono">${s.year?esc(s.year)+' · ':''}${done} of ${ids.length} episodes watched · ${rated} rated · ${out} season${out===1?'':'s'}</span>
       ${s.genres&&s.genres.length||s.network?`<span class="genres">${esc([(s.genres||[]).join(', '),s.network,s.creators&&s.creators.length?'Created by '+s.creators.join(', '):''].filter(Boolean).join(' · '))}</span>`:''}
+      ${stopLine?`<span class="note">${esc(stopLine)}</span>`:''}
       ${s.next&&s.next.d?`<span class="note airs">Next: ${sxe(s.next.n,s.next.e)} on ${esc(tmDay(s.next.d))}</span>`:''}</div></div>
     ${s.overview?`<p class="overview">${esc(s.overview)}</p>`:''}
     ${watchBlock(s)}
@@ -2454,7 +2488,7 @@ function showView(s){
     ${TME.busy===s.tmdb?'<p class="note">Getting episode names and descriptions from TMDB…</p>':''}
     ${s.seasons.map(se=>{const sids=Array.from({length:se.eps},(_,k)=>sid(s.id,'s',se.n,'e',k+1)),sd=sids.filter(isDone).length,sk=sid(s.id,'s',se.n),more=(se.total||0)-se.eps;
       if(!se.eps)return `<div class="group"><div class="ghead"><h3>Season ${se.n}</h3><span class="sp"></span><span class="label">Not out yet${se.total?' · '+se.total+' episode'+(se.total===1?'':'s')+' planned':''}</span></div></div>`;
-      return `<div class="group"><div class="ghead"><h3>Season ${se.n}</h3><span class="sp"></span>${more>0?`<span class="label">${more} more coming</span>`:''}<span class="mono">${sd}/${se.eps}</span><span class="bar"><i style="width:${sd/se.eps*100}%"></i></span>
+      return `<div class="group"><div class="ghead"><h3>Season ${se.n}</h3>${seasonTag(ss,se.n)}<span class="sp"></span>${more>0?`<span class="label">${more} more coming</span>`:''}<span class="mono">${sd}/${se.eps}</span><span class="bar"><i style="width:${sd/se.eps*100}%"></i></span>
         <button class="link" data-act="seasonall" data-s="${s.id}" data-n="${se.n}">${sd===se.eps?'Clear':'Mark season watched'}</button></div>
         ${seasonRate(sk,sids)}
         ${sids.map((id,k)=>epRow(s,se.n,k+1)).join('')}</div>`}).join('')}
