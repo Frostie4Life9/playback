@@ -784,6 +784,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.05-i', note:'ARTISTS WITH TWO NAMES: every artist now remembers the other names they go by (MusicBrainz aliases and the name Spotify uses), shown under the artist\u2019s name as \u201calso\u2026\u201d. Spotify plays, RYM ratings and imports match under any of them, so 공중도둑 and Mid-Air Thief are one artist, and if you already have both they fold into one with every checkmark and rating kept. Artists you already imported fill in their other names by themselves in the background; Check for new releases also tries each name on Spotify.'},
   {v:'2026.11.05-h', note:'DELUXE SONGS STAY ON THE ALBUM: a song that was released as a single before the album\u2019s deluxe edition now goes into the album\u2019s Deluxe & bonus tracks dropdown instead of staying a single of its own, and the empty single disappears. Tap Check for new releases (or Rebuild from Spotify) on an artist to apply it; checkmarks and ratings move with the song.'},
   {v:'2026.11.05-g', note:'KANYE\u2019S ALBUMS: Check for new releases on Kanye West now looks him up on Spotify afresh (most popular exact match, under either name) instead of reusing a saved Spotify profile that may have been the wrong one. Press it once and his albums should fill in; ratings and checkmarks stay.'},
   {v:'2026.11.05-f', note:'DELUXE EDITIONS TUCK INTO THE ALBUM: a studio album with a deluxe edition now keeps its own standard tracklist, and a violet Deluxe & bonus tracks bar under the rating opens the extra songs right inside it, in the deluxe edition\u2019s own order and in a different colour, with their own heard count and a Mark deluxe heard button. The album\u2019s count, bar and song average cover just the standard songs. Nothing changes until you tap Check for new releases (or Rebuild from Spotify) on an artist; checkmarks and ratings stay.'},
@@ -930,7 +931,8 @@ function seedAll(){
    Only names listed in ARTIST_SAME are ever joined, and two artists that both came
    from MusicBrainz as different people are left alone. */
 function mergeSameArtists(){
-  const keys=new Set(Object.values(ARTIST_SAME));
+  rebuildAka();
+  const keys=new Set([...Object.values(ARTIST_SAME),...Object.values(AKA)]);
   for(const p of Object.values(S.pendingR||{}))if(Array.isArray(p.n))p.n=[...new Set(p.n.map(nArtist))];   /* waiting RYM ratings follow the same names */
   for(const key of keys){
     const list=S.music.filter(a=>nArtist(a.name)===key);
@@ -952,10 +954,12 @@ function mergeSameArtists(){
         }
       }
       if(!keep.spid&&o.spid)keep.spid=o.spid;
+      akaSet(keep,{name:o.name,aka:o.aka});
       S.music=S.music.filter(x=>x!==o);
     }
     if(ARTIST_SHOW[key])keep.name=ARTIST_SHOW[key];
   }
+  rebuildAka();
 }
 
 /* ---------- derived ---------- */
@@ -1249,6 +1253,7 @@ function mbMerge(art,incoming,versions,tidy,sp){
   if(!a){const id0=sid('artist',art.name),hit=S.music.find(x=>x.id===id0)||S.music.find(x=>!x.mbid&&nArtist(x.name)===nArtist(art.name));
     if(hit&&!hit.mbid)a=hit;
     else{a={id:hit?sid('artist',art.name,art.id):id0,name:art.name,groups:[]};S.music.push(a)}}
+  const prevName=a.name;
   const seedIds=a.id===sid('artist','radiohead')?new Set(RADIOHEAD.map(r=>sid(a.id,r[0]))):new Set();
   const replaced=g=>g.src==='mb'||g.src==='kept'||seedIds.has(g.id);
   /* one ID per song: an imported item's ID wins, then the first one found */
@@ -1276,7 +1281,8 @@ function mbMerge(art,incoming,versions,tidy,sp){
   a.groups=[...groups,...manual];
   const fromSp=tidy?a.src==='sp':!!sp;
   if(kept.length)a.groups.push({id:sid(a.id,'kept'),src:'kept',title:'Kept from your earlier list',year:'—',kind:fromSp?'Not on Spotify':'Not in the MusicBrainz import',items:kept});
-  a.mbid=art.id;if(!tidy){a.name=ARTIST_SHOW[nArtist(art.name)]||art.name;a.mbVersions=!!versions;a.mbAt=Date.now();a.src=sp?'sp':'mb';if(sp)a.spid=sp.id}
+  a.mbid=art.id;if(!tidy){a.name=ARTIST_SHOW[nArtist(art.name)]||art.name;a.mbVersions=!!versions;a.mbAt=Date.now();a.src=sp?'sp':'mb';if(sp)a.spid=sp.id;if(art.aka){a.akaAt=Date.now()}}
+  akaSet(a,art,sp,prevName);
   for(const g of a.groups){if(rating(g.id))continue;const o=oldR.find(x=>x[0]===nTitle(g.title));if(o)S.marks[g.id]={...(S.marks[g.id]||{}),r:o[1]}}
   applyPending(a);
   const all=groups.flatMap(g=>g.items),kinds={};groups.forEach(g=>kinds[g.kind]=(kinds[g.kind]||0)+1);
@@ -1305,17 +1311,20 @@ async function mbSearch(q){
     const lq=q.replace(/([+\-&|!(){}\[\]^"~*?:\\\/])/g,'\\$1');
     const j=await mbGet('artist',{query:lq,limit:8});
     const list=j.artists||[];if(!list.length)throw MBError('nomatch');
-    MBX.results=list.map(x=>({id:x.id,name:x.name,dis:x.disambiguation||'',country:x.country||(x.area&&x.area.name)||'',type:x.type||'',begin:String((x['life-span']&&x['life-span'].begin)||'').slice(0,4)}));
+    MBX.results=list.map(x=>({id:x.id,name:x.name,dis:x.disambiguation||'',country:x.country||(x.area&&x.area.name)||'',type:x.type||'',aka:mbAkas(x),begin:String((x['life-span']&&x['life-span'].begin)||'').slice(0,4)}));
   }catch(e){MBX.err=mbMessage(e,q)}
   MBX.searching=false;MBX.cancel=false;render();
 }
 async function mbImport(art,where){
   if(MBX.busy)return;
-  const existing=S.music.find(x=>x.mbid===art.id)||S.music.find(x=>x.id===sid('artist',art.name)&&!x.mbid)||S.music.find(x=>!x.mbid&&nArtist(x.name)===nArtist(art.name));
+  const findExisting=()=>S.music.find(x=>x.mbid===art.id)||S.music.find(x=>x.id===sid('artist',art.name)&&!x.mbid)||S.music.find(x=>!x.mbid&&nArtist(x.name)===nArtist(art.name));
+  let existing=findExisting();
   Object.assign(MBX,{busy:true,cancel:false,err:'',report:'',where,errWhere:where,aid:existing?existing.id:null,name:art.name,step:'Asking MusicBrainz',n:0,of:0,note:''});render();
   let phase='mb',hint='';
   try{
     let groups=null,sp=null;
+    if(!art.aka){try{art.aka=mbAkas(await mbGet('artist/'+art.id,{inc:'aliases'}))}catch(e){if(e.code==='cancel')throw e;art.aka=(existing&&existing.aka)||[]}}   /* his other names, so Spotify and your RYM list land on the same artist */
+    akaRemember(art);existing=findExisting();
     if(spCanImport()){
       phase='sp';
       try{const c=await spFetchCatalog(art,existing);
@@ -1333,6 +1342,7 @@ async function mbImport(art,where){
       if(!groups.length)throw MBError('empty');
     }
     const r=mbMerge(art,groups,MBX.versions,false,sp);
+    mergeSameArtists();
     touch();
     UI.tab='music';UI.sel.music=r.aid;UI.filter='all';
     try{localStorage.setItem(KEY+'_tab','music')}catch(e){}
@@ -1359,11 +1369,11 @@ function mbSide(){
       <button class="btn primary" ${MBX.searching||MBX.busy?'disabled':''}>${MBX.searching?'Searching…':'Search'}</button></div></form>`;
   if(MBX.err&&MBX.errWhere==='side')h+=`<p class="mberr" role="alert">${esc(MBX.err)}</p>`;
   if(MBX.pick){const x=MBX.pick,have=S.music.find(a=>a.mbid===x.id)||S.music.find(a=>a.id===sid('artist',x.name)&&!a.mbid)||S.music.find(a=>!a.mbid&&nArtist(a.name)===nArtist(x.name));
-    h+=`<div class="mbpick"><div><b>${esc(x.name)}</b><span class="mbsub">${esc([x.dis,x.country,x.begin&&'since '+x.begin].filter(Boolean).join(' · '))}</span></div>
+    h+=`<div class="mbpick"><div><b>${esc(x.name)}</b><span class="mbsub">${esc([x.aka&&x.aka.length&&'also '+x.aka.slice(0,2).join(', '),x.dis,x.country,x.begin&&'since '+x.begin].filter(Boolean).join(' · '))}</span></div>
       <label class="tick"><input type="checkbox" id="mb-ver" ${MBX.versions?'checked':''} ${MBX.busy?'disabled':''}> Include live albums, remixes and alternate versions</label>
       <p class="note">${have?'You already have '+esc(have.name)+'. Missing releases get added and every checkmark and rating stays where it is.':'Every official release, sorted into albums, EPs, singles and the rest.'}${spCanImport()?' Tracklists come from Spotify, so only songs you can play there are listed.':''}</p>
       <div class="tools"><button type="button" class="btn primary" data-act="mbgo" ${MBX.busy?'disabled':''}>${have?'Update '+esc(have.name):'Import'}</button><button type="button" class="btn" data-act="mbback">Back</button></div></div>`}
-  else if(MBX.results)h+=`<div class="mbres" role="list">${MBX.results.map((x,k)=>`<button type="button" class="mbhit" role="listitem" data-act="mbpick" data-i="${k}"><b>${esc(x.name)}${k===0?'<span class="tag">Best match</span>':''}</b><span class="mbsub">${esc([x.dis,x.type,x.country,x.begin&&'since '+x.begin].filter(Boolean).join(' · ')||'No details on MusicBrainz')}</span></button>`).join('')}</div>`;
+  else if(MBX.results)h+=`<div class="mbres" role="list">${MBX.results.map((x,k)=>`<button type="button" class="mbhit" role="listitem" data-act="mbpick" data-i="${k}"><b>${esc(x.name)}${k===0?'<span class="tag">Best match</span>':''}</b><span class="mbsub">${esc([x.aka&&x.aka.length&&'also '+x.aka.slice(0,2).join(', '),x.dis,x.type,x.country,x.begin&&'since '+x.begin].filter(Boolean).join(' · ')||'No details on MusicBrainz')}</span></button>`).join('')}</div>`;
   return h;
 }
 
@@ -1380,7 +1390,54 @@ const nrm=x=>decodeEnt(String(x)).normalize('NFKD').replace(/[̀-ͯ]/g,'').toLow
    artists are matched (RYM imports, Spotify plays, imports), so they never split in two */
 const ARTIST_SAME={'ye':'kanye west'};
 const ARTIST_SHOW={'kanye west':'Kanye West'};   /* the name it is shown under, whichever name an import brings */
-const nArtist=x=>{const n=nrm(x).replace(/^the /,'');return ARTIST_SAME[n]||n};
+/* ARTIST_SAME is the short fixed list; AKA is built from every artist's own "also known as" names
+   (MusicBrainz aliases, the name Spotify uses), so any artist who goes by two names is one artist */
+let AKA={};
+const akaKey=x=>nrm(x).replace(/^the /,'');
+const nArtist=x=>{const n=akaKey(x);return ARTIST_SAME[n]||AKA[n]||n};
+function rebuildAka(){
+  const m={},own=new Map();
+  for(const a of S.music){const k=ARTIST_SAME[akaKey(a.name)]||akaKey(a.name);if(!own.has(k))own.set(k,new Set());own.get(k).add(a.mbid||'')}
+  for(const a of S.music){
+    if(!Array.isArray(a.aka)||!a.aka.length)continue;
+    const home=ARTIST_SAME[akaKey(a.name)]||akaKey(a.name);
+    for(const n of a.aka){
+      for(const k of [akaKey(n),akaKey(a.name+' '+n),akaKey(n+' '+a.name)]){   /* "공중도둑 (Mid-Air Thief)" reads as him too */
+        if(!k||k===home||ARTIST_SAME[k])continue;
+        const o=own.get(k);if(o&&[...o].some(id=>id&&id!==a.mbid))continue;   /* a different MusicBrainz artist with that very name is someone else */
+        m[k]=home}}
+  }
+  AKA=m;
+}
+/* the other names MusicBrainz lists for an artist (search results and lookups both carry them) */
+function mbAkas(x){
+  const out=[],seen=new Set([akaKey(x.name||'')]);
+  for(const al of (x.aliases||[])){const n=al&&al.name;if(!n)continue;const k=akaKey(n);if(!k||seen.has(k))continue;seen.add(k);out.push(n)}
+  return out.slice(0,12);
+}
+/* an artist's saved "also known as" list: MusicBrainz aliases, the Spotify name, and any earlier name */
+function akaSet(a,art,sp,prev){
+  const names=[art&&art.name,...((art&&art.aka)||[]),sp&&sp.name,prev,...(a.aka||[])].filter(Boolean);
+  const seen=new Set([akaKey(a.name)]),out=[];
+  for(const n of names){const k=akaKey(n);if(!k||seen.has(k))continue;seen.add(k);out.push(n)}
+  a.aka=out.slice(0,12);
+}
+/* during an import, before the artist is saved, so Spotify's name already matches */
+function akaRemember(art){const h=akaKey(art.name);for(const n of (art.aka||[])){const k=akaKey(n);if(k&&k!==h&&!ARTIST_SAME[k]&&!AKA[k])AKA[k]=ARTIST_SAME[h]||h}}
+let akaBusy=false;
+/* artists imported before this build have no alias list yet: fetch them quietly, one a second */
+async function akaBackfill(){
+  if(akaBusy||MBX.busy||MBX.searching||navigator.onLine===false)return;
+  const todo=S.music.filter(a=>a.mbid&&a.akaAt==null);if(!todo.length)return;
+  akaBusy=true;let n=0;
+  try{for(const a of todo){
+    if(MBX.busy||MBX.searching)break;
+    const j=await mbGet('artist/'+a.mbid,{inc:'aliases'});
+    akaSet(a,{name:a.name,aka:mbAkas(j)});a.akaAt=Date.now();n++}}
+  catch(e){}
+  finally{akaBusy=false}
+  if(n){rebuildAka();mergeSameArtists();touch();render()}
+}
 const nTitle=x=>nrm(String(x).replace(/\s*[\(\[][^)\]]*(deluxe|remaster|edition|version|anniversary|expanded)[^)\]]*[\)\]]/ig,''));
 function parseCSV(t){
   t=t.replace(/^﻿/,'');const rows=[];let row=[],f='',q=false;
@@ -1804,9 +1861,12 @@ async function spFetchCatalog(art,existing){
   let id=!alias&&existing&&existing.spid,name=art.name;
   MBX.step='Finding the artist on Spotify';MBX.n=0;MBX.of=0;mbProgress();
   if(!id){
-    const j=await spApi('search?'+new URLSearchParams({q:alias||art.name,type:'artist',limit:10}));
-    const list=(j.artists&&j.artists.items)||[],n=nArtist(art.name);
-    const hit=list.filter(x=>x&&x.id&&nArtist(x.name)===n).sort((a,b)=>(b.popularity||0)-(a.popularity||0))[0];
+    let hit=null;const n=nArtist(art.name);
+    for(const q of [alias||art.name,...((art.aka)||(existing&&existing.aka)||[])].slice(0,4)){   /* each name he goes by */
+      const j=await spApi('search?'+new URLSearchParams({q,type:'artist',limit:10}));
+      const list=(j.artists&&j.artists.items)||[];
+      hit=list.filter(x=>x&&x.id&&nArtist(x.name)===n).sort((a,b)=>(b.popularity||0)-(a.popularity||0))[0];
+      if(hit)break}
     if(!hit)throw SPError('nomatch');
     id=hit.id;name=hit.name;
   }
@@ -2252,6 +2312,7 @@ let S=load();
 function boot(){
   seedAll();READY=true;
   if(!S.flags.r10){for(const k in S.marks){if(S.marks[k].r)S.marks[k].r=S.marks[k].r*2}S.flags.r10=true;save()}
+  setTimeout(akaBackfill,3000);
 }
 if(READY)boot();
 
@@ -2545,7 +2606,7 @@ function artistView(a){
         <span class="ttl">${esc(s.t)}${s.f.length?`<span class="feat">feat. ${esc(s.f.join(', '))}</span>`:''}</span>${rateDots(i.id)}</div>`}).join('')}
     </div>`}).join('');
   return `<div class="head"><div class="ring" style="--p:${p}"><span>${p}%</span></div>
-    <div class="meta"><h2>${esc(a.name)}</h2><span class="mono">${done} of ${all.length} tracks heard · ${rated} rated · ${a.groups.length} releases</span></div></div>
+    <div class="meta"><h2>${esc(a.name)}</h2>${a.aka&&a.aka.length?`<span class="note">also ${esc(a.aka.slice(0,3).join(' · '))}</span>`:''}<span class="mono">${done} of ${all.length} tracks heard · ${rated} rated · ${a.groups.length} releases</span></div></div>
     <div class="tools"><button class="chip" data-act="filter" data-v="all" aria-pressed="${UI.filter==='all'}">Everything</button><button class="chip" data-act="filter" data-v="open" aria-pressed="${UI.filter==='open'}">Still to hear</button></div>
     ${mbArtistBar(a)}
     ${groups||'<p class="empty">You have heard every track listed here.</p>'}
