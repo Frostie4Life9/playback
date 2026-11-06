@@ -790,6 +790,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.05-m', note:'SPOTIFY IMPORTS ASK LESS: every tracklist Spotify gives you is now saved on this device, so rebuilding an artist only asks Spotify about releases it has not read before (a first import still reads everything). An import that gets cut off keeps what it read and carries on next time. When Spotify says the quota is used up, you now see that plainly, and a Use MusicBrainz this time button imports the artist from MusicBrainz instead (you keep every checkmark and rating).'},
   {v:'2026.11.05-l', note:'SPOTIFY IMPORT NO LONGER LOOKS STUCK: when Spotify asks for a pause, the import now counts it down (retrying in 12s), slows its pace for the rest of that import so it asks less often, and if Spotify says to wait a long time it stops right away and tells you roughly how long, instead of waiting and failing minutes later. Nothing in your log changes when an import stops.'},
   {v:'2026.11.05-k', note:'FIX: the page came up blank after the last update. Something that runs at start-up used the new deluxe code before it was ready. It is ready first now, and nothing in your log was touched.'},
   {v:'2026.11.05-j', note:'DELUXE SWITCH: an album with a deluxe edition now has a Standard | Deluxe switch under its title. Tap Deluxe and the whole release turns violet: the cover and title change to the deluxe edition\u2019s, every deluxe song shows in its place, and the rating becomes a separate Your deluxe rating with a song average that includes the deluxe songs. Your album rating is untouched. Both ratings come out in the album export. Check for new releases on an artist to pick up the deluxe cover and title.'},
@@ -1336,21 +1337,22 @@ async function mbSearch(q){
   }catch(e){MBX.err=mbMessage(e,q)}
   MBX.searching=false;MBX.cancel=false;render();
 }
-async function mbImport(art,where){
+async function mbImport(art,where,forceMb){
   if(MBX.busy)return;
   const findExisting=()=>S.music.find(x=>x.mbid===art.id)||S.music.find(x=>x.id===sid('artist',art.name)&&!x.mbid)||S.music.find(x=>!x.mbid&&nArtist(x.name)===nArtist(art.name));
   let existing=findExisting();
-  Object.assign(MBX,{busy:true,cancel:false,err:'',report:'',where,errWhere:where,aid:existing?existing.id:null,name:art.name,step:'Asking MusicBrainz',n:0,of:0,note:''});render();
-  let phase='mb',hint='';
+  Object.assign(MBX,{busy:true,cancel:false,err:'',report:'',spFallback:null,where,errWhere:where,aid:existing?existing.id:null,name:art.name,step:'Asking MusicBrainz',n:0,of:0,note:''});render();
+  let phase='mb',hint=forceMb?' This one came from MusicBrainz because Spotify was not available. Tap Rebuild from Spotify later for its covers and exact tracklists.':'';
   try{
     let groups=null,sp=null;
     if(!art.aka){try{art.aka=mbAkas(await mbGet('artist/'+art.id,{inc:'aliases'}))}catch(e){if(e.code==='cancel')throw e;art.aka=(existing&&existing.aka)||[]}}   /* his other names, so Spotify and your RYM list land on the same artist */
     akaRemember(art);existing=findExisting();
-    if(spCanImport()){
+    if(!forceMb&&spCanImport()){
       phase='sp';
       try{const c=await spFetchCatalog(art,existing);
         MBX.step='Sorting out duplicates';mbProgress();
         groups=spBuild(c.albums,c.artist.id,MBX.versions);sp=c.artist;
+        if(c.cached)hint+=' '+c.cached+' of '+c.albums.length+' tracklists came from copies saved on this device, so Spotify was only asked for '+(c.albums.length-c.cached)+'.';
         if(!groups.length){groups=null;sp=null;hint=' Spotify had no releases for this artist, so this came from MusicBrainz.'}}
       catch(e){if(e.code!=='nomatch')throw e;hint=' Could not find '+art.name+' on Spotify, so this came from MusicBrainz.'}
       phase='mb';
@@ -1368,7 +1370,8 @@ async function mbImport(art,where){
     UI.tab='music';UI.sel.music=r.aid;UI.filter='all';
     try{localStorage.setItem(KEY+'_tab','music')}catch(e){}
     Object.assign(MBX,{report:mbReportText(r)+hint,results:null,pick:null,q:'',errWhere:'sheet',aid:r.aid});
-  }catch(e){MBX.err=phase==='sp'&&e.code!=='cancel'?spImportMessage(e):mbMessage(e,art.name)}
+  }catch(e){MBX.err=phase==='sp'&&e.code!=='cancel'?spImportMessage(e):mbMessage(e,art.name);
+    MBX.spFallback=phase==='sp'&&['quota','limited','busy','network'].includes(e.code)?art:null}   /* offer the other source */
   finally{MBX.busy=false;MBX.cancel=false;render()}
   /* on a phone the sheet sits below the sidebar: bring the result into view */
   if(MBX.errWhere==='sheet'&&window.innerWidth<=760){const el=document.querySelector('.mbok,.sheet .mberr');if(el)el.scrollIntoView({behavior:'smooth',block:'center'})}
@@ -1381,6 +1384,7 @@ function mbProgHtml(){
     <span class="note">${esc(MBX.step)}${MBX.of&&MBX.step==='Reading releases'?` · ${MBX.n} of ${MBX.of}${left>=2?' · about '+Math.round(left)+' s left':''}`:''}${MBX.of&&MBX.step==='Reading tracklists'?` · ${MBX.n} of ${MBX.of}${MBX.of-MBX.n>=10?' · about '+Math.round((MBX.of-MBX.n)*.3)+' s left':''}`:''}${MBX.note?' · '+esc(MBX.note):''}</span>
     <div><button class="btn" data-act="mbcancel">Cancel</button></div></div>`;
 }
+const mbFallbackBtn=()=>MBX.err&&MBX.spFallback&&!MBX.busy?'<div><button class="btn" data-act="mbviamb">Use MusicBrainz this time</button></div>':'';
 function mbProgress(){const el=document.getElementById('mbprog');if(el)el.outerHTML=mbProgHtml()}
 function mbSide(){
   if(MBX.busy&&MBX.where==='side')return mbProgHtml();
@@ -1388,7 +1392,7 @@ function mbSide(){
     <label class="label" for="mb-q">Import a discography</label>
     <div class="row2"><input id="mb-q" name="q" placeholder="Search MusicBrainz" value="${esc(MBX.q)}" required autocomplete="off" ${MBX.busy?'disabled':''}>
       <button class="btn primary" ${MBX.searching||MBX.busy?'disabled':''}>${MBX.searching?'Searching…':'Search'}</button></div></form>`;
-  if(MBX.err&&MBX.errWhere==='side')h+=`<p class="mberr" role="alert">${esc(MBX.err)}</p>`;
+  if(MBX.err&&MBX.errWhere==='side')h+=`<p class="mberr" role="alert">${esc(MBX.err)}</p>${mbFallbackBtn()}`;
   if(MBX.pick){const x=MBX.pick,have=S.music.find(a=>a.mbid===x.id)||S.music.find(a=>a.id===sid('artist',x.name)&&!a.mbid)||S.music.find(a=>!a.mbid&&nArtist(a.name)===nArtist(x.name));
     h+=`<div class="mbpick"><div><b>${esc(x.name)}</b><span class="mbsub">${esc([x.aka&&x.aka.length&&'also '+x.aka.slice(0,2).join(', '),x.dis,x.country,x.begin&&'since '+x.begin].filter(Boolean).join(' · '))}</span></div>
       <label class="tick"><input type="checkbox" id="mb-ver" ${MBX.versions?'checked':''} ${MBX.busy?'disabled':''}> Include live albums, remixes and alternate versions</label>
@@ -1766,6 +1770,8 @@ const spViaWorker=()=>syncOn()&&(SY.wv||0)>=3;
 const SP_CB=(()=>{try{const q=new URLSearchParams(location.search);if(!q.has('state')||!(q.has('code')||q.has('error')))return null;
   const o={code:q.get('code'),error:q.get('error'),state:q.get('state')};history.replaceState(null,'',SP_REDIRECT+location.hash);return o}catch(e){return null}})();
 function SPError(code,status){const e=new Error(code);e.code=code;e.status=status;return e}
+function spWaitText(sec){const m=Math.ceil((sec||0)/60);
+  return !sec?'':sec<=90?' and to wait about a minute':m>=120?' and to wait about '+Math.round(m/60)+' hours':m>=60?' and to wait about an hour':' and to wait about '+Math.max(m,2)+' minutes'}
 function spMessage(e){
   switch(e.code){
     case 'network':return 'Could not reach Spotify. It will try again next time you open the app.';
@@ -1773,8 +1779,8 @@ function spMessage(e){
     case 'badcid':return 'Spotify did not recognize that Client ID. Copy it again from your app’s Settings on developer.spotify.com.';
     case 'forbidden':return 'Spotify refused (403). On developer.spotify.com, open your app › User Management and add the email of your Spotify account, and check that Premium is active.';
     case 'busy':return 'Spotify is asking for a short break. It will try again in a few minutes.';
-    case 'limited':{const m=Math.ceil((e.wait||0)/60),t=m>=120?'about '+Math.round(m/60)+' hours':m>=60?'about an hour':'about '+Math.max(m,2)+' minutes';
-      return 'Spotify has limited how often Playback can look things up and says to wait '+t+'. Nothing is wrong on your end.'}
+    case 'limited':return 'Spotify has limited how often Playback can look things up'+spWaitText(e.wait)+'. Nothing is wrong on your end.';
+    case 'quota':return 'Spotify says Playback has used up its quota for now'+spWaitText(e.wait)+'. Spotify counts every app on your developer account together, so rebuilding a lot of artists uses it up.';
     case 'synckey':return 'Your Worker did not accept the sync key, so it could not check Spotify. Re-enter the key under Sync.';
     case 'worker':return 'Your Worker had a problem checking Spotify ('+(e.status||'?')+'). Try again in a moment.';
     case 'state':return 'That Spotify sign-in did not start in this browser. Tap Connect Spotify again here. (On iPhone, connect from your PC instead: the home-screen app does not get the sign-in back.)';
@@ -1834,6 +1840,22 @@ async function spLocalPlays(retried){
   if(!r.ok)throw SPError('http',r.status);
   const j=await r.json().catch(()=>({}));return spSlim(j.items||[]);
 }
+/* ---------- saved tracklists ----------
+   Every album's tracklist Spotify gave us is kept on this device (IndexedDB, not in the log and
+   not synced), so a rebuild only asks Spotify about releases it has not read before. The list of
+   an artist's releases is still read fresh each time, so new releases show up; a saved tracklist
+   is used again only while the track count still matches and it is under 6 months old. A run that
+   gets cut off (rate limit, Cancel) keeps what it already read, so the next one resumes. */
+const SPC={m:null,p:null,dirty:false};
+function spcLoad(){return SPC.m?Promise.resolve(SPC.m):(SPC.p||(SPC.p=IDB.get('spcache_v1').then(v=>{SPC.m=v&&typeof v==='object'?v:{}},()=>{SPC.m={}}).then(()=>SPC.m)))}
+function spcSave(){
+  if(!SPC.dirty||!SPC.m)return;SPC.dirty=false;
+  const ks=Object.keys(SPC.m);if(ks.length>6000){ks.sort((x,y)=>(SPC.m[x].at||0)-(SPC.m[y].at||0)).slice(0,ks.length-5000).forEach(k=>delete SPC.m[k])}
+  IDB.put('spcache_v1',SPC.m).catch(()=>{});
+}
+const spcPack=t=>[t.name,t.explicit?1:0,t.is_playable===false?0:1,t.type==='episode'?1:0,(t.artists||[]).map(x=>[x.id,x.name])];
+const spcUnpack=a=>({name:a[0],explicit:!!a[1],is_playable:a[2]!==0,type:a[3]?'episode':'track',artists:(a[4]||[]).map(x=>({id:x[0],name:x[1]}))});
+const spcFresh=(c,al)=>!!(c&&c.t&&c.t.length&&Date.now()-(c.at||0)<183*864e5&&(!al.total_tracks||al.total_tracks===c.n));
 /* ---------- Spotify catalog: tracklists exactly as Spotify carries them ----------
    When Spotify is connected, a discography import reads the artist's albums,
    singles and compilations from Spotify itself (market=from_token, so only what
@@ -1860,8 +1882,9 @@ async function spApi(path){
     }catch(e){if(e&&e.code)throw e;throw SPError('network')}
     if(r.status===429||r.status===503||r.status===502){
       const ra=parseInt(r.headers.get('retry-after'),10);
+      let quota=false;if(r.status===429){try{quota=/QUOTA_EXCEEDED/i.test(await r.text())}catch(e){}}   /* Spotify marks a used-up quota in the reply */
       if(r.status===429)spGap=Math.min(1500,spGap+250);          /* it asked for a break: go slower for the rest of this run */
-      if(ra>90)throw Object.assign(SPError('limited',r.status),{wait:ra});   /* a long penalty: stop, don't keep knocking */
+      if(quota||ra>90)throw Object.assign(SPError(quota?'quota':'limited',r.status),{wait:ra>0?ra:0});   /* a long penalty: stop, don't keep knocking */
       if(tries>=5)throw SPError('busy',r.status);
       for(let left=ra>0?ra:2+tries*3;left>0;left--){            /* a short pause: count it down so it never looks stuck */
         if(MBX.cancel)throw MBError('cancel');
@@ -1879,7 +1902,7 @@ async function spApi(path){
 function spImportMessage(e){
   if(e.code==='notconnected')return 'Spotify is not connected on your Worker, so the import could not read Spotify. Connect it in the Spotify box, then try again. Nothing in your log was changed.';
   if(e.code==='busy')return 'Spotify kept asking Playback to slow down, so the import stopped. Wait a few minutes, then tap Check for new releases again. Nothing in your log was changed.';
-  if(e.code==='limited')return spMessage(e)+' Try the import again after that. Nothing in your log was changed.';
+  if(e.code==='limited'||e.code==='quota')return spMessage(e)+' Albums already read are saved on this device, so the next try picks up where this one stopped. Nothing in your log was changed.';
   return 'Spotify import stopped: '+spMessage(e)+' Nothing in your log was changed.';
 }
 function spPickImg(imgs){
@@ -1915,13 +1938,20 @@ async function spFetchCatalog(art,existing){
     if(!got.length||!j.next)break;                 /* Spotify's next/total can run past the end: an empty page stops it */
   }
   MBX.step='Reading tracklists';MBX.n=0;MBX.of=albums.length;mbProgress();
-  for(const al of albums){
-    const j=await spApi('albums/'+al.id+'?market=from_token');
-    const tr=((j.tracks&&j.tracks.items)||[]).slice();let next=j.tracks&&j.tracks.next,g=0;
-    while(next&&g++<20){const k=await spApi(spRel(next));tr.push(...(k.items||[]));next=k.next}
-    al.tracks=tr;al.img=spPickImg(j.images||al.images);MBX.n++;mbProgress();
-  }
-  return{artist:{id,name},albums};
+  const C=await spcLoad();let cached=0,since=0;
+  try{
+    for(const al of albums){
+      const c=C[al.id];
+      if(spcFresh(c,al)){al.tracks=c.t.map(spcUnpack);al.img=c.img||'';cached++;MBX.n++;mbProgress();continue}
+      const j=await spApi('albums/'+al.id+'?market=from_token');
+      const tr=((j.tracks&&j.tracks.items)||[]).slice();let next=j.tracks&&j.tracks.next,g=0;
+      while(next&&g++<20){const k=await spApi(spRel(next));tr.push(...(k.items||[]));next=k.next}
+      al.tracks=tr;al.img=spPickImg(j.images||al.images);MBX.n++;mbProgress();
+      C[al.id]={n:al.total_tracks||tr.length,at:Date.now(),img:al.img,t:tr.map(spcPack)};SPC.dirty=true;
+      if(++since%10===0)spcSave();
+    }
+  }finally{spcSave()}                                   /* even a cut-off run keeps what it read */
+  return{artist:{id,name},albums,cached};
 }
 const SP_ED=/\b(deluxe|remaster(ed)?|edition|anniversary|expanded|bonus|special|explicit|clean|reissue)\b/i;
 const spEd=s=>nrm(String(s).replace(/\s*[\(\[]([^\)\]]*)[\)\]]/g,(m,x)=>SP_ED.test(x)?' ':m).replace(/\s+[-–—]\s+(.+)$/,(m,x)=>SP_ED.test(x)?'':m))||nrm(s);
@@ -2675,7 +2705,7 @@ function mbArtistBar(a){
       <div><button class="btn primary" data-act="mbrefresh" data-a="${a.id}" ${MBX.busy?'disabled':''}>Replace with the verified MusicBrainz list</button></div></div>`;
   else h+=`<div class="mbsrc"><span class="label">Added by hand</span><button class="link" data-act="mbprefill" data-a="${a.id}" ${MBX.busy?'disabled':''}>Find on MusicBrainz</button></div>`;
   if(MBX.aid===a.id&&MBX.errWhere==='sheet'){
-    if(MBX.err)h+=`<p class="mberr" role="alert">${esc(MBX.err)}</p>`;
+    if(MBX.err)h+=`<p class="mberr" role="alert">${esc(MBX.err)}</p>${mbFallbackBtn()}`;
     if(MBX.report)h+=`<p class="mbok" role="status">${esc(MBX.report)}<button class="link" data-act="mbdismiss">Got it</button></p>`;
   }
   return h;
@@ -2800,6 +2830,7 @@ document.addEventListener('click',ev=>{
   else if(act==='mbgo'){if(MBX.pick)mbImport({id:MBX.pick.id,name:MBX.pick.name},'side');return}
   else if(act==='mbcancel'){MBX.cancel=true;MBX.note='cancelling';mbProgress();return}
   else if(act==='mbdismiss'){MBX.report='';MBX.err=''}
+  else if(act==='mbviamb'){const art=MBX.spFallback;if(!art||MBX.busy)return;MBX.spFallback=null;mbImport(art,MBX.errWhere==='side'?'side':'sheet',true);return}
   else if(act==='mbrefresh'){const a=S.music.find(x=>x.id===b.dataset.a);if(!a)return;
     const mbid=a.mbid||(a.id===sid('artist','radiohead')?RH_MBID:null);if(!mbid)return;
     MBX.versions=!!a.mbVersions;mbImport({id:mbid,name:a.name},'sheet');return}
