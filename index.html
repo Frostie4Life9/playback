@@ -773,6 +773,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.05-e', note:'KANYE WEST, NOT YE: the artist now shows as Kanye West, including the one you already have and any new import (Ye on MusicBrainz or Spotify still matches him). Releases, songs, checkmarks and ratings are unchanged.'},
   {v:'2026.11.05-d', note:'FEATURES AND KANYE = YE: songs now show their guest artists under the title (feat. Travis Scott, and so on). Imports from Spotify and MusicBrainz fill them in, and songs you already have show them when the credit is in the title; update an artist (Find on MusicBrainz, Update) to fill in the rest. Kanye West and Ye are now treated as the same artist everywhere: RYM imports, Spotify plays and imports all land on one artist, and if you already have both, they fold into one with every checkmark and rating kept.'},
   {v:'2026.11.05-c', note:'MORNING BRIEF HOOK: Playback now sends a short list of the next episode of each show you follow (title, episode, air date, nothing else) to your sync Worker, so your morning brief can say which episodes land tonight. It needs the new worker/playback-sync.js pasted into Cloudflare (version 5) and a BRIEF_KEY secret added; the steps are at the top of that file. Until then nothing changes.'},
   {v:'2026.11.05-b', note:'WHERE YOU STOPPED: every season of a show now says Finished, Caught up (everything out so far is watched, more is on the way) or Stopped at the last episode you watched. The top of the show says where you stopped overall and how many seasons you have finished, and the show list shows the same under each name, so you can see where to pick back up.'},
@@ -918,7 +919,9 @@ function mergeSameArtists(){
   const keys=new Set(Object.values(ARTIST_SAME));
   for(const p of Object.values(S.pendingR||{}))if(Array.isArray(p.n))p.n=[...new Set(p.n.map(nArtist))];   /* waiting RYM ratings follow the same names */
   for(const key of keys){
-    const list=S.music.filter(a=>nArtist(a.name)===key);if(list.length<2)continue;
+    const list=S.music.filter(a=>nArtist(a.name)===key);
+    if(ARTIST_SHOW[key])list.forEach(a=>{a.name=ARTIST_SHOW[key]});   /* a lone "Ye" is shown as Kanye West too */
+    if(list.length<2)continue;
     const keep=list.find(a=>a.mbid)||list[0];
     for(const o of list){
       if(o===keep||(o.mbid&&keep.mbid&&o.mbid!==keep.mbid))continue;
@@ -937,7 +940,7 @@ function mergeSameArtists(){
       if(!keep.spid&&o.spid)keep.spid=o.spid;
       S.music=S.music.filter(x=>x!==o);
     }
-    if(!keep.mbid){const nm=list.map(a=>a.name).find(n=>nrm(n)===key);if(nm)keep.name=nm}
+    if(ARTIST_SHOW[key])keep.name=ARTIST_SHOW[key];
   }
 }
 
@@ -1233,7 +1236,7 @@ function mbMerge(art,incoming,versions,tidy,sp){
   a.groups=[...groups,...manual];
   const fromSp=tidy?a.src==='sp':!!sp;
   if(kept.length)a.groups.push({id:sid(a.id,'kept'),src:'kept',title:'Kept from your earlier list',year:'—',kind:fromSp?'Not on Spotify':'Not in the MusicBrainz import',items:kept});
-  a.mbid=art.id;if(!tidy){a.name=art.name;a.mbVersions=!!versions;a.mbAt=Date.now();a.src=sp?'sp':'mb';if(sp)a.spid=sp.id}
+  a.mbid=art.id;if(!tidy){a.name=ARTIST_SHOW[nArtist(art.name)]||art.name;a.mbVersions=!!versions;a.mbAt=Date.now();a.src=sp?'sp':'mb';if(sp)a.spid=sp.id}
   for(const g of a.groups){if(rating(g.id))continue;const o=oldR.find(x=>x[0]===nTitle(g.title));if(o)S.marks[g.id]={...(S.marks[g.id]||{}),r:o[1]}}
   applyPending(a);
   const all=groups.flatMap(g=>g.items),kinds={};groups.forEach(g=>kinds[g.kind]=(kinds[g.kind]||0)+1);
@@ -1333,9 +1336,10 @@ const RATEABLE=['Studio album','EP','Live','Compilation','Other'];
 const RYX={err:'',report:null};
 const decodeEnt=x=>{const t=document.createElement('textarea');t.innerHTML=x;return t.value};
 const nrm=x=>decodeEnt(String(x)).normalize('NFKD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/&/g,' and ').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
-/* one artist who goes by two names: the left name is read as the right one everywhere
+/* one artist who goes by two names: the left name is read as the right one (Ye is Kanye West) everywhere
    artists are matched (RYM imports, Spotify plays, imports), so they never split in two */
-const ARTIST_SAME={'kanye west':'ye'};
+const ARTIST_SAME={'ye':'kanye west'};
+const ARTIST_SHOW={'kanye west':'Kanye West'};   /* the name it is shown under, whichever name an import brings */
 const nArtist=x=>{const n=nrm(x).replace(/^the /,'');return ARTIST_SAME[n]||n};
 const nTitle=x=>nrm(String(x).replace(/\s*[\(\[][^)\]]*(deluxe|remaster|edition|version|anniversary|expanded)[^)\]]*[\)\]]/ig,''));
 function parseCSV(t){
