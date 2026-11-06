@@ -19,17 +19,17 @@
 /* Layout: catalog sidebar (artists / shows) + detail sheet; "up next" strip on top. Archival record-sleeve feel. */
 :root{
   --bg:#ECEFEC; --surface:#F8FAF8; --sunk:#E1E6E2; --ink:#18221E; --muted:#5D6A64; --line:#CDD5D0;
-  --accent:#0F6E72; --accent-ink:#FFFFFF; --done:#2C7A55; --done-soft:#D6EBDF; --warn:#B4502F;
+  --accent:#0F6E72; --accent-ink:#FFFFFF; --done:#2C7A55; --done-soft:#D6EBDF; --warn:#B4502F; --dx:#7A4FB0; --dx-soft:#EEE7F7;
   --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
   --body:"Instrument Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#111614; --surface:#19201D; --sunk:#0C100E; --ink:#E3E9E6; --muted:#8F9C96; --line:#2C3632;
-  --accent:#6FD3C6; --accent-ink:#0B2A2C; --done:#6FCB9A; --done-soft:#1D3328; --warn:#F08A66; color-scheme:dark}}
+  --accent:#6FD3C6; --accent-ink:#0B2A2C; --done:#6FCB9A; --done-soft:#1D3328; --warn:#F08A66; --dx:#B79BF0; --dx-soft:#2A2238; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#111614; --surface:#19201D; --sunk:#0C100E; --ink:#E3E9E6; --muted:#8F9C96; --line:#2C3632;
-  --accent:#6FD3C6; --accent-ink:#0B2A2C; --done:#6FCB9A; --done-soft:#1D3328; --warn:#F08A66; color-scheme:dark}
+  --accent:#6FD3C6; --accent-ink:#0B2A2C; --done:#6FCB9A; --done-soft:#1D3328; --warn:#F08A66; --dx:#B79BF0; --dx-soft:#2A2238; color-scheme:dark}
 *{box-sizing:border-box}
 :root{color-scheme:light;padding-bottom:env(safe-area-inset-bottom,0px);-webkit-text-size-adjust:100%}
 html,body{-webkit-tap-highlight-color:transparent}
@@ -198,6 +198,17 @@ code.uri{font:500 12px var(--mono);background:var(--sunk);border-radius:4px;padd
 .track .num{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
 .track .ttl{min-width:0;overflow-wrap:anywhere}
 .track.done .ttl{color:var(--muted)}
+/* deluxe and bonus songs: tinted violet, shown only when the album's dropdown is open */
+.track.dx{background:var(--dx-soft);box-shadow:inset 3px 0 0 var(--dx)}
+.track.dx:hover{background:var(--dx-soft);filter:brightness(.97)}
+.track.dx .num{color:var(--dx)}
+.dxbar{display:flex;align-items:center;gap:10px;margin:4px 0 6px;padding:2px 0}
+.dxtog{flex:1;min-width:0;display:flex;align-items:center;gap:8px;text-align:left;border:1px solid var(--dx);background:var(--dx-soft);color:var(--ink);border-radius:8px;padding:7px 10px;font:inherit;font-size:13px;font-weight:600}
+.dxtog:focus-visible{outline:2px solid var(--dx);outline-offset:2px}
+.dxtog .chev{width:8px;height:8px;border:2px solid var(--dx);border-top:0;border-left:0;transform:rotate(-45deg);transition:transform .15s;flex:0 0 auto}
+.dxtog[aria-expanded="true"] .chev{transform:rotate(45deg)}
+.dxtog .mono{margin-left:auto;font-weight:500;color:var(--muted);white-space:nowrap}
+.dxbar .link{color:var(--dx);white-space:nowrap}
 .track .feat{display:block;margin-top:1px;font-size:12px;line-height:1.3;color:var(--muted)}
 .check{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);background:transparent;display:grid;place-items:center;padding:0}
 .check[aria-pressed="true"]{background:var(--done);border-color:var(--done)}
@@ -773,6 +784,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.05-f', note:'DELUXE EDITIONS TUCK INTO THE ALBUM: a studio album with a deluxe edition now keeps its own standard tracklist, and a violet Deluxe & bonus tracks bar under the rating opens the extra songs right inside it, in the deluxe edition\u2019s own order and in a different colour, with their own heard count and a Mark deluxe heard button. The album\u2019s count, bar and song average cover just the standard songs. Nothing changes until you tap Check for new releases (or Rebuild from Spotify) on an artist; checkmarks and ratings stay.'},
   {v:'2026.11.05-e', note:'KANYE WEST, NOT YE: the artist now shows as Kanye West, including the one you already have and any new import (Ye on MusicBrainz or Spotify still matches him). Releases, songs, checkmarks and ratings are unchanged.'},
   {v:'2026.11.05-d', note:'FEATURES AND KANYE = YE: songs now show their guest artists under the title (feat. Travis Scott, and so on). Imports from Spotify and MusicBrainz fill them in, and songs you already have show them when the credit is in the title; update an artist (Find on MusicBrainz, Update) to fill in the rest. Kanye West and Ye are now treated as the same artist everywhere: RYM imports, Spotify plays and imports all land on one artist, and if you already have both, they fold into one with every checkmark and rating kept.'},
   {v:'2026.11.05-c', note:'MORNING BRIEF HOOK: Playback now sends a short list of the next episode of each show you follow (title, episode, air date, nothing else) to your sync Worker, so your morning brief can say which episodes land tonight. It needs the new worker/playback-sync.js pasted into Cloudflare (version 5) and a BRIEF_KEY secret added; the steps are at the top of that file. Until then nothing changes.'},
@@ -1166,9 +1178,27 @@ function mbBuild(rels,versions){
        often came as CD1/CD2, so every edition counts as the release itself. */
     const whole=kind!=='Studio album',restR=usable.filter(r=>r!==rep);
     entries.push({rgid:rg.id,title:rg.title||rep.title,year:date.slice(0,4)||'—',kind,date:mbDateKey(date),
-      rep:(whole?[rep,...restR]:[rep]).flatMap(tracksOf),others:whole||!versions?[]:restR.flatMap(tracksOf),items:[]});
+      rep:(whole?[rep,...restR]:[rep]).flatMap(tracksOf),others:whole||!versions?[]:restR.flatMap(tracksOf),eds:whole||!versions?[]:restR.map(tracksOf),items:[]});
   }
   return mbClaim(entries,versions);
+}
+/* A studio album with a deluxe edition: the whole list follows the deluxe edition's own track
+   order, with the standard album's songs slotted in wherever the deluxe carries them, so the
+   songs both editions share keep their shared order and the deluxe-only ones land where the
+   deluxe puts them. Songs no edition orders (rare) go last. */
+function mbDeluxeOrder(E){
+  if(E.kind!=='Studio album'||!E.eds||!E.eds.length||!E.items.some(i=>i.dx))return;
+  const keysOf=tr=>{const o=[];for(const t of tr){const x=mbTrack(t,E.rgid);if(!x)continue;const k=x.alt?x.altKey:x.key;if(!o.includes(k))o.push(k)}return o};
+  const std=keysOf(E.rep),eds=E.eds.map(keysOf).sort((a,b)=>b.length-a.length);
+  const seq=(eds[0]||[]).slice();
+  const slot=(list,k,i)=>{                                    /* put k just after the song before it in list */
+    if(seq.includes(k))return;
+    let at=0;for(let j=i-1;j>=0;j--){const p=seq.indexOf(list[j]);if(p>=0){at=p+1;break}}
+    if(!seq.length||at>seq.length)at=seq.length;seq.splice(at,0,k)};
+  std.forEach((k,i)=>slot(std,k,i));
+  for(const ed of eds.slice(1))ed.forEach((k,i)=>slot(ed,k,i));
+  const at=i=>{let p=seq.indexOf(i.k);if(p<0)p=seq.indexOf(i.k.replace(/@[^@]*$/,''));return p<0?1e9:p};
+  E.items=E.items.map((i,n)=>({i,n,p:at(i)})).sort((a,b)=>(a.p-b.p)||(a.n-b.n)).map(x=>x.i);
 }
 /* Who gets each song. Studio albums go first, oldest first, and every studio album
    keeps its whole tracklist: a title already used by an earlier album (a second
@@ -1179,18 +1209,22 @@ function mbClaim(entries,versions){
   const albums=entries.filter(e=>e.kind==='Studio album').sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
   const rest=entries.filter(e=>e.kind!=='Studio album').sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:MB_KIND_ORDER.indexOf(a.kind)-MB_KIND_ORDER.indexOf(b.kind));
   const order=[...albums,...rest],claimed=new Map(),alts=[];
-  const add=(E,key,title,full,f)=>{
+  /* dx: a song that is only on the deluxe / bonus edition of a studio album. It stays in the
+     album's list, flagged, so the page can tuck it into the album's dropdown. */
+  const add=(E,key,title,full,f,dx)=>{
     const by=claimed.get(key);
     if(by){if(!full||by===E||E.kind!=='Studio album'||by.kind!=='Studio album')return;
       key=key+'@'+mbK(nTitle(E.title));if(claimed.has(key))return}
-    claimed.set(key,E);E.items.push({k:key,title,...(f?{f}:{})})};
-  const take=(E,t,full)=>{const x=mbTrack(t,E.rgid);if(!x)return;if(x.alt)alts.push({E,x});else add(E,x.key,x.title,full,x.f)};
+    claimed.set(key,E);E.items.push({k:key,title,...(f?{f}:{}),...(dx?{dx:1}:{})})};
+  const take=(E,t,full)=>{const x=mbTrack(t,E.rgid);if(!x)return;if(x.alt)alts.push({E,x,o:!full});else add(E,x.key,x.title,full,x.f,!full&&E.kind==='Studio album')};
   order.forEach(E=>E.rep.forEach(t=>take(E,t,true)));                     /* pass 1: the standard tracklists */
   order.forEach(E=>E.others.forEach(t=>take(E,t,false)));                 /* pass 2: songs only on other editions */
-  for(const {E,x} of alts){                                               /* pass 3: other versions */
-    if(!claimed.has(x.key)&&x.take)add(E,x.key,x.title,false,x.f);        /* a song only ever released live or as a demo IS the song */
-    else if(versions)add(E,x.altKey,x.title,false,x.f);
+  for(const {E,x,o} of alts){                                             /* pass 3: other versions */
+    const dx=o&&E.kind==='Studio album';
+    if(!claimed.has(x.key)&&x.take)add(E,x.key,x.title,false,x.f,dx);     /* a song only ever released live or as a demo IS the song */
+    else if(versions)add(E,x.altKey,x.title,false,x.f,dx);
   }
+  order.forEach(mbDeluxeOrder);
   return order.filter(E=>E.items.length)
     .sort((a,b)=>(MB_KIND_ORDER.indexOf(a.kind)-MB_KIND_ORDER.indexOf(b.kind))||(a.date<b.date?-1:a.date>b.date?1:0))
     .map(E=>({rgid:E.rgid,title:E.title,year:E.year,kind:E.kind,img:E.img||'',items:E.items}));
@@ -1219,7 +1253,7 @@ function mbMerge(art,incoming,versions,tidy,sp){
   const groups=[];
   for(const G of incoming){
     const items=[];
-    for(const t of G.items){if(placed.has(t.k))continue;placed.add(t.k);items.push({id:idFor(t.k),title:t.title,k:t.k,...(t.f&&t.f.length?{f:t.f}:{})})}
+    for(const t of G.items){if(placed.has(t.k))continue;placed.add(t.k);items.push({id:idFor(t.k),title:t.title,k:t.k,...(t.f&&t.f.length?{f:t.f}:{}),...(t.dx?{dx:1}:{})})}
     if(items.length)groups.push({id:sid(a.id,'rg',G.rgid),src:'mb',mbid:G.rgid,title:G.title,year:G.year,kind:G.kind,...(G.img?{img:G.img}:{}),items});
   }
   const manual=[];
@@ -1243,7 +1277,7 @@ function mbMerge(art,incoming,versions,tidy,sp){
   return{aid:a.id,name:a.name,kinds,songs:all.length,added:all.filter(i=>!before.has(i.id)).length,kept:kept.length,dropped,src:fromSp?'sp':'mb'};
 }
 function mbTidy(a){
-  const inc=a.groups.filter(g=>g.src==='mb').map(g=>({rgid:g.mbid,title:g.title,year:g.year,kind:g.kind,img:g.img||'',items:g.items.map(i=>({k:mbItemKey(i),title:i.title,...(i.f&&i.f.length?{f:i.f}:{})}))}));
+  const inc=a.groups.filter(g=>g.src==='mb').map(g=>({rgid:g.mbid,title:g.title,year:g.year,kind:g.kind,img:g.img||'',items:g.items.map(i=>({k:mbItemKey(i),title:i.title,...(i.f&&i.f.length?{f:i.f}:{}),...(i.dx?{dx:1}:{})}))}));
   mbMerge({id:a.mbid,name:a.name},inc,a.mbVersions,true);
 }
 function mbReportText(r){
@@ -1551,9 +1585,9 @@ function csvAlbums(){
   const rows=[];
   for(const a of xArtists())for(const g of xGroups(a)){
     if(!RATEABLE.includes(g.kind))continue;
-    const r=rating(g.id),rs=g.items.map(i=>rating(i.id)).filter(Boolean);
+    const its=stdItems(g),r=rating(g.id),rs=its.map(i=>rating(i.id)).filter(Boolean);
     if(!r&&!rs.length)continue;
-    rows.push([a.name,g.title,xYear(g),g.kind,r||'',rs.length?r2(rs.reduce((x,y)=>x+y,0)/rs.length):'',rs.length,g.items.length]);
+    rows.push([a.name,g.title,xYear(g),g.kind,r||'',rs.length?r2(rs.reduce((x,y)=>x+y,0)/rs.length):'',rs.length,its.length]);
   }
   return csvText(['Artist','Release','Year','Type','Album rating','Song average','Songs rated','Songs in list'],rows);
 }
@@ -1811,7 +1845,7 @@ function spBuild(albums,artistId,versions){
     eds.sort((a,b)=>(tagged(a)-tagged(b))||(ex(b)-ex(a))||(a.tr.length-b.tr.length)||(a.date<b.date?-1:a.date>b.date?1:0));
     const rep=eds[0],first=eds.map(e=>e.date).sort()[0];
     entries.push({rgid:'sp:'+rep.al.id,title:rep.al.name,year:first.startsWith('9999')?'—':first.slice(0,4),kind:rep.kind,date:first,img:rep.al.img||'',
-      rep:rep.tr.map(T),others:eds.slice(1).flatMap(e=>e.tr.map(T)),items:[]});
+      rep:rep.tr.map(T),others:eds.slice(1).flatMap(e=>e.tr.map(T)),eds:eds.slice(1).map(e=>e.tr.map(T)),items:[]});
   }
   return mbClaim(entries,versions);
 }
@@ -2316,7 +2350,7 @@ async function push(force){
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pull()});
 window.addEventListener('online',()=>pull());
 document.addEventListener('toggle',ev=>{if(ev.target.id==='syncpanel')UI.syncOpen=ev.target.open;else if(ev.target.classList&&ev.target.classList.contains('splog'))UI.spLogOpen=ev.target.open},true);
-const UI={lq:{music:'',screen:''},tab:'music',sel:{music:null,screen:null},filter:'all',armed:null,addType:'show',copied:false,epOpen:{}};
+const UI={lq:{music:'',screen:''},tab:'music',sel:{music:null,screen:null},filter:'all',armed:null,addType:'show',copied:false,epOpen:{},dxOpen:{}};
 try{const t=localStorage.getItem(KEY+'_tab');if(t==='screen')UI.tab='screen'}catch(e){}
 
 function current(){
@@ -2471,27 +2505,33 @@ function delBtn(id,label){const armed=UI.armed===id;return `<button class="btn d
 /* Albums and EPs (and live/compilation albums) get an overall rating; singles and
    the other odds and ends do not. The rating lives in marks under the release's own
    ID, so it syncs and survives a re-import like song ratings do. */
+/* the album's own songs; deluxe-only songs live in its dropdown and don't count toward the album's numbers */
+const dxItems=g=>g.items.filter(i=>i.dx);
+const stdItems=g=>{const s=g.items.filter(i=>!i.dx);return s.length?s:g.items};
 function albumRate(g){
   if(!RATEABLE.includes(g.kind))return '';
-  const rs=g.items.map(i=>rating(i.id)).filter(Boolean),n=rs.length,r=rating(g.id);
+  const its=stdItems(g),rs=its.map(i=>rating(i.id)).filter(Boolean),n=rs.length,r=rating(g.id);
   const avg=n?rs.reduce((x,y)=>x+y,0)/n:0,d=r&&n?r-avg:null,f1=v=>v.toFixed(1);
   return `<div class="arate"><span class="label">Your ${g.kind==='EP'?'EP':'album'} rating</span>${rateDots(g.id)}
-    <span class="avg">${n?'Song average '+f1(avg)+' <span class="of">('+n+' of '+g.items.length+' rated)</span>':'No songs rated yet'}</span>
+    <span class="avg">${n?'Song average '+f1(avg)+' <span class="of">('+n+' of '+its.length+' rated)</span>':'No songs rated yet'}</span>
     ${d===null?'':`<span class="diff ${Math.abs(d)<.05?'even':d>0?'up':'down'}">${Math.abs(d)<.05?'Same as the songs':(d>0?'+':'\u2212')+f1(Math.abs(d))+' vs the songs'}</span>`}</div>`}
 
 function artistView(a){
   const all=artistItems(a),done=all.filter(i=>isDone(i.id)).length,rated=all.filter(i=>rating(i.id)).length,p=pct(all.map(i=>i.id));
   const groups=a.groups.map(g=>{
-    const gd=g.items.filter(i=>isDone(i.id)).length,full=gd===g.items.length&&g.items.length>0;
-    const rows=g.items.map((i,k)=>({i,k})).filter(({i})=>UI.filter==='all'||!isDone(i.id));
-    if(UI.filter==='open'&&!rows.length)return '';
+    const std=stdItems(g),dxs=std===g.items?[]:dxItems(g),dxOpen=dxs.length>0&&!!UI.dxOpen[g.id];
+    const gd=std.filter(i=>isDone(i.id)).length,full=gd===std.length&&std.length>0;
+    const dd=dxs.filter(i=>isDone(i.id)).length,dfull=dd===dxs.length&&dxs.length>0;
+    const rows=(dxOpen?g.items:std).map((i,k)=>({i,k})).filter(({i})=>UI.filter==='all'||!isDone(i.id));
+    if(UI.filter==='open'&&!rows.length&&dd===dxs.length)return '';
     return `<div class="group">
       <div class="ghead">${g.img?`<img class="art" src="${esc(g.img)}" alt="" width="44" height="44" loading="lazy" decoding="async" onerror="this.remove()">`:g.mbid&&!/^sp:/.test(g.mbid)?`<img class="art" src="https://coverartarchive.org/release-group/${esc(g.mbid)}/front-250" alt="" width="44" height="44" loading="lazy" decoding="async" onerror="this.remove()">`:''}<h3>${esc(g.title)}</h3><span class="label">${esc(g.kind)} · ${esc(g.year)}</span><span class="sp"></span>
-        <span class="mono">${gd}/${g.items.length}</span><span class="bar"><i style="width:${g.items.length?gd/g.items.length*100:0}%"></i></span>
-        ${g.items.length?`<button class="link" data-act="grpall" data-a="${a.id}" data-g="${g.id}">${full?'Clear':'Mark all heard'}</button>`:''}</div>
+        <span class="mono">${gd}/${std.length}</span><span class="bar"><i style="width:${std.length?gd/std.length*100:0}%"></i></span>
+        ${std.length?`<button class="link" data-act="grpall" data-a="${a.id}" data-g="${g.id}">${full?'Clear':'Mark all heard'}</button>`:''}</div>
       ${albumRate(g)}
       ${g.items.length?'':'<p class="note">No songs listed yet. Tap Find on MusicBrainz at the top to fill them in; your album rating stays.</p>'}
-      ${rows.map(({i,k})=>{const s=songShow(i);return `<div class="track ${isDone(i.id)?'done':''}"><span class="num">${k+1}</span>
+      ${dxs.length?`<div class="dxbar"><button class="dxtog" data-act="dxopen" data-g="${g.id}" aria-expanded="${dxOpen}"><span class="chev" aria-hidden="true"></span>Deluxe &amp; bonus tracks<span class="mono">${dxs.length} more \u00b7 ${dd}/${dxs.length} heard</span></button>${dxOpen?`<button class="link" data-act="dxall" data-a="${a.id}" data-g="${g.id}">${dfull?'Clear deluxe':'Mark deluxe heard'}</button>`:''}</div>`:''}
+      ${rows.map(({i,k})=>{const s=songShow(i);return `<div class="track ${i.dx?'dx':''} ${isDone(i.id)?'done':''}"><span class="num">${k+1}</span>
         <button class="check" data-act="tog" data-id="${i.id}" aria-pressed="${isDone(i.id)}" aria-label="Heard ${esc(i.title)}"></button>
         <span class="ttl">${esc(s.t)}${s.f.length?`<span class="feat">feat. ${esc(s.f.join(', '))}</span>`:''}</span>${rateDots(i.id)}</div>`}).join('')}
     </div>`}).join('');
@@ -2627,8 +2667,11 @@ document.addEventListener('click',ev=>{
   else if(act==='spcopy'){const t=SP_REDIRECT;if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>{SPX.copied=true;render()},()=>{});return}
   else if(act==='rymadd'){const r=rymAddWaiting();RYX.report={total:r.albums,zero:0,filled:0,same:0,kept:[],waiting:[],notFound:[],dups:[],added:r};touch()}
   else if(act==='rate'){const v=+b.dataset.v;S.marks[id]={...(S.marks[id]||{}),r:rating(id)===v?0:v};touch()}
-  else if(act==='grpall'){const a=S.music.find(x=>x.id===b.dataset.a),g=a.groups.find(x=>x.id===b.dataset.g),full=g.items.every(i=>isDone(i.id));
-    g.items.forEach(i=>S.marks[i.id]={...(S.marks[i.id]||{}),done:!full});touch()}
+  else if(act==='grpall'){const a=S.music.find(x=>x.id===b.dataset.a),g=a.groups.find(x=>x.id===b.dataset.g),its=stdItems(g),full=its.every(i=>isDone(i.id));
+    its.forEach(i=>S.marks[i.id]={...(S.marks[i.id]||{}),done:!full});touch()}
+  else if(act==='dxopen'){UI.dxOpen[b.dataset.g]=!UI.dxOpen[b.dataset.g]}
+  else if(act==='dxall'){const a=S.music.find(x=>x.id===b.dataset.a),g=a.groups.find(x=>x.id===b.dataset.g),its=dxItems(g),full=its.every(i=>isDone(i.id));
+    its.forEach(i=>S.marks[i.id]={...(S.marks[i.id]||{}),done:!full});touch()}
   else if(act==='seasonall'){const s=S.screen.find(x=>x.id===b.dataset.s),n=+b.dataset.n,se=s.seasons.find(x=>x.n===n);
     const ids=Array.from({length:se.eps},(_,k)=>sid(s.id,'s',n,'e',k+1)),full=ids.every(isDone);
     ids.forEach(i=>S.marks[i]={...(S.marks[i]||{}),done:!full});touch()}
