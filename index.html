@@ -790,6 +790,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.05-k', note:'FIX: the page came up blank after the last update. Something that runs at start-up used the new deluxe code before it was ready. It is ready first now, and nothing in your log was touched.'},
   {v:'2026.11.05-j', note:'DELUXE SWITCH: an album with a deluxe edition now has a Standard | Deluxe switch under its title. Tap Deluxe and the whole release turns violet: the cover and title change to the deluxe edition\u2019s, every deluxe song shows in its place, and the rating becomes a separate Your deluxe rating with a song average that includes the deluxe songs. Your album rating is untouched. Both ratings come out in the album export. Check for new releases on an artist to pick up the deluxe cover and title.'},
   {v:'2026.11.05-i', note:'ARTISTS WITH TWO NAMES: every artist now remembers the other names they go by (MusicBrainz aliases and the name Spotify uses), shown under the artist\u2019s name as \u201calso\u2026\u201d. Spotify plays, RYM ratings and imports match under any of them, so 공중도둑 and Mid-Air Thief are one artist, and if you already have both they fold into one with every checkmark and rating kept. Artists you already imported fill in their other names by themselves in the background; Check for new releases also tries each name on Spotify.'},
   {v:'2026.11.05-h', note:'DELUXE SONGS STAY ON THE ALBUM: a song that was released as a single before the album\u2019s deluxe edition now goes into the album\u2019s Deluxe & bonus tracks dropdown instead of staying a single of its own, and the empty single disappears. Tap Check for new releases (or Rebuild from Spotify) on an artist to apply it; checkmarks and ratings move with the song.'},
@@ -975,8 +976,9 @@ function mergeSameArtists(){
 const isDone=id=>!!(S.marks[id]&&S.marks[id].done);
 const rating=id=>(S.marks[id]&&S.marks[id].r)||0;
 function artistItems(a){return a.groups.flatMap(g=>g.items)}
-const dxId=g=>g.id+'~dx';                        /* where an album's deluxe rating lives */
-const dxName=g=>g.dxTitle||g.title+' (Deluxe)';
+/* function declarations on purpose: the start-up tidy-up uses these before this point in the file runs */
+function dxId(g){return g.id+'~dx'}                /* where an album's deluxe rating lives */
+function dxName(g){return g.dxTitle||g.title+' (Deluxe)'}
 /* a song's title and its guest artists, for display. Guests come from the import (i.f);
    older songs fall back to a "(feat. X)" already written in the title. The credit comes
    out of the title so it isn't shown twice; the stored title never changes. */
@@ -2602,11 +2604,11 @@ function delBtn(id,label){const armed=UI.armed===id;return `<button class="btn d
 /* An album with a deluxe edition has two views: Standard (its own songs) and Deluxe (all of them,
    the deluxe-only songs flagged dx). Each view has its own overall rating, kept in marks under the
    release's ID (standard) and that ID + '~dx' (deluxe), and its own song average. */
-const hasDx=g=>g.items.some(i=>i.dx)&&g.items.some(i=>!i.dx);
-const dxItems=g=>hasDx(g)?g.items.filter(i=>i.dx):[];
-const stdItems=g=>hasDx(g)?g.items.filter(i=>!i.dx):g.items;
-const dxOn=g=>hasDx(g)&&!!UI.dxOpen[g.id];
-const viewItems=g=>dxOn(g)?g.items:stdItems(g);
+function hasDx(g){return g.items.some(i=>i.dx)&&g.items.some(i=>!i.dx)}
+function dxItems(g){return hasDx(g)?g.items.filter(i=>i.dx):[]}
+function stdItems(g){return hasDx(g)?g.items.filter(i=>!i.dx):g.items}
+function dxOn(g){return hasDx(g)&&!!UI.dxOpen[g.id]}
+function viewItems(g){return dxOn(g)?g.items:stdItems(g)}
 function albumRate(g){
   if(!RATEABLE.includes(g.kind))return '';
   const dx=dxOn(g),its=dx?g.items:stdItems(g),rid=dx?dxId(g):g.id,rs=its.map(i=>rating(i.id)).filter(Boolean),n=rs.length,r=rating(rid);
