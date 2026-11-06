@@ -253,6 +253,26 @@ footer textarea{font:12px var(--mono);margin-top:8px}
 .panel .msg{font-size:13px;color:var(--muted)}
 .panel .msg.err{color:var(--warn)}
 .buildid{font:500 12px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+/* ---- Your numbers (stats panel) ---- */
+.stat{display:flex;flex-direction:column;gap:14px;margin-top:8px}
+.stat .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:8px}
+.stat .kpi{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:1px}
+.stat .kpi b{font:700 20px var(--display);font-variant-numeric:tabular-nums}
+.stat .kpi span{font:500 11px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.stat h4{margin:0;font:600 13px var(--body)}
+.stat .hist{display:flex;align-items:flex-end;gap:2px;height:64px;border-bottom:1px solid var(--line)}
+.stat .hist i{flex:1;background:var(--accent);border-radius:2px 2px 0 0;min-height:0;opacity:.9}
+.stat .hist i.z{background:var(--line);min-height:2px;opacity:.6}
+.stat .hax{display:flex;justify-content:space-between;font:500 11px var(--mono);color:var(--muted)}
+.stat ol,.stat ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.stat .srow{width:100%;display:flex;align-items:baseline;gap:8px;text-align:left;border:0;background:transparent;border-radius:6px;padding:5px 6px}
+.stat .srow:hover{background:var(--sunk)}
+.stat .srow .n{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
+.stat .srow .n small{color:var(--muted);font-size:12px}
+.stat .srow .v{font:600 13px var(--mono);font-variant-numeric:tabular-nums;color:var(--accent)}
+.stat .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.stat .nb{font-size:13px;color:var(--muted);margin:0}
+
 /* ---- update bar (same behavior as the other apps) ---- */
 .updbar{position:fixed;left:0;right:0;top:0;z-index:130;padding:calc(10px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));pointer-events:none}
 .updin{max-width:520px;margin:0 auto;display:flex;align-items:center;gap:10px;height:48px;padding:0 6px 0 16px;
@@ -790,6 +810,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.06-a', note:'YOUR NUMBERS: a new Your numbers panel at the bottom of the page (above Export ratings) sums up your ratings: how many albums and songs you have rated and your averages, a bar chart of how you spread your album and song ratings, your top 10 albums, the artists you rate highest, albums you rate better or worse than their songs, and your show and film ratings. Tap any row to jump to it. It is only a view of your log; nothing is saved or changed.'},
   {v:'2026.11.05-n', note:'UNDO FOR IMPORTS: before any import changes an artist you already have, Playback saves how that artist looked (releases, songs, ratings and checkmarks) on this device. Under the artist\u2019s title, Undo last import (tap twice) puts it back exactly, for 2 weeks. The MusicBrainz fallback button now says plainly when it would replace a Spotify-built list.'},
   {v:'2026.11.05-m', note:'SPOTIFY IMPORTS ASK LESS: every tracklist Spotify gives you is now saved on this device, so rebuilding an artist only asks Spotify about releases it has not read before (a first import still reads everything). An import that gets cut off keeps what it read and carries on next time. When Spotify says the quota is used up, you now see that plainly, and a Use MusicBrainz this time button imports the artist from MusicBrainz instead (you keep every checkmark and rating).'},
   {v:'2026.11.05-l', note:'SPOTIFY IMPORT NO LONGER LOOKS STUCK: when Spotify asks for a pause, the import now counts it down (retrying in 12s), slows its pace for the rest of that import so it asks less often, and if Spotify says to wait a long time it stops right away and tells you roughly how long, instead of waiting and failing minutes later. Nothing in your log changes when an import stops.'},
@@ -1773,6 +1794,90 @@ function expSide(){
 }
 document.addEventListener('toggle',ev=>{const t=ev.target;if(t&&t.id==='export'&&t.open!==EXP.open){EXP.open=t.open;render()}},true);
 
+/* ---------- Your numbers ----------
+   Read-only summary of your ratings, worked out from the log each time the panel
+   is open (nothing is stored). Album numbers use each release's standard tracklist;
+   a deluxe edition's own rating counts as its own album, like the export does. */
+const STAT={open:false};
+const mean=a=>a.reduce((x,y)=>x+y,0)/a.length;
+const median=a=>{const b=[...a].sort((x,y)=>x-y),m=b.length>>1;return b.length%2?b[m]:(b[m-1]+b[m])/2};
+function statData(){
+  const alb=[],songs=[],seen=new Set();let heard=0,total=0;
+  for(const a of S.music){
+    for(const g of a.groups){
+      if(RATEABLE.includes(g.kind)){
+        const rs=stdItems(g).map(i=>rating(i.id)).filter(Boolean),r=rating(g.id);
+        if(r)alb.push({a,g,title:g.title,r,n:rs.length,avg:rs.length?mean(rs):0});
+        if(hasDx(g)){const dr=rating(dxId(g)),drs=g.items.map(i=>rating(i.id)).filter(Boolean);
+          if(dr)alb.push({a,g,title:dxName(g),r:dr,n:drs.length,avg:drs.length?mean(drs):0,dx:true})}
+      }
+      for(const i of g.items){if(seen.has(i.id))continue;seen.add(i.id);total++;if(isDone(i.id))heard++;const r=rating(i.id);if(r)songs.push(r)}
+    }
+  }
+  const scr=[];let eps=0;
+  for(const s of S.screen){
+    const r=rating(s.id);if(r)scr.push({s,r});
+    if(s.type!=='film')for(const se of s.seasons)for(let e=1;e<=se.eps;e++)if(rating(sid(s.id,'s',se.n,'e',e)))eps++;
+  }
+  return{alb,songs,heard,total,scr,eps};
+}
+function histHtml(vals){
+  const bins=Array(20).fill(0);vals.forEach(v=>{const k=Math.min(19,Math.max(0,Math.round(v*2)-1));bins[k]++});
+  const mx=Math.max(1,...bins);
+  return `<div class="hist" role="img" aria-label="Ratings from 0.5 to 10: ${bins.map((c,k)=>c?c+' at '+fmt((k+1)/2):'').filter(Boolean).join(', ')}">${bins.map((c,k)=>`<i class="${c?'':'z'}" ${c?`style="height:${Math.max(6,Math.round(c/mx*100))}%"`:''} title="${fmt((k+1)/2)}: ${c}"></i>`).join('')}</div>
+    <div class="hax"><span>1</span><span>5</span><span>10</span></div>`;
+}
+function statRows(list){
+  return `<ol>${list.map(x=>`<li><button class="srow" data-act="statgo" data-tab="${x.tab||'music'}" data-id="${x.id}"><span class="n">${esc(x.t)}${x.sub?' <small>'+esc(x.sub)+'</small>':''}</span><span class="v">${esc(x.v)}</span></button></li>`).join('')}</ol>`;
+}
+function statSide(){
+  const head=`<summary class="label" style="cursor:pointer">Your numbers</summary>`;
+  if(!STAT.open)return `<details id="stats">${head}</details>`;
+  const D=statData(),f1=v=>v.toFixed(1);
+  const albR=D.alb.map(x=>x.r),sg=D.songs;
+  let h=`<details id="stats" open>${head}<div class="stat">`;
+  if(!albR.length&&!sg.length&&!D.scr.length&&!D.eps)return h+`<p class="nb">Rate some albums, songs or shows and this fills in.</p></div></details>`;
+  h+=`<div class="kpis">
+    <div class="kpi"><b>${albR.length}</b><span>Albums rated</span></div>
+    <div class="kpi"><b>${albR.length?f1(mean(albR)):'–'}</b><span>Album average</span></div>
+    <div class="kpi"><b>${sg.length}</b><span>Songs rated</span></div>
+    <div class="kpi"><b>${sg.length?f1(mean(sg)):'–'}</b><span>Song average</span></div>
+    <div class="kpi"><b>${D.total?Math.round(D.heard/D.total*100)+'%':'–'}</b><span>${D.heard.toLocaleString()} of ${D.total.toLocaleString()} songs heard</span></div>
+  </div>`;
+  if(albR.length||sg.length){
+    h+=`<div class="cols">`;
+    if(albR.length)h+=`<div><h4>How you rate albums <span class="avg">median ${fmt(median(albR))}</span></h4>${histHtml(albR)}</div>`;
+    if(sg.length)h+=`<div><h4>How you rate songs <span class="avg">median ${fmt(median(sg))} · ${sg.filter(v=>v>=9).length} at 9 or higher</span></h4>${histHtml(sg)}</div>`;
+    h+=`</div>`;
+  }
+  if(D.alb.length){
+    const top=[...D.alb].sort((x,y)=>y.r-x.r||y.avg-x.avg||x.title.localeCompare(y.title)).slice(0,10)
+      .map(x=>({id:x.a.id,t:x.title,sub:x.a.name,v:fmt(x.r)}));
+    const gap=D.alb.filter(x=>x.n>=3).map(x=>({...x,d:x.r-x.avg}));
+    const up=gap.filter(x=>x.d>=.5).sort((x,y)=>y.d-x.d).slice(0,3).map(x=>({id:x.a.id,t:x.title,sub:x.a.name,v:'+'+f1(x.d)}));
+    const dn=gap.filter(x=>x.d<=-.5).sort((x,y)=>x.d-y.d).slice(0,3).map(x=>({id:x.a.id,t:x.title,sub:x.a.name,v:'−'+f1(Math.abs(x.d))}));
+    const byA={};D.alb.filter(x=>!x.dx).forEach(x=>{(byA[x.a.id]=byA[x.a.id]||{a:x.a,rs:[]}).rs.push(x.r)});
+    const arts=Object.values(byA).filter(o=>o.rs.length>=2).map(o=>({id:o.a.id,t:o.a.name,sub:o.rs.length+' albums',v:f1(mean(o.rs)),m:mean(o.rs)}))
+      .sort((x,y)=>y.m-x.m||y.sub.localeCompare(x.sub)).slice(0,5);
+    h+=`<div class="cols"><div><h4>Top albums</h4>${statRows(top)}</div>`;
+    if(arts.length)h+=`<div><h4>Artists you rate highest <span class="avg">2+ albums rated</span></h4>${statRows(arts)}</div>`;
+    h+=`</div>`;
+    if(up.length||dn.length){
+      h+=`<div class="cols">`;
+      if(up.length)h+=`<div><h4>Better than their songs <span class="avg">album rating vs song average</span></h4>${statRows(up)}</div>`;
+      if(dn.length)h+=`<div><h4>Worse than their songs <span class="avg">album rating vs song average</span></h4>${statRows(dn)}</div>`;
+      h+=`</div><p class="nb">Only albums with at least 3 rated songs and a gap of half a point or more.</p>`;
+    }
+  }
+  if(D.scr.length||D.eps){
+    const sr=D.scr.map(x=>x.r),topS=[...D.scr].sort((x,y)=>y.r-x.r||x.s.title.localeCompare(y.s.title)).slice(0,5)
+      .map(x=>({tab:'screen',id:x.s.id,t:x.s.title,sub:x.s.type==='film'?'Film':'Show',v:fmt(x.r)}));
+    h+=`<div><h4>Screen <span class="avg">${D.scr.length} show${D.scr.length===1?'':'s'} and films rated${sr.length?' · average '+f1(mean(sr)):''} · ${D.eps} episode${D.eps===1?'':'s'} rated</span></h4>${topS.length?statRows(topS):''}</div>`;
+  }
+  return h+'</div></details>';
+}
+document.addEventListener('toggle',ev=>{const t=ev.target;if(t&&t.id==='stats'&&t.open!==STAT.open){STAT.open=t.open;render()}},true);
+
 /* ---------- Spotify: songs you play get checked off ----------
    Your own Spotify app (Client ID in S.cfg.spotify, which syncs; it is not a secret)
    signs in with PKCE, so there is no client secret anywhere. Scope:
@@ -2651,6 +2756,7 @@ function renderMain(){
         <span class="msg ${SYS.status==='error'?'err':''}">${esc(SYS.msg||'')}</span>
       </form>
     </details>
+    ${statSide()}
     ${expSide()}
     <details id="backup">
       <summary class="label" style="cursor:pointer">Backup &amp; restore</summary>
@@ -2825,6 +2931,7 @@ document.addEventListener('click',ev=>{
   else if(act==='lsort'||act==='lshow'){const P=lPrefs();P[act==='lsort'?'sort':'show']=b.dataset.v;lSave(P);UI.llTab=null}
   else if(act==='lqx'){UI.lq[UI.tab]='';lRedraw();const i=document.getElementById('lq');if(i){i.value='';i.focus()}return}
   else if(act==='go'){UI.tab=b.dataset.tab;UI.sel[UI.tab]=id;UI.filter='all'}
+  else if(act==='statgo'){UI.tab=b.dataset.tab;UI.sel[UI.tab]=id;UI.filter='all';UI.toSheet=true;window.scrollTo({top:0,behavior:'smooth'})}
   else if(act==='filter'){UI.filter=b.dataset.v}
   else if(act==='epx'){UI.epOpen[id]=!UI.epOpen[id]}
   else if(act==='tog'){S.marks[id]={...(S.marks[id]||{}),done:!isDone(id)};touch()}
