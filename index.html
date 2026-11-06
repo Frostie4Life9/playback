@@ -784,6 +784,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.05-h', note:'DELUXE SONGS STAY ON THE ALBUM: a song that was released as a single before the album\u2019s deluxe edition now goes into the album\u2019s Deluxe & bonus tracks dropdown instead of staying a single of its own, and the empty single disappears. Tap Check for new releases (or Rebuild from Spotify) on an artist to apply it; checkmarks and ratings move with the song.'},
   {v:'2026.11.05-g', note:'KANYE\u2019S ALBUMS: Check for new releases on Kanye West now looks him up on Spotify afresh (most popular exact match, under either name) instead of reusing a saved Spotify profile that may have been the wrong one. Press it once and his albums should fill in; ratings and checkmarks stay.'},
   {v:'2026.11.05-f', note:'DELUXE EDITIONS TUCK INTO THE ALBUM: a studio album with a deluxe edition now keeps its own standard tracklist, and a violet Deluxe & bonus tracks bar under the rating opens the extra songs right inside it, in the deluxe edition\u2019s own order and in a different colour, with their own heard count and a Mark deluxe heard button. The album\u2019s count, bar and song average cover just the standard songs. Nothing changes until you tap Check for new releases (or Rebuild from Spotify) on an artist; checkmarks and ratings stay.'},
   {v:'2026.11.05-e', note:'KANYE WEST, NOT YE: the artist now shows as Kanye West, including the one you already have and any new import (Ye on MusicBrainz or Spotify still matches him). Releases, songs, checkmarks and ratings are unchanged.'},
@@ -1218,9 +1219,13 @@ function mbClaim(entries,versions){
       key=key+'@'+mbK(nTitle(E.title));if(claimed.has(key))return}
     claimed.set(key,E);E.items.push({k:key,title,...(f?{f}:{}),...(dx?{dx:1}:{})})};
   const take=(E,t,full)=>{const x=mbTrack(t,E.rgid);if(!x)return;if(x.alt)alts.push({E,x,o:!full});else add(E,x.key,x.title,full,x.f,!full&&E.kind==='Studio album')};
-  order.forEach(E=>E.rep.forEach(t=>take(E,t,true)));                     /* pass 1: the standard tracklists */
-  order.forEach(E=>E.others.forEach(t=>take(E,t,false)));                 /* pass 2: songs only on other editions */
-  for(const {E,x,o} of alts){                                             /* pass 3: other versions */
+  /* Studio albums claim first, deluxe-only songs included, so a song that came out as a single
+     before the album's deluxe edition lands on the album's deluxe dropdown, not as its own single. */
+  albums.forEach(E=>E.rep.forEach(t=>take(E,t,true)));                    /* pass 1: the standard album tracklists */
+  albums.forEach(E=>E.others.forEach(t=>take(E,t,false)));                /* pass 2: songs only on a deluxe / other edition of an album */
+  rest.forEach(E=>E.rep.forEach(t=>take(E,t,true)));                      /* pass 3: EPs, singles, compilations: what no album has */
+  rest.forEach(E=>E.others.forEach(t=>take(E,t,false)));                  /* pass 4: songs only on their other editions */
+  for(const {E,x,o} of alts){                                             /* pass 5: other versions */
     const dx=o&&E.kind==='Studio album';
     if(!claimed.has(x.key)&&x.take)add(E,x.key,x.title,false,x.f,dx);     /* a song only ever released live or as a demo IS the song */
     else if(versions)add(E,x.altKey,x.title,false,x.f,dx);
