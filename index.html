@@ -784,6 +784,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.05-f', note:'KANYE\u2019S ALBUMS: Check for new releases on Kanye West now looks him up on Spotify afresh (most popular exact match, under either name) instead of reusing a saved Spotify profile that may have been the wrong one. Press it once and his albums should fill in; ratings and checkmarks stay.'},
   {v:'2026.11.05-f', note:'DELUXE EDITIONS TUCK INTO THE ALBUM: a studio album with a deluxe edition now keeps its own standard tracklist, and a violet Deluxe & bonus tracks bar under the rating opens the extra songs right inside it, in the deluxe edition\u2019s own order and in a different colour, with their own heard count and a Mark deluxe heard button. The album\u2019s count, bar and song average cover just the standard songs. Nothing changes until you tap Check for new releases (or Rebuild from Spotify) on an artist; checkmarks and ratings stay.'},
   {v:'2026.11.05-e', note:'KANYE WEST, NOT YE: the artist now shows as Kanye West, including the one you already have and any new import (Ye on MusicBrainz or Spotify still matches him). Releases, songs, checkmarks and ratings are unchanged.'},
   {v:'2026.11.05-d', note:'FEATURES AND KANYE = YE: songs now show their guest artists under the title (feat. Travis Scott, and so on). Imports from Spotify and MusicBrainz fill them in, and songs you already have show them when the credit is in the title; update an artist (Find on MusicBrainz, Update) to fill in the rest. Kanye West and Ye are now treated as the same artist everywhere: RYM imports, Spotify plays and imports all land on one artist, and if you already have both, they fold into one with every checkmark and rating kept.'},
@@ -1792,12 +1793,15 @@ function spPickImg(imgs){
   return (im.find(x=>(x.width||0)>=100)||im[im.length-1]||{}).url||'';
 }
 async function spFetchCatalog(art,existing){
-  let id=existing&&existing.spid,name=art.name;
+  /* an artist with two names is looked up again every time: a saved Spotify ID may point at the
+     wrong profile, and the most popular exact match is the real one */
+  const alias=ARTIST_SHOW[nArtist(art.name)];
+  let id=!alias&&existing&&existing.spid,name=art.name;
   MBX.step='Finding the artist on Spotify';MBX.n=0;MBX.of=0;mbProgress();
   if(!id){
-    const j=await spApi('search?'+new URLSearchParams({q:art.name,type:'artist',limit:10}));
+    const j=await spApi('search?'+new URLSearchParams({q:alias||art.name,type:'artist',limit:10}));
     const list=(j.artists&&j.artists.items)||[],n=nArtist(art.name);
-    const hit=list.find(x=>x&&x.id&&nArtist(x.name)===n);
+    const hit=list.filter(x=>x&&x.id&&nArtist(x.name)===n).sort((a,b)=>(b.popularity||0)-(a.popularity||0))[0];
     if(!hit)throw SPError('nomatch');
     id=hit.id;name=hit.name;
   }
