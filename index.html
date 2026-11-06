@@ -790,6 +790,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.05-n', note:'UNDO FOR IMPORTS: before any import changes an artist you already have, Playback saves how that artist looked (releases, songs, ratings and checkmarks) on this device. Under the artist\u2019s title, Undo last import (tap twice) puts it back exactly, for 2 weeks. The MusicBrainz fallback button now says plainly when it would replace a Spotify-built list.'},
   {v:'2026.11.05-m', note:'SPOTIFY IMPORTS ASK LESS: every tracklist Spotify gives you is now saved on this device, so rebuilding an artist only asks Spotify about releases it has not read before (a first import still reads everything). An import that gets cut off keeps what it read and carries on next time. When Spotify says the quota is used up, you now see that plainly, and a Use MusicBrainz this time button imports the artist from MusicBrainz instead (you keep every checkmark and rating).'},
   {v:'2026.11.05-l', note:'SPOTIFY IMPORT NO LONGER LOOKS STUCK: when Spotify asks for a pause, the import now counts it down (retrying in 12s), slows its pace for the rest of that import so it asks less often, and if Spotify says to wait a long time it stops right away and tells you roughly how long, instead of waiting and failing minutes later. Nothing in your log changes when an import stops.'},
   {v:'2026.11.05-k', note:'FIX: the page came up blank after the last update. Something that runs at start-up used the new deluxe code before it was ready. It is ready first now, and nothing in your log was touched.'},
@@ -1310,6 +1311,29 @@ function mbMerge(art,incoming,versions,tidy,sp){
   const all=groups.flatMap(g=>g.items),kinds={};groups.forEach(g=>kinds[g.kind]=(kinds[g.kind]||0)+1);
   return{aid:a.id,name:a.name,kinds,songs:all.length,added:all.filter(i=>!before.has(i.id)).length,kept:kept.length,dropped,src:fromSp?'sp':'mb'};
 }
+/* ---- undo for imports: before an import changes an artist that is already in your log, the artist
+   and the marks on its releases and songs are saved on this device (IndexedDB, last 8 artists), so
+   "Undo last import" can put it back exactly as it was. Not synced. ---- */
+var UNDO={};
+function undoLoad(){IDB.get('undo_v1').then(v=>{if(v&&typeof v==='object'){UNDO=Object.assign(v,UNDO);render()}},()=>{})}
+function undoSave(){IDB.put('undo_v1',UNDO).catch(()=>{})}
+function undoTake(a){
+  const snap={at:Date.now(),artist:JSON.parse(JSON.stringify(a)),marks:{},seen:{}};
+  for(const g of a.groups)for(const id of [g.id,dxId(g),...g.items.map(i=>i.id)]){
+    if(S.marks[id])snap.marks[id]={...S.marks[id]};if(S.rymSeen&&S.rymSeen[id]!=null)snap.seen[id]=S.rymSeen[id]}
+  UNDO[a.id]=snap;
+  const ks=Object.keys(UNDO);if(ks.length>8)ks.sort((x,y)=>UNDO[x].at-UNDO[y].at).slice(0,ks.length-8).forEach(k=>delete UNDO[k]);
+  undoSave();
+}
+function undoAvail(a){const u=UNDO[a.id];return !!(u&&u.artist&&Date.now()-u.at<14*864e5)}
+function undoApply(aid){
+  const u=UNDO[aid];if(!u||!u.artist)return false;
+  const i=S.music.findIndex(x=>x.id===aid);if(i>=0)S.music[i]=u.artist;else S.music.push(u.artist);
+  for(const id in u.marks)S.marks[id]=u.marks[id];                  /* only puts marks back; never removes one you added since */
+  S.rymSeen=S.rymSeen||{};for(const id in u.seen)S.rymSeen[id]=u.seen[id];
+  delete UNDO[aid];undoSave();touch();return true;
+}
+setTimeout(undoLoad,0);
 function mbTidy(a){
   const inc=a.groups.filter(g=>g.src==='mb').map(g=>({rgid:g.mbid,title:g.title,year:g.year,kind:g.kind,img:g.img||'',...(g.dxImg?{dxImg:g.dxImg}:{}),...(g.dxTitle?{dxTitle:g.dxTitle}:{}),items:g.items.map(i=>({k:mbItemKey(i),title:i.title,...(i.f&&i.f.length?{f:i.f}:{}),...(i.dx?{dx:1}:{})}))}));
   mbMerge({id:a.mbid,name:a.name},inc,a.mbVersions,true);
@@ -1364,6 +1388,7 @@ async function mbImport(art,where,forceMb){
       groups=mbBuild(rels,MBX.versions);
       if(!groups.length)throw MBError('empty');
     }
+    const ex=findExisting();if(ex)undoTake(ex);                       /* so the import can be undone */
     const r=mbMerge(art,groups,MBX.versions,false,sp);
     mergeSameArtists();
     touch();
@@ -1384,7 +1409,11 @@ function mbProgHtml(){
     <span class="note">${esc(MBX.step)}${MBX.of&&MBX.step==='Reading releases'?` · ${MBX.n} of ${MBX.of}${left>=2?' · about '+Math.round(left)+' s left':''}`:''}${MBX.of&&MBX.step==='Reading tracklists'?` · ${MBX.n} of ${MBX.of}${MBX.of-MBX.n>=10?' · about '+Math.round((MBX.of-MBX.n)*.3)+' s left':''}`:''}${MBX.note?' · '+esc(MBX.note):''}</span>
     <div><button class="btn" data-act="mbcancel">Cancel</button></div></div>`;
 }
-const mbFallbackBtn=()=>MBX.err&&MBX.spFallback&&!MBX.busy?'<div><button class="btn" data-act="mbviamb">Use MusicBrainz this time</button></div>':'';
+const mbFallbackBtn=()=>{
+  if(!MBX.err||!MBX.spFallback||MBX.busy)return '';
+  const a=S.music.find(x=>x.mbid===MBX.spFallback.id),sp=a&&a.src==='sp';
+  return '<div><button class="btn" data-act="mbviamb">'+(sp?'Replace with MusicBrainz (you can undo)':'Use MusicBrainz this time')+'</button></div>'+
+    (sp?'<p class="note">This rebuilds the artist\u2019s releases from MusicBrainz, which groups them differently and has no Spotify covers or deluxe songs. Undo last import puts it back.</p>':'')};
 function mbProgress(){const el=document.getElementById('mbprog');if(el)el.outerHTML=mbProgHtml()}
 function mbSide(){
   if(MBX.busy&&MBX.where==='side')return mbProgHtml();
@@ -2704,6 +2733,7 @@ function mbArtistBar(a){
   else if(isRH)h+=`<div class="mbsrc warn"><p class="note">The non-album lists here were typed by hand and aren't verified. Replacing them with MusicBrainz's list keeps every checkmark and rating you have.</p>
       <div><button class="btn primary" data-act="mbrefresh" data-a="${a.id}" ${MBX.busy?'disabled':''}>Replace with the verified MusicBrainz list</button></div></div>`;
   else h+=`<div class="mbsrc"><span class="label">Added by hand</span><button class="link" data-act="mbprefill" data-a="${a.id}" ${MBX.busy?'disabled':''}>Find on MusicBrainz</button></div>`;
+  if(undoAvail(a))h+=`<div class="mbsrc"><span class="label">Before the last import \u00b7 ${esc(new Date(UNDO[a.id].at).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}))}</span><button class="link" data-act="mbundo" data-a="${a.id}">${UI.undoArm===a.id?'Tap again to restore it':'Undo last import'}</button></div>`;
   if(MBX.aid===a.id&&MBX.errWhere==='sheet'){
     if(MBX.err)h+=`<p class="mberr" role="alert">${esc(MBX.err)}</p>${mbFallbackBtn()}`;
     if(MBX.report)h+=`<p class="mbok" role="status">${esc(MBX.report)}<button class="link" data-act="mbdismiss">Got it</button></p>`;
@@ -2787,6 +2817,7 @@ document.addEventListener('click',ev=>{
   const b=ev.target.closest('[data-act]');if(!b)return;
   const act=b.dataset.act,id=b.dataset.id;
   if(act!=='del')UI.armed=null;
+  if(act!=='mbundo')UI.undoArm=null;
   if(act!=='copy')UI.copied=false;
   if(act==='tab'){UI.tab=b.dataset.v;try{localStorage.setItem(KEY+'_tab',UI.tab)}catch(e){}}
   else if(act==='sel'){UI.sel[UI.tab]=id;
@@ -2830,6 +2861,7 @@ document.addEventListener('click',ev=>{
   else if(act==='mbgo'){if(MBX.pick)mbImport({id:MBX.pick.id,name:MBX.pick.name},'side');return}
   else if(act==='mbcancel'){MBX.cancel=true;MBX.note='cancelling';mbProgress();return}
   else if(act==='mbdismiss'){MBX.report='';MBX.err=''}
+  else if(act==='mbundo'){const aid=b.dataset.a;if(UI.undoArm!==aid){UI.undoArm=aid}else{UI.undoArm=null;if(undoApply(aid)){MBX.report='Put back as it was before the last import.';MBX.err='';MBX.aid=aid;MBX.errWhere='sheet'}}}
   else if(act==='mbviamb'){const art=MBX.spFallback;if(!art||MBX.busy)return;MBX.spFallback=null;mbImport(art,MBX.errWhere==='side'?'side':'sheet',true);return}
   else if(act==='mbrefresh'){const a=S.music.find(x=>x.id===b.dataset.a);if(!a)return;
     const mbid=a.mbid||(a.id===sid('artist','radiohead')?RH_MBID:null);if(!mbid)return;
