@@ -790,6 +790,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.05-l', note:'SPOTIFY IMPORT NO LONGER LOOKS STUCK: when Spotify asks for a pause, the import now counts it down (retrying in 12s), slows its pace for the rest of that import so it asks less often, and if Spotify says to wait a long time it stops right away and tells you roughly how long, instead of waiting and failing minutes later. Nothing in your log changes when an import stops.'},
   {v:'2026.11.05-k', note:'FIX: the page came up blank after the last update. Something that runs at start-up used the new deluxe code before it was ready. It is ready first now, and nothing in your log was touched.'},
   {v:'2026.11.05-j', note:'DELUXE SWITCH: an album with a deluxe edition now has a Standard | Deluxe switch under its title. Tap Deluxe and the whole release turns violet: the cover and title change to the deluxe edition\u2019s, every deluxe song shows in its place, and the rating becomes a separate Your deluxe rating with a song average that includes the deluxe songs. Your album rating is untouched. Both ratings come out in the album export. Check for new releases on an artist to pick up the deluxe cover and title.'},
   {v:'2026.11.05-i', note:'ARTISTS WITH TWO NAMES: every artist now remembers the other names they go by (MusicBrainz aliases and the name Spotify uses), shown under the artist\u2019s name as \u201calso\u2026\u201d. Spotify plays, RYM ratings and imports match under any of them, so 공중도둑 and Mid-Air Thief are one artist, and if you already have both they fold into one with every checkmark and rating kept. Artists you already imported fill in their other names by themselves in the background; Check for new releases also tries each name on Spotify.'},
@@ -1772,6 +1773,8 @@ function spMessage(e){
     case 'badcid':return 'Spotify did not recognize that Client ID. Copy it again from your app’s Settings on developer.spotify.com.';
     case 'forbidden':return 'Spotify refused (403). On developer.spotify.com, open your app › User Management and add the email of your Spotify account, and check that Premium is active.';
     case 'busy':return 'Spotify is asking for a short break. It will try again in a few minutes.';
+    case 'limited':{const m=Math.ceil((e.wait||0)/60),t=m>=120?'about '+Math.round(m/60)+' hours':m>=60?'about an hour':'about '+Math.max(m,2)+' minutes';
+      return 'Spotify has limited how often Playback can look things up and says to wait '+t+'. Nothing is wrong on your end.'}
     case 'synckey':return 'Your Worker did not accept the sync key, so it could not check Spotify. Re-enter the key under Sync.';
     case 'worker':return 'Your Worker had a problem checking Spotify ('+(e.status||'?')+'). Try again in a moment.';
     case 'state':return 'That Spotify sign-in did not start in this browser. Tap Connect Spotify again here. (On iPhone, connect from your PC instead: the home-screen app does not get the sign-in back.)';
@@ -1843,11 +1846,11 @@ function spCanImport(){
   if(spViaWorker())return (SY.wv||0)>=4&&!(SPX.wk&&SPX.wk.connected===false);
   return !!SPL.rt;
 }
-let spLast=0;
+let spLast=0,spGap=250;                /* ms between catalog requests; it widens when Spotify asks for a break */
 const spRel=u=>String(u||'').replace(/^https:\/\/api\.spotify\.com\/v1\//,'');
 async function spApi(path){
   for(let tries=0;;tries++){
-    const wait=spLast+150-Date.now();if(wait>0)await mbSleep(wait);
+    const wait=spLast+spGap-Date.now();if(wait>0)await mbSleep(wait);
     if(MBX.cancel)throw MBError('cancel');
     spLast=Date.now();
     const viaW=spViaWorker();let r;
@@ -1856,10 +1859,15 @@ async function spApi(path){
       else{await spLocalToken();r=await fetch(SP_API+path,{headers:{authorization:'Bearer '+SPL.at}})}
     }catch(e){if(e&&e.code)throw e;throw SPError('network')}
     if(r.status===429||r.status===503||r.status===502){
-      if(tries>=5)throw SPError('busy',r.status);
       const ra=parseInt(r.headers.get('retry-after'),10);
-      MBX.note='Spotify asked for a short pause';mbProgress();
-      await mbSleep((ra>0?Math.min(ra,30):2+tries*3)*1000);MBX.note='';continue;
+      if(r.status===429)spGap=Math.min(1500,spGap+250);          /* it asked for a break: go slower for the rest of this run */
+      if(ra>90)throw Object.assign(SPError('limited',r.status),{wait:ra});   /* a long penalty: stop, don't keep knocking */
+      if(tries>=5)throw SPError('busy',r.status);
+      for(let left=ra>0?ra:2+tries*3;left>0;left--){            /* a short pause: count it down so it never looks stuck */
+        if(MBX.cancel)throw MBError('cancel');
+        MBX.note='Spotify asked for a pause \u00b7 retrying in '+left+'s';mbProgress();await mbSleep(1000);
+      }
+      MBX.note='';continue;
     }
     if(r.status===401){if(viaW)throw SPError('synckey',401);if(tries<1){SPL.exp=0;splSave();continue}throw SPError('reconnect',401)}
     if(r.status===409){const j=await r.json().catch(()=>({}));throw SPError(j.error==='reconnect'?'reconnect':'notconnected',409)}
@@ -1870,6 +1878,8 @@ async function spApi(path){
 }
 function spImportMessage(e){
   if(e.code==='notconnected')return 'Spotify is not connected on your Worker, so the import could not read Spotify. Connect it in the Spotify box, then try again. Nothing in your log was changed.';
+  if(e.code==='busy')return 'Spotify kept asking Playback to slow down, so the import stopped. Wait a few minutes, then tap Check for new releases again. Nothing in your log was changed.';
+  if(e.code==='limited')return spMessage(e)+' Try the import again after that. Nothing in your log was changed.';
   return 'Spotify import stopped: '+spMessage(e)+' Nothing in your log was changed.';
 }
 function spPickImg(imgs){
@@ -1881,6 +1891,7 @@ async function spFetchCatalog(art,existing){
      wrong profile, and the most popular exact match is the real one */
   const alias=ARTIST_SHOW[nArtist(art.name)];
   let id=!alias&&existing&&existing.spid,name=art.name;
+  spGap=250;                                      /* each import starts at a gentle pace */
   MBX.step='Finding the artist on Spotify';MBX.n=0;MBX.of=0;mbProgress();
   if(!id){
     let hit=null;const n=nArtist(art.name);
