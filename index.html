@@ -198,6 +198,7 @@ code.uri{font:500 12px var(--mono);background:var(--sunk);border-radius:4px;padd
 .track .num{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
 .track .ttl{min-width:0;overflow-wrap:anywhere}
 .track.done .ttl{color:var(--muted)}
+.track .feat{display:block;margin-top:1px;font-size:12px;line-height:1.3;color:var(--muted)}
 .check{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);background:transparent;display:grid;place-items:center;padding:0}
 .check[aria-pressed="true"]{background:var(--done);border-color:var(--done)}
 .check[aria-pressed="true"]::after{content:"";width:8px;height:4px;border:2px solid var(--surface);border-top:0;border-right:0;transform:translateY(-1px) rotate(-45deg)}
@@ -772,6 +773,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.05-d', note:'FEATURES AND KANYE = YE: songs now show their guest artists under the title (feat. Travis Scott, and so on). Imports from Spotify and MusicBrainz fill them in, and songs you already have show them when the credit is in the title; update an artist (Find on MusicBrainz, Update) to fill in the rest. Kanye West and Ye are now treated as the same artist everywhere: RYM imports, Spotify plays and imports all land on one artist, and if you already have both, they fold into one with every checkmark and rating kept.'},
   {v:'2026.11.05-c', note:'MORNING BRIEF HOOK: Playback now sends a short list of the next episode of each show you follow (title, episode, air date, nothing else) to your sync Worker, so your morning brief can say which episodes land tonight. It needs the new worker/playback-sync.js pasted into Cloudflare (version 5) and a BRIEF_KEY secret added; the steps are at the top of that file. Until then nothing changes.'},
   {v:'2026.11.05-b', note:'WHERE YOU STOPPED: every season of a show now says Finished, Caught up (everything out so far is watched, more is on the way) or Stopped at the last episode you watched. The top of the show says where you stopped overall and how many seasons you have finished, and the show list shows the same under each name, so you can see where to pick back up.'},
   {v:'2026.11.05-a', note:'EXPORT YOUR RATINGS: at the bottom of the page, Export ratings downloads spreadsheets of your album ratings (with the song average beside each), every song rating, and your show, season, episode and film ratings. Below them, Not yet in Rate Your Music lists the ratings you added or changed here, so you know exactly what to type into RYM. Tap Everything is on RYM now once to start tracking, and importing your RYM file or song ratings again keeps it up to date.'},
@@ -901,16 +903,60 @@ function seedAll(){
         const nk=mbKeyOf(i.title);if(nk&&nk!==k&&!have.has(nk)){have.add(nk);i.k=nk}}}
     S.flags.key2=true;
   }
+  mergeSameArtists();
   S.music.forEach(x=>{if(x.mbid)mbTidy(x)});
   S.music.forEach(x=>applyPending(x));
   S.sp=S.sp||{after:0,miss:[]};
   save();
 }
 
+/* An artist you already have under both names (Kanye West and Ye, say) becomes one:
+   releases and songs fold together, and every checkmark and rating moves with them.
+   Only names listed in ARTIST_SAME are ever joined, and two artists that both came
+   from MusicBrainz as different people are left alone. */
+function mergeSameArtists(){
+  const keys=new Set(Object.values(ARTIST_SAME));
+  for(const p of Object.values(S.pendingR||{}))if(Array.isArray(p.n))p.n=[...new Set(p.n.map(nArtist))];   /* waiting RYM ratings follow the same names */
+  for(const key of keys){
+    const list=S.music.filter(a=>nArtist(a.name)===key);if(list.length<2)continue;
+    const keep=list.find(a=>a.mbid)||list[0];
+    for(const o of list){
+      if(o===keep||(o.mbid&&keep.mbid&&o.mbid!==keep.mbid))continue;
+      for(const g of o.groups){
+        const tg=keep.groups.find(x=>x.kind===g.kind&&nTitle(x.title)===nTitle(g.title));
+        if(!tg){keep.groups.push(g);continue}
+        if(!rating(tg.id)&&rating(g.id))S.marks[tg.id]={...(S.marks[tg.id]||{}),r:rating(g.id)};
+        if(S.rymSeen&&S.rymSeen[g.id]!=null&&S.rymSeen[tg.id]==null)S.rymSeen[tg.id]=S.rymSeen[g.id];
+        delete S.marks[g.id];
+        for(const i of g.items){
+          const ti=tg.items.find(x=>mbItemKey(x)===mbItemKey(i));
+          if(ti){mbFold(ti.id,i.id);delete S.marks[i.id];if(!(ti.f&&ti.f.length)&&i.f&&i.f.length)ti.f=i.f}
+          else tg.items.push(i);
+        }
+      }
+      if(!keep.spid&&o.spid)keep.spid=o.spid;
+      S.music=S.music.filter(x=>x!==o);
+    }
+    if(!keep.mbid){const nm=list.map(a=>a.name).find(n=>nrm(n)===key);if(nm)keep.name=nm}
+  }
+}
+
 /* ---------- derived ---------- */
 const isDone=id=>!!(S.marks[id]&&S.marks[id].done);
 const rating=id=>(S.marks[id]&&S.marks[id].r)||0;
 function artistItems(a){return a.groups.flatMap(g=>g.items)}
+/* a song's title and its guest artists, for display. Guests come from the import (i.f);
+   older songs fall back to a "(feat. X)" already written in the title. The credit comes
+   out of the title so it isn't shown twice; the stored title never changes. */
+function songShow(i){
+  const f=Array.isArray(i.f)?i.f.filter(Boolean):[],got=[];
+  const word=f.length?'feat\\.?|ft\\.?|featuring|with':'feat\\.?|ft\\.?|featuring';
+  let t=String(i.title).replace(new RegExp('\\s*[\\(\\[]\\s*(?:'+word+')\\s+([^\\)\\]]*)[\\)\\]]','ig'),(m,x)=>{got.push(x.trim());return ' '})
+    .replace(new RegExp('\\s+[-\u2013\u2014]\\s*(?:'+word+')\\s+(.+)$','i'),(m,x)=>{got.push(x.trim());return ''})
+    .replace(/\s+/g,' ').trim();
+  if(!t)return{t:String(i.title),f};
+  return{t,f:f.length?f:got.filter(Boolean)};
+}
 function epIds(s){return s.type==='film'?[s.id]:s.seasons.flatMap(se=>Array.from({length:se.eps},(_,k)=>sid(s.id,'s',se.n,'e',k+1)))}
 function pct(ids){if(!ids.length)return 0;return Math.round(ids.filter(isDone).length/ids.length*100)}
 const sxe=(n,e)=>'S'+String(n).padStart(2,'0')+'E'+String(e).padStart(2,'0');
@@ -1051,21 +1097,30 @@ function mbTrack(t,rgid){
   for(const d of sp.descs)if(mbVClass(d)==='alt'){alt=d;break}
   const dis=String(rec.disambiguation||'');
   if(!alt&&dis&&mbVClass(dis)==='alt'){alt=dis;fromDis=true}
-  if(!alt)return{key,title};
+  const f=Array.isArray(t.feat)&&t.feat.length?{f:t.feat}:{};      /* guest artists, when the source lists them */
+  if(!alt)return{key,title,...f};
   const live=/\blive\b/i.test(alt);
-  return{key,title:fromDis?title+' ('+(live?'live':dis)+')':title,alt:true,altKey:key+'~'+(live?'live@'+rgid:mbK(alt)),
+  return{key,title:fromDis?title+' ('+(live?'live':dis)+')':title,...f,alt:true,altKey:key+'~'+(live?'live@'+rgid:mbK(alt)),
     take:/\b(live|demo|acoustic|session|sessions|rehearsal|unplugged|early|outtake)\b/i.test(alt)};   /* remixes and "versions" never stand in for the song */
 }
 
 /* ---- fetch + build ---- */
 async function mbFetchCatalog(mbid){
-  const rels=[];let off=0,total=0;
-  do{
-    const j=await mbGet('release',{artist:mbid,status:'official',inc:'recordings+release-groups',limit:100,offset:off});
+  const rels=[];let off=0,total=0,inc='recordings+release-groups+artist-credits';
+  for(;;){
+    let j;
+    try{j=await mbGet('release',{artist:mbid,status:'official',inc,limit:100,offset:off})}
+    catch(e){if(e.code==='http'&&e.status===400&&/artist-credits/.test(inc)){inc='recordings+release-groups';continue}throw e}   /* no credits, no features: the import still works */
     const got=j.releases||[];total=j['release-count']||0;rels.push(...got);off+=got.length;
     MBX.step='Reading releases';MBX.n=Math.min(off,total);MBX.of=total;mbProgress();
-    if(!got.length)break;
-  }while(off<total);
+    if(!got.length||off>=total)break;
+  }
+  /* anyone credited on a track besides this artist is a guest on it */
+  for(const r of rels)for(const m of r.media||[])for(const t of m.tracks||[]){
+    const ac=t['artist-credit']||(t.recording&&t.recording['artist-credit'])||[];
+    const f=[];for(const c of ac){const nm=c&&c.artist&&c.artist.id!==mbid?(c.name||c.artist.name):'';if(nm&&!f.includes(nm))f.push(nm)}
+    if(f.length)t.feat=f;
+  }
   return rels;
 }
 const MB_KIND_ORDER=['Studio album','EP','Single','Compilation','Live','Other'];
@@ -1121,17 +1176,17 @@ function mbClaim(entries,versions){
   const albums=entries.filter(e=>e.kind==='Studio album').sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
   const rest=entries.filter(e=>e.kind!=='Studio album').sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:MB_KIND_ORDER.indexOf(a.kind)-MB_KIND_ORDER.indexOf(b.kind));
   const order=[...albums,...rest],claimed=new Map(),alts=[];
-  const add=(E,key,title,full)=>{
+  const add=(E,key,title,full,f)=>{
     const by=claimed.get(key);
     if(by){if(!full||by===E||E.kind!=='Studio album'||by.kind!=='Studio album')return;
       key=key+'@'+mbK(nTitle(E.title));if(claimed.has(key))return}
-    claimed.set(key,E);E.items.push({k:key,title})};
-  const take=(E,t,full)=>{const x=mbTrack(t,E.rgid);if(!x)return;if(x.alt)alts.push({E,x});else add(E,x.key,x.title,full)};
+    claimed.set(key,E);E.items.push({k:key,title,...(f?{f}:{})})};
+  const take=(E,t,full)=>{const x=mbTrack(t,E.rgid);if(!x)return;if(x.alt)alts.push({E,x});else add(E,x.key,x.title,full,x.f)};
   order.forEach(E=>E.rep.forEach(t=>take(E,t,true)));                     /* pass 1: the standard tracklists */
   order.forEach(E=>E.others.forEach(t=>take(E,t,false)));                 /* pass 2: songs only on other editions */
   for(const {E,x} of alts){                                               /* pass 3: other versions */
-    if(!claimed.has(x.key)&&x.take)add(E,x.key,x.title,false);            /* a song only ever released live or as a demo IS the song */
-    else if(versions)add(E,x.altKey,x.title,false);
+    if(!claimed.has(x.key)&&x.take)add(E,x.key,x.title,false,x.f);        /* a song only ever released live or as a demo IS the song */
+    else if(versions)add(E,x.altKey,x.title,false,x.f);
   }
   return order.filter(E=>E.items.length)
     .sort((a,b)=>(MB_KIND_ORDER.indexOf(a.kind)-MB_KIND_ORDER.indexOf(b.kind))||(a.date<b.date?-1:a.date>b.date?1:0))
@@ -1148,7 +1203,7 @@ function mbFold(into,from){            /* a duplicate's checkmark/rating moves o
 }
 function mbMerge(art,incoming,versions,tidy,sp){
   let a=S.music.find(x=>x.mbid===art.id);
-  if(!a){const id0=sid('artist',art.name),hit=S.music.find(x=>x.id===id0);
+  if(!a){const id0=sid('artist',art.name),hit=S.music.find(x=>x.id===id0)||S.music.find(x=>!x.mbid&&nArtist(x.name)===nArtist(art.name));
     if(hit&&!hit.mbid)a=hit;
     else{a={id:hit?sid('artist',art.name,art.id):id0,name:art.name,groups:[]};S.music.push(a)}}
   const seedIds=a.id===sid('artist','radiohead')?new Set(RADIOHEAD.map(r=>sid(a.id,r[0]))):new Set();
@@ -1161,7 +1216,7 @@ function mbMerge(art,incoming,versions,tidy,sp){
   const groups=[];
   for(const G of incoming){
     const items=[];
-    for(const t of G.items){if(placed.has(t.k))continue;placed.add(t.k);items.push({id:idFor(t.k),title:t.title,k:t.k})}
+    for(const t of G.items){if(placed.has(t.k))continue;placed.add(t.k);items.push({id:idFor(t.k),title:t.title,k:t.k,...(t.f&&t.f.length?{f:t.f}:{})})}
     if(items.length)groups.push({id:sid(a.id,'rg',G.rgid),src:'mb',mbid:G.rgid,title:G.title,year:G.year,kind:G.kind,...(G.img?{img:G.img}:{}),items});
   }
   const manual=[];
@@ -1173,7 +1228,7 @@ function mbMerge(art,incoming,versions,tidy,sp){
   for(const g of a.groups){if(!replaced(g))continue;
     for(const i of g.items){const k=mbItemKey(i);if(placed.has(k))continue;placed.add(k);
       const id=idFor(k);if(usedIds.has(id))continue;
-      if(mbMarked(id)||(tidy&&g.src==='kept'))kept.push({id,title:i.title,k});else dropped++}}
+      if(mbMarked(id)||(tidy&&g.src==='kept'))kept.push({id,title:i.title,k,...(i.f&&i.f.length?{f:i.f}:{})});else dropped++}}
   const oldR=a.groups.map(g=>[nTitle(g.title),rating(g.id)]).filter(x=>x[1]);
   a.groups=[...groups,...manual];
   const fromSp=tidy?a.src==='sp':!!sp;
@@ -1185,7 +1240,7 @@ function mbMerge(art,incoming,versions,tidy,sp){
   return{aid:a.id,name:a.name,kinds,songs:all.length,added:all.filter(i=>!before.has(i.id)).length,kept:kept.length,dropped,src:fromSp?'sp':'mb'};
 }
 function mbTidy(a){
-  const inc=a.groups.filter(g=>g.src==='mb').map(g=>({rgid:g.mbid,title:g.title,year:g.year,kind:g.kind,img:g.img||'',items:g.items.map(i=>({k:mbItemKey(i),title:i.title}))}));
+  const inc=a.groups.filter(g=>g.src==='mb').map(g=>({rgid:g.mbid,title:g.title,year:g.year,kind:g.kind,img:g.img||'',items:g.items.map(i=>({k:mbItemKey(i),title:i.title,...(i.f&&i.f.length?{f:i.f}:{})}))}));
   mbMerge({id:a.mbid,name:a.name},inc,a.mbVersions,true);
 }
 function mbReportText(r){
@@ -1213,7 +1268,7 @@ async function mbSearch(q){
 }
 async function mbImport(art,where){
   if(MBX.busy)return;
-  const existing=S.music.find(x=>x.mbid===art.id)||S.music.find(x=>x.id===sid('artist',art.name)&&!x.mbid);
+  const existing=S.music.find(x=>x.mbid===art.id)||S.music.find(x=>x.id===sid('artist',art.name)&&!x.mbid)||S.music.find(x=>!x.mbid&&nArtist(x.name)===nArtist(art.name));
   Object.assign(MBX,{busy:true,cancel:false,err:'',report:'',where,errWhere:where,aid:existing?existing.id:null,name:art.name,step:'Asking MusicBrainz',n:0,of:0,note:''});render();
   let phase='mb',hint='';
   try{
@@ -1260,7 +1315,7 @@ function mbSide(){
     <div class="row2"><input id="mb-q" name="q" placeholder="Search MusicBrainz" value="${esc(MBX.q)}" required autocomplete="off" ${MBX.busy?'disabled':''}>
       <button class="btn primary" ${MBX.searching||MBX.busy?'disabled':''}>${MBX.searching?'Searching…':'Search'}</button></div></form>`;
   if(MBX.err&&MBX.errWhere==='side')h+=`<p class="mberr" role="alert">${esc(MBX.err)}</p>`;
-  if(MBX.pick){const x=MBX.pick,have=S.music.find(a=>a.mbid===x.id)||S.music.find(a=>a.id===sid('artist',x.name)&&!a.mbid);
+  if(MBX.pick){const x=MBX.pick,have=S.music.find(a=>a.mbid===x.id)||S.music.find(a=>a.id===sid('artist',x.name)&&!a.mbid)||S.music.find(a=>!a.mbid&&nArtist(a.name)===nArtist(x.name));
     h+=`<div class="mbpick"><div><b>${esc(x.name)}</b><span class="mbsub">${esc([x.dis,x.country,x.begin&&'since '+x.begin].filter(Boolean).join(' · '))}</span></div>
       <label class="tick"><input type="checkbox" id="mb-ver" ${MBX.versions?'checked':''} ${MBX.busy?'disabled':''}> Include live albums, remixes and alternate versions</label>
       <p class="note">${have?'You already have '+esc(have.name)+'. Missing releases get added and every checkmark and rating stays where it is.':'Every official release, sorted into albums, EPs, singles and the rest.'}${spCanImport()?' Tracklists come from Spotify, so only songs you can play there are listed.':''}</p>
@@ -1278,7 +1333,10 @@ const RATEABLE=['Studio album','EP','Live','Compilation','Other'];
 const RYX={err:'',report:null};
 const decodeEnt=x=>{const t=document.createElement('textarea');t.innerHTML=x;return t.value};
 const nrm=x=>decodeEnt(String(x)).normalize('NFKD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/&/g,' and ').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
-const nArtist=x=>nrm(x).replace(/^the /,'');
+/* one artist who goes by two names: the left name is read as the right one everywhere
+   artists are matched (RYM imports, Spotify plays, imports), so they never split in two */
+const ARTIST_SAME={'kanye west':'ye'};
+const nArtist=x=>{const n=nrm(x).replace(/^the /,'');return ARTIST_SAME[n]||n};
 const nTitle=x=>nrm(String(x).replace(/\s*[\(\[][^)\]]*(deluxe|remaster|edition|version|anniversary|expanded)[^)\]]*[\)\]]/ig,''));
 function parseCSV(t){
   t=t.replace(/^﻿/,'');const rows=[];let row=[],f='',q=false;
@@ -1742,7 +1800,7 @@ function spBuild(albums,artistId,versions){
     if(!byEd.has(ek))byEd.set(ek,[]);
     byEd.get(ek).push({al,tr,kind,date:mbDateKey(al.release_date)});
   }
-  const T=t=>({title:t.name,recording:{title:t.name}});
+  const T=t=>({title:t.name,recording:{title:t.name},feat:(t.artists||[]).filter(x=>x&&x.name&&x.id!==artistId).map(x=>x.name)});   /* the other artists on a track are its features */
   const entries=[];
   for(const eds of byEd.values()){
     const tagged=e=>spEd(e.al.name)!==nrm(e.al.name)?1:0,ex=e=>e.tr.filter(t=>t.explicit).length;
@@ -2429,9 +2487,9 @@ function artistView(a){
         ${g.items.length?`<button class="link" data-act="grpall" data-a="${a.id}" data-g="${g.id}">${full?'Clear':'Mark all heard'}</button>`:''}</div>
       ${albumRate(g)}
       ${g.items.length?'':'<p class="note">No songs listed yet. Tap Find on MusicBrainz at the top to fill them in; your album rating stays.</p>'}
-      ${rows.map(({i,k})=>`<div class="track ${isDone(i.id)?'done':''}"><span class="num">${k+1}</span>
+      ${rows.map(({i,k})=>{const s=songShow(i);return `<div class="track ${isDone(i.id)?'done':''}"><span class="num">${k+1}</span>
         <button class="check" data-act="tog" data-id="${i.id}" aria-pressed="${isDone(i.id)}" aria-label="Heard ${esc(i.title)}"></button>
-        <span class="ttl">${esc(i.title)}</span>${rateDots(i.id)}</div>`).join('')}
+        <span class="ttl">${esc(s.t)}${s.f.length?`<span class="feat">feat. ${esc(s.f.join(', '))}</span>`:''}</span>${rateDots(i.id)}</div>`}).join('')}
     </div>`}).join('');
   return `<div class="head"><div class="ring" style="--p:${p}"><span>${p}%</span></div>
     <div class="meta"><h2>${esc(a.name)}</h2><span class="mono">${done} of ${all.length} tracks heard · ${rated} rated · ${a.groups.length} releases</span></div></div>
