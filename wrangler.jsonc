@@ -8,6 +8,12 @@
     { "binding": "STATE", "id": "123626e20f3e4780ba3064ff22077e7e" }
   ],
   "keep_vars": true,
+  // Without this block a Git deploy switches the Worker's logs off.
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": { "enabled": true, "head_sampling_rate": 1, "persist": true, "invocation_logs": true }
+  },
   "triggers": {
     // Hourly Spotify check
     "crons": ["0 * * * *"]
