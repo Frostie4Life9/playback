@@ -119,6 +119,7 @@ textarea{min-height:110px;resize:vertical;font-size:14px}
 .bar i{display:block;height:100%;background:var(--done)}
 .link{border:0;background:none;color:var(--accent);font-weight:600;font-size:13px;padding:0}
 .link:disabled{opacity:.45;cursor:default}
+a.link{text-decoration:none}
 .arate{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap;padding:2px 0 6px;border-bottom:1px solid var(--line)}
 .avg{font:500 12px var(--mono);color:var(--muted)}
 .avg .of{opacity:.8}
@@ -810,6 +811,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.10-a', note:'FIND IT ON RYM: every album and EP now has a Find on RYM link beside its rating. It opens Rate Your Music’s search for that artist and album in a new tab, so you land one tap from the real page. Nothing is fetched or saved; it is just a link.'},
   {v:'2026.11.06-a', note:'YOUR NUMBERS: a new Your numbers panel at the bottom of the page (above Export ratings) sums up your ratings: how many albums and songs you have rated and your averages, a bar chart of how you spread your album and song ratings, your top 10 albums, the artists you rate highest, albums you rate better or worse than their songs, and your show and film ratings. Tap any row to jump to it. It is only a view of your log; nothing is saved or changed.'},
   {v:'2026.11.05-n', note:'UNDO FOR IMPORTS: before any import changes an artist you already have, Playback saves how that artist looked (releases, songs, ratings and checkmarks) on this device. Under the artist\u2019s title, Undo last import (tap twice) puts it back exactly, for 2 weeks. The MusicBrainz fallback button now says plainly when it would replace a Spotify-built list.'},
   {v:'2026.11.05-m', note:'SPOTIFY IMPORTS ASK LESS: every tracklist Spotify gives you is now saved on this device, so rebuilding an artist only asks Spotify about releases it has not read before (a first import still reads everything). An import that gets cut off keeps what it read and carries on next time. When Spotify says the quota is used up, you now see that plainly, and a Use MusicBrainz this time button imports the artist from MusicBrainz instead (you keep every checkmark and rating).'},
@@ -2785,13 +2787,17 @@ function dxItems(g){return hasDx(g)?g.items.filter(i=>i.dx):[]}
 function stdItems(g){return hasDx(g)?g.items.filter(i=>!i.dx):g.items}
 function dxOn(g){return hasDx(g)&&!!UI.dxOpen[g.id]}
 function viewItems(g){return dxOn(g)?g.items:stdItems(g)}
-function albumRate(g){
+/* Link to RYM's own search for this album. It is only a link (nothing is fetched), and it uses
+   the standard title so a deluxe view still finds the album's page. */
+const rymSearchUrl=(a,g)=>'https://rateyourmusic.com/search?searchtype=l&searchterm='+encodeURIComponent((a&&a.name?a.name+' ':'')+g.title);
+function albumRate(g,a){
   if(!RATEABLE.includes(g.kind))return '';
   const dx=dxOn(g),its=dx?g.items:stdItems(g),rid=dx?dxId(g):g.id,rs=its.map(i=>rating(i.id)).filter(Boolean),n=rs.length,r=rating(rid);
   const avg=n?rs.reduce((x,y)=>x+y,0)/n:0,d=r&&n?r-avg:null,f1=v=>v.toFixed(1);
   return `<div class="arate"><span class="label">Your ${dx?'deluxe':g.kind==='EP'?'EP':'album'} rating</span>${rateDots(rid)}
     <span class="avg">${n?'Song average '+f1(avg)+' <span class="of">('+n+' of '+its.length+' rated)</span>':'No songs rated yet'}</span>
-    ${d===null?'':`<span class="diff ${Math.abs(d)<.05?'even':d>0?'up':'down'}">${Math.abs(d)<.05?'Same as the songs':(d>0?'+':'\u2212')+f1(Math.abs(d))+' vs the songs'}</span>`}</div>`}
+    ${d===null?'':`<span class="diff ${Math.abs(d)<.05?'even':d>0?'up':'down'}">${Math.abs(d)<.05?'Same as the songs':(d>0?'+':'\u2212')+f1(Math.abs(d))+' vs the songs'}</span>`}
+    <a class="link" href="${esc(rymSearchUrl(a,g))}" target="_blank" rel="noopener">Find on RYM</a></div>`}
 
 function artistView(a){
   const all=artistItems(a),done=all.filter(i=>isDone(i.id)).length,rated=all.filter(i=>rating(i.id)).length,p=pct(all.map(i=>i.id));
@@ -2807,7 +2813,7 @@ function artistView(a){
         <span class="mono">${gd}/${shown.length}</span><span class="bar"><i style="width:${shown.length?gd/shown.length*100:0}%"></i></span>
         ${shown.length?`<button class="link" data-act="grpall" data-a="${a.id}" data-g="${g.id}">${full?'Clear':'Mark all heard'}</button>`:''}</div>
       ${dxs.length?`<div class="dxseg" role="group" aria-label="Edition"><button type="button" data-act="dxsel" data-g="${g.id}" data-v="0" aria-pressed="${!dx}">Standard<span class="mono">${sd}/${std.length}</span></button><button type="button" class="dx" data-act="dxsel" data-g="${g.id}" data-v="1" aria-pressed="${dx}">Deluxe<span class="mono">${dd}/${g.items.length}</span></button></div>`:''}
-      ${albumRate(g)}
+      ${albumRate(g,a)}
       ${g.items.length?'':'<p class="note">No songs listed yet. Tap Find on MusicBrainz at the top to fill them in; your album rating stays.</p>'}
       ${rows.map(({i,k})=>{const s=songShow(i);return `<div class="track ${i.dx?'dx':''} ${isDone(i.id)?'done':''}"><span class="num">${k+1}</span>
         <button class="check" data-act="tog" data-id="${i.id}" aria-pressed="${isDone(i.id)}" aria-label="Heard ${esc(i.title)}"></button>
