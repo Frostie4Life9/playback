@@ -451,6 +451,67 @@ footer textarea{font:12px var(--mono);margin-top:8px}
 /* a tiny disc beside each Discogs result, so you can see the variant before you pick it */
 .mini-disc{position:relative;flex:0 0 auto;width:40px;height:40px}
 .mini-disc .rec-disc{inset:0;width:100%;height:100%;box-shadow:0 2px 6px rgb(0 0 0 / .25)}
+
+/* ===== Open the record (2026.11.11-h) ===== */
+.vcrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.vcrow input[type=color]{width:52px;height:36px;padding:2px}
+.vchk{display:inline-flex;align-items:center;gap:6px;font-size:13px}
+.vchk input{width:auto}
+.rec-gal figure{margin:0;flex:0 0 auto;display:flex;flex-direction:column;gap:6px;width:118px}
+.rec-gal figure select{font-size:12px;padding:4px 6px}
+.vw-open{display:inline-flex;align-items:center;gap:8px}
+.vw-open svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8}
+html.vw-lock{overflow:hidden}
+.vw{position:fixed;inset:0;z-index:2000;display:flex;flex-direction:column;align-items:center;gap:14px;overflow:hidden;color:#fff;
+  padding:max(16px,env(safe-area-inset-top,0px)) 16px max(18px,env(safe-area-inset-bottom,0px));
+  background:radial-gradient(120% 80% at 50% 40%,color-mix(in srgb,var(--ac) 70%,#000),#0b0908 72%);animation:recin .3s ease-out}
+.vw-top{width:min(100%,760px);display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.vw-top .sl-kind{color:rgb(255 255 255 / .7)}
+.vw-top h3{margin:2px 0 0;font:900 28px/.98 Archivo,var(--display);font-stretch:118%;text-transform:uppercase;letter-spacing:-.02em}
+.vw-x{flex:0 0 auto;width:44px;height:44px;border-radius:50%;border:1px solid rgb(255 255 255 / .3);background:rgb(0 0 0 / .25);color:#fff;display:grid;place-items:center}
+.vw-x svg,.vw-nav svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.vw-stage{--S:min(62vw,52vh,400px);position:relative;flex:1;width:min(100%,900px);min-height:calc(var(--S) + 30px);perspective:1600px;display:grid;place-items:center}
+.vw-stage>*{grid-area:1/1;width:var(--S);height:var(--S);transition:transform .8s cubic-bezier(.2,.8,.2,1),opacity .5s}
+.vw-sleeve{position:relative;transform-style:preserve-3d;z-index:3}
+.vw-face{position:absolute;inset:0;border-radius:4px;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:color-mix(in srgb,var(--ac) 60%,#111);box-shadow:0 30px 60px rgb(0 0 0 / .5)}
+.vw-face.back{transform:rotateY(180deg)}
+.vw-face img,.vw-inner img{width:100%;height:100%;object-fit:cover;display:block}
+.vw-face::after{content:"";position:absolute;inset:0;background:linear-gradient(120deg,rgb(255 255 255 / .14),transparent 40%);pointer-events:none}
+.vw-miss{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:20px;font:600 14px var(--body);color:rgb(255 255 255 / .75);
+  background:repeating-linear-gradient(45deg,rgb(255 255 255 / .04) 0 10px,transparent 10px 20px)}
+.vw-inner{z-index:2;border-radius:3px;overflow:hidden;background:#efe9df;box-shadow:0 20px 40px rgb(0 0 0 / .4);transform:scale(.97)}
+.vw-paper{display:block;width:100%;height:100%;background:radial-gradient(circle,transparent 0 13%,#efe9df 13.5%),radial-gradient(circle,#d8cfc0 0 13%,transparent 13.5%);
+  background-color:#efe9df;box-shadow:inset 0 0 0 1px rgb(0 0 0 / .08)}
+.vw-disc{z-index:1;transform-style:preserve-3d;transform:scale(.96)}
+.vw-stage:not([data-step="a"]):not([data-step="b"]) .vw-disc{opacity:0}
+.vw-stage[data-step="a"] .vw-inner,.vw-stage[data-step="b"] .vw-inner{opacity:0}
+.vw-dface{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.vw-dface.b{transform:rotateY(180deg)}
+.vw-dface .rec-disc{inset:0;width:100%;height:100%;box-shadow:0 30px 60px rgb(0 0 0 / .55)}
+/* the steps */
+.vw-stage[data-step="back"] .vw-sleeve{transform:rotateY(180deg)}
+.vw-stage[data-step="inner"] .vw-sleeve{transform:translateX(-30%) scale(.86) rotateY(-8deg);opacity:.85}
+.vw-stage[data-step="inner"] .vw-inner{transform:translateX(30%) scale(.92) rotate(2deg);z-index:4}
+.vw-stage[data-step="a"] .vw-sleeve,.vw-stage[data-step="b"] .vw-sleeve{transform:translateX(-34%) scale(.8) rotateY(-10deg);opacity:.55}
+.vw-stage[data-step="a"] .vw-disc{transform:translateX(30%) scale(.98);z-index:4}
+.vw-stage[data-step="b"] .vw-disc{transform:translateX(30%) scale(.98) rotateY(180deg);z-index:4}
+@media (prefers-reduced-motion:no-preference){
+  .vw-stage[data-step="a"] .vw-dface:not(.b) .rec-disc,.vw-stage[data-step="b"] .vw-dface.b .rec-disc{animation:recspin 1.8s linear .8s infinite}}
+@media (max-width:620px){.vw-stage{--S:min(68vw,46vh,400px)}
+  .vw-stage[data-step="inner"] .vw-sleeve,.vw-stage[data-step="a"] .vw-sleeve,.vw-stage[data-step="b"] .vw-sleeve{transform:translateY(-34%) scale(.7);opacity:.5}
+  .vw-stage[data-step="inner"] .vw-inner{transform:translateY(16%) scale(.9)}
+  .vw-stage[data-step="a"] .vw-disc{transform:translateY(16%) scale(.92)}
+  .vw-stage[data-step="b"] .vw-disc{transform:translateY(16%) scale(.92) rotateY(180deg)}}
+.vw-ctl{display:flex;align-items:center;gap:8px;max-width:100%}
+.vw-nav{flex:0 0 auto;width:44px;height:44px;border-radius:50%;border:1px solid rgb(255 255 255 / .3);background:rgb(0 0 0 / .25);color:#fff;display:grid;place-items:center}
+.vw-nav:disabled{opacity:.3}
+.vw-seg{display:flex;gap:2px;background:rgb(0 0 0 / .35);border-radius:999px;padding:4px;overflow-x:auto;scrollbar-width:none}
+.vw-seg button{border:0;background:transparent;color:rgb(255 255 255 / .75);font-weight:600;font-size:13px;padding:8px 12px;border-radius:999px;white-space:nowrap}
+.vw-seg button[aria-pressed="true"]{background:#fff;color:#111}
+@media (max-width:480px){.vw-seg button{padding:8px 9px;font-size:12px}}
+.vw-note{margin:0;max-width:60ch;text-align:center;font-size:13px;color:rgb(255 255 255 / .72)}
+.vw-note .link{color:#fff;text-decoration:underline}
+@media (prefers-reduced-motion:reduce){.vw-stage>*{transition:none}}
 /* library: on a phone the list folds behind Switch */
 .libbtn{display:none}
 @media (max-width:760px){
@@ -1075,6 +1136,7 @@ button.rnum:not(.set){border:1px dashed var(--line);border-radius:10px;text-alig
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.11-h', note:'OPEN THE RECORD: every record in your Collection has an Open the record button. It fills the screen with the sleeve: flip it to the back, slide out the inner sleeve, then pull out the record, which spins, and flip it to Side B. It looks for clean, labelled scans on the Cover Art Archive (MusicBrainz), first for your exact Discogs pressing and then for another vinyl pressing of the album, and remembers what it found. Any Discogs photo can fill a spot with its new Use as\u2026 menu (Front, Back, Inner sleeve, Side A or B label). DISC COLORS are closer to the real thing: shade words count, so Red (Deep) is now a dark cranberry, and Edit details has a Disc color picker for when the guess is off.'},
   {v:'2026.11.11-g', note:'THE CRATE: the Collection tab now looks like the rest of the Sleeve design. Your records sit in a grid of sleeves, and hovering over one (or, on a phone, the edge that peeks out) slides the record out so you can see the vinyl itself: its color, splatter, marble, half-and-half, clear or picture-disc look, drawn from the pressing\u2019s color, with the cover as its center label. Each record takes its color from its cover like albums do. Tap a record to open it: the record spins out of the sleeve, the pressing details sit underneath, and Photos from Discogs shows the back cover, inner sleeves and labels that Discogs owners uploaded for that exact pressing (it uses the same Discogs token as Find a pressing; your Worker learns the photo lookup when it updates itself from GitHub). Each Discogs search result also shows a small disc of that variant.'},
   {v:'2026.11.11-f', note:'CLEARER PRESSINGS: each result in Find a pressing, and each record in your Collection, now shows its details as labelled fields instead of one run-on line: Region, Catalog #, Vinyl (with a color dot, or Standard when Discogs lists no color), Format, Edition (reissue, limited, deluxe and so on), Label and Year. Results are grouped by catalog number so the same pressing in different regions sits together, and the edition words come along when you add a record.'},
   {v:'2026.11.11-e', note:'DISCOGS FROM THIS DEVICE: Discogs was turning away searches that went through your Worker (its limit counts every request from the Worker\u2019s shared address, and it was already past it). Under Find a pressing there is now a Discogs token box; with a token saved there, the search runs straight from this device, which has its own limit of 60 a minute. The token stays in this browser only and is never synced, so add it on each device you search from. Without one, or if the browser cannot reach Discogs, it still goes through your Worker.'},
@@ -3054,15 +3116,15 @@ function mainView(e,next,list){return `
    matching the Listen list uses), so it can show the cover and your rating. wish:true means
    it is on your wishlist, not on your shelf. */
 const COND=['M','NM','VG+','VG','G+','G','F','P'];
-const COL={busy:false,err:'',tokMsg:'',res:null,imgs:{},q:{artist:'',title:'',code:''}};
+const COL={busy:false,err:'',tokMsg:'',res:null,imgs:{},scanBusy:{},q:{artist:'',title:'',code:''}};
 const colAll=()=>S.collection||[];
 const colNewId=()=>sid('copy',Date.now(),Math.random());
 const colMoney=v=>{const n=parseFloat(v);return isFinite(n)?'$'+n.toFixed(2):''};
-const COL_SW={oxblood:'#5b1a1f',maroon:'#6b1f2a',burgundy:'#6b1f2a',crimson:'#a3162b',teal:'#1f8a8a',turquoise:'#2fb5b0',aqua:'#5cc9d1',mint:'#9fd8bd',seafoam:'#8fd1bd',navy:'#1d2f5e',royal:'#2a4bb0',sky:'#7fb6e6',lavender:'#b7a3dc',lilac:'#c4a8d8',magenta:'#c2307f',olive:'#6f7a33',forest:'#25523a',lime:'#a6cc3a',coke:'#6fa58f',beige:'#d9c8a6',sand:'#d8c19a',mustard:'#c99a2e',peach:'#f0b48f',coral:'#ea7a64',rose:'#d98a9a',ruby:'#9b1b30',amber:'#d68a1c',copper:'#b06a3b',bronze:'#8c6a37',smoke:'#7d7f80',milky:'#ecebe5',opaque:'',red:'#c0392b',blue:'#2f6fb5',green:'#3a8f55',yellow:'#e3c43b',orange:'#e08a2b',pink:'#e68fb0',purple:'#7d4cae',violet:'#7d4cae',white:'#f4f4f0',black:'#161616',grey:'#8a8f93',gray:'#8a8f93',gold:'#c9a227',silver:'#b9bec3',brown:'#7a5230',cream:'#efe6cf',bone:'#e9e1cc',tan:'#cdb48a',clear:'transparent',transparent:'transparent'};
+const COL_SW={oxblood:'#5b1a1f',maroon:'#6b1f2a',burgundy:'#6b1f2a',crimson:'#a3162b',teal:'#1f8a8a',turquoise:'#2fb5b0',aqua:'#5cc9d1',mint:'#9fd8bd',seafoam:'#8fd1bd',navy:'#1d2f5e',royal:'#2a4bb0',sky:'#7fb6e6',lavender:'#b7a3dc',lilac:'#c4a8d8',magenta:'#c2307f',olive:'#6f7a33',forest:'#25523a',lime:'#a6cc3a',coke:'#6fa58f',beige:'#d9c8a6',sand:'#d8c19a',mustard:'#c99a2e',peach:'#f0b48f',coral:'#ea7a64',rose:'#d98a9a',ruby:'#9b1b30',amber:'#d68a1c',copper:'#b06a3b',bronze:'#8c6a37',smoke:'#7d7f80',milky:'#ecebe5',opaque:'',red:'#b3202f',blue:'#2f6fb5',green:'#3a8f55',yellow:'#e3c43b',orange:'#e08a2b',pink:'#e68fb0',purple:'#7d4cae',violet:'#7d4cae',white:'#f4f4f0',black:'#161616',grey:'#8a8f93',gray:'#8a8f93',gold:'#c9a227',silver:'#b9bec3',brown:'#7a5230',cream:'#efe6cf',bone:'#e9e1cc',tan:'#cdb48a',clear:'transparent',transparent:'transparent'};
 /* the pressing as labelled fields: what tells two pressings of the same album apart comes first */
 function colFacts(x,std){
   const cell=(k,v,dim)=>v?`<div><span class="k">${k}</span><span class="v${dim?' dim':''}">${v}</span></div>`:'';
-  const w=String(x.color||'').toLowerCase().match(/[a-z]+/),sw=w&&COL_SW[w[0]]?`<i class="sw" style="background:${COL_SW[w[0]]}"></i>`:'';
+  const sw=x.color||x.vc?`<i class="sw" style="background:${esc(vinylLook(x,'').dot)}"></i>`:'';
   const vinyl=x.color?sw+esc(x.color):std&&x.fmt?'Standard':'';
   return `<div class="colfacts">${cell('Region',esc(x.country))}${cell('Catalog #',esc(x.catno))}${cell('Vinyl',vinyl,!x.color)}${cell('Format',esc(x.fmt))}${cell('Edition',esc(x.edition))}${cell('Label',esc(x.label))}${cell('Year',esc(x.year))}</div>`;
 }
@@ -3073,8 +3135,11 @@ function vinylLook(x,art){
   const t=String(x.color||'').toLowerCase(),all=(t+' '+String(x.fmt||'')+' '+String(x.edition||'')).toLowerCase();
   const cols=(t.match(/[a-z]+/g)||[]).map(w=>COL_SW[w]).filter(Boolean).filter(c=>c!=='transparent');
   const clear=/clear|transparent|translucent|crystal|see.?through|smoke|glass/.test(t);
-  if(/picture disc/.test(all)&&art)return{bg:`url('${String(art).replace(/'/g,'%27')}') center/cover`,dot:'conic-gradient(#c0392b,#e3c43b,#2f6fb5,#c0392b)',clear:false,name:x.color||'Picture disc'};
+  if(/picture disc/.test(all)&&art&&!x.vc)return{bg:`url('${String(art).replace(/'/g,'%27')}') center/cover`,dot:'conic-gradient(#c0392b,#e3c43b,#2f6fb5,#c0392b)',clear:false,name:x.color||'Picture disc'};
   const mix=(c,p)=>clear?`color-mix(in srgb,${c} ${p}%,transparent)`:c;
+  /* shade words: "Red (Deep)" is a dark cranberry, not fire-engine red */
+  const tone=c=>/\b(deep|dark|blood|wine|dusky|midnight)\b/.test(t)?`color-mix(in srgb,${c} 58%,#14000a)`:/\b(light|pale|baby|pastel|soft|powder)\b/.test(t)?`color-mix(in srgb,${c} 55%,#fff)`:/\b(bright|neon|electric|hot)\b/.test(t)?`color-mix(in srgb,${c} 85%,#ff2d6a)`:c;
+  if(x.vc&&/^#[0-9a-f]{6}$/i.test(x.vc))cols[0]=x.vc;else if(cols[0])cols[0]=tone(cols[0]);
   let a=cols[0]||(clear?'#cfd8db':'#141111'),b=cols[1]||(cols[0]?(clear?'#ffffff':'#f4f4f0'):'#2a2a2a');
   if(clear&&!cols[0])b='#ffffff';
   const A=mix(a,clear?55:100),B=mix(b,clear?60:100),h=colHash(x.id||x.catno||t);
@@ -3185,6 +3250,7 @@ function colEditForm(x){
     ${fld('label','Label')}${fld('catno','Catalog #')}
     ${fld('barcode','Barcode')}${fld('fmt','Format (LP, 7", 2×LP, Reissue)')}
     ${fld('color','Color or variant')}${fld('edition','Edition (limited no., first press)')}
+    <label class="label">Disc color in the app<span class="vcrow"><input type="color" name="vc" value="${esc(x.vc||'#7a1424')}" aria-label="Disc color"><span class="vchk"><input type="checkbox" name="vcauto" ${x.vc?'':'checked'}> Guess from the color words</span></span></label>
     <label class="label">Media condition${sel('media')}</label><label class="label">Sleeve condition${sel('sleeve')}</label>
     <label class="label">Paid (USD)<input name="paid" inputmode="decimal" value="${esc(x.paid||'')}"></label>
     <label class="label">Date bought<input name="bought" type="date" value="${esc(x.bought||'')}"></label>
@@ -3226,7 +3292,8 @@ function colDetail(x,art,col){
       ${x.notes?`<p class="note" style="margin:0">${esc(x.notes)}</p>`:''}
       ${x.discogs?`<div class="rd-sec"><span class="label"><span>Photos from Discogs</span><a class="link" href="https://www.discogs.com/release/${+x.discogs}" target="_blank" rel="noopener">Open on Discogs</a></span><div data-gal="${+x.discogs}">${colGalHTML(x.discogs)}</div></div>`:''}
       <div class="rd-acts">
-        ${x.wish?`<button class="btn primary" data-act="colgot" data-id="${x.id}">Got it</button>`:''}
+        <button class="btn primary vw-open" data-act="vopen" data-id="${x.id}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></svg>Open the record</button>
+        ${x.wish?`<button class="btn" data-act="colgot" data-id="${x.id}">Got it</button>`:''}
         ${a?`<button class="btn" data-act="llgo" data-a="${a.id}">Open in Music</button>`:''}
         <button class="btn" data-act="coledit" data-id="${x.id}" aria-expanded="${UI.colEdit===x.id}">${UI.colEdit===x.id?'Close editor':'Edit details'}</button>
         <button class="btn danger${UI.colDel===x.id?' armed':''}" data-act="coldel" data-id="${x.id}">${UI.colDel===x.id?'Tap again to remove':'Remove'}</button>
@@ -3242,7 +3309,8 @@ function colGalHTML(id){
   if(s===undefined||s==='loading')return '<p class="note" style="margin:0">Loading photos…</p>';
   if(s&&s.err)return `<p class="note" style="margin:0">${esc(s.err)}</p>`;
   if(!s.length)return '<p class="note" style="margin:0">Nobody has uploaded photos of this pressing on Discogs yet.</p>';
-  return `<div class="rec-gal">${s.map((im,i)=>`<a href="${esc(im.uri||im.uri150)}" target="_blank" rel="noopener" aria-label="Photo ${i+1} of ${s.length}"><img src="${esc(im.uri150||im.uri)}" alt="" loading="lazy" decoding="async"></a>`).join('')}</div><p class="note" style="margin:0">${s.length} photo${s.length>1?'s':''} uploaded by Discogs owners, usually the back, the inner sleeves and both labels. Tap one to see it full size.</p>`;
+  const x=colAll().find(c=>+c.discogs===+id),used=u=>x&&x.art?(ART_SLOTS.find(([k])=>x.art[k]===u)||[''])[0]:'';
+  return `<div class="rec-gal">${s.map((im,i)=>`<figure><a href="${esc(im.uri||im.uri150)}" target="_blank" rel="noopener" aria-label="Photo ${i+1} of ${s.length}, full size"><img src="${esc(im.uri150||im.uri)}" alt="" loading="lazy" decoding="async"></a>${x?`<select data-artslot="${x.id}" data-uri="${esc(im.uri||im.uri150)}" aria-label="Use photo ${i+1} as"><option value="">Use as…</option>${ART_SLOTS.map(([k,t])=>`<option value="${k}" ${used(im.uri||im.uri150)===k?'selected':''}>${t}</option>`).join('')}</select>`:''}</figure>`).join('')}</div><p class="note" style="margin:0">${s.length} photo${s.length>1?'s':''} uploaded by Discogs owners. Tap one to see it full size, or use Use as… to put a clean one into Open the record.</p>`;
 }
 async function colLoadImgs(id){
   if(COL.imgs[id]!==undefined)return;COL.imgs[id]='loading';
@@ -3265,6 +3333,69 @@ async function colLoadImgs(id){
     else done(pick(j));
   }catch(e){done({err:'Could not reach Discogs for the photos. Check your connection.'})}
 }
+/* Clean, labelled scans. Cover Art Archive tags each image (Front, Back, Medium = the disc
+   label, Liner = the inner sleeve), unlike Discogs. MusicBrainz links many releases to their
+   Discogs pressing, so the exact pressing is tried first; failing that, another vinyl release
+   of the same album in your log. What is found is kept on the entry (x.scan), so it is looked
+   up once; x.art holds the photos you picked yourself, and those win. */
+const ART_SLOTS=[['front','Front'],['back','Back'],['inner','Inner sleeve'],['labA','Label, side A'],['labB','Label, side B']];
+const colSlot=(x,k)=>(x.art&&x.art[k])||(x.scan&&x.scan[k])||'';
+async function caaTyped(mbid){
+  const r=await fetch('https://coverartarchive.org/release/'+mbid,{cache:'no-store'});
+  if(!r.ok)return null;const j=await r.json(),o={},img=i=>(i.thumbnails&&(i.thumbnails['1200']||i.thumbnails.large||i.thumbnails['500']))||i.image;
+  const of=t=>(j.images||[]).filter(i=>(i.types||[]).includes(t));
+  if(of('Front')[0])o.front=img(of('Front')[0]);if(of('Back')[0])o.back=img(of('Back')[0]);
+  const lin=of('Liner').concat(of('Booklet'),of('Poster'));if(lin[0])o.inner=img(lin[0]);
+  const med=of('Medium');if(med[0])o.labA=img(med[0]);if(med[1])o.labB=img(med[1]);
+  return Object.keys(o).length?o:null;
+}
+async function colFindScans(x){
+  if(COL.scanBusy[x.id])return;COL.scanBusy[x.id]=1;viewRedraw();
+  let out=null;
+  try{
+    if(x.discogs){try{const j=await mbGet('url',{resource:'https://www.discogs.com/release/'+(+x.discogs),inc:'release-rels'});
+      const rel=(j.relations||[]).map(r=>r.release&&r.release.id).filter(Boolean);
+      for(const id of rel.slice(0,2)){const o=await caaTyped(id);if(o){out=Object.assign(o,{mbid:id,exact:true});break}}}catch(e){}}
+    const {g}=colMatch(x);
+    if(!out&&g&&g.mbid&&!/^sp:/.test(g.mbid)){
+      const j=await mbGet('release',{'release-group':g.mbid,inc:'media+labels',limit:'100'});
+      const cat=String(x.catno||'').replace(/\W/g,'').toLowerCase();
+      const L=(j.releases||[]).filter(r=>(r.media||[]).some(m=>/vinyl/i.test(m.format||''))&&r['cover-art-archive']&&r['cover-art-archive'].back)
+        .map(r=>({r,s:((r['label-info']||[]).some(l=>cat&&String(l['catalog-number']||'').replace(/\W/g,'').toLowerCase()===cat)?4:0)+(r.country===x.country?1:0)+(String(r.date||'').slice(0,4)===String(x.year)?1:0)}))
+        .sort((p,q)=>q.s-p.s);
+      for(const {r,s:sc} of L.slice(0,3)){const o=await caaTyped(r.id);if(o){out=Object.assign(o,{mbid:r.id,exact:sc>=4});break}}
+    }
+  }catch(e){}
+  x.scan=out?Object.assign(out,{at:Date.now()}):{none:true,at:Date.now()};
+  delete COL.scanBusy[x.id];touch();viewRedraw();
+}
+
+/* ---------- open the record: a digital sleeve you can flip, empty and spin ---------- */
+const VSTEPS=[['front','Front'],['back','Back'],['inner','Inner sleeve'],['a','Side A'],['b','Side B']];
+function viewerHTML(){
+  const x=colAll().find(c=>c.id===UI.vOpen);if(!x)return '';
+  const {art}=colArt(x),st=UI.vStep||'front',col=acolFor('c_'+x.id,'',{title:x.title,id:x.id});
+  const front=colSlot(x,'front')||art,back=colSlot(x,'back'),inner=colSlot(x,'inner'),la=colSlot(x,'labA'),lb=colSlot(x,'labB')||la;
+  const face=(u,msg)=>u?`<img src="${esc(u)}" alt="" decoding="async">`:`<span class="vw-miss">${msg}</span>`;
+  const busy=COL.scanBusy[x.id],sc=x.scan;
+  const status=busy?'Looking for clean scans on MusicBrainz…':sc&&!sc.none?(sc.exact?'Scans of this exact pressing from the Cover Art Archive.':'Scans from another vinyl pressing of this album (Cover Art Archive), so small details may differ.'):sc&&sc.none?'No labelled scans found for this record. Pick photos from Photos from Discogs (Use as…) to fill the empty spots.':'';
+  const i=VSTEPS.findIndex(v=>v[0]===st);
+  return `<div class="vw" role="dialog" aria-modal="true" aria-label="${esc(x.title)}, opened" style="--ac:${col}" data-acol="c_${x.id}">
+    <div class="vw-top"><div><span class="sl-kind">${esc(x.artist)}</span><h3>${esc(x.title)}</h3></div><button class="vw-x" data-act="vclose" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="vw-stage" data-step="${st}">
+      <div class="vw-inner">${inner?`<img src="${esc(inner)}" alt="" decoding="async">`:'<span class="vw-paper"></span>'}</div>
+      <div class="vw-disc"><div class="vw-dface">${discHTML(x,front,la||front)}</div><div class="vw-dface b">${discHTML(x,front,lb||front)}</div></div>
+      <div class="vw-sleeve"><div class="vw-face">${face(front,'No front')}</div><div class="vw-face back">${face(back,'No back scan yet')}</div></div>
+    </div>
+    <div class="vw-ctl">
+      <button class="vw-nav" data-act="vstep" data-v="${VSTEPS[Math.max(0,i-1)][0]}" ${i<=0?'disabled':''} aria-label="Previous"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div class="vw-seg" role="group" aria-label="View">${VSTEPS.map(([k,t])=>`<button data-act="vstep" data-v="${k}" aria-pressed="${st===k}">${t}</button>`).join('')}</div>
+      <button class="vw-nav" data-act="vstep" data-v="${VSTEPS[Math.min(VSTEPS.length-1,i+1)][0]}" ${i>=VSTEPS.length-1?'disabled':''} aria-label="Next"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+    </div>
+    ${status?`<p class="vw-note">${esc(status)}${sc&&!busy?' <button class="link" data-act="vrescan" data-id="'+x.id+'">Look again</button>':''}</p>`:''}
+  </div>`;
+}
+function viewRedraw(){const h=document.getElementById('vwhost');if(h)h.innerHTML=viewerHTML()}
 function colListHTML(){
   const all=colAll(),L=colFiltered();
   if(!all.length)return '<p class="note">Your crate is empty. Find a pressing above, or add one by hand. Each entry is one physical copy, so two pressings of the same album are two entries.</p>';
@@ -3334,6 +3465,7 @@ function collectionView(){
     </div>
     <div class="crate-wrap" id="col-list">${colListHTML()}</div>
     ${all.length?`<div class="tools"><button class="btn" data-act="colexport">Export as spreadsheet (CSV)</button></div>`:''}
+    <div id="vwhost">${viewerHTML()}</div>
   </section>`;
 }
 function csvCollection(){
@@ -3696,6 +3828,14 @@ document.addEventListener('click',ev=>{
     const c={id:colNewId(),artist:p.artist,title:p.title,year:p.year,country:p.country,label:p.label,catno:p.catno,barcode:p.barcode,fmt:p.fmt,color:p.color,discogs:p.discogs,thumb:p.thumb,cover:p.cover||'',edition:p.edition||'',media:'',sleeve:'',paid:'',bought:b.dataset.w?'':colToday(),where:'',notes:'',wish:!!b.dataset.w,added:Date.now()};
     S.collection=[c,...colAll()];COL.res=null;UI.colEdit=c.id;UI.colOpen=c.id;UI.colF='all';UI.colQ='';touch()}
   else if(act==='coledit'){UI.colEdit=UI.colEdit===id?null:id}
+  else if(act==='vopen'){const x=colAll().find(c=>c.id===id);UI.vOpen=id;UI.vStep='front';document.documentElement.classList.add('vw-lock');
+    if(x&&(!x.scan||(x.scan.none&&Date.now()-x.scan.at>2592e6)))setTimeout(()=>colFindScans(x),0)}
+  else if(act==='vclose'){UI.vOpen=null;document.documentElement.classList.remove('vw-lock');viewRedraw();return}
+  else if(act==='vstep'){UI.vStep=b.dataset.v;const st=document.querySelector('.vw-stage');if(st){st.dataset.step=UI.vStep;
+    document.querySelectorAll('.vw-seg button').forEach(z=>z.setAttribute('aria-pressed',z.dataset.v===UI.vStep));
+    const i=VSTEPS.findIndex(v=>v[0]===UI.vStep),nv=document.querySelectorAll('.vw-nav');
+    if(nv[0]){nv[0].dataset.v=VSTEPS[Math.max(0,i-1)][0];nv[0].disabled=i<=0}if(nv[1]){nv[1].dataset.v=VSTEPS[Math.min(4,i+1)][0];nv[1].disabled=i>=4}}return}
+  else if(act==='vrescan'){const x=colAll().find(c=>c.id===id);if(x){x.scan=null;colFindScans(x)}return}
   else if(act==='colopen'){UI.colOpen=UI.colOpen===id?null:id;UI.colEdit=null;
     for(const k in COL.imgs)if(COL.imgs[k]&&COL.imgs[k].err)delete COL.imgs[k]}   /* reopening retries photos that failed */
   else if(act==='coldel'){if(UI.colDel===id){S.collection=colAll().filter(x=>x.id!==id);UI.colDel=null;if(UI.colEdit===id)UI.colEdit=null;if(UI.colOpen===id)UI.colOpen=null;touch()}else UI.colDel=id}
@@ -3802,9 +3942,18 @@ document.addEventListener('keydown',ev=>{
   if(ev.target.id==='lq'&&ev.key==='Enter'){const f=document.querySelector('#llist .entry');if(f){ev.preventDefault();f.click()}}
 });
 
+document.addEventListener('keydown',ev=>{
+  if(!UI.vOpen)return;
+  if(ev.key==='Escape'){ev.preventDefault();const c=document.querySelector('.vw-x');if(c)c.click();return}
+  if(ev.key==='ArrowRight'||ev.key==='ArrowLeft'){const n=document.querySelectorAll('.vw-nav')[ev.key==='ArrowRight'?1:0];if(n&&!n.disabled){ev.preventDefault();n.click()}}
+});
 document.addEventListener('change',ev=>{
   if(ev.target.id==='new-type'){UI.addType=ev.target.value;render();return}
   if(ev.target.id==='col-sort'){UI.colS=ev.target.value;render();return}
+  if(ev.target.dataset&&ev.target.dataset.artslot){const x=colAll().find(c=>c.id===ev.target.dataset.artslot);if(!x)return;
+    const u=ev.target.dataset.uri,k=ev.target.value;x.art=Object.assign({},x.art);
+    for(const z in x.art)if(x.art[z]===u)delete x.art[z];if(k)x.art[k]=u;touch();
+    const g=document.querySelector('[data-gal="'+(+x.discogs)+'"]');if(g)g.innerHTML=colGalHTML(x.discogs);return}
   if(ev.target.id==='mb-ver'){MBX.versions=ev.target.checked;return}
   if(ev.target.id==='rym-file'){const f=ev.target.files&&ev.target.files[0];ev.target.value='';
     if(f)f.text().then(rymImport).catch(()=>{RYX.err='Could not read that file. Nothing was changed.';RYX.report=null;render()});return}
@@ -3826,6 +3975,7 @@ document.addEventListener('submit',ev=>{
     S.collection=[c,...colAll()];UI.colEdit=c.id;UI.colOpen=c.id;UI.colF='all';UI.colQ='';UI.colHand=false;touch();render();return}
   if(kind==='coledit'){const x=colAll().find(c=>c.id===f.dataset.id);if(!x||!(d.artist||'').trim()||!(d.title||'').trim())return;
     for(const k of ['artist','title','year','country','label','catno','barcode','fmt','color','edition','media','sleeve','where','notes'])x[k]=(d[k]||'').trim();
+    x.vc=d.vcauto?'':String(d.vc||'');
     x.paid=String(d.paid||'').replace(/[^0-9.]/g,'');x.bought=d.bought||'';x.wish=d.status==='wish';UI.colEdit=null;touch();render();return}
   if(kind==='listen'){if(llAdd(d.artist,d.title))touch();UI.llOpen=true;render();const el=document.getElementById('wl-artist');if(el)el.focus();return}
   if(kind==='spcid'){const c=(d.cid||'').trim();
