@@ -362,6 +362,95 @@ footer textarea{font:12px var(--mono);margin-top:8px}
 .colfacts .v{font-weight:600;font-size:14px;overflow-wrap:anywhere}
 .colfacts .v.dim{color:var(--muted);font-weight:500}
 .sw{display:inline-block;width:.8em;height:.8em;border-radius:50%;margin-right:6px;border:1px solid var(--line);vertical-align:-1px}
+
+/* ===== Collection: the crate (2026.11.11-g) ===== */
+.colv{max-width:none}
+.col-hero{position:relative;overflow:hidden;border-radius:20px;background:#1a1512;color:#f4ece4;padding:22px 20px;display:flex;flex-wrap:wrap;align-items:flex-end;gap:18px 28px;border:1px solid var(--line);
+  background-image:repeating-radial-gradient(circle at 112% 50%,rgb(255 255 255 / .035) 0 1px,transparent 1px 5px)}
+.col-hero .sl-kind{color:rgb(244 236 228 / .7)}
+.col-hero h2{color:#fff;font:900 46px/.92 Archivo,var(--display);font-stretch:125%;letter-spacing:-.025em;text-transform:uppercase;margin:4px 0 0}
+.col-hero-t{display:flex;flex-direction:column;flex:1 1 220px;min-width:0;position:relative;z-index:1}
+.col-hero-n{display:flex;gap:22px;flex-wrap:wrap;position:relative;z-index:1}
+@media (min-width:561px){.col-hero{padding-right:190px}}
+.col-hero-n div{display:flex;flex-direction:column;gap:2px}
+.col-hero-n b{font:900 30px/1 Archivo,var(--display);font-stretch:118%;font-variant-numeric:tabular-nums;color:#fff}
+.col-hero-n span{font:600 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:rgb(244 236 228 / .66)}
+.col-hero-d{position:absolute;right:-46px;top:50%;width:190px;height:190px;margin-top:-95px;pointer-events:none;opacity:.9}
+.col-hero-d .rec-disc{position:absolute;width:100%;height:100%;left:0;top:0}
+.col-hero-d .rec-disc:nth-child(1){transform:translateX(-58px) rotate(-20deg);opacity:.55}
+.col-hero-d .rec-disc:nth-child(2){transform:translateX(-28px) rotate(10deg);opacity:.8}
+@media (prefers-reduced-motion:no-preference){.col-hero-d .rec-disc:nth-child(3){animation:recspin 14s linear infinite}}
+@media (max-width:560px){.col-hero h2{font-size:36px}.col-hero-d{width:150px;height:150px;margin-top:-75px;right:-56px;opacity:.5}}
+.colv>.setcard{margin:0}
+
+/* the vinyl itself: --vb is the pressing's color or pattern, grooves and sheen ride on top */
+.rec-disc{position:absolute;border-radius:50%;background:var(--vb,#141111);box-shadow:0 10px 24px rgb(0 0 0 / .32),inset 0 0 0 1px rgb(0 0 0 / .25);overflow:hidden}
+.rec-disc::before{content:"";position:absolute;inset:0;border-radius:50%;
+  background:repeating-radial-gradient(circle,rgb(0 0 0 / .13) 0 .6px,transparent .6px 2.2px,rgb(255 255 255 / .05) 2.2px 2.8px,transparent 2.8px 4px);
+  -webkit-mask:radial-gradient(circle,transparent 0 33%,#000 34% 95%,transparent 96%);mask:radial-gradient(circle,transparent 0 33%,#000 34% 95%,transparent 96%)}
+.rec-disc::after{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 20deg,transparent 0 8%,rgb(255 255 255 / .22) 12%,transparent 18% 50%,rgb(255 255 255 / .16) 62%,transparent 68%);mix-blend-mode:screen}
+.rec-lab{position:absolute;left:33%;top:33%;width:34%;height:34%;border-radius:50%;background:var(--lab,var(--ac)) center/cover;box-shadow:0 0 0 1px rgb(0 0 0 / .2);z-index:1}
+.rec-lab::after{content:"";position:absolute;left:50%;top:50%;width:13%;height:13%;margin:-6.5% 0 0 -6.5%;border-radius:50%;background:var(--bg);box-shadow:inset 0 0 0 1px rgb(0 0 0 / .3)}
+.rec-disc.clear{box-shadow:0 10px 24px rgb(0 0 0 / .18),inset 0 0 0 1.5px rgb(255 255 255 / .35)}
+@keyframes recspin{to{rotate:360deg}}
+
+/* the crate: a grid of sleeves, the record slides out on hover */
+.crate-wrap{display:flex;flex-direction:column;gap:10px}
+.crate{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));grid-auto-flow:dense;gap:26px 18px}
+@media (max-width:420px){.crate{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 14px}}
+.rec{--ac:#5a3a2a;min-width:0}
+.rec-hit{display:flex;flex-direction:column;gap:3px;width:100%;border:0;background:none;padding:0;text-align:left;color:inherit}
+.rec-pack{position:relative;display:block;width:100%;aspect-ratio:1/0.82;margin-bottom:8px}
+.rec-pack .rec-disc{width:72%;aspect-ratio:1;height:auto;top:4%;left:14%;transition:left .55s cubic-bezier(.2,.8,.2,1),rotate .9s cubic-bezier(.2,.8,.2,1)}
+.rec-cover{position:absolute;left:0;top:0;width:78%;aspect-ratio:1;border-radius:6px;overflow:hidden;z-index:2;display:grid;place-items:center;
+  background:color-mix(in srgb,var(--ac) 70%,#000);box-shadow:0 12px 26px rgb(0 0 0 / .28),0 0 0 1px rgb(0 0 0 / .08);transition:transform .55s cubic-bezier(.2,.8,.2,1)}
+.rec-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.rec-cover .sl-ph{font-size:48px}
+.rec-cover::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,rgb(255 255 255 / .16),transparent 38%);pointer-events:none}
+.rec-tag{position:absolute;left:8px;top:8px;z-index:3;font:700 10px var(--body);letter-spacing:.08em;text-transform:uppercase;background:rgb(255 255 255 / .92);color:#1a1512;border-radius:999px;padding:2px 8px}
+.rec-t{font:800 15px/1.15 Archivo,var(--display);font-stretch:108%;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.rec-a{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec-v{font:500 11px var(--mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
+.rec-v .dot{flex:0 0 auto;width:10px;height:10px;border-radius:50%;background:var(--vb);box-shadow:0 0 0 1px var(--line)}
+.rec.wish .rec-cover{filter:saturate(.55)}
+.rec.wish .rec-disc{opacity:.75}
+@media (hover:none){.rec-pack .rec-disc{left:20%}}
+@media (hover:hover){.rec-hit:hover .rec-pack .rec-disc,.rec-hit:focus-visible .rec-pack .rec-disc{left:28%;rotate:160deg}.rec-hit:hover .rec-cover,.rec-hit:focus-visible .rec-cover{transform:translateX(-3px) rotate(-1.5deg)}}
+.rec.open .rec-pack .rec-disc{left:28%;rotate:160deg}
+.rec.open .rec-cover{box-shadow:0 0 0 3px var(--ac),0 12px 26px rgb(0 0 0 / .28)}
+@media (prefers-reduced-motion:reduce){.rec-pack .rec-disc,.rec-cover{transition:none}.rec-hit:hover .rec-pack .rec-disc,.rec.open .rec-pack .rec-disc{rotate:0deg}}
+
+/* the open record */
+.rec-detail{grid-column:1/-1;border-radius:20px;overflow:hidden;border:1px solid var(--line);background:var(--surface);animation:recin .35s cubic-bezier(.2,.8,.2,1)}
+@keyframes recin{from{opacity:0;transform:translateY(-6px)}}
+@media (prefers-reduced-motion:reduce){.rec-detail{animation:none}}
+.rd-hero{background:var(--ac);color:#fff;display:flex;flex-wrap:wrap;align-items:flex-end;gap:18px 26px;padding:20px;transition:background-color .5s}
+.rd-pack{position:relative;width:min(100%,330px);height:190px;flex:0 0 auto}
+.rd-pack .rec-cover{width:186px;height:186px}
+.rd-pack .rec-disc{width:178px;height:178px;top:4px;left:132px}
+@media (prefers-reduced-motion:no-preference){.rd-pack .rec-disc{animation:rdout .7s cubic-bezier(.2,.8,.2,1) both,recspin 9s linear .7s infinite}}
+@keyframes rdout{from{left:8px;rotate:-120deg}}
+@media (max-width:420px){.rd-pack{height:160px}.rd-pack .rec-cover{width:156px;height:156px}.rd-pack .rec-disc{width:150px;height:150px;left:118px}}
+.rd-meta{flex:1 1 240px;min-width:0;display:flex;flex-direction:column;gap:4px;padding-bottom:4px}
+.rd-meta .sl-kind{color:rgb(255 255 255 / .8)}
+.rd-meta h3{margin:0;font:900 32px/.96 Archivo,var(--display);font-stretch:118%;letter-spacing:-.02em;text-transform:uppercase;overflow-wrap:anywhere}
+.rd-meta .sl-sub{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rd-vinyl{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;margin-top:6px;background:rgb(0 0 0 / .22);border-radius:999px;padding:4px 12px 4px 5px;font-size:13px;font-weight:600}
+.rd-vinyl .dot{width:20px;height:20px;border-radius:50%;background:var(--vb);box-shadow:inset 0 0 0 1px rgb(255 255 255 / .3)}
+.rd-score{font:900 22px Archivo,var(--display);margin-left:4px}
+.rd-body{display:flex;flex-direction:column;gap:14px;padding:16px 20px 20px}
+.rd-body .colfacts{padding:0}
+.rd-acts{display:flex;gap:8px;flex-wrap:wrap}
+.rd-sec{display:flex;flex-direction:column;gap:8px}
+.rd-sec>.label{display:flex;justify-content:space-between;gap:10px}
+.rec-gal{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory}
+.rec-gal a{flex:0 0 auto;width:118px;height:118px;border-radius:8px;overflow:hidden;background:var(--sunk);scroll-snap-align:start;box-shadow:0 0 0 1px var(--line);transition:transform .2s}
+.rec-gal a:hover{transform:translateY(-2px)}
+.rec-gal img{width:100%;height:100%;object-fit:cover;display:block}
+.rd-body .colform{border-top:0;padding-top:0}
+/* a tiny disc beside each Discogs result, so you can see the variant before you pick it */
+.mini-disc{position:relative;flex:0 0 auto;width:40px;height:40px}
+.mini-disc .rec-disc{inset:0;width:100%;height:100%;box-shadow:0 2px 6px rgb(0 0 0 / .25)}
 /* library: on a phone the list folds behind Switch */
 .libbtn{display:none}
 @media (max-width:760px){
@@ -986,6 +1075,7 @@ button.rnum:not(.set){border:1px dashed var(--line);border-radius:10px;text-alig
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.11-g', note:'THE CRATE: the Collection tab now looks like the rest of the Sleeve design. Your records sit in a grid of sleeves, and hovering over one (or, on a phone, the edge that peeks out) slides the record out so you can see the vinyl itself: its color, splatter, marble, half-and-half, clear or picture-disc look, drawn from the pressing\u2019s color, with the cover as its center label. Each record takes its color from its cover like albums do. Tap a record to open it: the record spins out of the sleeve, the pressing details sit underneath, and Photos from Discogs shows the back cover, inner sleeves and labels that Discogs owners uploaded for that exact pressing (it uses the same Discogs token as Find a pressing; your Worker learns the photo lookup when it updates itself from GitHub). Each Discogs search result also shows a small disc of that variant.'},
   {v:'2026.11.11-f', note:'CLEARER PRESSINGS: each result in Find a pressing, and each record in your Collection, now shows its details as labelled fields instead of one run-on line: Region, Catalog #, Vinyl (with a color dot, or Standard when Discogs lists no color), Format, Edition (reissue, limited, deluxe and so on), Label and Year. Results are grouped by catalog number so the same pressing in different regions sits together, and the edition words come along when you add a record.'},
   {v:'2026.11.11-e', note:'DISCOGS FROM THIS DEVICE: Discogs was turning away searches that went through your Worker (its limit counts every request from the Worker\u2019s shared address, and it was already past it). Under Find a pressing there is now a Discogs token box; with a token saved there, the search runs straight from this device, which has its own limit of 60 a minute. The token stays in this browser only and is never synced, so add it on each device you search from. Without one, or if the browser cannot reach Discogs, it still goes through your Worker.'},
   {v:'2026.11.11-d', note:'DISCOGS LOOKUP: when Discogs turns a search away as too busy (HTTP 429), your Worker now waits a moment and tries once more, and if Discogs still refuses, the message shows exactly what Discogs said so the cause can be pinned down. Nothing in your collection changes.'},
@@ -2964,11 +3054,11 @@ function mainView(e,next,list){return `
    matching the Listen list uses), so it can show the cover and your rating. wish:true means
    it is on your wishlist, not on your shelf. */
 const COND=['M','NM','VG+','VG','G+','G','F','P'];
-const COL={busy:false,err:'',tokMsg:'',res:null,q:{artist:'',title:'',code:''}};
+const COL={busy:false,err:'',tokMsg:'',res:null,imgs:{},q:{artist:'',title:'',code:''}};
 const colAll=()=>S.collection||[];
 const colNewId=()=>sid('copy',Date.now(),Math.random());
 const colMoney=v=>{const n=parseFloat(v);return isFinite(n)?'$'+n.toFixed(2):''};
-const COL_SW={red:'#c0392b',blue:'#2f6fb5',green:'#3a8f55',yellow:'#e3c43b',orange:'#e08a2b',pink:'#e68fb0',purple:'#7d4cae',violet:'#7d4cae',white:'#f4f4f0',black:'#161616',grey:'#8a8f93',gray:'#8a8f93',gold:'#c9a227',silver:'#b9bec3',brown:'#7a5230',cream:'#efe6cf',bone:'#e9e1cc',tan:'#cdb48a',clear:'transparent',transparent:'transparent'};
+const COL_SW={oxblood:'#5b1a1f',maroon:'#6b1f2a',burgundy:'#6b1f2a',crimson:'#a3162b',teal:'#1f8a8a',turquoise:'#2fb5b0',aqua:'#5cc9d1',mint:'#9fd8bd',seafoam:'#8fd1bd',navy:'#1d2f5e',royal:'#2a4bb0',sky:'#7fb6e6',lavender:'#b7a3dc',lilac:'#c4a8d8',magenta:'#c2307f',olive:'#6f7a33',forest:'#25523a',lime:'#a6cc3a',coke:'#6fa58f',beige:'#d9c8a6',sand:'#d8c19a',mustard:'#c99a2e',peach:'#f0b48f',coral:'#ea7a64',rose:'#d98a9a',ruby:'#9b1b30',amber:'#d68a1c',copper:'#b06a3b',bronze:'#8c6a37',smoke:'#7d7f80',milky:'#ecebe5',opaque:'',red:'#c0392b',blue:'#2f6fb5',green:'#3a8f55',yellow:'#e3c43b',orange:'#e08a2b',pink:'#e68fb0',purple:'#7d4cae',violet:'#7d4cae',white:'#f4f4f0',black:'#161616',grey:'#8a8f93',gray:'#8a8f93',gold:'#c9a227',silver:'#b9bec3',brown:'#7a5230',cream:'#efe6cf',bone:'#e9e1cc',tan:'#cdb48a',clear:'transparent',transparent:'transparent'};
 /* the pressing as labelled fields: what tells two pressings of the same album apart comes first */
 function colFacts(x,std){
   const cell=(k,v,dim)=>v?`<div><span class="k">${k}</span><span class="v${dim?' dim':''}">${v}</span></div>`:'';
@@ -2976,6 +3066,35 @@ function colFacts(x,std){
   const vinyl=x.color?sw+esc(x.color):std&&x.fmt?'Standard':'';
   return `<div class="colfacts">${cell('Region',esc(x.country))}${cell('Catalog #',esc(x.catno))}${cell('Vinyl',vinyl,!x.color)}${cell('Format',esc(x.fmt))}${cell('Edition',esc(x.edition))}${cell('Label',esc(x.label))}${cell('Year',esc(x.year))}</div>`;
 }
+/* what the vinyl looks like, from the words Discogs (or you) used for its color:
+   splatter, marble or swirl, half-and-half, clear or translucent, picture disc, or a plain color */
+function colHash(t){let h=5381;t=String(t);for(let i=0;i<t.length;i++)h=((h<<5)+h+t.charCodeAt(i))>>>0;return h}
+function vinylLook(x,art){
+  const t=String(x.color||'').toLowerCase(),all=(t+' '+String(x.fmt||'')+' '+String(x.edition||'')).toLowerCase();
+  const cols=(t.match(/[a-z]+/g)||[]).map(w=>COL_SW[w]).filter(Boolean).filter(c=>c!=='transparent');
+  const clear=/clear|transparent|translucent|crystal|see.?through|smoke|glass/.test(t);
+  if(/picture disc/.test(all)&&art)return{bg:`url('${String(art).replace(/'/g,'%27')}') center/cover`,dot:'conic-gradient(#c0392b,#e3c43b,#2f6fb5,#c0392b)',clear:false,name:x.color||'Picture disc'};
+  const mix=(c,p)=>clear?`color-mix(in srgb,${c} ${p}%,transparent)`:c;
+  let a=cols[0]||(clear?'#cfd8db':'#141111'),b=cols[1]||(cols[0]?(clear?'#ffffff':'#f4f4f0'):'#2a2a2a');
+  if(clear&&!cols[0])b='#ffffff';
+  const A=mix(a,clear?55:100),B=mix(b,clear?60:100),h=colHash(x.id||x.catno||t);
+  let bg=A;
+  if(/splatter|splat|speckle|spatter|confetti/.test(t)){
+    const dots=[];for(let i=0;i<9;i++){const k=colHash(h+':'+i),px=12+k%76,py=12+(k>>8)%76,r=3+(k>>16)%6;dots.push(`radial-gradient(circle at ${px}% ${py}%,${B} ${r*.55}%,transparent ${r}%)`)}
+    bg=dots.join(',')+','+A;
+  }else if(/marble|swirl|galaxy|haze|smoke|tie.?dye|vortex|nebula/.test(t)){
+    const s=h%360;bg=`conic-gradient(from ${s}deg,${A},${B} 18%,${A} 31%,${B} 47%,${A} 58%,${B} 74%,${A} 88%,${A})`;
+  }else if(/half|split|side/.test(t)&&cols[1]){
+    bg=`linear-gradient(${100+h%40}deg,${A} 50%,${B} 50%)`;
+  }else if(/striped|stripe|tri.?color/.test(t)&&cols[1]){
+    bg=`linear-gradient(90deg,${A} 33%,${B} 33% 66%,${mix(cols[2]||a,clear?55:100)} 66%)`;
+  }else if((/and|with|\/|&/.test(t))&&cols[1]){
+    bg=`radial-gradient(circle,${B} 0 38%,${A} 42%)`;
+  }
+  return{bg,dot:bg,clear,name:x.color||(cols.length?'':'Black')};
+}
+function discHTML(x,art,lab){const v=vinylLook(x,art);
+  return `<span class="rec-disc${v.clear?' clear':''}" style="--vb:${esc(v.bg)}" aria-hidden="true"><span class="rec-lab"${lab?` style="--lab:url('${esc(lab)}')"`:''}></span></span>`}
 const colLine=x=>[x.year,x.country,[x.label,x.catno].filter(Boolean).join(' '),x.fmt,x.color].filter(Boolean).join(' · ');
 const colToday=()=>new Date().toLocaleDateString('en-CA');
 
@@ -2987,7 +3106,7 @@ function dcParse(r){
   const code=(r.barcode||[]).map(b=>String(b).replace(/\s/g,'')).find(b=>/^\d{8,14}$/.test(b))||'';
   return{artist:(i>0?t.slice(0,i):'').replace(/\s*\(\d+\)$/,'').trim(),title:(i>0?t.slice(i+3):t).trim(),
     year:r.year?String(r.year):'',country:r.country||'',label:String((r.label||[])[0]||'').replace(/\s*\(\d+\)$/,''),
-    catno:r.catno||'',barcode:code,fmt:(qty+desc).trim(),edition,color:String(f.text||'').replace(/\s*\[(.+?)\]/g,' ($1)').trim(),discogs:r.id||0,thumb:r.thumb||''}
+    catno:r.catno||'',barcode:code,fmt:(qty+desc).trim(),edition,color:String(f.text||'').replace(/\s*\[(.+?)\]/g,' ($1)').trim(),discogs:r.id||0,thumb:r.thumb||'',cover:/spacer\.gif/.test(r.cover_image||'')?'':(r.cover_image||'')}
 }
 const dcSort=L=>L.sort((a,b)=>String(a.catno).localeCompare(String(b.catno))||String(a.country).localeCompare(String(b.country))||String(a.year).localeCompare(String(b.year)));
 /* Discogs throttles by source address (60 a minute with a token). A Worker shares its address with
@@ -3075,24 +3194,82 @@ function colEditForm(x){
     <div class="tools wide"><button class="btn primary">Save</button><button type="button" class="btn" data-act="coledit" data-id="${x.id}">Cancel</button></div>
   </form>`;
 }
-function colRow(x){
-  const {a,g}=colMatch(x),r=g?rating(g.id):0;
-  const art=x.thumb||(g&&(g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-250':'')))||'';
-  const cond=[x.media&&'Media '+x.media,x.sleeve&&'Sleeve '+x.sleeve].filter(Boolean).join(' · ');
-  const buy=[colMoney(x.paid),x.bought,x.where].filter(Boolean).join(' · ');
-  const open=UI.colEdit===x.id;
-  return `<li>
-    <span class="wl-art" ${art?`style="background:var(--sunk) url('${esc(art)}') center/cover"`:''} aria-hidden="true"></span>
-    <span class="wl-meta"><b>${esc(x.title)}</b><span>${esc(x.artist)}</span>${cond||buy?`<span>${esc([cond,buy].filter(Boolean).join(' · '))}</span>`:''}${x.notes?`<span>${esc(x.notes)}</span>`:''}</span>
-    <span class="wl-st">${x.wish?'Wishlist':'On shelf'}${r?`<span>You rated ${esc(String(r))}</span>`:''}</span>
-    <span class="wl-act">${x.wish?`<button class="link" data-act="colgot" data-id="${x.id}">Got it</button>`:''}${a?`<button class="link" data-act="llgo" data-a="${a.id}">Open</button>`:''}<button class="link" data-act="coledit" data-id="${x.id}" aria-expanded="${open}">${open?'Close':'Edit'}</button><button class="link" data-act="coldel" data-id="${x.id}" style="${UI.colDel===x.id?'color:var(--warn)':''}">${UI.colDel===x.id?'Tap again to remove':'Remove'}</button></span>
-    ${colFacts(x)}${open?colEditForm(x):''}</li>`;
+function colArt(x){const {a,g}=colMatch(x);
+  const mb=g&&(g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-250':''))||'';
+  return{a,g,art:x.cover||mb||x.thumb||'',key:mb||x.thumb||''}}
+function colCover(x,art){return `<span class="rec-cover">${art?`<img src="${esc(art)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}<span class="sl-ph" aria-hidden="true">${esc((x.title||'?').trim().charAt(0).toUpperCase())}</span></span>`}
+function colCard(x){
+  const {art,key}=colArt(x),col=acolFor('c_'+x.id,key,{title:x.title,id:x.id}),v=vinylLook(x,art),open=UI.colOpen===x.id;
+  const sub=[x.color||(x.fmt?'Black':''),x.year].filter(Boolean).join(' · ');
+  return `<li class="rec${open?' open':''}${x.wish?' wish':''}" data-acol="c_${x.id}" style="--ac:${col}">
+    <button class="rec-hit" data-act="colopen" data-id="${x.id}" aria-expanded="${open}">
+      <span class="rec-pack">${discHTML(x,art,art)}${colCover(x,art)}${x.wish?'<span class="rec-tag">Wishlist</span>':''}</span>
+      <span class="rec-t">${esc(x.title)}</span><span class="rec-a">${esc(x.artist)}</span>
+      ${sub?`<span class="rec-v"><i class="dot" style="--vb:${esc(v.dot)}"></i>${esc(sub)}</span>`:''}
+    </button></li>${open?colDetail(x,art,col):''}`;
+}
+function colDetail(x,art,col){
+  const {a,g}=colMatch(x),r=g?rating(g.id):0,v=vinylLook(x,art);
+  const extra=[['Media',x.media],['Sleeve',x.sleeve],['Paid',colMoney(x.paid)],['Bought',x.bought],['From',x.where],['Barcode',x.barcode]].filter(z=>z[1]);
+  const facts=colFacts(x).replace(/<\/div>$/,extra.map(([k,val])=>`<div><span class="k">${k}</span><span class="v">${esc(val)}</span></div>`).join('')+'</div>');
+  const kind=[x.wish?'On your wishlist':'On your shelf',x.year,x.country].filter(Boolean).join(' · ');
+  if(x.discogs&&COL.imgs[x.discogs]===undefined)setTimeout(()=>colLoadImgs(x.discogs),0);
+  return `<li class="rec-detail" data-acol="c_${x.id}" style="--ac:${col}" aria-label="${esc(x.title)} details">
+    <div class="rd-hero">
+      <div class="rd-pack">${discHTML(x,art,art)}${colCover(x,art)}</div>
+      <div class="rd-meta"><span class="sl-kind">${esc(kind)}</span><h3>${esc(x.title)}</h3>
+        <span class="sl-sub">${esc(x.artist)}${r?`<span>· you rated <span class="rd-score">${esc(fmt(r))}</span></span>`:''}</span>
+        <span class="rd-vinyl"><i class="dot" style="--vb:${esc(v.dot)}"></i>${esc(v.name||x.color||'Black vinyl')}${x.fmt?' · '+esc(x.fmt):''}</span></div>
+    </div>
+    <div class="rd-body">
+      ${facts}
+      ${x.notes?`<p class="note" style="margin:0">${esc(x.notes)}</p>`:''}
+      ${x.discogs?`<div class="rd-sec"><span class="label"><span>Photos from Discogs</span><a class="link" href="https://www.discogs.com/release/${+x.discogs}" target="_blank" rel="noopener">Open on Discogs</a></span><div data-gal="${+x.discogs}">${colGalHTML(x.discogs)}</div></div>`:''}
+      <div class="rd-acts">
+        ${x.wish?`<button class="btn primary" data-act="colgot" data-id="${x.id}">Got it</button>`:''}
+        ${a?`<button class="btn" data-act="llgo" data-a="${a.id}">Open in Music</button>`:''}
+        <button class="btn" data-act="coledit" data-id="${x.id}" aria-expanded="${UI.colEdit===x.id}">${UI.colEdit===x.id?'Close editor':'Edit details'}</button>
+        <button class="btn danger${UI.colDel===x.id?' armed':''}" data-act="coldel" data-id="${x.id}">${UI.colDel===x.id?'Tap again to remove':'Remove'}</button>
+        <span class="sl-sp"></span><button class="btn" data-act="colopen" data-id="${x.id}">Close</button>
+      </div>
+      ${UI.colEdit===x.id?colEditForm(x):''}
+    </div></li>`;
+}
+/* Discogs owners upload the back cover, inner sleeves, labels and the record itself; the
+   release lookup hands them back (it needs a token, so it goes the same way searches do) */
+function colGalHTML(id){
+  const s=COL.imgs[id];
+  if(s===undefined||s==='loading')return '<p class="note" style="margin:0">Loading photos…</p>';
+  if(s&&s.err)return `<p class="note" style="margin:0">${esc(s.err)}</p>`;
+  if(!s.length)return '<p class="note" style="margin:0">Nobody has uploaded photos of this pressing on Discogs yet.</p>';
+  return `<div class="rec-gal">${s.map((im,i)=>`<a href="${esc(im.uri||im.uri150)}" target="_blank" rel="noopener" aria-label="Photo ${i+1} of ${s.length}"><img src="${esc(im.uri150||im.uri)}" alt="" loading="lazy" decoding="async"></a>`).join('')}</div><p class="note" style="margin:0">${s.length} photo${s.length>1?'s':''} uploaded by Discogs owners, usually the back, the inner sleeves and both labels. Tap one to see it full size.</p>`;
+}
+async function colLoadImgs(id){
+  if(COL.imgs[id]!==undefined)return;COL.imgs[id]='loading';
+  const done=v=>{COL.imgs[id]=v;document.querySelectorAll('[data-gal="'+id+'"]').forEach(el=>el.innerHTML=colGalHTML(id))};
+  const pick=j=>(j.images||[]).map(i=>({uri:i.uri,uri150:i.uri150,type:i.type})).filter(i=>i.uri||i.uri150).sort((p,q)=>(p.type==='primary')-(q.type==='primary'));
+  const tok=dcToken();
+  try{
+    if(tok){
+      const r=await fetch('https://api.discogs.com/releases/'+(+id)+'?token='+encodeURIComponent(tok),{cache:'no-store'});
+      if(r.ok){done(pick(await r.json()));return}
+      if(r.status===401){done({err:'Discogs did not accept the token saved on this device, so the photos could not load.'});return}
+      if(!syncOn()){done({err:'Discogs could not send the photos right now ('+r.status+'). Close and reopen the record to try again.'});return}
+    }
+    if(!syncOn()){done({err:'Save a Discogs token on this device (under Find a pressing) to see this pressing’s back cover, inner sleeves and labels.'});return}
+    const r=await fetch(SY.url.replace(/\/+$/,'')+'/discogs/release?id='+(+id),{cache:'no-store',headers:{'x-sync-key':SY.key}});
+    let j={};try{j=await r.json()}catch(e){}
+    if(r.status===404)done({err:'Your sync Worker does not have the photo lookup yet. It updates itself from GitHub within a few minutes; or save a Discogs token on this device.'});
+    else if(j.error==='no discogs token')done({err:'Add a Discogs token (on this device, or as DISCOGS_TOKEN on your Worker) to see the photos.'});
+    else if(!r.ok)done({err:'The photo lookup failed ('+r.status+'). Close and reopen the record to try again.'});
+    else done(pick(j));
+  }catch(e){done({err:'Could not reach Discogs for the photos. Check your connection.'})}
 }
 function colListHTML(){
   const all=colAll(),L=colFiltered();
-  if(!all.length)return '<p class="note">Nothing here yet. Find a pressing above, or add one by hand. Each entry is one physical copy, so two pressings of the same album are two entries.</p>';
+  if(!all.length)return '<p class="note">Your crate is empty. Find a pressing above, or add one by hand. Each entry is one physical copy, so two pressings of the same album are two entries.</p>';
   if(!L.length)return '<p class="note">No records match that.</p>';
-  return `<ul>${L.map(colRow).join('')}</ul>`;
+  return `<ul class="crate">${L.map(colCard).join('')}</ul>`;
 }
 function colResultsHTML(){
   if(COL.busy)return '<p class="note">Searching Discogs…</p>';
@@ -3100,7 +3277,7 @@ function colResultsHTML(){
   if(!COL.res)return '';
   if(!COL.res.length)return '<p class="note">No vinyl pressings found. Try fewer words, only the artist, or add it by hand below.</p>';
   const rows=COL.res.slice(0,30).map((x,i)=>`<li>
-    <span class="wl-art" ${x.thumb?`style="background:var(--sunk) url('${esc(x.thumb)}') center/cover"`:''} aria-hidden="true"></span>
+    <span class="wl-art" ${x.thumb?`style="background:var(--sunk) url('${esc(x.thumb)}') center/cover"`:''} aria-hidden="true"></span><span class="mini-disc">${discHTML(Object.assign({id:'r'+i},x),x.thumb,x.thumb)}</span>
     <span class="wl-meta"><b>${esc(x.title)}</b><span>${esc(x.artist)}</span></span>
     <span class="wl-act"><button class="link" data-act="coladdp" data-i="${i}">I own this</button><button class="link" data-act="coladdp" data-i="${i}" data-w="1">Want it</button></span>
     ${colFacts(x,true)}</li>`).join('');
@@ -3111,8 +3288,11 @@ function collectionView(){
   const paid=own.reduce((n,x)=>n+(parseFloat(x.paid)||0),0),f=UI.colF||'all';
   const chip=(v,t)=>`<button class="chip" data-act="colf" data-v="${v}" aria-pressed="${f===v}">${t}</button>`;
   return `<section class="colv" aria-labelledby="col-h">
-    <h2 id="col-h">Collection</h2>
-    <div class="colstats"><span><b>${own.length}</b> on the shelf</span><span><b>${wish.length}</b> on the wishlist</span>${paid?`<span><b>${colMoney(paid)}</b> paid</span>`:''}</div>
+    <div class="col-hero">
+      <div class="col-hero-t"><span class="sl-kind">Your records</span><h2 id="col-h">Collection</h2></div>
+      <div class="col-hero-n"><div><b>${own.length}</b><span>On the shelf</span></div><div><b>${wish.length}</b><span>Wishlist</span></div>${paid?`<div><b>${colMoney(paid).replace(/\.00$/,'')}</b><span>Spent</span></div>`:''}</div>
+      <div class="col-hero-d" aria-hidden="true">${(own.length?own:[{id:'a',color:'red'},{id:'b',color:'blue marble'},{id:'c',color:''}]).slice(0,3).concat([{id:'d'},{id:'e'},{id:'f'}]).slice(0,3).reverse().map(x=>discHTML(x,'','')).join('')}</div>
+    </div>
     <div class="setcard">
       <details id="coladd" ${UI.colAdd?'open':''}>
         <summary class="label" style="cursor:pointer">Find a pressing</summary>
@@ -3152,7 +3332,7 @@ function collectionView(){
       <input id="col-q" type="search" placeholder="Search your records" aria-label="Search your records" value="${esc(UI.colQ||'')}">
       <select id="col-sort" aria-label="Sort"><option value="new" ${(UI.colS||'new')==='new'?'selected':''}>Newest added</option><option value="artist" ${UI.colS==='artist'?'selected':''}>Artist</option><option value="year" ${UI.colS==='year'?'selected':''}>Year</option></select>
     </div>
-    <div class="wl" id="col-list">${colListHTML()}</div>
+    <div class="crate-wrap" id="col-list">${colListHTML()}</div>
     ${all.length?`<div class="tools"><button class="btn" data-act="colexport">Export as spreadsheet (CSV)</button></div>`:''}
   </section>`;
 }
@@ -3513,10 +3693,12 @@ document.addEventListener('click',ev=>{
   else if(act==='dcforget'){dcSetToken('');COL.tokMsg='Removed from this device.';UI.colTok=true}
   else if(act==='colf'){UI.colF=b.dataset.v}
   else if(act==='coladdp'){const p=(COL.res||[])[+b.dataset.i];if(!p)return;
-    const c={id:colNewId(),artist:p.artist,title:p.title,year:p.year,country:p.country,label:p.label,catno:p.catno,barcode:p.barcode,fmt:p.fmt,color:p.color,discogs:p.discogs,thumb:p.thumb,edition:p.edition||'',media:'',sleeve:'',paid:'',bought:b.dataset.w?'':colToday(),where:'',notes:'',wish:!!b.dataset.w,added:Date.now()};
-    S.collection=[c,...colAll()];COL.res=null;UI.colEdit=c.id;UI.colF='all';UI.colQ='';touch()}
+    const c={id:colNewId(),artist:p.artist,title:p.title,year:p.year,country:p.country,label:p.label,catno:p.catno,barcode:p.barcode,fmt:p.fmt,color:p.color,discogs:p.discogs,thumb:p.thumb,cover:p.cover||'',edition:p.edition||'',media:'',sleeve:'',paid:'',bought:b.dataset.w?'':colToday(),where:'',notes:'',wish:!!b.dataset.w,added:Date.now()};
+    S.collection=[c,...colAll()];COL.res=null;UI.colEdit=c.id;UI.colOpen=c.id;UI.colF='all';UI.colQ='';touch()}
   else if(act==='coledit'){UI.colEdit=UI.colEdit===id?null:id}
-  else if(act==='coldel'){if(UI.colDel===id){S.collection=colAll().filter(x=>x.id!==id);UI.colDel=null;if(UI.colEdit===id)UI.colEdit=null;touch()}else UI.colDel=id}
+  else if(act==='colopen'){UI.colOpen=UI.colOpen===id?null:id;UI.colEdit=null;
+    for(const k in COL.imgs)if(COL.imgs[k]&&COL.imgs[k].err)delete COL.imgs[k]}   /* reopening retries photos that failed */
+  else if(act==='coldel'){if(UI.colDel===id){S.collection=colAll().filter(x=>x.id!==id);UI.colDel=null;if(UI.colEdit===id)UI.colEdit=null;if(UI.colOpen===id)UI.colOpen=null;touch()}else UI.colDel=id}
   else if(act==='colgot'){const x=colAll().find(c=>c.id===id);if(x){x.wish=false;if(!x.bought)x.bought=colToday();touch()}}
   else if(act==='colexport'){dlCSV('playback-collection.csv',csvCollection());return}
   else if(act==='ropen'){UI.rOpen=UI.rOpen===id?null:id}
@@ -3641,7 +3823,7 @@ document.addEventListener('submit',ev=>{
     UI.colTok=true;render();return}
   if(kind==='colhand'){const ar=(d.artist||'').trim(),t=(d.title||'').trim();if(!ar||!t)return;
     const c={id:colNewId(),artist:ar,title:t,year:(d.year||'').trim(),country:'',label:(d.label||'').trim(),catno:(d.catno||'').trim(),barcode:'',fmt:'',color:(d.color||'').trim(),discogs:0,thumb:'',edition:'',media:'',sleeve:'',paid:'',bought:colToday(),where:'',notes:'',wish:false,added:Date.now()};
-    S.collection=[c,...colAll()];UI.colEdit=c.id;UI.colF='all';UI.colQ='';UI.colHand=false;touch();render();return}
+    S.collection=[c,...colAll()];UI.colEdit=c.id;UI.colOpen=c.id;UI.colF='all';UI.colQ='';UI.colHand=false;touch();render();return}
   if(kind==='coledit'){const x=colAll().find(c=>c.id===f.dataset.id);if(!x||!(d.artist||'').trim()||!(d.title||'').trim())return;
     for(const k of ['artist','title','year','country','label','catno','barcode','fmt','color','edition','media','sleeve','where','notes'])x[k]=(d[k]||'').trim();
     x.paid=String(d.paid||'').replace(/[^0-9.]/g,'');x.bought=d.bought||'';x.wish=d.status==='wish';UI.colEdit=null;touch();render();return}

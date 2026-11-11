@@ -41,7 +41,7 @@
    along as KV metadata so the newer-copy check needs no parsing.
    Every response carries x-pb-worker: 5 so the app knows what this Worker
    can do (2 = compressed sync, 3 = Spotify plays, 4 = Spotify catalog too,
-   5 = the morning-brief list, 6 = Discogs pressing search).
+   5 = the morning-brief list, 6 = Discogs pressing search, 7 = Discogs pressing photos).
 
    MORNING BRIEF (version 5)
    The app keeps a tiny list of the next episode of each show you follow
@@ -70,6 +70,8 @@
                     (artist search, an artist's albums, an album and its tracks)
                     made with the stored sign-in, so the app can build tracklists
                     from exactly what Spotify carries. Nothing else is allowed through.
+   GET    /discogs/release?id= (version 7) -> one pressing's photos (front, back,
+                    inner sleeves, labels) as Discogs owners uploaded them
    GET    /discogs?artist=&title=&barcode=&catno= (version 6) -> a vinyl pressing
                     search on Discogs, answered with Discogs' own JSON ({results:[...]}),
                     so the Collection tab can offer the exact pressing you own.
@@ -99,7 +101,7 @@ const CORS = {
   'Access-Control-Allow-Headers': 'content-type, x-sync-key',
   'Access-Control-Expose-Headers': 'x-pb-worker, retry-after',
   'Access-Control-Max-Age': '86400',
-  'x-pb-worker': '6'
+  'x-pb-worker': '7'
 };
 const JSON_H = Object.assign({ 'content-type': 'application/json', 'cache-control': 'no-store' }, CORS);
 const GZ_H = Object.assign({ 'content-type': 'application/gzip', 'cache-control': 'no-store' }, CORS);
@@ -243,6 +245,22 @@ async function discogsSearch(env, url) {
   return new Response(await r.text(), { status: r.status, headers: h });
 }
 
+/* One Discogs pressing's photos (version 7). Discogs only hands out image links to signed-in
+   requests, so this uses the DISCOGS_TOKEN secret and returns just the image list. */
+async function discogsRelease(env, url) {
+  if (!env.DISCOGS_TOKEN) return reply({ error: 'no discogs token' }, 409);
+  const id = (url.searchParams.get('id') || '').replace(/[^0-9]/g, '').slice(0, 12);
+  if (!id) return reply({ error: 'no release id' }, 400);
+  const r = await fetch('https://api.discogs.com/releases/' + id, {
+    headers: { authorization: 'Discogs token=' + String(env.DISCOGS_TOKEN).trim(), 'user-agent': 'PlaybackApp/1.0 (+https://frostie4life9.github.io/playback/)', accept: 'application/json' }
+  });
+  if (r.status === 401) return reply({ error: 'discogs rejected the token' }, 409);
+  if (!r.ok) return reply({ error: 'discogs ' + r.status }, r.status === 429 ? 429 : 502);
+  const j = await r.json();
+  const images = (j.images || []).slice(0, 24).map(i => ({ type: i.type, uri: i.uri, uri150: i.uri150, width: i.width, height: i.height }));
+  return reply({ id: +id, images, uri: j.uri || '' });
+}
+
 /* one check of Spotify's recently played. mayRefresh: allowed to swap the refresh
    token (only the hourly check, or the app when the hourly check is not running) */
 async function spCheck(env, mayRefresh, fromCron) {
@@ -324,6 +342,7 @@ export default {
     const given = (request.headers.get('x-sync-key') || '').trim();
     if (!keyMatches(given, String(env.SECRET).trim())) return reply({ error: 'unauthorized' }, 401);
     if (url.pathname === '/spotify/api') return request.method === 'GET' ? spCatalog(env, url) : reply({ error: 'method not allowed' }, 405);
+    if (url.pathname === '/discogs/release') return request.method === 'GET' ? discogsRelease(env, url) : reply({ error: 'method not allowed' }, 405);
     if (url.pathname === '/discogs') return request.method === 'GET' ? discogsSearch(env, url) : reply({ error: 'method not allowed' }, 405);
     if (url.pathname === '/spotify') return spotify(request, env, url);
     if (url.pathname === '/brief') return request.method === 'PUT' ? briefPut(request, env) : reply({ error: 'method not allowed' }, 405);
