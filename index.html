@@ -980,6 +980,7 @@ button.rnum:not(.set){border:1px dashed var(--line);border-radius:10px;text-alig
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.11-e', note:'DISCOGS FROM THIS DEVICE: Discogs was turning away searches that went through your Worker (its limit counts every request from the Worker\u2019s shared address, and it was already past it). Under Find a pressing there is now a Discogs token box; with a token saved there, the search runs straight from this device, which has its own limit of 60 a minute. The token stays in this browser only and is never synced, so add it on each device you search from. Without one, or if the browser cannot reach Discogs, it still goes through your Worker.'},
   {v:'2026.11.11-d', note:'DISCOGS LOOKUP: when Discogs turns a search away as too busy (HTTP 429), your Worker now waits a moment and tries once more, and if Discogs still refuses, the message shows exactly what Discogs said so the cause can be pinned down. Nothing in your collection changes.'},
   {v:'2026.11.11-c', note:'COLLECTION: a new Collection tab keeps an inventory of the vinyl you own, one entry per physical copy, so two pressings of the same album are two entries. Each one holds the pressing details (year, country, label, catalog number, barcode, format, color or variant, edition), media and sleeve condition, what you paid, when and where you bought it, and notes. Find a pressing searches Discogs for your album and you tap the one that matches your copy (it needs a free Discogs token on your sync Worker as a secret named DISCOGS_TOKEN; the Worker updates itself from GitHub), or use Add by hand with no setup. Records you want go on a Wishlist and Got it moves them to the shelf. An entry shows your Music rating when the album is in your log, and Open jumps to it. Search and sort the list, and export it as a spreadsheet. It syncs with the rest of your log.'},
   {v:'2026.11.11-b', note:'SLEEVE REDESIGN: every album now looks like a record pulled halfway out of its sleeve. The cover sits on the record, and each groove is a song: the grooves you have heard light up in the album\u2019s own color, which the page picks up from the cover art. Albums split into Side A and Side B, each song is one clean line, and your rating shows as a number. Tap the number (or Rate) to open the groove meter right on that song and tap a groove to rate in half steps; Rate the album works the same way and shows your song average beside it. Setup moved out of the way: Spotify, Rate Your Music, Sync, Your numbers, Export and Backup now live on a new Settings tab, and adding an artist folds into one Add an artist panel. On a phone the Music, Screen and Settings tabs sit at the bottom, and the artist list folds into a Switch artist button so the album is the first thing you see.'},
@@ -2837,7 +2838,7 @@ async function push(force){
 }
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pull()});
 window.addEventListener('online',()=>pull());
-document.addEventListener('toggle',ev=>{if(ev.target.id==='syncpanel')UI.syncOpen=ev.target.open;else if(ev.target.id==='addart')UI.addOpen=ev.target.open;else if(ev.target.id==='listenpanel')UI.llOpen=ev.target.open;else if(ev.target.id==='coladd')UI.colAdd=ev.target.open;else if(ev.target.id==='colhand')UI.colHand=ev.target.open;else if(ev.target.classList&&ev.target.classList.contains('splog'))UI.spLogOpen=ev.target.open},true);
+document.addEventListener('toggle',ev=>{if(ev.target.id==='syncpanel')UI.syncOpen=ev.target.open;else if(ev.target.id==='addart')UI.addOpen=ev.target.open;else if(ev.target.id==='listenpanel')UI.llOpen=ev.target.open;else if(ev.target.id==='coladd')UI.colAdd=ev.target.open;else if(ev.target.id==='colhand')UI.colHand=ev.target.open;else if(ev.target.id==='coltok')UI.colTok=ev.target.open;else if(ev.target.classList&&ev.target.classList.contains('splog'))UI.spLogOpen=ev.target.open},true);
 const UI={view:null,libOpen:false,addOpen:false,rOpen:null,lq:{music:'',screen:''},tab:'music',sel:{music:null,screen:null},filter:'all',armed:null,addType:'show',copied:false,epOpen:{},dxOpen:{}};
 try{const t=localStorage.getItem(KEY+'_tab');if(t==='screen')UI.tab='screen'}catch(e){}
 
@@ -2956,7 +2957,7 @@ function mainView(e,next,list){return `
    matching the Listen list uses), so it can show the cover and your rating. wish:true means
    it is on your wishlist, not on your shelf. */
 const COND=['M','NM','VG+','VG','G+','G','F','P'];
-const COL={busy:false,err:'',res:null,q:{artist:'',title:'',code:''}};
+const COL={busy:false,err:'',tokMsg:'',res:null,q:{artist:'',title:'',code:''}};
 const colAll=()=>S.collection||[];
 const colNewId=()=>sid('copy',Date.now(),Math.random());
 const colMoney=v=>{const n=parseFloat(v);return isFinite(n)?'$'+n.toFixed(2):''};
@@ -2972,14 +2973,47 @@ function dcParse(r){
     year:r.year?String(r.year):'',country:r.country||'',label:String((r.label||[])[0]||'').replace(/\s*\(\d+\)$/,''),
     catno:r.catno||'',barcode:code,fmt:(qty+desc).trim(),color:f.text||'',discogs:r.id||0,thumb:r.thumb||''}
 }
+/* Discogs throttles by source address (60 a minute with a token). A Worker shares its address with
+   many others and was often refused before it asked anything, so when a Discogs token is saved on
+   this device the search runs straight from this device instead. The token stays in this
+   browser only (never in your log, never synced). Without one, or if the browser cannot reach
+   Discogs, the search goes through your Worker as before. */
+const DC_KEY='playback_discogs_token';
+const dcToken=()=>{try{return localStorage.getItem(DC_KEY)||''}catch(e){return ''}};
+function dcSetToken(t){try{t?localStorage.setItem(DC_KEY,t):localStorage.removeItem(DC_KEY)}catch(e){return false}return true}
+async function dcDirect(p,tok){
+  const q=new URLSearchParams({type:'release',format:'Vinyl',per_page:'30'});
+  if(p.artist)q.set('artist',p.artist);if(p.title)q.set('release_title',p.title);if(p.barcode)q.set('barcode',p.barcode);if(p.catno)q.set('catno',p.catno);
+  q.set('token',tok);
+  const r=await fetch('https://api.discogs.com/database/search?'+q,{cache:'no-store'});
+  let j={};try{j=await r.json()}catch(e){}
+  return{status:r.status,j};
+}
 async function dcSearch(d){
   COL.q={artist:(d.artist||'').trim(),title:(d.title||'').trim(),code:(d.code||'').trim()};
   if(!COL.q.artist&&!COL.q.title&&!COL.q.code){COL.err='Type an artist, an album, or a barcode or catalog number.';render();return}
-  if(!syncOn()){COL.err='Connect your sync Worker in Settings to look up pressings, or add the record by hand below.';render();return}
+  const tok=dcToken();
+  if(!tok&&!syncOn()){COL.err='Save a Discogs token on this device (under Discogs token below), or connect your sync Worker in Settings, to look up pressings. You can also add the record by hand.';render();return}
+  const p={artist:COL.q.artist,title:COL.q.title,barcode:'',catno:''};
+  if(COL.q.code){/^[\d\s-]{8,}$/.test(COL.q.code)?p.barcode=COL.q.code.replace(/[\s-]/g,''):p.catno=COL.q.code}
+  if(tok){
+    COL.busy=true;COL.err='';COL.res=null;render();
+    try{
+      const {status,j}=await dcDirect(p,tok);
+      if(status===401)COL.err='Discogs did not accept the token saved on this device. Generate a new one under Discogs Settings, Developers and save it below.';
+      else if(status===429)COL.err='Discogs asked for a pause (HTTP 429). That is your own limit of 60 a minute, so wait a minute and try again.';
+      else if(status<200||status>=300)COL.err='Discogs could not run that search ('+status+'). Try again, or add the record by hand.';
+      else{COL.res=(j.results||[]).map(dcParse).filter(x=>x.title);COL.busy=false;render();return}
+      COL.busy=false;render();return;
+    }catch(e){
+      if(!syncOn()){COL.err='Could not reach Discogs from this browser. Check your connection and try again.';COL.busy=false;render();return}
+      /* the browser could not reach Discogs: fall through to the Worker */
+    }
+  }
   const q=new URLSearchParams();
   if(COL.q.artist)q.set('artist',COL.q.artist);
   if(COL.q.title)q.set('title',COL.q.title);
-  if(COL.q.code){/^[\d\s-]{8,}$/.test(COL.q.code)?q.set('barcode',COL.q.code.replace(/[\s-]/g,'')):q.set('catno',COL.q.code)}
+  if(p.barcode)q.set('barcode',p.barcode);if(p.catno)q.set('catno',p.catno);
   COL.busy=true;COL.err='';COL.res=null;render();
   try{
     const r=await fetch(SY.url.replace(/\/+$/,'')+'/discogs?'+q,{cache:'no-store',headers:{'x-sync-key':SY.key}});
@@ -3071,6 +3105,14 @@ function collectionView(){
           <button class="btn primary" ${COL.busy?'disabled':''}>Search Discogs</button>
         </form>
         ${colResultsHTML()}
+        <details id="coltok" ${UI.colTok?'open':''}>
+          <summary class="label" style="cursor:pointer">Discogs token${dcToken()?' \u00b7 saved on this device':''}</summary>
+          <form class="colfind panel" data-form="dctoken" style="max-width:none">
+            <input name="token" type="password" autocomplete="off" placeholder="${dcToken()?'Saved. Paste a new token to replace it':'Paste your Discogs token'}" aria-label="Discogs token">
+            <button class="btn primary">Save on this device</button>${dcToken()?'<button type="button" class="btn" data-act="dcforget">Remove</button>':''}
+          </form>
+          <p class="note">${COL.tokMsg?esc(COL.tokMsg)+' ':''}With a token saved here, searches run straight from this device, which Discogs does not throttle the way it does your Worker. It stays in this browser only (not in your log, not synced), so add it on each device you search from. Treat it like a password: it also lets whoever holds it change your Discogs account. Get one at discogs.com under Settings, Developers, Generate new token.</p>
+        </details>
       </details>
       <details id="colhand" ${UI.colHand?'open':''}>
         <summary class="label" style="cursor:pointer">Add by hand</summary>
@@ -3450,6 +3492,7 @@ document.addEventListener('click',ev=>{
   if(act!=='coldel')UI.colDel=null;
   if(act==='view'){UI.view=b.dataset.v;UI.rOpen=null;window.scrollTo({top:0})}
   else if(act==='lib'){UI.libOpen=!UI.libOpen}
+  else if(act==='dcforget'){dcSetToken('');COL.tokMsg='Removed from this device.';UI.colTok=true}
   else if(act==='colf'){UI.colF=b.dataset.v}
   else if(act==='coladdp'){const p=(COL.res||[])[+b.dataset.i];if(!p)return;
     const c={id:colNewId(),artist:p.artist,title:p.title,year:p.year,country:p.country,label:p.label,catno:p.catno,barcode:p.barcode,fmt:p.fmt,color:p.color,discogs:p.discogs,thumb:p.thumb,edition:'',media:'',sleeve:'',paid:'',bought:b.dataset.w?'':colToday(),where:'',notes:'',wish:!!b.dataset.w,added:Date.now()};
@@ -3574,6 +3617,10 @@ document.addEventListener('submit',ev=>{
   if(kind==='tmsearch'){const q=(d.q||'').trim();if(q)tmSearch(q);return}
   if(kind==='tmkey'){tmSaveKey(d.key);return}
   if(kind==='colfind'){dcSearch(d);return}
+  if(kind==='dctoken'){const t=String(d.token||'').replace(/\s/g,'');
+    if(!/^[A-Za-z0-9]{30,64}$/.test(t))COL.tokMsg='That does not look like a Discogs token (about 40 letters and numbers).';
+    else{COL.tokMsg=dcSetToken(t)?'Saved on this device.':'This browser would not save it.';if(COL.tokMsg==='Saved on this device.'){COL.err=''}}
+    UI.colTok=true;render();return}
   if(kind==='colhand'){const ar=(d.artist||'').trim(),t=(d.title||'').trim();if(!ar||!t)return;
     const c={id:colNewId(),artist:ar,title:t,year:(d.year||'').trim(),country:'',label:(d.label||'').trim(),catno:(d.catno||'').trim(),barcode:'',fmt:'',color:(d.color||'').trim(),discogs:0,thumb:'',edition:'',media:'',sleeve:'',paid:'',bought:colToday(),where:'',notes:'',wish:false,added:Date.now()};
     S.collection=[c,...colAll()];UI.colEdit=c.id;UI.colF='all';UI.colQ='';UI.colHand=false;touch();render();return}
