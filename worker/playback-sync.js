@@ -41,7 +41,7 @@
    along as KV metadata so the newer-copy check needs no parsing.
    Every response carries x-pb-worker: 5 so the app knows what this Worker
    can do (2 = compressed sync, 3 = Spotify plays, 4 = Spotify catalog too,
-   5 = the morning-brief list, 6 = Discogs pressing search, 7 = Discogs pressing photos).
+   5 = the morning-brief list, 6 = Discogs pressing search, 7 = Discogs pressing photos, 8 = your own record photos).
 
    MORNING BRIEF (version 5)
    The app keeps a tiny list of the next episode of each show you follow
@@ -70,6 +70,11 @@
                     (artist search, an artist's albums, an album and its tracks)
                     made with the stored sign-in, so the app can build tracklists
                     from exactly what Spotify carries. Nothing else is allowed through.
+   PUT    /photo?k=<copy>/<slot> (version 8) -> stores your own photo of a record
+                    (front, back, inner, labA, labB) in the STATE KV under photo:<k>;
+                    answers with a signed link the app keeps in your log
+   GET    /photo?k=&s=&v=  -> that photo; no sync key, the signature is the pass
+   DELETE /photo?k=  -> removes it
    GET    /discogs/release?id= (version 7) -> one pressing's photos (front, back,
                     inner sleeves, labels) as Discogs owners uploaded them
    GET    /discogs?artist=&title=&barcode=&catno= (version 6) -> a vinyl pressing
@@ -101,7 +106,7 @@ const CORS = {
   'Access-Control-Allow-Headers': 'content-type, x-sync-key',
   'Access-Control-Expose-Headers': 'x-pb-worker, retry-after',
   'Access-Control-Max-Age': '86400',
-  'x-pb-worker': '7'
+  'x-pb-worker': '8'
 };
 const JSON_H = Object.assign({ 'content-type': 'application/json', 'cache-control': 'no-store' }, CORS);
 const GZ_H = Object.assign({ 'content-type': 'application/gzip', 'cache-control': 'no-store' }, CORS);
@@ -245,6 +250,36 @@ async function discogsSearch(env, url) {
   return new Response(await r.text(), { status: r.status, headers: h });
 }
 
+/* Your own record photos (version 8), kept in the same KV namespace as the log. Image tags
+   can't send the sync key, so each stored photo gets a signed link (HMAC of its key with
+   SECRET); the link only opens that one photo. */
+const PHOTO_RE = /^[A-Za-z0-9_.:-]{1,80}\/(front|back|inner|labA|labB)$/;
+const PHOTO_MAX = 4 * 1024 * 1024;
+async function photoSig(env, k) {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode('photo:' + String(env.SECRET).trim()), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = new Uint8Array(await crypto.subtle.sign('HMAC', key, enc.encode(k)));
+  return [...sig.slice(0, 16)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+async function photoGet(env, url) {
+  const k = url.searchParams.get('k') || '', s = url.searchParams.get('s') || '';
+  if (!PHOTO_RE.test(k) || !keyMatches(s, await photoSig(env, k))) return new Response('not found', { status: 404, headers: CORS });
+  const { value, metadata } = await env.STATE.getWithMetadata('photo:' + k, 'arrayBuffer');
+  if (!value) return new Response('not found', { status: 404, headers: CORS });
+  return new Response(value, { headers: Object.assign({ 'content-type': (metadata && metadata.ct) || 'image/jpeg', 'cache-control': 'public, max-age=31536000, immutable' }, CORS) });
+}
+async function photoPut(request, env, url) {
+  const k = url.searchParams.get('k') || '';
+  if (!PHOTO_RE.test(k)) return reply({ error: 'bad photo key' }, 400);
+  const ct = (request.headers.get('content-type') || '').split(';')[0];
+  if (!/^image\/(jpeg|webp|png)$/.test(ct)) return reply({ error: 'not an image' }, 415);
+  const buf = await request.arrayBuffer();
+  if (!buf.byteLength || buf.byteLength > PHOTO_MAX) return reply({ error: 'photo too large' }, 413);
+  await env.STATE.put('photo:' + k, buf, { metadata: { ct, at: Date.now() } });
+  const v = Date.now().toString(36);
+  return reply({ url: url.origin + '/photo?' + new URLSearchParams({ k, s: await photoSig(env, k), v }), bytes: buf.byteLength });
+}
+
 /* One Discogs pressing's photos (version 7). Discogs only hands out image links to signed-in
    requests, so this uses the DISCOGS_TOKEN secret and returns just the image list. */
 async function discogsRelease(env, url) {
@@ -339,9 +374,15 @@ export default {
 
     const url = new URL(request.url);
     if (url.pathname === '/brief' && request.method === 'GET') return briefGet(env, url);   /* its own read-only key */
+    if (url.pathname === '/photo' && request.method === 'GET') return photoGet(env, url);   /* signed link, no sync key */
     const given = (request.headers.get('x-sync-key') || '').trim();
     if (!keyMatches(given, String(env.SECRET).trim())) return reply({ error: 'unauthorized' }, 401);
     if (url.pathname === '/spotify/api') return request.method === 'GET' ? spCatalog(env, url) : reply({ error: 'method not allowed' }, 405);
+    if (url.pathname === '/photo') {
+      if (request.method === 'PUT') return photoPut(request, env, url);
+      if (request.method === 'DELETE') { const k = url.searchParams.get('k') || ''; if (!PHOTO_RE.test(k)) return reply({ error: 'bad photo key' }, 400); await env.STATE.delete('photo:' + k); return reply({ ok: true }); }
+      return reply({ error: 'method not allowed' }, 405);
+    }
     if (url.pathname === '/discogs/release') return request.method === 'GET' ? discogsRelease(env, url) : reply({ error: 'method not allowed' }, 405);
     if (url.pathname === '/discogs') return request.method === 'GET' ? discogsSearch(env, url) : reply({ error: 'method not allowed' }, 405);
     if (url.pathname === '/spotify') return spotify(request, env, url);

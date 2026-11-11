@@ -389,7 +389,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
   background:repeating-radial-gradient(circle,rgb(0 0 0 / .13) 0 .6px,transparent .6px 2.2px,rgb(255 255 255 / .05) 2.2px 2.8px,transparent 2.8px 4px);
   -webkit-mask:radial-gradient(circle,transparent 0 33%,#000 34% 95%,transparent 96%);mask:radial-gradient(circle,transparent 0 33%,#000 34% 95%,transparent 96%)}
 .rec-disc::after{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 20deg,transparent 0 8%,rgb(255 255 255 / .22) 12%,transparent 18% 50%,rgb(255 255 255 / .16) 62%,transparent 68%);mix-blend-mode:screen}
-.rec-lab{position:absolute;left:33%;top:33%;width:34%;height:34%;border-radius:50%;background:var(--lab,var(--ac)) center/cover;box-shadow:0 0 0 1px rgb(0 0 0 / .2);z-index:1}
+.rec-lab{position:absolute;left:33%;top:33%;width:34%;height:34%;border-radius:50%;background:var(--lab,var(--ac)) center/var(--labz,cover);box-shadow:0 0 0 1px rgb(0 0 0 / .2);z-index:1}
 .rec-lab::after{content:"";position:absolute;left:50%;top:50%;width:13%;height:13%;margin:-6.5% 0 0 -6.5%;border-radius:50%;background:var(--bg);box-shadow:inset 0 0 0 1px rgb(0 0 0 / .3)}
 .rec-disc.clear{box-shadow:0 10px 24px rgb(0 0 0 / .18),inset 0 0 0 1.5px rgb(255 255 255 / .35)}
 @keyframes recspin{to{rotate:360deg}}
@@ -465,6 +465,7 @@ html.vw-lock{overflow:hidden}
 .vw{position:fixed;inset:0;z-index:2000;display:flex;flex-direction:column;align-items:center;gap:14px;overflow:hidden;color:#fff;
   padding:max(16px,env(safe-area-inset-top,0px)) 16px max(18px,env(safe-area-inset-bottom,0px));
   background:radial-gradient(120% 80% at 50% 40%,color-mix(in srgb,var(--ac) 70%,#000),#0b0908 72%);animation:recin .3s ease-out}
+.vw.still{animation:none}
 .vw-top{width:min(100%,760px);display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
 .vw-top .sl-kind{color:rgb(255 255 255 / .7)}
 .vw-top h3{margin:2px 0 0;font:900 28px/.98 Archivo,var(--display);font-stretch:118%;text-transform:uppercase;letter-spacing:-.02em}
@@ -512,6 +513,24 @@ html.vw-lock{overflow:hidden}
 .vw-note{margin:0;max-width:60ch;text-align:center;font-size:13px;color:rgb(255 255 255 / .72)}
 .vw-note .link{color:#fff;text-decoration:underline}
 @media (prefers-reduced-motion:reduce){.vw-stage>*{transition:none}}
+
+/* ===== Your own photos (2026.11.11-i) ===== */
+.vw-photo{display:flex;align-items:center;justify-content:center;gap:8px 14px;flex-wrap:wrap;min-height:44px}
+.vw-pbtn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:999px;background:#fff;color:#111;font-weight:700;font-size:14px;cursor:pointer}
+.vw-pbtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round}
+.vw-pbtn.busy{opacity:.6;cursor:progress}
+.vw-photo .link{color:#fff;text-decoration:underline}
+.vw-perr{flex:1 1 100%;text-align:center;font-size:13px;color:#ffb39c}
+.crop{position:fixed;inset:0;z-index:2100;background:#0b0908;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  padding:max(16px,env(safe-area-inset-top,0px)) 16px max(18px,env(safe-area-inset-bottom,0px))}
+.crop-t{margin:0;font-weight:700;text-align:center}
+#cropc{width:min(88vw,62vh,520px);height:auto;aspect-ratio:1;border-radius:10px;touch-action:none;cursor:grab;background:#111}
+.crop-ctl{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;width:min(88vw,520px)}
+.crop-ctl label{flex:1 1 180px;display:flex;flex-direction:column;gap:4px;font:600 12px var(--body);letter-spacing:.06em;text-transform:uppercase;color:rgb(255 255 255 / .7)}
+.crop-ctl input{padding:0;background:none;border:0;accent-color:#fff}
+.crop-h{margin:0;font-size:13px;color:rgb(255 255 255 / .6)}
+.crop-acts{display:flex;gap:10px}
+.crop .btn{min-height:44px;padding:0 18px}
 /* library: on a phone the list folds behind Switch */
 .libbtn{display:none}
 @media (max-width:760px){
@@ -1136,6 +1155,7 @@ button.rnum:not(.set){border:1px dashed var(--line);border-radius:10px;text-alig
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.11-i', note:'YOUR OWN PHOTOS: in Open the record, each view has an Add your photo button (front, back, inner sleeve, Side A and Side B labels). Take or pick a photo, drag, zoom and straighten it into the guide, and it is cropped, shrunk and saved by your sync Worker, so it shows on every device. Your photos win over scans and Discogs picks, your front photo becomes the cover in your crate, and a label photo becomes the record\u2019s center label. A label photo also reads the real color of your vinyl from the ring around the label, so the drawn disc matches your copy (Edit details can still override it). Removing a record removes its photos.'},
   {v:'2026.11.11-h', note:'OPEN THE RECORD: every record in your Collection has an Open the record button. It fills the screen with the sleeve: flip it to the back, slide out the inner sleeve, then pull out the record, which spins, and flip it to Side B. It looks for clean, labelled scans on the Cover Art Archive (MusicBrainz), first for your exact Discogs pressing and then for another vinyl pressing of the album, and remembers what it found. Any Discogs photo can fill a spot with its new Use as\u2026 menu (Front, Back, Inner sleeve, Side A or B label). DISC COLORS are closer to the real thing: shade words count, so Red (Deep) is now a dark cranberry, and Edit details has a Disc color picker for when the guess is off.'},
   {v:'2026.11.11-g', note:'THE CRATE: the Collection tab now looks like the rest of the Sleeve design. Your records sit in a grid of sleeves, and hovering over one (or, on a phone, the edge that peeks out) slides the record out so you can see the vinyl itself: its color, splatter, marble, half-and-half, clear or picture-disc look, drawn from the pressing\u2019s color, with the cover as its center label. Each record takes its color from its cover like albums do. Tap a record to open it: the record spins out of the sleeve, the pressing details sit underneath, and Photos from Discogs shows the back cover, inner sleeves and labels that Discogs owners uploaded for that exact pressing (it uses the same Discogs token as Find a pressing; your Worker learns the photo lookup when it updates itself from GitHub). Each Discogs search result also shows a small disc of that variant.'},
   {v:'2026.11.11-f', note:'CLEARER PRESSINGS: each result in Find a pressing, and each record in your Collection, now shows its details as labelled fields instead of one run-on line: Region, Catalog #, Vinyl (with a color dot, or Standard when Discogs lists no color), Format, Edition (reissue, limited, deluxe and so on), Label and Year. Results are grouped by catalog number so the same pressing in different regions sits together, and the edition words come along when you add a record.'},
@@ -3139,7 +3159,7 @@ function vinylLook(x,art){
   const mix=(c,p)=>clear?`color-mix(in srgb,${c} ${p}%,transparent)`:c;
   /* shade words: "Red (Deep)" is a dark cranberry, not fire-engine red */
   const tone=c=>/\b(deep|dark|blood|wine|dusky|midnight)\b/.test(t)?`color-mix(in srgb,${c} 58%,#14000a)`:/\b(light|pale|baby|pastel|soft|powder)\b/.test(t)?`color-mix(in srgb,${c} 55%,#fff)`:/\b(bright|neon|electric|hot)\b/.test(t)?`color-mix(in srgb,${c} 85%,#ff2d6a)`:c;
-  if(x.vc&&/^#[0-9a-f]{6}$/i.test(x.vc))cols[0]=x.vc;else if(cols[0])cols[0]=tone(cols[0]);
+  if(x.vc&&/^#[0-9a-f]{6}$/i.test(x.vc))cols[0]=x.vc;else if(x.pc&&/^#[0-9a-f]{6}$/i.test(x.pc))cols[0]=x.pc;else if(cols[0])cols[0]=tone(cols[0]);
   let a=cols[0]||(clear?'#cfd8db':'#141111'),b=cols[1]||(cols[0]?(clear?'#ffffff':'#f4f4f0'):'#2a2a2a');
   if(clear&&!cols[0])b='#ffffff';
   const A=mix(a,clear?55:100),B=mix(b,clear?60:100),h=colHash(x.id||x.catno||t);
@@ -3158,8 +3178,8 @@ function vinylLook(x,art){
   }
   return{bg,dot:bg,clear,name:x.color||(cols.length?'':'Black')};
 }
-function discHTML(x,art,lab){const v=vinylLook(x,art);
-  return `<span class="rec-disc${v.clear?' clear':''}" style="--vb:${esc(v.bg)}" aria-hidden="true"><span class="rec-lab"${lab?` style="--lab:url('${esc(lab)}')"`:''}></span></span>`}
+function discHTML(x,art,lab,side){const v=vinylLook(x,art),L=x.id?colLabel(x,side,lab):{u:lab,z:'cover'};
+  return `<span class="rec-disc${v.clear?' clear':''}" style="--vb:${esc(v.bg)}" aria-hidden="true"><span class="rec-lab"${L.u?` style="--lab:url('${esc(L.u)}');--labz:${L.z}"`:''}></span></span>`}
 const colLine=x=>[x.year,x.country,[x.label,x.catno].filter(Boolean).join(' '),x.fmt,x.color].filter(Boolean).join(' · ');
 const colToday=()=>new Date().toLocaleDateString('en-CA');
 
@@ -3250,7 +3270,7 @@ function colEditForm(x){
     ${fld('label','Label')}${fld('catno','Catalog #')}
     ${fld('barcode','Barcode')}${fld('fmt','Format (LP, 7", 2×LP, Reissue)')}
     ${fld('color','Color or variant')}${fld('edition','Edition (limited no., first press)')}
-    <label class="label">Disc color in the app<span class="vcrow"><input type="color" name="vc" value="${esc(x.vc||'#7a1424')}" aria-label="Disc color"><span class="vchk"><input type="checkbox" name="vcauto" ${x.vc?'':'checked'}> Guess from the color words</span></span></label>
+    <label class="label">Disc color in the app<span class="vcrow"><input type="color" name="vc" value="${esc(x.vc||'#7a1424')}" aria-label="Disc color"><span class="vchk"><input type="checkbox" name="vcauto" ${x.vc?'':'checked'}> ${x.pc?'Use the color from your label photo':'Guess from the color words'}</span></span></label>
     <label class="label">Media condition${sel('media')}</label><label class="label">Sleeve condition${sel('sleeve')}</label>
     <label class="label">Paid (USD)<input name="paid" inputmode="decimal" value="${esc(x.paid||'')}"></label>
     <label class="label">Date bought<input name="bought" type="date" value="${esc(x.bought||'')}"></label>
@@ -3262,7 +3282,8 @@ function colEditForm(x){
 }
 function colArt(x){const {a,g}=colMatch(x);
   const mb=g&&(g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-250':''))||'';
-  return{a,g,art:x.cover||mb||x.thumb||'',key:mb||x.thumb||''}}
+  const own=x.photos&&x.photos.front&&x.photos.front.url;
+  return{a,g,art:own||x.cover||mb||x.thumb||'',key:own||mb||x.thumb||''}}
 function colCover(x,art){return `<span class="rec-cover">${art?`<img src="${esc(art)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}<span class="sl-ph" aria-hidden="true">${esc((x.title||'?').trim().charAt(0).toUpperCase())}</span></span>`}
 function colCard(x){
   const {art,key}=colArt(x),col=acolFor('c_'+x.id,key,{title:x.title,id:x.id}),v=vinylLook(x,art),open=UI.colOpen===x.id;
@@ -3339,7 +3360,11 @@ async function colLoadImgs(id){
    of the same album in your log. What is found is kept on the entry (x.scan), so it is looked
    up once; x.art holds the photos you picked yourself, and those win. */
 const ART_SLOTS=[['front','Front'],['back','Back'],['inner','Inner sleeve'],['labA','Label, side A'],['labB','Label, side B']];
-const colSlot=(x,k)=>(x.art&&x.art[k])||(x.scan&&x.scan[k])||'';
+const colSlot=(x,k)=>(x.photos&&x.photos[k]&&x.photos[k].url)||(x.art&&x.art[k])||(x.scan&&x.scan[k])||'';
+const myPhoto=(x,k)=>!!(x.photos&&x.photos[k]&&x.photos[k].url);
+/* the center label: your own label photo is framed with the label filling the guide circle (56% of the frame), so it is zoomed to match */
+function colLabel(x,side,fallback){const k=side==='b'?'labB':'labA',own=myPhoto(x,k)?x.photos[k].url:side==='b'&&myPhoto(x,'labA')?x.photos.labA.url:'';
+  if(own)return{u:own,z:'179%'};const u=colSlot(x,k)||(side==='b'?colSlot(x,'labA'):'');return u?{u,z:'cover'}:{u:fallback||'',z:'cover'}}
 async function caaTyped(mbid){
   const r=await fetch('https://coverartarchive.org/release/'+mbid,{cache:'no-store'});
   if(!r.ok)return null;const j=await r.json(),o={},img=i=>(i.thumbnails&&(i.thumbnails['1200']||i.thumbnails.large||i.thumbnails['500']))||i.image;
@@ -3384,7 +3409,7 @@ function viewerHTML(){
     <div class="vw-top"><div><span class="sl-kind">${esc(x.artist)}</span><h3>${esc(x.title)}</h3></div><button class="vw-x" data-act="vclose" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <div class="vw-stage" data-step="${st}">
       <div class="vw-inner">${inner?`<img src="${esc(inner)}" alt="" decoding="async">`:'<span class="vw-paper"></span>'}</div>
-      <div class="vw-disc"><div class="vw-dface">${discHTML(x,front,la||front)}</div><div class="vw-dface b">${discHTML(x,front,lb||front)}</div></div>
+      <div class="vw-disc"><div class="vw-dface">${discHTML(x,front,front,'a')}</div><div class="vw-dface b">${discHTML(x,front,front,'b')}</div></div>
       <div class="vw-sleeve"><div class="vw-face">${face(front,'No front')}</div><div class="vw-face back">${face(back,'No back scan yet')}</div></div>
     </div>
     <div class="vw-ctl">
@@ -3392,10 +3417,102 @@ function viewerHTML(){
       <div class="vw-seg" role="group" aria-label="View">${VSTEPS.map(([k,t])=>`<button data-act="vstep" data-v="${k}" aria-pressed="${st===k}">${t}</button>`).join('')}</div>
       <button class="vw-nav" data-act="vstep" data-v="${VSTEPS[Math.min(VSTEPS.length-1,i+1)][0]}" ${i>=VSTEPS.length-1?'disabled':''} aria-label="Next"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
     </div>
+    ${photoBar(x,st)}
     ${status?`<p class="vw-note">${esc(status)}${sc&&!busy?' <button class="link" data-act="vrescan" data-id="'+x.id+'">Look again</button>':''}</p>`:''}
   </div>`;
 }
-function viewRedraw(){const h=document.getElementById('vwhost');if(h)h.innerHTML=viewerHTML()}
+/* ---------- your own photos ----------
+   Take or pick a photo, line it up in the guide (square for the sleeve and inner sleeve,
+   a circle for each label with the vinyl around it in frame), and it is cropped, levelled,
+   shrunk to a JPEG and stored by your sync Worker (version 8). A label photo also gives the
+   app the real color of the vinyl, read from the ring of record around the label. */
+const VSLOT={front:'front',back:'back',inner:'inner',a:'labA',b:'labB'};
+const SLOTNAME={front:'front cover',back:'back cover',inner:'inner sleeve',labA:'Side A label',labB:'Side B label'};
+const CROP={on:false};
+function photoBar(x,st){
+  const k=VSLOT[st],has=myPhoto(x,k),busy=CROP.up===x.id+'/'+k;
+  return `<div class="vw-photo">
+    <label class="vw-pbtn${busy?' busy':''}"><input type="file" accept="image/*" data-photo="${x.id}" data-slot="${k}" hidden ${busy?'disabled':''}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>${busy?'Saving…':has?'Retake your '+SLOTNAME[k]:'Add your photo of the '+SLOTNAME[k]}</label>
+    ${has&&!busy?`<button class="link" data-act="phdel" data-id="${x.id}" data-k="${k}">Remove yours</button>`:''}
+    ${CROP.err?`<span class="vw-perr">${esc(CROP.err)}</span>`:''}
+  </div>`;
+}
+function cropHTML(){
+  if(!CROP.on)return '';const lab=/^lab/.test(CROP.k);
+  return `<div class="crop" role="dialog" aria-modal="true" aria-label="Line up your photo">
+    <p class="crop-t">${lab?'Fit the label inside the circle, with vinyl showing around it':'Fit the '+SLOTNAME[CROP.k]+' to the square'}</p>
+    <canvas id="cropc" width="720" height="720"></canvas>
+    <div class="crop-ctl">
+      <label>Zoom<input type="range" id="crop-z" min="0.3" max="4" step="0.01" value="${CROP.z}"></label>
+      <label>Straighten<input type="range" id="crop-r" min="-20" max="20" step="0.1" value="${CROP.r}"></label>
+    </div>
+    <p class="crop-h">Drag to move it.</p>
+    <div class="crop-acts"><button class="btn" data-act="cropx">Cancel</button><button class="btn primary" data-act="cropok">Use this photo</button></div>
+  </div>`;
+}
+function cropDraw(c,size,guide){
+  const im=CROP.img,ctx=c.getContext('2d'),W=c.width;
+  ctx.fillStyle='#111';ctx.fillRect(0,0,W,W);
+  const base=Math.max(W/im.naturalWidth,W/im.naturalHeight)*CROP.z,f=W/720;
+  ctx.save();ctx.translate(W/2+CROP.dx*f,W/2+CROP.dy*f);ctx.rotate(CROP.r*Math.PI/180);
+  ctx.drawImage(im,-im.naturalWidth*base/2,-im.naturalHeight*base/2,im.naturalWidth*base,im.naturalHeight*base);ctx.restore();
+  if(guide){
+    ctx.save();ctx.strokeStyle='rgb(255 255 255 / .9)';ctx.lineWidth=3;ctx.setLineDash([12,10]);
+    if(/^lab/.test(CROP.k)){ctx.fillStyle='rgb(0 0 0 / .28)';ctx.beginPath();ctx.rect(0,0,W,W);ctx.arc(W/2,W/2,W*.28,0,Math.PI*2,true);ctx.fill('evenodd');
+      ctx.beginPath();ctx.arc(W/2,W/2,W*.28,0,Math.PI*2);ctx.stroke();ctx.setLineDash([4,8]);ctx.beginPath();ctx.arc(W/2,W/2,W*.47,0,Math.PI*2);ctx.stroke()}
+    else{ctx.strokeRect(6,6,W-12,W-12);ctx.setLineDash([]);ctx.strokeStyle='rgb(255 255 255 / .18)';ctx.lineWidth=1;
+      for(const t of [1/3,2/3]){ctx.beginPath();ctx.moveTo(W*t,0);ctx.lineTo(W*t,W);ctx.moveTo(0,W*t);ctx.lineTo(W,W*t);ctx.stroke()}}
+    ctx.restore()}
+}
+function cropRedraw(){const c=document.getElementById('cropc');if(c&&CROP.img)cropDraw(c,720,true)}
+/* the vinyl's own color: the middle value of the ring between the label and the edge */
+function ringColor(c){
+  const W=c.width,d=c.getContext('2d').getImageData(0,0,W,W).data,R=[],G=[],B=[];
+  for(let i=0;i<1400;i++){const a=i*2.399963,rr=W*(.31+.15*((i*7919)%997)/997),px=Math.round(W/2+Math.cos(a)*rr),py=Math.round(W/2+Math.sin(a)*rr);
+    if(px<0||py<0||px>=W||py>=W)continue;const o=(py*W+px)*4;R.push(d[o]);G.push(d[o+1]);B.push(d[o+2])}
+  const med=a=>{a.sort((p,q)=>p-q);return a[a.length>>1]||0};
+  return '#'+[med(R),med(G),med(B)].map(v=>v.toString(16).padStart(2,'0')).join('');
+}
+function photoPick(input){
+  const f=input.files&&input.files[0];input.value='';if(!f)return;
+  if(!syncOn()){CROP.err='Connect your sync Worker in Settings first; that is where your photos are kept.';viewRedraw();return}
+  const im=new Image(),u=URL.createObjectURL(f);
+  im.onload=()=>{Object.assign(CROP,{on:true,img:im,url:u,id:input.dataset.photo,k:input.dataset.slot,z:1,r:0,dx:0,dy:0,err:''});
+    const h=document.getElementById('crophost');if(h){h.innerHTML=cropHTML();cropRedraw();cropWire()}};
+  im.onerror=()=>{CROP.err='That file could not be opened as a photo.';viewRedraw()};
+  im.src=u;
+}
+function cropWire(){
+  const c=document.getElementById('cropc');if(!c)return;let drag=null;
+  c.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,dx:CROP.dx,dy:CROP.dy};c.setPointerCapture(e.pointerId)});
+  c.addEventListener('pointermove',e=>{if(!drag)return;const k=720/c.getBoundingClientRect().width;CROP.dx=drag.dx+(e.clientX-drag.x)*k;CROP.dy=drag.dy+(e.clientY-drag.y)*k;cropRedraw()});
+  const end=()=>drag=null;c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);
+  c.addEventListener('wheel',e=>{e.preventDefault();CROP.z=Math.max(.3,Math.min(4,CROP.z*(e.deltaY<0?1.06:.94)));const z=document.getElementById('crop-z');if(z)z.value=CROP.z;cropRedraw()},{passive:false});
+}
+function cropClose(){if(CROP.url)URL.revokeObjectURL(CROP.url);Object.assign(CROP,{on:false,img:null,url:''});const h=document.getElementById('crophost');if(h)h.innerHTML=''}
+async function cropSave(){
+  const x=colAll().find(c=>c.id===CROP.id),k=CROP.k;if(!x||!CROP.img)return;
+  const lab=/^lab/.test(k),out=document.createElement('canvas');out.width=out.height=lab?1000:1400;cropDraw(out,out.width,false);
+  const pc=lab?ringColor(out):'';
+  const blob=await new Promise(r=>out.toBlob(r,'image/jpeg',.85));
+  cropClose();CROP.up=x.id+'/'+k;CROP.err='';viewRedraw();
+  try{
+    const r=await fetch(SY.url.replace(/\/+$/,'')+'/photo?k='+encodeURIComponent(x.id+'/'+k),{method:'PUT',body:blob,headers:{'x-sync-key':SY.key,'content-type':'image/jpeg'}});
+    let j={};try{j=await r.json()}catch(e){}
+    if(r.status===404)CROP.err='Your sync Worker does not take photos yet. It updates itself from GitHub within a few minutes; try again shortly.';
+    else if(r.status===401)CROP.err='Your Worker did not accept the sync key. Re-enter it under Sync in Settings.';
+    else if(!r.ok||!j.url)CROP.err='The photo did not save ('+r.status+'). Try again.';
+    else{x.photos=Object.assign({},x.photos,{[k]:{url:j.url,at:Date.now()}});if(pc&&k==='labA')x.pc=pc;else if(pc&&!x.pc)x.pc=pc;touch()}
+  }catch(e){CROP.err='Could not reach your Worker. Check your connection and try again.'}
+  CROP.up=null;viewRedraw();
+}
+async function photoDel(x,k){
+  if(!x.photos||!x.photos[k])return;
+  try{await fetch(SY.url.replace(/\/+$/,'')+'/photo?k='+encodeURIComponent(x.id+'/'+k),{method:'DELETE',headers:{'x-sync-key':SY.key}})}catch(e){}
+  const p=Object.assign({},x.photos);delete p[k];x.photos=p;if(k==='labA'&&!p.labB)x.pc='';touch();viewRedraw();
+}
+function viewRedraw(){const h=document.getElementById('vwhost');if(h)h.innerHTML=viewerHTML().replace('<div class="vw"','<div class="vw still"')}
 function colListHTML(){
   const all=colAll(),L=colFiltered();
   if(!all.length)return '<p class="note">Your crate is empty. Find a pressing above, or add one by hand. Each entry is one physical copy, so two pressings of the same album are two entries.</p>';
@@ -3465,7 +3582,7 @@ function collectionView(){
     </div>
     <div class="crate-wrap" id="col-list">${colListHTML()}</div>
     ${all.length?`<div class="tools"><button class="btn" data-act="colexport">Export as spreadsheet (CSV)</button></div>`:''}
-    <div id="vwhost">${viewerHTML()}</div>
+    <div id="vwhost">${viewerHTML()}</div><div id="crophost">${cropHTML()}</div>
   </section>`;
 }
 function csvCollection(){
@@ -3831,14 +3948,19 @@ document.addEventListener('click',ev=>{
   else if(act==='vopen'){const x=colAll().find(c=>c.id===id);UI.vOpen=id;UI.vStep='front';document.documentElement.classList.add('vw-lock');
     if(x&&(!x.scan||(x.scan.none&&Date.now()-x.scan.at>2592e6)))setTimeout(()=>colFindScans(x),0)}
   else if(act==='vclose'){UI.vOpen=null;document.documentElement.classList.remove('vw-lock');viewRedraw();return}
-  else if(act==='vstep'){UI.vStep=b.dataset.v;const st=document.querySelector('.vw-stage');if(st){st.dataset.step=UI.vStep;
+  else if(act==='vstep'){UI.vStep=b.dataset.v;CROP.err='';const st=document.querySelector('.vw-stage');if(st){
+    const pb=document.querySelector('.vw-photo'),x=colAll().find(c=>c.id===UI.vOpen);if(pb&&x)pb.outerHTML=photoBar(x,UI.vStep);st.dataset.step=UI.vStep;
     document.querySelectorAll('.vw-seg button').forEach(z=>z.setAttribute('aria-pressed',z.dataset.v===UI.vStep));
     const i=VSTEPS.findIndex(v=>v[0]===UI.vStep),nv=document.querySelectorAll('.vw-nav');
     if(nv[0]){nv[0].dataset.v=VSTEPS[Math.max(0,i-1)][0];nv[0].disabled=i<=0}if(nv[1]){nv[1].dataset.v=VSTEPS[Math.min(4,i+1)][0];nv[1].disabled=i>=4}}return}
+  else if(act==='phdel'){const x=colAll().find(c=>c.id===id);if(x)photoDel(x,b.dataset.k);return}
+  else if(act==='cropx'){cropClose();return}
+  else if(act==='cropok'){cropSave();return}
   else if(act==='vrescan'){const x=colAll().find(c=>c.id===id);if(x){x.scan=null;colFindScans(x)}return}
   else if(act==='colopen'){UI.colOpen=UI.colOpen===id?null:id;UI.colEdit=null;
     for(const k in COL.imgs)if(COL.imgs[k]&&COL.imgs[k].err)delete COL.imgs[k]}   /* reopening retries photos that failed */
-  else if(act==='coldel'){if(UI.colDel===id){S.collection=colAll().filter(x=>x.id!==id);UI.colDel=null;if(UI.colEdit===id)UI.colEdit=null;if(UI.colOpen===id)UI.colOpen=null;touch()}else UI.colDel=id}
+  else if(act==='coldel'){if(UI.colDel===id){{const gone=colAll().find(x=>x.id===id);if(gone&&gone.photos)for(const k in gone.photos)photoDel(gone,k)}
+    S.collection=colAll().filter(x=>x.id!==id);UI.colDel=null;if(UI.colEdit===id)UI.colEdit=null;if(UI.colOpen===id)UI.colOpen=null;touch()}else UI.colDel=id}
   else if(act==='colgot'){const x=colAll().find(c=>c.id===id);if(x){x.wish=false;if(!x.bought)x.bought=colToday();touch()}}
   else if(act==='colexport'){dlCSV('playback-collection.csv',csvCollection());return}
   else if(act==='ropen'){UI.rOpen=UI.rOpen===id?null:id}
@@ -3933,6 +4055,8 @@ document.addEventListener('click',ev=>{
 });
 
 document.addEventListener('input',ev=>{
+  if(ev.target.id==='crop-z'){CROP.z=+ev.target.value;cropRedraw();return}
+  if(ev.target.id==='crop-r'){CROP.r=+ev.target.value;cropRedraw();return}
   if(ev.target.id==='lq'){UI.lq[UI.tab]=ev.target.value;lRedraw()}
   if(ev.target.id==='col-q'){UI.colQ=ev.target.value;const l=document.getElementById('col-list');if(l)l.innerHTML=colListHTML()}
 });
@@ -3943,6 +4067,7 @@ document.addEventListener('keydown',ev=>{
 });
 
 document.addEventListener('keydown',ev=>{
+  if(CROP.on&&ev.key==='Escape'){ev.preventDefault();cropClose();return}
   if(!UI.vOpen)return;
   if(ev.key==='Escape'){ev.preventDefault();const c=document.querySelector('.vw-x');if(c)c.click();return}
   if(ev.key==='ArrowRight'||ev.key==='ArrowLeft'){const n=document.querySelectorAll('.vw-nav')[ev.key==='ArrowRight'?1:0];if(n&&!n.disabled){ev.preventDefault();n.click()}}
@@ -3950,6 +4075,7 @@ document.addEventListener('keydown',ev=>{
 document.addEventListener('change',ev=>{
   if(ev.target.id==='new-type'){UI.addType=ev.target.value;render();return}
   if(ev.target.id==='col-sort'){UI.colS=ev.target.value;render();return}
+  if(ev.target.dataset&&ev.target.dataset.photo){photoPick(ev.target);return}
   if(ev.target.dataset&&ev.target.dataset.artslot){const x=colAll().find(c=>c.id===ev.target.dataset.artslot);if(!x)return;
     const u=ev.target.dataset.uri,k=ev.target.value;x.art=Object.assign({},x.art);
     for(const z in x.art)if(x.art[z]===u)delete x.art[z];if(k)x.art[k]=u;touch();
