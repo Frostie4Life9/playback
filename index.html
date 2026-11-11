@@ -1155,6 +1155,7 @@ button.rnum:not(.set){border:1px dashed var(--line);border-radius:10px;text-alig
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.11-j', note:'TIDIER RECORDS: the Photos from Discogs strip is gone from opened records, since your own photos fill Open the record now. Open on Discogs moved to the buttons under each record.'},
   {v:'2026.11.11-i', note:'YOUR OWN PHOTOS: in Open the record, each view has an Add your photo button (front, back, inner sleeve, Side A and Side B labels). Take or pick a photo, drag, zoom and straighten it into the guide, and it is cropped, shrunk and saved by your sync Worker, so it shows on every device. Your photos win over scans and Discogs picks, your front photo becomes the cover in your crate, and a label photo becomes the record\u2019s center label. A label photo also reads the real color of your vinyl from the ring around the label, so the drawn disc matches your copy (Edit details can still override it). Removing a record removes its photos.'},
   {v:'2026.11.11-h', note:'OPEN THE RECORD: every record in your Collection has an Open the record button. It fills the screen with the sleeve: flip it to the back, slide out the inner sleeve, then pull out the record, which spins, and flip it to Side B. It looks for clean, labelled scans on the Cover Art Archive (MusicBrainz), first for your exact Discogs pressing and then for another vinyl pressing of the album, and remembers what it found. Any Discogs photo can fill a spot with its new Use as\u2026 menu (Front, Back, Inner sleeve, Side A or B label). DISC COLORS are closer to the real thing: shade words count, so Red (Deep) is now a dark cranberry, and Edit details has a Disc color picker for when the guess is off.'},
   {v:'2026.11.11-g', note:'THE CRATE: the Collection tab now looks like the rest of the Sleeve design. Your records sit in a grid of sleeves, and hovering over one (or, on a phone, the edge that peeks out) slides the record out so you can see the vinyl itself: its color, splatter, marble, half-and-half, clear or picture-disc look, drawn from the pressing\u2019s color, with the cover as its center label. Each record takes its color from its cover like albums do. Tap a record to open it: the record spins out of the sleeve, the pressing details sit underneath, and Photos from Discogs shows the back cover, inner sleeves and labels that Discogs owners uploaded for that exact pressing (it uses the same Discogs token as Find a pressing; your Worker learns the photo lookup when it updates itself from GitHub). Each Discogs search result also shows a small disc of that variant.'},
@@ -3300,7 +3301,6 @@ function colDetail(x,art,col){
   const extra=[['Media',x.media],['Sleeve',x.sleeve],['Paid',colMoney(x.paid)],['Bought',x.bought],['From',x.where],['Barcode',x.barcode]].filter(z=>z[1]);
   const facts=colFacts(x).replace(/<\/div>$/,extra.map(([k,val])=>`<div><span class="k">${k}</span><span class="v">${esc(val)}</span></div>`).join('')+'</div>');
   const kind=[x.wish?'On your wishlist':'On your shelf',x.year,x.country].filter(Boolean).join(' · ');
-  if(x.discogs&&COL.imgs[x.discogs]===undefined)setTimeout(()=>colLoadImgs(x.discogs),0);
   return `<li class="rec-detail" data-acol="c_${x.id}" style="--ac:${col}" aria-label="${esc(x.title)} details">
     <div class="rd-hero">
       <div class="rd-pack">${discHTML(x,art,art)}${colCover(x,art)}</div>
@@ -3311,13 +3311,13 @@ function colDetail(x,art,col){
     <div class="rd-body">
       ${facts}
       ${x.notes?`<p class="note" style="margin:0">${esc(x.notes)}</p>`:''}
-      ${x.discogs?`<div class="rd-sec"><span class="label"><span>Photos from Discogs</span><a class="link" href="https://www.discogs.com/release/${+x.discogs}" target="_blank" rel="noopener">Open on Discogs</a></span><div data-gal="${+x.discogs}">${colGalHTML(x.discogs)}</div></div>`:''}
       <div class="rd-acts">
         <button class="btn primary vw-open" data-act="vopen" data-id="${x.id}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></svg>Open the record</button>
         ${x.wish?`<button class="btn" data-act="colgot" data-id="${x.id}">Got it</button>`:''}
         ${a?`<button class="btn" data-act="llgo" data-a="${a.id}">Open in Music</button>`:''}
         <button class="btn" data-act="coledit" data-id="${x.id}" aria-expanded="${UI.colEdit===x.id}">${UI.colEdit===x.id?'Close editor':'Edit details'}</button>
         <button class="btn danger${UI.colDel===x.id?' armed':''}" data-act="coldel" data-id="${x.id}">${UI.colDel===x.id?'Tap again to remove':'Remove'}</button>
+        ${x.discogs?`<a class="btn" href="https://www.discogs.com/release/${+x.discogs}" target="_blank" rel="noopener">Open on Discogs</a>`:''}
         <span class="sl-sp"></span><button class="btn" data-act="colopen" data-id="${x.id}">Close</button>
       </div>
       ${UI.colEdit===x.id?colEditForm(x):''}
@@ -3403,7 +3403,7 @@ function viewerHTML(){
   const front=colSlot(x,'front')||art,back=colSlot(x,'back'),inner=colSlot(x,'inner'),la=colSlot(x,'labA'),lb=colSlot(x,'labB')||la;
   const face=(u,msg)=>u?`<img src="${esc(u)}" alt="" decoding="async">`:`<span class="vw-miss">${msg}</span>`;
   const busy=COL.scanBusy[x.id],sc=x.scan;
-  const status=busy?'Looking for clean scans on MusicBrainz…':sc&&!sc.none?(sc.exact?'Scans of this exact pressing from the Cover Art Archive.':'Scans from another vinyl pressing of this album (Cover Art Archive), so small details may differ.'):sc&&sc.none?'No labelled scans found for this record. Pick photos from Photos from Discogs (Use as…) to fill the empty spots.':'';
+  const status=busy?'Looking for clean scans on MusicBrainz…':sc&&!sc.none?(sc.exact?'Scans of this exact pressing from the Cover Art Archive.':'Scans from another vinyl pressing of this album (Cover Art Archive), so small details may differ.'):sc&&sc.none?'No labelled scans found for this record. Add your own photos to fill the empty spots.':'';
   const i=VSTEPS.findIndex(v=>v[0]===st);
   return `<div class="vw" role="dialog" aria-modal="true" aria-label="${esc(x.title)}, opened" style="--ac:${col}" data-acol="c_${x.id}">
     <div class="vw-top"><div><span class="sl-kind">${esc(x.artist)}</span><h3>${esc(x.title)}</h3></div><button class="vw-x" data-act="vclose" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
