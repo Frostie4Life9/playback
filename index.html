@@ -335,11 +335,27 @@ footer textarea{font:12px var(--mono);margin-top:8px}
 @media (max-width:760px){
   body{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
   .tabs{position:fixed;z-index:40;left:0;right:0;bottom:0;border-radius:0;padding:6px 8px calc(8px + env(safe-area-inset-bottom,0px));gap:0;
-    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -6px 20px rgb(0 0 0 / .06)}
+    display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -6px 20px rgb(0 0 0 / .06)}
   .tabs button{flex-direction:column;gap:3px;padding:6px 0;min-height:52px;font-size:12px;border-radius:12px}
   .tabs button[aria-pressed="true"]{background:transparent;box-shadow:none;color:var(--accent)}
   .tabs svg{width:24px;height:24px}
 }
+/* collection tab */
+.colv{display:flex;flex-direction:column;gap:14px;max-width:760px}
+.colv h2{font:800 34px/1 Archivo,var(--display);font-stretch:118%;letter-spacing:-.02em;margin:0}
+.colstats{display:flex;gap:6px 18px;flex-wrap:wrap;font:500 13px var(--mono);color:var(--muted)}
+.colstats b{color:var(--ink)}
+.colfind{display:flex;flex-direction:row;gap:8px;flex-wrap:wrap}
+.colfind input{flex:1 1 140px;width:auto}
+.colbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.colbar input{flex:1 1 150px;width:auto}
+.colbar select{width:auto}
+.colform{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:10px 0 4px;border-top:1px solid var(--line)}
+.colform .label{display:flex;flex-direction:column;gap:4px;text-transform:none;letter-spacing:0;font-size:12px}
+.colform .wide{grid-column:1/-1}
+.wl li .colx{flex:1 1 100%}
+@media (max-width:520px){.colform{grid-template-columns:minmax(0,1fr)}}
+.colv .wl-meta span{white-space:normal}
 /* library: on a phone the list folds behind Switch */
 .libbtn{display:none}
 @media (max-width:760px){
@@ -964,6 +980,7 @@ button.rnum:not(.set){border:1px dashed var(--line);border-radius:10px;text-alig
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.11-c', note:'COLLECTION: a new Collection tab keeps an inventory of the vinyl you own, one entry per physical copy, so two pressings of the same album are two entries. Each one holds the pressing details (year, country, label, catalog number, barcode, format, color or variant, edition), media and sleeve condition, what you paid, when and where you bought it, and notes. Find a pressing searches Discogs for your album and you tap the one that matches your copy (it needs a free Discogs token on your sync Worker as a secret named DISCOGS_TOKEN; the Worker updates itself from GitHub), or use Add by hand with no setup. Records you want go on a Wishlist and Got it moves them to the shelf. An entry shows your Music rating when the album is in your log, and Open jumps to it. Search and sort the list, and export it as a spreadsheet. It syncs with the rest of your log.'},
   {v:'2026.11.11-b', note:'SLEEVE REDESIGN: every album now looks like a record pulled halfway out of its sleeve. The cover sits on the record, and each groove is a song: the grooves you have heard light up in the album\u2019s own color, which the page picks up from the cover art. Albums split into Side A and Side B, each song is one clean line, and your rating shows as a number. Tap the number (or Rate) to open the groove meter right on that song and tap a groove to rate in half steps; Rate the album works the same way and shows your song average beside it. Setup moved out of the way: Spotify, Rate Your Music, Sync, Your numbers, Export and Backup now live on a new Settings tab, and adding an artist folds into one Add an artist panel. On a phone the Music, Screen and Settings tabs sit at the bottom, and the artist list folds into a Switch artist button so the album is the first thing you see.'},
   {v:'2026.11.11-a', note:'LISTEN LIST: a new Listen list panel under Up next on the Music tab holds the albums you want to get to. Type an artist and an album to add one (artists already in your log autocomplete), or tap Add to listen list next to Find on RYM under any album, EP or compilation you have not heard yet. Each entry shows its cover and how many songs you have checked off, so it fills in as you listen (Spotify plays count too), and the moment you have heard the whole standard album or given it a rating it moves to the bottom as Heard. Open jumps to the artist, Remove takes an entry off, and Clear the heard tidies up. Albums for artists you have not imported yet are fine: the entry links up by itself once you import that artist. It syncs with the rest of your log.'},
   {v:'2026.11.10-b', note:'DELUXE EDITIONS WITH THEIR OWN NAMES: Playback no longer needs the word \u201cdeluxe\u201d to spot a deluxe album. If a release has the standard album\u2019s title at the front, carries nearly all of its songs and adds more, it is that album\u2019s deluxe edition. So Call Me If You Get Lost: The Estate Sale and OK Computer OKNOTOK 1997 2017 now sit behind the Standard | Deluxe switch on their albums instead of showing up as albums of their own. Re-recordings, live albums and remix sets stay separate. Tap Check for new releases (or Rebuild from Spotify) on an artist to apply it; the rating you gave the old stand-alone deluxe album becomes your deluxe rating and its song checkmarks and ratings move onto the album\u2019s songs. Undo last import puts it back. LOOK: the switch has a sliding thumb, the deluxe view gets a violet header wash, a Deluxe badge and a glowing cover, and its songs ease in one after another. Buttons give a little press feedback. All of it respects reduced-motion settings.'},
@@ -2819,7 +2836,7 @@ async function push(force){
 }
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pull()});
 window.addEventListener('online',()=>pull());
-document.addEventListener('toggle',ev=>{if(ev.target.id==='syncpanel')UI.syncOpen=ev.target.open;else if(ev.target.id==='addart')UI.addOpen=ev.target.open;else if(ev.target.id==='listenpanel')UI.llOpen=ev.target.open;else if(ev.target.classList&&ev.target.classList.contains('splog'))UI.spLogOpen=ev.target.open},true);
+document.addEventListener('toggle',ev=>{if(ev.target.id==='syncpanel')UI.syncOpen=ev.target.open;else if(ev.target.id==='addart')UI.addOpen=ev.target.open;else if(ev.target.id==='listenpanel')UI.llOpen=ev.target.open;else if(ev.target.id==='coladd')UI.colAdd=ev.target.open;else if(ev.target.id==='colhand')UI.colHand=ev.target.open;else if(ev.target.classList&&ev.target.classList.contains('splog'))UI.spLogOpen=ev.target.open},true);
 const UI={view:null,libOpen:false,addOpen:false,rOpen:null,lq:{music:'',screen:''},tab:'music',sel:{music:null,screen:null},filter:'all',armed:null,addType:'show',copied:false,epOpen:{},dxOpen:{}};
 try{const t=localStorage.getItem(KEY+'_tab');if(t==='screen')UI.tab='screen'}catch(e){}
 
@@ -2929,6 +2946,161 @@ function mainView(e,next,list){return `
   </div>
 
 `}
+/* ---------- collection: vinyl you own (and want) ----------
+   S.collection is a list of copies, one per physical record, so owning two pressings of the
+   same album is two entries. It is part of the log, so it saves and syncs like everything else.
+   Pressing lookups go through the sync Worker (version 6) to Discogs, which knows the
+   country, label, catalog number and color of each pressing; without that, every field can be
+   typed by hand. An entry matches an album in your Music log by artist and title (the same
+   matching the Listen list uses), so it can show the cover and your rating. wish:true means
+   it is on your wishlist, not on your shelf. */
+const COND=['M','NM','VG+','VG','G+','G','F','P'];
+const COL={busy:false,err:'',res:null,q:{artist:'',title:'',code:''}};
+const colAll=()=>S.collection||[];
+const colNewId=()=>sid('copy',Date.now(),Math.random());
+const colMoney=v=>{const n=parseFloat(v);return isFinite(n)?'$'+n.toFixed(2):''};
+const colLine=x=>[x.year,x.country,[x.label,x.catno].filter(Boolean).join(' '),x.fmt,x.color].filter(Boolean).join(' · ');
+const colToday=()=>new Date().toLocaleDateString('en-CA');
+
+/* a Discogs search result, as one pressing */
+function dcParse(r){
+  const t=String(r.title||''),i=t.indexOf(' - '),f=(r.formats&&r.formats[0])||{};
+  const desc=(f.descriptions||[]).join(', '),qty=+f.qty>1?f.qty+'× ':'';
+  const code=(r.barcode||[]).map(b=>String(b).replace(/\s/g,'')).find(b=>/^\d{8,14}$/.test(b))||'';
+  return{artist:(i>0?t.slice(0,i):'').replace(/\s*\(\d+\)$/,'').trim(),title:(i>0?t.slice(i+3):t).trim(),
+    year:r.year?String(r.year):'',country:r.country||'',label:String((r.label||[])[0]||'').replace(/\s*\(\d+\)$/,''),
+    catno:r.catno||'',barcode:code,fmt:(qty+desc).trim(),color:f.text||'',discogs:r.id||0,thumb:r.thumb||''}
+}
+async function dcSearch(d){
+  COL.q={artist:(d.artist||'').trim(),title:(d.title||'').trim(),code:(d.code||'').trim()};
+  if(!COL.q.artist&&!COL.q.title&&!COL.q.code){COL.err='Type an artist, an album, or a barcode or catalog number.';render();return}
+  if(!syncOn()){COL.err='Connect your sync Worker in Settings to look up pressings, or add the record by hand below.';render();return}
+  const q=new URLSearchParams();
+  if(COL.q.artist)q.set('artist',COL.q.artist);
+  if(COL.q.title)q.set('title',COL.q.title);
+  if(COL.q.code){/^[\d\s-]{8,}$/.test(COL.q.code)?q.set('barcode',COL.q.code.replace(/[\s-]/g,'')):q.set('catno',COL.q.code)}
+  COL.busy=true;COL.err='';COL.res=null;render();
+  try{
+    const r=await fetch(SY.url.replace(/\/+$/,'')+'/discogs?'+q,{cache:'no-store',headers:{'x-sync-key':SY.key}});
+    const wv=+(r.headers.get('x-pb-worker')||0);if(r.ok&&wv>(SY.wv||0)){SY.wv=wv;saveSync()}
+    let j={};try{j=await r.json()}catch(e){}
+    if(r.status===401)COL.err='Your Worker did not accept the sync key. Re-enter it under Sync in Settings.';
+    else if(r.status===404)COL.err='Your sync Worker does not have the Discogs lookup yet. It updates itself when this change deploys; if it still says this, paste worker/playback-sync.js into Cloudflare.';
+    else if(j.error==='no discogs token')COL.err='Add your Discogs token to the Worker first: in Cloudflare open playback-sync, Settings, Variables and Secrets, add a Secret named DISCOGS_TOKEN. You can still add records by hand below.';
+    else if(j.error==='discogs rejected the token')COL.err='Discogs did not accept the token saved on your Worker. Generate a new one and replace DISCOGS_TOKEN.';
+    else if(r.status===429)COL.err='Discogs asked for a short pause. Try again in a minute.';
+    else if(!r.ok)COL.err='The lookup failed ('+r.status+'). Try again, or add the record by hand.';
+    else COL.res=(j.results||[]).map(dcParse).filter(x=>x.title);
+  }catch(e){COL.err='Could not reach your Worker. Check your connection and try again.'}
+  COL.busy=false;render();
+}
+
+function colMatch(x){const a=rtArtist([x.artist]),g=a&&rtGroup(a,x.title);return{a,g}}
+function colFiltered(){
+  const q=(UI.colQ||'').trim().toLowerCase(),f=UI.colF||'all';
+  let L=colAll().filter(x=>f==='all'||(f==='wish')===!!x.wish);
+  if(q)L=L.filter(x=>[x.artist,x.title,x.label,x.catno,x.color,x.country,x.year,x.edition,x.fmt,x.where,x.notes].join(' ').toLowerCase().includes(q));
+  const s=UI.colS||'new',cmp=(a,b)=>String(a).localeCompare(String(b));
+  return L.sort((p,q2)=>s==='artist'?cmp(p.artist,q2.artist)||cmp(p.year,q2.year)||cmp(p.title,q2.title):s==='year'?cmp(p.year||'9999',q2.year||'9999')||cmp(p.artist,q2.artist):(q2.added||0)-(p.added||0));
+}
+function colEditForm(x){
+  const o=(v,t)=>`<option value="${esc(v)}" ${x[t.k]===v?'selected':''}>${esc(v||'—')}</option>`;
+  const fld=(k,label,extra)=>`<label class="label">${label}<input name="${k}" value="${esc(x[k]||'')}" ${extra||''}></label>`;
+  const sel=k=>`<select name="${k}">${['',...COND].map(v=>o(v,{k})).join('')}</select>`;
+  return `<form class="colform colx" data-form="coledit" data-id="${x.id}">
+    ${fld('artist','Artist','required')}${fld('title','Album','required')}
+    ${fld('year','Year','inputmode="numeric"')}${fld('country','Country')}
+    ${fld('label','Label')}${fld('catno','Catalog #')}
+    ${fld('barcode','Barcode')}${fld('fmt','Format (LP, 7", 2×LP, Reissue)')}
+    ${fld('color','Color or variant')}${fld('edition','Edition (limited no., first press)')}
+    <label class="label">Media condition${sel('media')}</label><label class="label">Sleeve condition${sel('sleeve')}</label>
+    <label class="label">Paid (USD)<input name="paid" inputmode="decimal" value="${esc(x.paid||'')}"></label>
+    <label class="label">Date bought<input name="bought" type="date" value="${esc(x.bought||'')}"></label>
+    ${fld('where','Where you bought it')}
+    <label class="label">On your<select name="status"><option value="own" ${x.wish?'':'selected'}>Shelf</option><option value="wish" ${x.wish?'selected':''}>Wishlist</option></select></label>
+    <label class="label wide">Notes<input name="notes" value="${esc(x.notes||'')}" placeholder="Signed, hype sticker, obi strip, warped, plays great"></label>
+    <div class="tools wide"><button class="btn primary">Save</button><button type="button" class="btn" data-act="coledit" data-id="${x.id}">Cancel</button></div>
+  </form>`;
+}
+function colRow(x){
+  const {a,g}=colMatch(x),r=g?rating(g.id):0;
+  const art=x.thumb||(g&&(g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-250':'')))||'';
+  const cond=[x.media&&'Media '+x.media,x.sleeve&&'Sleeve '+x.sleeve].filter(Boolean).join(' · ');
+  const buy=[colMoney(x.paid),x.bought,x.where].filter(Boolean).join(' · ');
+  const open=UI.colEdit===x.id;
+  return `<li>
+    <span class="wl-art" ${art?`style="background:var(--sunk) url('${esc(art)}') center/cover"`:''} aria-hidden="true"></span>
+    <span class="wl-meta"><b>${esc(x.title)}</b><span>${esc(x.artist)}</span><span>${esc(colLine(x))||'No pressing details yet'}</span>${x.edition?`<span>${esc(x.edition)}</span>`:''}${cond||buy?`<span>${esc([cond,buy].filter(Boolean).join(' · '))}</span>`:''}${x.notes?`<span>${esc(x.notes)}</span>`:''}</span>
+    <span class="wl-st">${x.wish?'Wishlist':'On shelf'}${r?`<span>You rated ${esc(String(r))}</span>`:''}</span>
+    <span class="wl-act">${x.wish?`<button class="link" data-act="colgot" data-id="${x.id}">Got it</button>`:''}${a?`<button class="link" data-act="llgo" data-a="${a.id}">Open</button>`:''}<button class="link" data-act="coledit" data-id="${x.id}" aria-expanded="${open}">${open?'Close':'Edit'}</button><button class="link" data-act="coldel" data-id="${x.id}" style="${UI.colDel===x.id?'color:var(--warn)':''}">${UI.colDel===x.id?'Tap again to remove':'Remove'}</button></span>
+    ${open?colEditForm(x):''}</li>`;
+}
+function colListHTML(){
+  const all=colAll(),L=colFiltered();
+  if(!all.length)return '<p class="note">Nothing here yet. Find a pressing above, or add one by hand. Each entry is one physical copy, so two pressings of the same album are two entries.</p>';
+  if(!L.length)return '<p class="note">No records match that.</p>';
+  return `<ul>${L.map(colRow).join('')}</ul>`;
+}
+function colResultsHTML(){
+  if(COL.busy)return '<p class="note">Searching Discogs…</p>';
+  if(COL.err)return `<p class="note" style="color:var(--warn)">${esc(COL.err)}</p>`;
+  if(!COL.res)return '';
+  if(!COL.res.length)return '<p class="note">No vinyl pressings found. Try fewer words, only the artist, or add it by hand below.</p>';
+  const rows=COL.res.slice(0,30).map((x,i)=>`<li>
+    <span class="wl-art" ${x.thumb?`style="background:var(--sunk) url('${esc(x.thumb)}') center/cover"`:''} aria-hidden="true"></span>
+    <span class="wl-meta"><b>${esc(x.title)}</b><span>${esc(x.artist)}</span><span>${esc(colLine(x))||'No details listed'}</span></span>
+    <span class="wl-act"><button class="link" data-act="coladdp" data-i="${i}">I own this</button><button class="link" data-act="coladdp" data-i="${i}" data-w="1">Want it</button></span></li>`).join('');
+  return `<p class="note">${COL.res.length>30?'Showing the first 30 of '+COL.res.length+'. Add a label, catalog number or barcode to narrow it. ':''}Tap the pressing that matches your copy.</p><div class="wl"><ul>${rows}</ul></div>`;
+}
+function collectionView(){
+  const all=colAll(),own=all.filter(x=>!x.wish),wish=all.filter(x=>x.wish);
+  const paid=own.reduce((n,x)=>n+(parseFloat(x.paid)||0),0),f=UI.colF||'all';
+  const chip=(v,t)=>`<button class="chip" data-act="colf" data-v="${v}" aria-pressed="${f===v}">${t}</button>`;
+  return `<section class="colv" aria-labelledby="col-h">
+    <h2 id="col-h">Collection</h2>
+    <div class="colstats"><span><b>${own.length}</b> on the shelf</span><span><b>${wish.length}</b> on the wishlist</span>${paid?`<span><b>${colMoney(paid)}</b> paid</span>`:''}</div>
+    <div class="setcard">
+      <details id="coladd" ${UI.colAdd?'open':''}>
+        <summary class="label" style="cursor:pointer">Find a pressing</summary>
+        <form class="colfind panel" data-form="colfind" style="max-width:none">
+          <input name="artist" list="col-artists" placeholder="Artist" autocomplete="off" aria-label="Artist" value="${esc(COL.q.artist)}">
+          <input name="title" placeholder="Album" autocomplete="off" aria-label="Album" value="${esc(COL.q.title)}">
+          <input name="code" placeholder="Barcode or catalog # (optional)" autocomplete="off" aria-label="Barcode or catalog number" value="${esc(COL.q.code)}">
+          <button class="btn primary" ${COL.busy?'disabled':''}>Search Discogs</button>
+        </form>
+        ${colResultsHTML()}
+      </details>
+      <details id="colhand" ${UI.colHand?'open':''}>
+        <summary class="label" style="cursor:pointer">Add by hand</summary>
+        <form class="colfind panel" data-form="colhand" style="max-width:none">
+          <input name="artist" list="col-artists" placeholder="Artist" autocomplete="off" required aria-label="Artist">
+          <input name="title" placeholder="Album" autocomplete="off" required aria-label="Album">
+          <input name="year" placeholder="Year" inputmode="numeric" aria-label="Year">
+          <input name="label" placeholder="Label" autocomplete="off" aria-label="Label">
+          <input name="catno" placeholder="Catalog #" autocomplete="off" aria-label="Catalog number">
+          <input name="color" placeholder="Color or variant" autocomplete="off" aria-label="Color or variant">
+          <button class="btn primary">Add to shelf</button>
+        </form>
+        <p class="note">Everything else (condition, price, notes) is on the entry once it is added.</p>
+        <datalist id="col-artists">${S.music.map(a=>`<option value="${esc(a.name)}"></option>`).join('')}</datalist>
+      </details>
+    </div>
+    <div class="colbar">
+      ${chip('all','All')}${chip('own','Shelf')}${chip('wish','Wishlist')}
+      <input id="col-q" type="search" placeholder="Search your records" aria-label="Search your records" value="${esc(UI.colQ||'')}">
+      <select id="col-sort" aria-label="Sort"><option value="new" ${(UI.colS||'new')==='new'?'selected':''}>Newest added</option><option value="artist" ${UI.colS==='artist'?'selected':''}>Artist</option><option value="year" ${UI.colS==='year'?'selected':''}>Year</option></select>
+    </div>
+    <div class="wl" id="col-list">${colListHTML()}</div>
+    ${all.length?`<div class="tools"><button class="btn" data-act="colexport">Export as spreadsheet (CSV)</button></div>`:''}
+  </section>`;
+}
+function csvCollection(){
+  const head=['Artist','Album','Year','Country','Label','Catalog #','Barcode','Format','Color or variant','Edition','Media condition','Sleeve condition','Paid (USD)','Date bought','Where bought','On','Notes','Discogs ID'];
+  const rows=[...colAll()].sort((a,b)=>String(a.artist).localeCompare(String(b.artist))||String(a.year).localeCompare(String(b.year))).map(x=>
+    [x.artist,x.title,x.year,x.country,x.label,x.catno,x.barcode,x.fmt,x.color,x.edition,x.media,x.sleeve,x.paid,x.bought,x.where,x.wish?'Wishlist':'Shelf',x.notes,x.discogs||'']);
+  return csvText(head,rows);
+}
+
 function settingsView(){return `
   <section class="settings" aria-labelledby="set-h">
     <h2 id="set-h">Settings</h2>
@@ -2972,6 +3144,7 @@ function renderMain(){
       <nav class="tabs" aria-label="Section">
         <button data-act="tab" data-v="music" aria-pressed="${!UI.view&&UI.tab==='music'}">${ICO.music}<span>Music</span></button>
         <button data-act="tab" data-v="screen" aria-pressed="${!UI.view&&UI.tab==='screen'}">${ICO.screen}<span>Screen</span></button>
+        <button data-act="view" data-v="collection" aria-pressed="${UI.view==='collection'}">${ICO.collection}<span>Collection</span></button>
         <button data-act="view" data-v="settings" aria-pressed="${UI.view==='settings'}">${ICO.settings}<span>Settings</span></button>
       </nav>
     </div>
@@ -2980,7 +3153,7 @@ function renderMain(){
   ${SYS.status==='conflict'?`<div class="banner" role="alert"><p>This device and your other device both changed the log since the last sync. Which version should win?</p>
     <button class="btn primary" data-act="keeplocal">Keep this device</button><button class="btn" data-act="keepremote">Use synced version</button></div>`:''}
 
-${UI.view==='settings'?settingsView():mainView(e,next,list)}
+${UI.view==='settings'?settingsView():UI.view==='collection'?collectionView():mainView(e,next,list)}
   <footer>
     <p class="buildid">Build ${esc(BUILD)}</p>
   </footer>`;
@@ -2989,6 +3162,7 @@ ${UI.view==='settings'?settingsView():mainView(e,next,list)}
 const ICO={
   music:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5" opacity=".45"/><circle cx="12" cy="12" r="1.6"/></svg>',
   screen:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v12H3zM8 21h8M12 17v4"/></svg>',
+  collection:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16v11H4zM6 5.5h12M8 2.5h8M8.5 14.5h7"/></svg>',
   settings:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M14 4v4M8 10v4M16 16v4"/></svg>',
   list:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>',
   listOn:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z" fill="currentColor"/></svg>',
@@ -3271,8 +3445,17 @@ document.addEventListener('click',ev=>{
   if(act!=='del')UI.armed=null;
   if(act!=='mbundo')UI.undoArm=null;
   if(act!=='copy')UI.copied=false;
+  if(act!=='coldel')UI.colDel=null;
   if(act==='view'){UI.view=b.dataset.v;UI.rOpen=null;window.scrollTo({top:0})}
   else if(act==='lib'){UI.libOpen=!UI.libOpen}
+  else if(act==='colf'){UI.colF=b.dataset.v}
+  else if(act==='coladdp'){const p=(COL.res||[])[+b.dataset.i];if(!p)return;
+    const c={id:colNewId(),artist:p.artist,title:p.title,year:p.year,country:p.country,label:p.label,catno:p.catno,barcode:p.barcode,fmt:p.fmt,color:p.color,discogs:p.discogs,thumb:p.thumb,edition:'',media:'',sleeve:'',paid:'',bought:b.dataset.w?'':colToday(),where:'',notes:'',wish:!!b.dataset.w,added:Date.now()};
+    S.collection=[c,...colAll()];COL.res=null;UI.colEdit=c.id;UI.colF='all';UI.colQ='';touch()}
+  else if(act==='coledit'){UI.colEdit=UI.colEdit===id?null:id}
+  else if(act==='coldel'){if(UI.colDel===id){S.collection=colAll().filter(x=>x.id!==id);UI.colDel=null;if(UI.colEdit===id)UI.colEdit=null;touch()}else UI.colDel=id}
+  else if(act==='colgot'){const x=colAll().find(c=>c.id===id);if(x){x.wish=false;if(!x.bought)x.bought=colToday();touch()}}
+  else if(act==='colexport'){dlCSV('playback-collection.csv',csvCollection());return}
   else if(act==='ropen'){UI.rOpen=UI.rOpen===id?null:id}
   else if(act==='rclose'){UI.rOpen=null}
   else if(act==='tab'){UI.view=null;UI.rOpen=null;UI.tab=b.dataset.v;try{localStorage.setItem(KEY+'_tab',UI.tab)}catch(e){}}
@@ -3366,6 +3549,7 @@ document.addEventListener('click',ev=>{
 
 document.addEventListener('input',ev=>{
   if(ev.target.id==='lq'){UI.lq[UI.tab]=ev.target.value;lRedraw()}
+  if(ev.target.id==='col-q'){UI.colQ=ev.target.value;const l=document.getElementById('col-list');if(l)l.innerHTML=colListHTML()}
 });
 document.addEventListener('keydown',ev=>{
   if(ev.target.id==='lq'&&ev.key==='Escape'&&ev.target.value){ev.preventDefault();UI.lq[UI.tab]='';ev.target.value='';lRedraw()}
@@ -3375,6 +3559,7 @@ document.addEventListener('keydown',ev=>{
 
 document.addEventListener('change',ev=>{
   if(ev.target.id==='new-type'){UI.addType=ev.target.value;render();return}
+  if(ev.target.id==='col-sort'){UI.colS=ev.target.value;render();return}
   if(ev.target.id==='mb-ver'){MBX.versions=ev.target.checked;return}
   if(ev.target.id==='rym-file'){const f=ev.target.files&&ev.target.files[0];ev.target.value='';
     if(f)f.text().then(rymImport).catch(()=>{RYX.err='Could not read that file. Nothing was changed.';RYX.report=null;render()});return}
@@ -3386,6 +3571,13 @@ document.addEventListener('submit',ev=>{
   if(kind==='mbsearch'){const q=(d.q||'').trim();if(q)mbSearch(q);return}
   if(kind==='tmsearch'){const q=(d.q||'').trim();if(q)tmSearch(q);return}
   if(kind==='tmkey'){tmSaveKey(d.key);return}
+  if(kind==='colfind'){dcSearch(d);return}
+  if(kind==='colhand'){const ar=(d.artist||'').trim(),t=(d.title||'').trim();if(!ar||!t)return;
+    const c={id:colNewId(),artist:ar,title:t,year:(d.year||'').trim(),country:'',label:(d.label||'').trim(),catno:(d.catno||'').trim(),barcode:'',fmt:'',color:(d.color||'').trim(),discogs:0,thumb:'',edition:'',media:'',sleeve:'',paid:'',bought:colToday(),where:'',notes:'',wish:false,added:Date.now()};
+    S.collection=[c,...colAll()];UI.colEdit=c.id;UI.colF='all';UI.colQ='';UI.colHand=false;touch();render();return}
+  if(kind==='coledit'){const x=colAll().find(c=>c.id===f.dataset.id);if(!x||!(d.artist||'').trim()||!(d.title||'').trim())return;
+    for(const k of ['artist','title','year','country','label','catno','barcode','fmt','color','edition','media','sleeve','where','notes'])x[k]=(d[k]||'').trim();
+    x.paid=String(d.paid||'').replace(/[^0-9.]/g,'');x.bought=d.bought||'';x.wish=d.status==='wish';UI.colEdit=null;touch();render();return}
   if(kind==='listen'){if(llAdd(d.artist,d.title))touch();UI.llOpen=true;render();const el=document.getElementById('wl-artist');if(el)el.focus();return}
   if(kind==='spcid'){const c=(d.cid||'').trim();
     if(!/^[0-9a-f]{32}$/i.test(c)){SPX.err='That does not look like a Client ID. It is 32 letters and numbers, under Settings on your Spotify app\u2019s page.';render();return}
