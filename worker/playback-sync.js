@@ -222,12 +222,24 @@ async function discogsSearch(env, url) {
   if (catno) q.set('catno', catno);
   if (artist) q.set('artist', artist);
   if (title) q.set('release_title', title);
-  const r = await fetch('https://api.discogs.com/database/search?' + q, {
+  const go = () => fetch('https://api.discogs.com/database/search?' + q, {
     headers: { authorization: 'Discogs token=' + String(env.DISCOGS_TOKEN).trim(), 'user-agent': 'PlaybackApp/1.0 (+https://frostie4life9.github.io/playback/)', accept: 'application/json' }
   });
+  let r = await go();
+  /* Discogs throttles by source address, and a Worker shares addresses with many others: wait a moment and try once more */
+  if (r.status === 429) {
+    const wait = Math.min(Math.max(parseFloat(r.headers.get('retry-after')) || 2, 1), 4);
+    await new Promise(res => setTimeout(res, wait * 1000));
+    r = await go();
+  }
   const h = Object.assign({}, JSON_H);
   const ra = r.headers.get('retry-after'); if (ra) h['retry-after'] = ra;
   if (r.status === 401) return reply({ error: 'discogs rejected the token' }, 409);
+  if (r.status === 429) {
+    const rl = {};
+    for (const k of ['x-discogs-ratelimit', 'x-discogs-ratelimit-used', 'x-discogs-ratelimit-remaining']) { const v = r.headers.get(k); if (v) rl[k.replace('x-discogs-', '')] = v; }
+    return new Response(JSON.stringify({ error: 'discogs rate limit', ratelimit: rl, retryAfter: ra || '', via: r.headers.get('server') || '', body: (await r.text()).slice(0, 200) }), { status: 429, headers: h });
+  }
   return new Response(await r.text(), { status: r.status, headers: h });
 }
 
