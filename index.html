@@ -123,6 +123,23 @@ a.link{text-decoration:none}
 .arate{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap;padding:2px 0 6px;border-bottom:1px solid var(--line)}
 .avg{font:500 12px var(--mono);color:var(--muted)}
 .avg .of{opacity:.8}
+/* listen list: albums you want to hear */
+#listenpanel{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 12px}
+#listenpanel>summary{cursor:pointer}
+.wl{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.wl-add{display:flex;gap:8px;flex-wrap:wrap}
+.wl-add input{flex:1 1 150px;width:auto}
+.wl ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.wl li{display:flex;align-items:center;gap:6px 10px;flex-wrap:wrap;padding:8px 0;border-top:1px solid var(--line)}
+.wl-art{width:40px;height:40px;border-radius:5px;object-fit:cover;background:var(--sunk);flex:0 0 auto;box-shadow:0 0 0 1px var(--line)}
+.wl-meta{flex:1 1 140px;min-width:0;display:flex;flex-direction:column;gap:1px}
+.wl-meta b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wl-meta span{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wl-st{display:flex;flex-direction:column;align-items:flex-end;gap:3px;font:500 12px var(--mono);color:var(--muted)}
+.wl-act{display:flex;gap:12px;flex:0 0 auto}
+.wl li.heard .wl-art,.wl li.heard .wl-meta{opacity:.6}
+.wl li.heard .wl-st{color:var(--done)}
+.wl-foot{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
 .diff{font:600 12px var(--mono);color:var(--muted)}
 .diff.up,.diff.down{color:var(--accent)}
 .rymrep{display:flex;flex-direction:column;gap:6px}
@@ -834,6 +851,7 @@ footer textarea{font:12px var(--mono);margin-top:8px}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.11-a', note:'LISTEN LIST: a new Listen list panel under Up next on the Music tab holds the albums you want to get to. Type an artist and an album to add one (artists already in your log autocomplete), or tap Add to listen list next to Find on RYM under any album, EP or compilation you have not heard yet. Each entry shows its cover and how many songs you have checked off, so it fills in as you listen (Spotify plays count too), and the moment you have heard the whole standard album or given it a rating it moves to the bottom as Heard. Open jumps to the artist, Remove takes an entry off, and Clear the heard tidies up. Albums for artists you have not imported yet are fine: the entry links up by itself once you import that artist. It syncs with the rest of your log.'},
   {v:'2026.11.10-b', note:'DELUXE EDITIONS WITH THEIR OWN NAMES: Playback no longer needs the word \u201cdeluxe\u201d to spot a deluxe album. If a release has the standard album\u2019s title at the front, carries nearly all of its songs and adds more, it is that album\u2019s deluxe edition. So Call Me If You Get Lost: The Estate Sale and OK Computer OKNOTOK 1997 2017 now sit behind the Standard | Deluxe switch on their albums instead of showing up as albums of their own. Re-recordings, live albums and remix sets stay separate. Tap Check for new releases (or Rebuild from Spotify) on an artist to apply it; the rating you gave the old stand-alone deluxe album becomes your deluxe rating and its song checkmarks and ratings move onto the album\u2019s songs. Undo last import puts it back. LOOK: the switch has a sliding thumb, the deluxe view gets a violet header wash, a Deluxe badge and a glowing cover, and its songs ease in one after another. Buttons give a little press feedback. All of it respects reduced-motion settings.'},
   {v:'2026.11.10-a', note:'FIND IT ON RYM: every album and EP now has a Find on RYM link beside its rating. It opens Rate Your Music’s search for that artist and album in a new tab, so you land one tap from the real page. Nothing is fetched or saved; it is just a link.'},
   {v:'2026.11.06-a', note:'YOUR NUMBERS: a new Your numbers panel at the bottom of the page (above Export ratings) sums up your ratings: how many albums and songs you have rated and your averages, a bar chart of how you spread your album and song ratings, your top 10 albums, the artists you rate highest, albums you rate better or worse than their songs, and your show and film ratings. Tap any row to jump to it. It is only a view of your log; nothing is saved or changed.'},
@@ -2687,7 +2705,7 @@ async function push(force){
 }
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pull()});
 window.addEventListener('online',()=>pull());
-document.addEventListener('toggle',ev=>{if(ev.target.id==='syncpanel')UI.syncOpen=ev.target.open;else if(ev.target.classList&&ev.target.classList.contains('splog'))UI.spLogOpen=ev.target.open},true);
+document.addEventListener('toggle',ev=>{if(ev.target.id==='syncpanel')UI.syncOpen=ev.target.open;else if(ev.target.id==='listenpanel')UI.llOpen=ev.target.open;else if(ev.target.classList&&ev.target.classList.contains('splog'))UI.spLogOpen=ev.target.open},true);
 const UI={lq:{music:'',screen:''},tab:'music',sel:{music:null,screen:null},filter:'all',armed:null,addType:'show',copied:false,epOpen:{},dxOpen:{}};
 try{const t=localStorage.getItem(KEY+'_tab');if(t==='screen')UI.tab='screen'}catch(e){}
 
@@ -2791,6 +2809,8 @@ function renderMain(){
     <div class="strip">${next.length?next.map(n=>`<button class="card" data-act="go" data-tab="${n.tab}" data-id="${n.id}"><span class="label">${n.tab==='music'?'Listen':'Watch'}</span><span class="t">${esc(n.t)}</span><span class="s">${esc(n.s)}${n.on?` <span class="on">\u00b7 ${esc(n.on)}</span>`:''}</span></button>`).join(''):'<span class="note">Everything is finished. Add something new.</span>'}</div>
   </section>
 
+  ${UI.tab==='music'?listenSide():''}
+
   <div class="shell">
     <aside class="side">
       ${sideFinder(list)}
@@ -2862,7 +2882,54 @@ function albumRate(g,a){
   return `<div class="arate"><span class="label">Your ${dx?'deluxe':g.kind==='EP'?'EP':'album'} rating</span>${rateDots(rid)}
     <span class="avg">${n?'Song average '+f1(avg)+' <span class="of">('+n+' of '+its.length+' rated)</span>':'No songs rated yet'}</span>
     ${d===null?'':`<span class="diff ${Math.abs(d)<.05?'even':d>0?'up':'down'}">${Math.abs(d)<.05?'Same as the songs':(d>0?'+':'\u2212')+f1(Math.abs(d))+' vs the songs'}</span>`}
-    <a class="link" href="${esc(rymSearchUrl(a,g))}" target="_blank" rel="noopener">Find on RYM</a></div>`}
+    <a class="link" href="${esc(rymSearchUrl(a,g))}" target="_blank" rel="noopener">Find on RYM</a>${lolBtn(a,g)}</div>`}
+/* Add to / remove from the listen list. Offered only while the album is on the list or not yet heard. */
+function lolBtn(a,g){
+  const on=llOn(a.name,g.title),sg=stdItems(g),heard=(sg.length>0&&sg.every(i=>isDone(i.id)))||!!rating(g.id);
+  if(!on&&heard)return '';
+  return `<button class="link" data-act="lltog" data-a="${a.id}" data-g="${g.id}">${on?'On your listen list \u00b7 Remove':'Add to listen list'}</button>`}
+
+/* ---------- listen list ----------
+   Albums you want to hear. An entry is just an artist name and an album title, saved in
+   S.listen, so it can be added by hand for something that is not in your log yet and it
+   syncs with everything else. Each time the page draws, the entry is matched to the album
+   in your log (same artist-name and title matching the RYM import uses), so it picks up the
+   cover and your song progress by itself, survives re-imports, and the moment you have heard
+   the album (every standard song checked, or an album rating) it moves to the bottom as Heard. */
+function listenAll(){return S.listen||[]}
+function llId(artist,title){return sid('listen',nArtist(artist),nTitle(title))}
+function llOn(artist,title){const id=llId(artist,title);return listenAll().some(x=>x.id===id)}
+function llAdd(artist,title,year){
+  artist=String(artist||'').trim();title=String(title||'').trim();if(!artist||!title)return false;
+  const id=llId(artist,title);if(listenAll().some(x=>x.id===id))return false;
+  S.listen=[{id,artist,title,year:/^\d{4}$/.test(String(year||'').trim())?String(year).trim():'',added:Date.now()},...listenAll()];
+  return true}
+function llResolve(x){
+  const a=rtArtist([x.artist]),g=a&&rtGroup(a,x.title);
+  if(!g)return{x,a:a||null,g:null,n:0,d:0,heard:false,art:''};
+  const its=stdItems(g),d=its.filter(i=>isDone(i.id)).length;
+  const art=g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-250':'');
+  return{x,a,g,n:its.length,d,heard:(its.length>0&&d===its.length)||!!rating(g.id),art}}
+function listenSide(){
+  const L=listenAll().map(llResolve),todo=L.filter(r=>!r.heard).sort((p,q)=>(q.x.added||0)-(p.x.added||0)),done=L.filter(r=>r.heard).sort((p,q)=>(q.x.added||0)-(p.x.added||0));
+  const row=r=>{const x=r.x,sub=esc(x.artist)+(x.year||r.g&&/^\d{4}/.test(r.g.year)?' · '+esc(x.year||String(r.g.year).slice(0,4)):'');
+    const st=r.heard?'Heard':!r.g?'Not in your log yet':r.n?r.d+'/'+r.n+' heard':'No songs listed yet';
+    return `<li class="${r.heard?'heard':''}"><span class="wl-art" ${r.art?`style="background:var(--sunk) url('${esc(r.art)}') center/cover"`:''} aria-hidden="true"></span>
+      <span class="wl-meta"><b>${esc(x.title)}</b><span>${sub}</span></span>
+      <span class="wl-st">${st}${r.g&&r.n&&!r.heard?`<span class="bar" aria-hidden="true"><i style="width:${r.d/r.n*100}%"></i></span>`:''}</span>
+      <span class="wl-act">${r.a?`<button class="link" data-act="llgo" data-a="${r.a.id}">Open</button>`:''}<button class="link" data-act="lldel" data-id="${x.id}" aria-label="Remove ${esc(x.title)} from the listen list">Remove</button></span></li>`};
+  return `<details id="listenpanel" ${UI.llOpen?'open':''}>
+    <summary class="label">Listen list · ${todo.length} to hear${done.length?' · '+done.length+' heard':''}</summary>
+    <div class="wl">
+      <form class="wl-add" data-form="listen">
+        <input id="wl-artist" name="artist" list="wl-artists" placeholder="Artist" autocomplete="off" required aria-label="Artist">
+        <input id="wl-title" name="title" placeholder="Album" autocomplete="off" required aria-label="Album">
+        <button class="btn primary">Add album</button>
+        <datalist id="wl-artists">${S.music.map(a=>`<option value="${esc(a.name)}"></option>`).join('')}</datalist>
+      </form>
+      ${L.length?`<ul>${todo.map(row).join('')}${done.map(row).join('')}</ul>`:'<p class="note">Add the albums you want to get to. You can also tap Add to listen list under any album in your log. An entry fills in its cover and your progress by itself once the artist is in your log, and moves to the bottom when you have heard it.</p>'}
+      ${done.length?`<div class="wl-foot"><button class="link" data-act="llclear">Clear the ${done.length} heard</button></div>`:''}
+    </div></details>`}
 
 function artistView(a){
   const all=artistItems(a),done=all.filter(i=>isDone(i.id)).length,rated=all.filter(i=>rating(i.id)).length,p=pct(all.map(i=>i.id));
@@ -3007,6 +3074,11 @@ document.addEventListener('click',ev=>{
   else if(act==='filter'){UI.filter=b.dataset.v}
   else if(act==='epx'){UI.epOpen[id]=!UI.epOpen[id]}
   else if(act==='tog'){S.marks[id]={...(S.marks[id]||{}),done:!isDone(id)};touch()}
+  else if(act==='lltog'){const a=S.music.find(x=>x.id===b.dataset.a),g=a&&a.groups.find(x=>x.id===b.dataset.g);if(!g)return;
+    if(llOn(a.name,g.title)){const lid=llId(a.name,g.title);S.listen=listenAll().filter(x=>x.id!==lid)}else llAdd(a.name,g.title,g.year);touch()}
+  else if(act==='lldel'){S.listen=listenAll().filter(x=>x.id!==id);touch()}
+  else if(act==='llclear'){S.listen=listenAll().filter(x=>!llResolve(x).heard);touch()}
+  else if(act==='llgo'){UI.tab='music';UI.sel.music=b.dataset.a;UI.filter='all';UI.toSheet=true}
   else if(act==='rtimport'){rtImport()}
   else if(act==='spgo'){spConnect().catch(()=>{SPX.err='This browser could not start the Spotify sign-in.';render()});return}
   else if(act==='spnow'){spPoll(true);return}
@@ -3103,6 +3175,7 @@ document.addEventListener('submit',ev=>{
   if(kind==='mbsearch'){const q=(d.q||'').trim();if(q)mbSearch(q);return}
   if(kind==='tmsearch'){const q=(d.q||'').trim();if(q)tmSearch(q);return}
   if(kind==='tmkey'){tmSaveKey(d.key);return}
+  if(kind==='listen'){if(llAdd(d.artist,d.title))touch();UI.llOpen=true;render();const el=document.getElementById('wl-artist');if(el)el.focus();return}
   if(kind==='spcid'){const c=(d.cid||'').trim();
     if(!/^[0-9a-f]{32}$/i.test(c)){SPX.err='That does not look like a Client ID. It is 32 letters and numbers, under Settings on your Spotify app\u2019s page.';render();return}
     S.cfg={...(S.cfg||{}),spotify:c};SPX.cidOpen=false;SPX.err='';touch();render();return}
