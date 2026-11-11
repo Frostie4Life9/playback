@@ -356,6 +356,12 @@ footer textarea{font:12px var(--mono);margin-top:8px}
 .wl li .colx{flex:1 1 100%}
 @media (max-width:520px){.colform{grid-template-columns:minmax(0,1fr)}}
 .colv .wl-meta span{white-space:normal}
+.colfacts{flex:1 1 100%;display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px 16px;padding:6px 0 2px}
+.colfacts>div{display:flex;flex-direction:column;gap:1px;min-width:0}
+.colfacts .k{font:500 10px var(--mono);text-transform:uppercase;letter-spacing:.09em;color:var(--muted)}
+.colfacts .v{font-weight:600;font-size:14px;overflow-wrap:anywhere}
+.colfacts .v.dim{color:var(--muted);font-weight:500}
+.sw{display:inline-block;width:.8em;height:.8em;border-radius:50%;margin-right:6px;border:1px solid var(--line);vertical-align:-1px}
 /* library: on a phone the list folds behind Switch */
 .libbtn{display:none}
 @media (max-width:760px){
@@ -980,6 +986,7 @@ button.rnum:not(.set){border:1px dashed var(--line);border-radius:10px;text-alig
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.11-f', note:'CLEARER PRESSINGS: each result in Find a pressing, and each record in your Collection, now shows its details as labelled fields instead of one run-on line: Region, Catalog #, Vinyl (with a color dot, or Standard when Discogs lists no color), Format, Edition (reissue, limited, deluxe and so on), Label and Year. Results are grouped by catalog number so the same pressing in different regions sits together, and the edition words come along when you add a record.'},
   {v:'2026.11.11-e', note:'DISCOGS FROM THIS DEVICE: Discogs was turning away searches that went through your Worker (its limit counts every request from the Worker\u2019s shared address, and it was already past it). Under Find a pressing there is now a Discogs token box; with a token saved there, the search runs straight from this device, which has its own limit of 60 a minute. The token stays in this browser only and is never synced, so add it on each device you search from. Without one, or if the browser cannot reach Discogs, it still goes through your Worker.'},
   {v:'2026.11.11-d', note:'DISCOGS LOOKUP: when Discogs turns a search away as too busy (HTTP 429), your Worker now waits a moment and tries once more, and if Discogs still refuses, the message shows exactly what Discogs said so the cause can be pinned down. Nothing in your collection changes.'},
   {v:'2026.11.11-c', note:'COLLECTION: a new Collection tab keeps an inventory of the vinyl you own, one entry per physical copy, so two pressings of the same album are two entries. Each one holds the pressing details (year, country, label, catalog number, barcode, format, color or variant, edition), media and sleeve condition, what you paid, when and where you bought it, and notes. Find a pressing searches Discogs for your album and you tap the one that matches your copy (it needs a free Discogs token on your sync Worker as a secret named DISCOGS_TOKEN; the Worker updates itself from GitHub), or use Add by hand with no setup. Records you want go on a Wishlist and Got it moves them to the shelf. An entry shows your Music rating when the album is in your log, and Open jumps to it. Search and sort the list, and export it as a spreadsheet. It syncs with the rest of your log.'},
@@ -2961,18 +2968,28 @@ const COL={busy:false,err:'',tokMsg:'',res:null,q:{artist:'',title:'',code:''}};
 const colAll=()=>S.collection||[];
 const colNewId=()=>sid('copy',Date.now(),Math.random());
 const colMoney=v=>{const n=parseFloat(v);return isFinite(n)?'$'+n.toFixed(2):''};
+const COL_SW={red:'#c0392b',blue:'#2f6fb5',green:'#3a8f55',yellow:'#e3c43b',orange:'#e08a2b',pink:'#e68fb0',purple:'#7d4cae',violet:'#7d4cae',white:'#f4f4f0',black:'#161616',grey:'#8a8f93',gray:'#8a8f93',gold:'#c9a227',silver:'#b9bec3',brown:'#7a5230',cream:'#efe6cf',bone:'#e9e1cc',tan:'#cdb48a',clear:'transparent',transparent:'transparent'};
+/* the pressing as labelled fields: what tells two pressings of the same album apart comes first */
+function colFacts(x,std){
+  const cell=(k,v,dim)=>v?`<div><span class="k">${k}</span><span class="v${dim?' dim':''}">${v}</span></div>`:'';
+  const w=String(x.color||'').toLowerCase().match(/[a-z]+/),sw=w&&COL_SW[w[0]]?`<i class="sw" style="background:${COL_SW[w[0]]}"></i>`:'';
+  const vinyl=x.color?sw+esc(x.color):std&&x.fmt?'Standard':'';
+  return `<div class="colfacts">${cell('Region',esc(x.country))}${cell('Catalog #',esc(x.catno))}${cell('Vinyl',vinyl,!x.color)}${cell('Format',esc(x.fmt))}${cell('Edition',esc(x.edition))}${cell('Label',esc(x.label))}${cell('Year',esc(x.year))}</div>`;
+}
 const colLine=x=>[x.year,x.country,[x.label,x.catno].filter(Boolean).join(' '),x.fmt,x.color].filter(Boolean).join(' · ');
 const colToday=()=>new Date().toLocaleDateString('en-CA');
 
 /* a Discogs search result, as one pressing */
 function dcParse(r){
   const t=String(r.title||''),i=t.indexOf(' - '),f=(r.formats&&r.formats[0])||{};
-  const desc=(f.descriptions||[]).join(', '),qty=+f.qty>1?f.qty+'× ':'';
+  const ds=f.descriptions||[],ED=/reissue|repress|limited|special|deluxe|anniversary|remaster|numbered|club|promo|test pressing|unofficial|stereo|mono|gatefold|picture disc|record store/i;
+  const desc=ds.filter(d=>d!=='Album'&&!ED.test(d)).join(', '),edition=ds.filter(d=>ED.test(d)).join(', '),qty=+f.qty>1?f.qty+'× ':'';
   const code=(r.barcode||[]).map(b=>String(b).replace(/\s/g,'')).find(b=>/^\d{8,14}$/.test(b))||'';
   return{artist:(i>0?t.slice(0,i):'').replace(/\s*\(\d+\)$/,'').trim(),title:(i>0?t.slice(i+3):t).trim(),
     year:r.year?String(r.year):'',country:r.country||'',label:String((r.label||[])[0]||'').replace(/\s*\(\d+\)$/,''),
-    catno:r.catno||'',barcode:code,fmt:(qty+desc).trim(),color:f.text||'',discogs:r.id||0,thumb:r.thumb||''}
+    catno:r.catno||'',barcode:code,fmt:(qty+desc).trim(),edition,color:String(f.text||'').replace(/\s*\[(.+?)\]/g,' ($1)').trim(),discogs:r.id||0,thumb:r.thumb||''}
 }
+const dcSort=L=>L.sort((a,b)=>String(a.catno).localeCompare(String(b.catno))||String(a.country).localeCompare(String(b.country))||String(a.year).localeCompare(String(b.year)));
 /* Discogs throttles by source address (60 a minute with a token). A Worker shares its address with
    many others and was often refused before it asked anything, so when a Discogs token is saved on
    this device the search runs straight from this device instead. The token stays in this
@@ -3003,7 +3020,7 @@ async function dcSearch(d){
       if(status===401)COL.err='Discogs did not accept the token saved on this device. Generate a new one under Discogs Settings, Developers and save it below.';
       else if(status===429)COL.err='Discogs asked for a pause (HTTP 429). That is your own limit of 60 a minute, so wait a minute and try again.';
       else if(status<200||status>=300)COL.err='Discogs could not run that search ('+status+'). Try again, or add the record by hand.';
-      else{COL.res=(j.results||[]).map(dcParse).filter(x=>x.title);COL.busy=false;render();return}
+      else{COL.res=dcSort((j.results||[]).map(dcParse).filter(x=>x.title));COL.busy=false;render();return}
       COL.busy=false;render();return;
     }catch(e){
       if(!syncOn()){COL.err='Could not reach Discogs from this browser. Check your connection and try again.';COL.busy=false;render();return}
@@ -3026,7 +3043,7 @@ async function dcSearch(d){
     else if(r.status===429){const rl=j.ratelimit||{},bits=[rl.ratelimit&&'limit '+rl.ratelimit,rl['ratelimit-used']&&'used '+rl['ratelimit-used'],rl['ratelimit-remaining']&&'left '+rl['ratelimit-remaining'],j.via&&'from '+j.via,j.body&&'said: '+String(j.body).slice(0,120)].filter(Boolean);
       COL.err='Discogs turned the request away (HTTP 429) even after a retry'+(bits.length?' ('+bits.join(', ')+')':'')+'. Try again in a minute, or add the record by hand below.'}
     else if(!r.ok)COL.err='The lookup failed ('+r.status+'). Try again, or add the record by hand.';
-    else COL.res=(j.results||[]).map(dcParse).filter(x=>x.title);
+    else COL.res=dcSort((j.results||[]).map(dcParse).filter(x=>x.title));
   }catch(e){COL.err='Could not reach your Worker. Check your connection and try again.'}
   COL.busy=false;render();
 }
@@ -3066,10 +3083,10 @@ function colRow(x){
   const open=UI.colEdit===x.id;
   return `<li>
     <span class="wl-art" ${art?`style="background:var(--sunk) url('${esc(art)}') center/cover"`:''} aria-hidden="true"></span>
-    <span class="wl-meta"><b>${esc(x.title)}</b><span>${esc(x.artist)}</span><span>${esc(colLine(x))||'No pressing details yet'}</span>${x.edition?`<span>${esc(x.edition)}</span>`:''}${cond||buy?`<span>${esc([cond,buy].filter(Boolean).join(' · '))}</span>`:''}${x.notes?`<span>${esc(x.notes)}</span>`:''}</span>
+    <span class="wl-meta"><b>${esc(x.title)}</b><span>${esc(x.artist)}</span>${cond||buy?`<span>${esc([cond,buy].filter(Boolean).join(' · '))}</span>`:''}${x.notes?`<span>${esc(x.notes)}</span>`:''}</span>
     <span class="wl-st">${x.wish?'Wishlist':'On shelf'}${r?`<span>You rated ${esc(String(r))}</span>`:''}</span>
     <span class="wl-act">${x.wish?`<button class="link" data-act="colgot" data-id="${x.id}">Got it</button>`:''}${a?`<button class="link" data-act="llgo" data-a="${a.id}">Open</button>`:''}<button class="link" data-act="coledit" data-id="${x.id}" aria-expanded="${open}">${open?'Close':'Edit'}</button><button class="link" data-act="coldel" data-id="${x.id}" style="${UI.colDel===x.id?'color:var(--warn)':''}">${UI.colDel===x.id?'Tap again to remove':'Remove'}</button></span>
-    ${open?colEditForm(x):''}</li>`;
+    ${colFacts(x)}${open?colEditForm(x):''}</li>`;
 }
 function colListHTML(){
   const all=colAll(),L=colFiltered();
@@ -3084,8 +3101,9 @@ function colResultsHTML(){
   if(!COL.res.length)return '<p class="note">No vinyl pressings found. Try fewer words, only the artist, or add it by hand below.</p>';
   const rows=COL.res.slice(0,30).map((x,i)=>`<li>
     <span class="wl-art" ${x.thumb?`style="background:var(--sunk) url('${esc(x.thumb)}') center/cover"`:''} aria-hidden="true"></span>
-    <span class="wl-meta"><b>${esc(x.title)}</b><span>${esc(x.artist)}</span><span>${esc(colLine(x))||'No details listed'}</span></span>
-    <span class="wl-act"><button class="link" data-act="coladdp" data-i="${i}">I own this</button><button class="link" data-act="coladdp" data-i="${i}" data-w="1">Want it</button></span></li>`).join('');
+    <span class="wl-meta"><b>${esc(x.title)}</b><span>${esc(x.artist)}</span></span>
+    <span class="wl-act"><button class="link" data-act="coladdp" data-i="${i}">I own this</button><button class="link" data-act="coladdp" data-i="${i}" data-w="1">Want it</button></span>
+    ${colFacts(x,true)}</li>`).join('');
   return `<p class="note">${COL.res.length>30?'Showing the first 30 of '+COL.res.length+'. Add a label, catalog number or barcode to narrow it. ':''}Tap the pressing that matches your copy.</p><div class="wl"><ul>${rows}</ul></div>`;
 }
 function collectionView(){
@@ -3495,7 +3513,7 @@ document.addEventListener('click',ev=>{
   else if(act==='dcforget'){dcSetToken('');COL.tokMsg='Removed from this device.';UI.colTok=true}
   else if(act==='colf'){UI.colF=b.dataset.v}
   else if(act==='coladdp'){const p=(COL.res||[])[+b.dataset.i];if(!p)return;
-    const c={id:colNewId(),artist:p.artist,title:p.title,year:p.year,country:p.country,label:p.label,catno:p.catno,barcode:p.barcode,fmt:p.fmt,color:p.color,discogs:p.discogs,thumb:p.thumb,edition:'',media:'',sleeve:'',paid:'',bought:b.dataset.w?'':colToday(),where:'',notes:'',wish:!!b.dataset.w,added:Date.now()};
+    const c={id:colNewId(),artist:p.artist,title:p.title,year:p.year,country:p.country,label:p.label,catno:p.catno,barcode:p.barcode,fmt:p.fmt,color:p.color,discogs:p.discogs,thumb:p.thumb,edition:p.edition||'',media:'',sleeve:'',paid:'',bought:b.dataset.w?'':colToday(),where:'',notes:'',wish:!!b.dataset.w,added:Date.now()};
     S.collection=[c,...colAll()];COL.res=null;UI.colEdit=c.id;UI.colF='all';UI.colQ='';touch()}
   else if(act==='coledit'){UI.colEdit=UI.colEdit===id?null:id}
   else if(act==='coldel'){if(UI.colDel===id){S.collection=colAll().filter(x=>x.id!==id);UI.colDel=null;if(UI.colEdit===id)UI.colEdit=null;touch()}else UI.colDel=id}
