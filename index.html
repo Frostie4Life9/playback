@@ -564,20 +564,22 @@ details.addart .add{border-top:1px solid var(--line)}
 .group.sleeve{--acs:#7a3a24;--acd:var(--acs);--ac:var(--acs);gap:14px;border-radius:24px;overflow:hidden;background:var(--bg);border:1px solid color-mix(in srgb,var(--line) 60%,transparent);padding:0 0 10px}
 .sheet>.group.sleeve+.group.sleeve{margin-top:0}
 .group.sleeve.dxon{--ac:var(--acd)}
-.sl-hero{background:linear-gradient(160deg,color-mix(in srgb,var(--ac) 88%,#fff),color-mix(in srgb,var(--ac) 82%,#000));color:#fff;display:flex;flex-direction:column;gap:18px;padding:22px 22px 24px;transition:background-color .5s}
+.sl-hero{position:relative;background:linear-gradient(160deg,color-mix(in srgb,var(--ac) 88%,#fff),color-mix(in srgb,var(--ac) 82%,#000));color:#fff;display:flex;flex-direction:column;gap:18px;padding:22px 22px 24px;transition:background-color .5s}
 .sl-pack{position:relative;height:168px;width:100%;max-width:290px}
 .sl-cover{position:absolute;left:0;top:0;width:160px;height:160px;border-radius:10px;overflow:hidden;background:color-mix(in srgb,var(--ac) 60%,#000);box-shadow:0 14px 30px rgb(0 0 0 / .35);display:grid;place-items:center}
 .sl-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
 .sl-ph{font:900 64px Archivo,var(--display);font-stretch:125%;color:rgb(255 255 255 / .35)}
 .sl-disc{position:absolute;left:112px;top:4px;width:160px;height:160px;border-radius:50%;background:#141111;box-shadow:0 12px 26px rgb(0 0 0 / .35);will-change:transform;backface-visibility:hidden;transform:translate3d(0,0,0)}
-.sl-disc i{position:absolute;left:50%;top:50%;width:var(--d);height:var(--d);transform:translate(-50%,-50%);border-radius:50%;border:1.5px solid rgb(255 255 255 / .09);box-sizing:border-box}
+.sl-disc i{position:absolute;left:calc(50% - var(--d)/2);top:calc(50% - var(--d)/2);width:var(--d);height:var(--d);border-radius:50%;border:1.5px solid rgb(255 255 255 / .09);box-sizing:border-box}
 .sl-disc i.on{border-color:color-mix(in srgb,var(--ac) 35%,#ffd9a8)}
-/* the pulse: as the record slides out, a ripple runs from the label outward through the grooves you have heard */
+/* the pulse: a ripple runs from the label outward through the grooves you have heard. It only animates
+   colour and glow (never a transform), so the lines are not lifted onto their own layers and cannot
+   shift a pixel when it ends. --rb is the start delay: the slide-out waits for the record to emerge. */
 @keyframes slPulse{
-  0%{transform:translate(-50%,-50%) scale(1);border-color:color-mix(in srgb,var(--ac) 35%,#ffd9a8);box-shadow:0 0 0 0 transparent}
-  35%{transform:translate(-50%,-50%) scale(1.045);border-color:color-mix(in srgb,var(--ac) 8%,#fff4e2);box-shadow:0 0 7px 1px color-mix(in srgb,var(--ac) 70%,#ffd9a8)}
-  100%{transform:translate(-50%,-50%) scale(1);border-color:color-mix(in srgb,var(--ac) 35%,#ffd9a8);box-shadow:0 0 0 0 transparent}}
-@media (prefers-reduced-motion:no-preference){.group.sleeve.rip .sl-disc i.on{animation:slPulse .62s cubic-bezier(.3,.6,.3,1) calc(220ms + var(--o,0)*38ms) both}}
+  0%{border-color:color-mix(in srgb,var(--ac) 35%,#ffd9a8);box-shadow:0 0 0 0 transparent}
+  35%{border-color:color-mix(in srgb,var(--ac) 8%,#fff4e2);box-shadow:0 0 8px 1.5px color-mix(in srgb,var(--ac) 70%,#ffd9a8)}
+  100%{border-color:color-mix(in srgb,var(--ac) 35%,#ffd9a8);box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion:no-preference){.group.sleeve.rip .sl-disc i.on{animation:slPulse .62s cubic-bezier(.3,.6,.3,1) calc(var(--rb,0ms) + var(--o,0)*38ms) backwards}}
 .sl-lab{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:var(--ac);display:grid;place-items:center;font:800 12px Archivo,var(--display);color:#fff;font-variant-numeric:tabular-nums}
 @media (prefers-reduced-motion:no-preference){.sl-disc{transition:transform .7s cubic-bezier(.2,.8,.2,1)}}
 .group.sleeve.in .sl-disc{transform:translate3d(16px,0,0)}
@@ -590,6 +592,9 @@ details.addart .add{border-top:1px solid var(--line)}
 .sl-hacts .sl-ic svg{width:20px;height:20px}
 .sl-hacts .sl-ic[aria-pressed="true"]{background:#fff;color:var(--ac);border-color:#fff}
 .sl-meta .dxbadge{align-self:flex-start}
+.sl-ic.sl-lbtn{position:absolute;top:14px;right:14px;z-index:2;width:42px;min-height:42px;border-color:rgb(255 255 255 / .38);color:#fff;background:rgb(255 255 255 / .12)}
+.sl-ic.sl-lbtn svg{width:20px;height:20px}
+.sl-ic.sl-lbtn[aria-pressed="true"]{background:#fff;color:var(--ac);border-color:#fff}
 @media (min-width:761px){.sl-hero{flex-direction:row;align-items:flex-end}.sl-pack{flex:0 0 312px}.sl-meta{flex:1;padding-bottom:6px}}
 .group.sleeve .dxseg{margin:4px 18px 0}
 .sl-acts{display:flex;gap:10px;align-items:stretch;padding:4px 18px 0}
@@ -649,6 +654,26 @@ details.addart .add{border-top:1px solid var(--line)}
 .rt-hint{font-size:12px;color:var(--muted)}
 .rt-foot .link{font-size:14px;min-height:40px;padding:0 4px}
 .rt-done{font-weight:600}
+/* the rater unfolds out of its song (and folds back when closed); the thumb pops in and grows while you hold it */
+@keyframes raterIn{from{opacity:0;max-height:0;padding-top:0;padding-bottom:0;margin-top:0;margin-bottom:0;transform:translateY(-8px)}to{opacity:1;max-height:260px;transform:none}}
+@keyframes raterOut{from{opacity:1;max-height:260px;transform:none}to{opacity:0;max-height:0;padding-top:0;padding-bottom:0;margin-top:0;margin-bottom:0;transform:translateY(-8px)}}
+@keyframes thumbPop{from{transform:scale(.3)}60%{transform:scale(1.18)}to{transform:scale(1)}}
+@keyframes rowSettle{from{transform:scale(.982)}60%{transform:scale(1.006)}to{transform:scale(1)}}
+@media (prefers-reduced-motion:no-preference){
+  .rater.rt-in{overflow:hidden;animation:raterIn .36s cubic-bezier(.2,.8,.2,1) both}
+  .rater.rt-out{overflow:hidden;animation:raterOut .22s cubic-bezier(.4,0,.8,.4) both}
+  .rater.rt-in .rt-s::-webkit-slider-thumb{animation:thumbPop .42s cubic-bezier(.2,.8,.2,1) .12s backwards}
+  .rater.rt-in .rt-s::-moz-range-thumb{animation:thumbPop .42s cubic-bezier(.2,.8,.2,1) .12s backwards}
+  .rt-s::-webkit-slider-thumb{transition:transform .14s ease-out,box-shadow .14s}
+  .rt-s::-moz-range-thumb{transition:transform .14s ease-out,box-shadow .14s}
+  .rt-s:active::-webkit-slider-thumb{transform:scale(1.22);box-shadow:0 4px 12px rgb(0 0 0 / .26)}
+  .rt-s:active::-moz-range-thumb{transform:scale(1.22);box-shadow:0 4px 12px rgb(0 0 0 / .26)}
+  .rt-v{display:inline-block;transition:transform .12s ease-out}
+  .rater:has(.rt-s:active) .rt-v{transform:scale(1.08);transform-origin:right bottom}
+  .track.sl-t{transition:background-color .2s,transform .14s ease-out}
+  .track.sl-t:active{transform:scale(.982)}
+  .track.sl-t.opening{animation:rowSettle .34s cubic-bezier(.2,.8,.2,1)}
+}
 </style>
 
 <!-- suite:css v10 · shared by Kitchen, Grocery, Lift, DishLog, Protocol, Rail, Game Log, Playback — edit tools/suite.py in the kitchen repo, not here -->
@@ -1174,6 +1199,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.11-r', note:'MORE MOTION: the groove ripple no longer lifts the lines, so they cannot snap when it finishes, and it now also plays when you switch to Deluxe or check off a song. Tapping a song settles it with a little press, and its rating slider unfolds out of it (and folds away when you close it); a rating that is already set sweeps up to its place, and the thumb pops in and grows while you hold it. While you drag, the song\u2019s color wash, number and ring follow the slider live. The listen-list button now sits in the top right of every release\u2019s banner.'},
   {v:'2026.11.11-q', note:'RECORD PULSE: as a record slides out of its sleeve, a ripple now runs from the label out through the grooves you have heard, lighting each one in turn. The record’s slide is also smoother, so the lines no longer glitch while it moves. Singles lose their Mark all / Clear all button, since they are short enough to tap through, so their header lines up with the other releases.'},
   {v:'2026.11.11-p', note:'TRUER COLOR, SMOOTHER FADE: the wash behind each song now uses the album\u2019s real banner color instead of a washed-out version, and it eases out gradually with a soft, still visible end at the rating. The stray dark chip and off-center number in the rings are gone. Deluxe: switching to Deluxe now recolors the banner from the deluxe cover, and only the deluxe songs get the deluxe color in their fade; standard songs keep the standard album color.'},
   {v:'2026.11.11-o', note:'RINGS AND WASH: each song\u2019s heard-check is now a ring that fills to your rating with the number inside (a dot when it\u2019s heard but not rated, empty when you haven\u2019t heard it), and a soft wash of the album\u2019s color fades out behind the row toward the rating. Tap the ring to check a song off; tap anywhere else on the row to rate it.'},
@@ -3135,6 +3161,16 @@ function lRedraw(){const el=document.getElementById('llist');if(el)el.innerHTML=
 /* the record slides out of its sleeve as the sleeve scrolls into view. Which sleeves are on screen is
    remembered across redraws, so a tap never replays or resets the motion. */
 const SLIN=new Set();let slIO=null;
+/* run the groove ripple on one sleeve. base = ms to wait before it starts (the slide-out needs ~220) */
+function slRipple(sl,base){
+  if(!sl||!sl.querySelector('.sl-disc i.on'))return;
+  sl.style.setProperty('--rb',base+'ms');sl.classList.remove('rip');void sl.offsetWidth;sl.classList.add('rip');
+  clearTimeout(sl._rt);sl._rt=setTimeout(()=>sl.classList.remove('rip'),base+1700)}
+/* ask for a ripple on the next draw of this release (checking a song off, switching to Deluxe) */
+function slPulseAsk(gid,base){UI.pulse={g:String(gid),b:base||0}}
+function slPulseNow(){const p=UI.pulse;UI.pulse=null;if(!p)return;
+  const sl=document.querySelector('.group.sleeve[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(p.g):p.g)+'"]');slRipple(sl,p.b)}
+function grpOfItem(id){for(const a of S.music){const g=a.groups.find(g=>g.items.some(i=>i.id===id));if(g)return g}return null}
 function slObserve(){
   if(!('IntersectionObserver' in window))return;
   /* watch the header (where the record lives), not the whole tall sleeve, so the record
@@ -3142,15 +3178,14 @@ function slObserve(){
   if(!slIO)slIO=new IntersectionObserver(es=>{for(const e of es){const sl=e.target.closest('.group.sleeve'),id=sl&&sl.dataset.acol;if(!id)continue;
       const on=e.isIntersecting,was=SLIN.has(id);if(on)SLIN.add(id);else SLIN.delete(id);sl.classList.toggle('in',on);
       /* ripple only when the record actually slides out now, not on every redraw of a sleeve already open */
-      if(on&&!was&&sl.querySelector('.sl-disc i.on')){sl.classList.remove('rip');void sl.offsetWidth;sl.classList.add('rip');
-        clearTimeout(sl._rt);sl._rt=setTimeout(()=>sl.classList.remove('rip'),1700)}
+      if(on&&!was)slRipple(sl,220);
       if(!on)sl.classList.remove('rip')}},{rootMargin:'-16% 0px -22% 0px',threshold:0.85});
   slIO.disconnect();document.querySelectorAll('.group.sleeve[data-acol] .sl-hero').forEach(el=>slIO.observe(el))}
 
 /* ---------- render ---------- */
 function render(){
   const ll=document.getElementById('llist'),llTop=ll?ll.scrollTop:0,llTab=UI.llTab;UI.llTab=UI.tab;
-  renderMain();slObserve();
+  renderMain();slObserve();slPulseNow();raterSweep();UI.rAnim=null;
   const nl=document.getElementById('llist');
   if(nl){if(ll&&llTab===UI.tab)nl.scrollTop=llTop;
     else{const c=nl.querySelector('[aria-current="true"]');if(c)nl.scrollTop=c.offsetTop-nl.clientHeight/3}}
@@ -3763,12 +3798,20 @@ function acolFor(key,url,g){const c=ACOL[key];if(c)return c;if(c!==''&&url)acolR
    Drag (or tap) along the line: 1 to 10 in half steps. The number follows your finger and the
    rating saves when you let go. Clear removes it; Done closes. */
 function rateMeter(id,label){const r=rating(id);
-  return `<div class="rater" role="group" aria-label="Rate ${esc(label)}" style="--p:${r?(r-1)/9*100:0}%">
+  return `<div class="rater${UI.rAnim===id?' rt-in':''}" role="group" aria-label="Rate ${esc(label)}" style="--p:${r?(r-1)/9*100:0}%">
     <div class="rt-top"><span class="rt-l">${esc(label)}</span><b class="rt-v">${r?fmt(r):'\u2013'}</b></div>
     <input class="rt-s${r?'':' unset'}" type="range" min="1" max="10" step="0.5" value="${r||5}" data-rate="${id}" aria-label="Rating for ${esc(label)}, out of 10">
     <div class="rt-ticks" aria-hidden="true">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<span>${n}</span>`).join('')}</div>
     <div class="rt-foot">${r?`<button class="link" data-act="rclear" data-id="${id}">Clear</button>`:'<span class="rt-hint">Drag or tap to rate</span>'}<button class="link rt-done" data-act="rclose">Done</button></div>
   </div>`}
+/* when a rater has just opened on a rating that is already set, the thumb sweeps up from 1 to where it sits */
+function raterSweep(){
+  const box=document.querySelector('.rater.rt-in');if(!box||matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  const s=box.querySelector('.rt-s');if(!s||s.classList.contains('unset'))return;
+  const to=+s.value,t0=performance.now(),dur=420,v=box.querySelector('.rt-v');
+  const ease=x=>1-Math.pow(1-x,3),set=n=>{s.value=n;box.style.setProperty('--p',((n-1)/9*100)+'%');if(v)v.textContent=fmt(Math.round(n*2)/2)};
+  set(1);
+  (function step(now){const k=Math.min(1,(now-t0)/dur);set(1+(to-1)*ease(k));if(k<1&&s.isConnected)requestAnimationFrame(step);else{s.value=to;box.style.setProperty('--p',((to-1)/9*100)+'%');if(v)v.textContent=fmt(to)}})(t0)}
 function rateCommit(el){const id=el.dataset.rate,v=+el.value;if(!id||!v)return;
   if(v===rating(id))return;
   const isGroup=S.music.some(a=>a.groups.some(g=>g.id===id||dxId(g)===id));
@@ -3783,10 +3826,10 @@ function viewItems(g){return dxOn(g)?g.items:stdItems(g)}
 /* Link to RYM's own search for this album. It is only a link (nothing is fetched), and it uses
    the standard title so a deluxe view still finds the album's page. */
 const rymSearchUrl=(a,g)=>'https://rateyourmusic.com/search?searchtype=l&searchterm='+encodeURIComponent((a&&a.name?a.name+' ':'')+g.title);
-function sleeveBtns(g,a,full,n){
-  const on=llOn(a.name,g.title),sg=stdItems(g),heard=(sg.length>0&&sg.every(i=>isDone(i.id)))||!!rating(g.id),ll=on||!heard;
-  return `${ll?`<button class="sl-ic" data-act="lltog" data-a="${a.id}" data-g="${g.id}" aria-pressed="${on}" aria-label="${on?'On your listen list, remove':'Add to listen list'}" title="${on?'On your listen list':'Add to listen list'}">${on?ICO.listOn:ICO.list}</button>`:''}`}
-/* singles are short enough that they have no Mark all / Clear all button, so their header matches the rest */
+function listBtn(g,a){
+  const on=llOn(a.name,g.title),sg=stdItems(g),heard=(sg.length>0&&sg.every(i=>isDone(i.id)))||!!rating(g.id);
+  if(!on&&heard)return '';
+  return `<button class="sl-ic sl-lbtn" data-act="lltog" data-a="${a.id}" data-g="${g.id}" aria-pressed="${on}" aria-label="${on?'On your listen list, remove':'Add to listen list'}" title="${on?'On your listen list':'Add to listen list'}">${on?ICO.listOn:ICO.list}</button>`}
 function albumBar(g,a,full,n){
   if(!RATEABLE.includes(g.kind))return '';   /* singles and the like have no album rating, so no empty row: their buttons sit in the header */
   const can=RATEABLE.includes(g.kind),dx=dxOn(g),its=dx?g.items:stdItems(g),rid=dx?dxId(g):g.id,rs=its.map(i=>rating(i.id)).filter(Boolean),rn=rs.length,r=can?rating(rid):0;
@@ -3795,7 +3838,6 @@ function albumBar(g,a,full,n){
   const what=dx?'deluxe':g.kind==='EP'?'EP':'album';
   return `<div class="sl-acts">
     ${can?`<button class="sl-rate ${r?'set':''}" data-act="ropen" data-id="${rid}" aria-expanded="${UI.rOpen===rid}"><span class="t">${r?'Your '+what:'Rate the '+what}</span>${r?`<b class="v">${fmt(r)}</b>`:''}<span class="avg">${rn?`<b>${f1(avg)}</b>song avg`:'<b>\u2013</b>song avg'}</span></button>`:'<span class="sl-sp"></span>'}
-    ${ll?`<button class="sl-ic" data-act="lltog" data-a="${a.id}" data-g="${g.id}" aria-pressed="${on}" aria-label="${on?'On your listen list, remove':'Add to listen list'}" title="${on?'On your listen list':'Add to listen list'}">${on?ICO.listOn:ICO.list}</button>`:''}
     ${n?`<button class="sl-ic" data-act="grpall" data-a="${a.id}" data-g="${g.id}" aria-label="${full?'Clear all checkmarks':'Mark all heard'}" title="${full?'Clear all':'Mark all heard'}" aria-pressed="${full}">${ICO.all}</button>`:''}
   </div>
   ${can&&(d!==null||rn)?`<p class="sl-note">${rn?rn+' of '+its.length+' songs rated':''}${d===null?'':` \u00b7 <span class="diff ${Math.abs(d)<.05?'even':d>0?'up':'down'}">${Math.abs(d)<.05?'same as the songs':(d>0?'+':'\u2212')+f1(Math.abs(d))+' vs the songs'}</span>`} \u00b7 <a class="link" href="${esc(rymSearchUrl(a,g))}" target="_blank" rel="noopener">Find on RYM</a></p>`:can?`<p class="sl-note"><a class="link" href="${esc(rymSearchUrl(a,g))}" target="_blank" rel="noopener">Find on RYM</a></p>`:''}
@@ -3873,17 +3915,18 @@ function artistView(a){
     const ringHtml=rings.map((on,j)=>{const d=96-j*(52/Math.max(R,1));return `<i class="${on?'on':''}" style="--d:${d.toFixed(1)}%;--o:${R-1-j}"></i>`}).join('');
     const trackRows=rows.map(({i,k})=>{const s=songShow(i),r=rating(i.id),dn=isDone(i.id);
       const pc=r?r*10:0,dash=(pc*100.53/100).toFixed(2)+' 100.53';
-      return `<div class="track sl-t ${i.dx?'dx':''} ${dn?'done':''} ${r?'rated':''} ${UI.rOpen===i.id?'ropen':''}" data-act="ropen" data-id="${i.id}"${i.dx&&UI.dxAnim===g.id?` style="animation-delay:${Math.min(k,14)*26}ms"`:''}>${r?`<span class="wash" style="width:${pc}%" aria-hidden="true"></span>`:''}<span class="num">${k+1}</span>
+      return `<div class="track sl-t ${i.dx?'dx':''} ${dn?'done':''} ${r?'rated':''} ${UI.rOpen===i.id?'ropen':''} ${UI.rAnim===i.id?'opening':''}" data-act="ropen" data-id="${i.id}"${i.dx&&UI.dxAnim===g.id?` style="animation-delay:${Math.min(k,14)*26}ms"`:''}>${r?`<span class="wash" style="width:${pc}%" aria-hidden="true"></span>`:''}<span class="num">${k+1}</span>
         <span class="ttl">${esc(s.t)}${s.f.length?`<span class="feat">feat. ${esc(s.f.join(', '))}</span>`:''}</span>
         <button class="check" data-act="tog" data-id="${i.id}" aria-pressed="${dn}" aria-label="${r?'Rated '+fmt(r)+'. ':''}${dn?'Heard':'Not heard'}: ${esc(i.title)}"><svg viewBox="0 0 44 44" aria-hidden="true"><circle class="rg-t" cx="22" cy="22" r="16"/>${r?`<circle class="rg-v" cx="22" cy="22" r="16" stroke-dasharray="${dash}"/>`:''}</svg>${r?`<span class="rg-n">${fmt(r)}</span>`:dn?'<span class="rg-d"></span>':''}</button></div>
         ${UI.rOpen===i.id?rateMeter(i.id,s.t):''}`}).join('');
     return `<div class="group sleeve ${dx?'dxon':''} ${UI.dxAnim===g.id?'dxanim':''} ${SLIN.has(String(g.id))?'in':''}" data-acol="${g.id}" style="--acs:${col};--acd:${colD}">
       <div class="sl-hero">
+        ${listBtn(g,a)}
         <div class="sl-pack">
           <div class="sl-disc" role="img" aria-label="${gd} of ${shown.length} songs heard">${ringHtml}<span class="sl-lab">${shown.length?gd+'/'+shown.length:'\u2013'}</span></div>
           <div class="sl-cover">${art?`<img src="${esc(art)}" ${dx&&sArt&&art!==sArt?`data-f="${esc(sArt)}" `:''}alt="" loading="lazy" decoding="async" onerror="if(this.dataset.f){this.src=this.dataset.f;this.removeAttribute('data-f')}else this.remove()">`:''}<span class="sl-ph" aria-hidden="true">${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div>
         </div>
-        <div class="sl-meta"><span class="sl-kind">${esc(g.kind)} \u00b7 ${esc(g.year)}</span><h3>${esc(dx?dxName(g):g.title)}</h3>${dx?'<span class="dxbadge">Deluxe</span>':''}<span class="sl-sub">${gd} of ${shown.length} heard</span>${RATEABLE.includes(g.kind)?'':(sb=>sb?`<div class="sl-hacts">${sb}</div>`:'')(sleeveBtns(g,a,full,shown.length).trim())}</div>
+        <div class="sl-meta"><span class="sl-kind">${esc(g.kind)} \u00b7 ${esc(g.year)}</span><h3>${esc(dx?dxName(g):g.title)}</h3>${dx?'<span class="dxbadge">Deluxe</span>':''}<span class="sl-sub">${gd} of ${shown.length} heard</span></div>
       </div>
       ${dxs.length?`<div class="dxseg" role="group" aria-label="Edition" data-dx="${dx?1:0}"><button type="button" data-act="dxsel" data-g="${g.id}" data-v="0" aria-pressed="${!dx}">Standard<span class="mono">${sd}/${std.length}</span></button><button type="button" class="dx" data-act="dxsel" data-g="${g.id}" data-v="1" aria-pressed="${dx}">Deluxe<span class="mono">${dd}/${g.items.length}</span></button></div>`:''}
       ${albumBar(g,a,full,shown.length)}
@@ -4004,6 +4047,11 @@ document.addEventListener('click',ev=>{
   if(act!=='mbundo')UI.undoArm=null;
   if(act!=='copy')UI.copied=false;
   if(act!=='coldel')UI.colDel=null;
+  /* closing a rater: let it fold away first, then redraw */
+  if((act==='rclose'||(act==='ropen'&&UI.rOpen===id))&&!UI.rClosing){
+    const rt=document.querySelector('.rater');
+    if(rt&&!matchMedia('(prefers-reduced-motion:reduce)').matches){UI.rClosing=true;rt.classList.remove('rt-in');rt.classList.add('rt-out');
+      setTimeout(()=>{UI.rClosing=false;UI.rOpen=null;render()},230);return}}
   if(act==='view'){UI.view=b.dataset.v;UI.rOpen=null;window.scrollTo({top:0})}
   else if(act==='lib'){UI.libOpen=!UI.libOpen}
   else if(act==='dcforget'){dcSetToken('');COL.tokMsg='Removed from this device.';UI.colTok=true}
@@ -4030,7 +4078,7 @@ document.addEventListener('click',ev=>{
     S.collection=colAll().filter(x=>x.id!==id);UI.colDel=null;if(UI.colEdit===id)UI.colEdit=null;if(UI.colOpen===id)UI.colOpen=null;touch()}else UI.colDel=id}
   else if(act==='colgot'){const x=colAll().find(c=>c.id===id);if(x){x.wish=false;if(!x.bought)x.bought=colToday();touch()}}
   else if(act==='colexport'){dlCSV('playback-collection.csv',csvCollection());return}
-  else if(act==='ropen'){UI.rOpen=UI.rOpen===id?null:id}
+  else if(act==='ropen'){UI.rOpen=UI.rOpen===id?null:id;UI.rAnim=UI.rOpen}
   else if(act==='rclose'){UI.rOpen=null}
   else if(act==='tab'){UI.view=null;UI.rOpen=null;UI.tab=b.dataset.v;try{localStorage.setItem(KEY+'_tab',UI.tab)}catch(e){}}
   else if(act==='sel'){UI.sel[UI.tab]=id;UI.libOpen=false;UI.rOpen=null;
@@ -4041,7 +4089,7 @@ document.addEventListener('click',ev=>{
   else if(act==='statgo'){UI.view=null;UI.tab=b.dataset.tab;UI.sel[UI.tab]=id;UI.filter='all';UI.toSheet=true;window.scrollTo({top:0,behavior:'smooth'})}
   else if(act==='filter'){UI.filter=b.dataset.v}
   else if(act==='epx'){UI.epOpen[id]=!UI.epOpen[id]}
-  else if(act==='tog'){S.marks[id]={...(S.marks[id]||{}),done:!isDone(id)};touch()}
+  else if(act==='tog'){const was=isDone(id);S.marks[id]={...(S.marks[id]||{}),done:!was};if(!was){const g=grpOfItem(id);if(g)slPulseAsk(g.id,0)}touch()}
   else if(act==='lltog'){const a=S.music.find(x=>x.id===b.dataset.a),g=a&&a.groups.find(x=>x.id===b.dataset.g);if(!g)return;
     if(llOn(a.name,g.title)){const lid=llId(a.name,g.title);S.listen=listenAll().filter(x=>x.id!==lid)}else llAdd(a.name,g.title,g.year);touch()}
   else if(act==='lldel'){S.listen=listenAll().filter(x=>x.id!==id);touch()}
@@ -4061,8 +4109,8 @@ document.addEventListener('click',ev=>{
   else if(act==='rymadd'){const r=rymAddWaiting();RYX.report={total:r.albums,zero:0,filled:0,same:0,kept:[],waiting:[],notFound:[],dups:[],added:r};touch()}
   else if(act==='rclear'){S.marks[id]={...(S.marks[id]||{}),r:0};touch()}
   else if(act==='grpall'){const a=S.music.find(x=>x.id===b.dataset.a),g=a.groups.find(x=>x.id===b.dataset.g),its=viewItems(g),full=its.every(i=>isDone(i.id));
-    its.forEach(i=>S.marks[i.id]={...(S.marks[i.id]||{}),done:!full});touch()}
-  else if(act==='dxsel'){UI.dxOpen[b.dataset.g]=b.dataset.v==='1';UI.dxAnim=b.dataset.g}
+    its.forEach(i=>S.marks[i.id]={...(S.marks[i.id]||{}),done:!full});if(!full)slPulseAsk(g.id,0);touch()}
+  else if(act==='dxsel'){UI.dxOpen[b.dataset.g]=b.dataset.v==='1';UI.dxAnim=b.dataset.g;slPulseAsk(b.dataset.g,140)}
   else if(act==='seasonall'){const s=S.screen.find(x=>x.id===b.dataset.s),n=+b.dataset.n,se=s.seasons.find(x=>x.n===n);
     const ids=Array.from({length:se.eps},(_,k)=>sid(s.id,'s',n,'e',k+1)),full=ids.every(isDone);
     ids.forEach(i=>S.marks[i]={...(S.marks[i]||{}),done:!full});touch()}
@@ -4124,7 +4172,15 @@ document.addEventListener('click',ev=>{
 document.addEventListener('input',ev=>{
   const rt=ev.target.dataset&&ev.target.dataset.rate;
   if(rt){const el=ev.target,box=el.closest('.rater'),v=+el.value;el.classList.remove('unset');
-    if(box){box.style.setProperty('--p',((v-1)/9*100)+'%');const o=box.querySelector('.rt-v');if(o)o.textContent=fmt(v)}return}
+    if(box){box.style.setProperty('--p',((v-1)/9*100)+'%');const o=box.querySelector('.rt-v');if(o)o.textContent=fmt(v)}
+    /* the song's row follows the slider: its colour wash, number and ring grow and shrink as you drag */
+    const row=document.querySelector('.track.sl-t[data-id="'+(window.CSS&&CSS.escape?CSS.escape(rt):rt)+'"]');
+    if(row&&v){let w=row.querySelector(':scope>.wash');
+      if(!w){w=document.createElement('span');w.className='wash';w.setAttribute('aria-hidden','true');w.style.width='0%';row.insertBefore(w,row.firstChild);void w.offsetWidth;row.classList.add('rated')}
+      w.style.transitionDuration='.14s';w.style.width=(v*10)+'%';
+      const n=row.querySelector('.rg-n'),rv=row.querySelector('.rg-v');
+      if(n)n.textContent=fmt(v);if(rv)rv.setAttribute('stroke-dasharray',(v*10*100.53/100).toFixed(2)+' 100.53')}
+    return}
   if(ev.target.id==='crop-z'){CROP.z=+ev.target.value;cropRedraw();return}
   if(ev.target.id==='crop-r'){CROP.r=+ev.target.value;cropRedraw();return}
   if(ev.target.id==='lq'){UI.lq[UI.tab]=ev.target.value;lRedraw()}
