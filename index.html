@@ -598,25 +598,27 @@ details.addart .add{border-top:1px solid var(--line)}
 .sl-note{margin:0;padding:0 20px;font-size:13px;color:var(--muted)}
 .sl-note .diff.up{color:var(--done)}.sl-note .diff.down{color:var(--warn)}
 .tlist{display:flex;flex-direction:column;padding:6px 18px 0}
-.track.sl-t,.track.sl-t.ep{grid-template-columns:30px minmax(0,1fr) auto 44px;gap:6px;min-height:54px;padding:0 0 0 2px;border-bottom:1px solid color-mix(in srgb,var(--line) 55%,transparent);border-radius:0}
-@media (max-width:560px){.track.sl-t{grid-template-columns:30px minmax(0,1fr) auto 44px}}
-.track.sl-t{cursor:pointer;-webkit-tap-highlight-color:transparent}
-.track.sl-t:hover,.track.sl-t.ropen{background:color-mix(in srgb,var(--ink) 4%,transparent)}
+.group.sleeve{--acl:var(--ac)}
+:root[data-theme="dark"] .group.sleeve{--acl:color-mix(in srgb,var(--ac) 45%,#fff)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .group.sleeve{--acl:color-mix(in srgb,var(--ac) 45%,#fff)}}
+/* a song: number, title, and a ring that is the heard-check and the rating in one; a soft wash of the album's color fades out toward the rating */
+.track.sl-t,.track.sl-t.ep{position:relative;overflow:hidden;grid-template-columns:30px minmax(0,1fr) 48px;gap:6px;min-height:52px;margin-bottom:4px;padding:0 4px 0 12px;border:0;border-radius:14px;background:color-mix(in srgb,var(--ink) 3.5%,transparent);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background-color .2s}
+.track.sl-t:hover,.track.sl-t.ropen{background:color-mix(in srgb,var(--ink) 6%,transparent)}
+.track.sl-t>*{position:relative}
+.track.sl-t>.wash{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,color-mix(in srgb,var(--acl) 34%,transparent),color-mix(in srgb,var(--acl) 3%,transparent));pointer-events:none}
+@media (prefers-reduced-motion:no-preference){.track.sl-t>.wash{transition:width .45s cubic-bezier(.2,.8,.2,1)}}
 .track.sl-t .num{font:500 14px Archivo,var(--display);text-align:left;color:var(--muted);font-variant-numeric:tabular-nums}
 .track.sl-t.done .num{color:var(--ink)}
 .track.sl-t .ttl{font-size:16px;font-weight:450;color:var(--ink)}
-.track.sl-t:not(.done) .ttl{color:color-mix(in srgb,var(--ink) 78%,var(--bg))}
-.rnum{min-width:44px;min-height:40px;border:0;background:transparent;padding:0 4px;text-align:right;font:600 13px var(--body);color:var(--muted)}
-button.rnum:not(.set){border:1px dashed var(--line);border-radius:10px;text-align:center}
-.rnum.set{font:650 17px Archivo,var(--display);font-stretch:100%;color:var(--ac)}
-:root[data-theme="dark"] .rnum.set{color:color-mix(in srgb,var(--ac) 40%,#fff)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .rnum.set{color:color-mix(in srgb,var(--ac) 40%,#fff)}}
-.track.sl-t .check{width:44px;height:44px;border:0;border-radius:50%;background:transparent;position:relative}
-.track.sl-t .check::before{content:"";position:absolute;left:10px;top:10px;width:24px;height:24px;border-radius:50%;border:1.6px solid color-mix(in srgb,var(--muted) 70%,var(--bg));box-sizing:border-box}
-.track.sl-t .check[aria-pressed="true"]{background:transparent}
-.track.sl-t .check[aria-pressed="true"]::before{background:var(--ink);border-color:var(--ink)}
-.track.sl-t .check[aria-pressed="true"]::after{content:"";position:absolute;left:19px;top:19px;width:6px;height:6px;border:0;border-radius:50%;background:var(--surface);transform:none}
-.track.sl-t.dx{background:transparent;box-shadow:inset 3px 0 0 var(--dx)}
+.track.sl-t:not(.done):not(.rated) .ttl{color:color-mix(in srgb,var(--ink) 70%,var(--bg))}
+.track.sl-t .check{width:44px;height:44px;border:0;border-radius:50%;background:transparent;padding:0;display:grid;place-items:center;position:relative}
+.track.sl-t .check svg{position:absolute;inset:0;width:44px;height:44px}
+.track.sl-t .check .rg-t{fill:none;stroke:color-mix(in srgb,var(--ink) 16%,transparent);stroke-width:3}
+.track.sl-t .check .rg-v{fill:none;stroke:var(--acl);stroke-width:3;stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%}
+@media (prefers-reduced-motion:no-preference){.track.sl-t .check .rg-v{transition:stroke-dasharray .45s cubic-bezier(.2,.8,.2,1)}}
+.track.sl-t .check .rg-n{position:relative;font:600 13px Archivo,var(--display);font-variant-numeric:tabular-nums;color:var(--ink)}
+.track.sl-t .check .rg-d{position:relative;width:8px;height:8px;border-radius:50%;background:var(--ink)}
+.track.sl-t.dx{box-shadow:inset 3px 0 0 var(--dx)}
 /* groove meter */
 .rater{margin:8px 0 10px;padding:16px 18px 10px;border-radius:20px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
 .rt-top{display:flex;align-items:baseline;gap:12px}
@@ -1162,6 +1164,7 @@ button.rnum:not(.set){border:1px dashed var(--line);border-radius:10px;text-alig
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.11-o', note:'RINGS AND WASH: each song\u2019s heard-check is now a ring that fills to your rating with the number inside (a dot when it\u2019s heard but not rated, empty when you haven\u2019t heard it), and a soft wash of the album\u2019s color fades out behind the row toward the rating. Tap the ring to check a song off; tap anywhere else on the row to rate it.'},
   {v:'2026.11.11-n', note:'TAP A SONG: tapping anywhere on a song row opens its rating, not just the number, and rating a song you hadn\u2019t checked off counts it as heard. The record no longer slides over the start of the title. Singles lose the empty row: their listen-list and mark-all buttons now sit under the title.'},
   {v:'2026.11.11-m', note:'SMOOTHER RECORDS AND RATINGS: the record now slides back into its sleeve when you scroll the album\u2019s header off the top of the screen, as well as sliding out as it comes in. The rating bar of grooves is replaced by a clean slider: drag or tap along the line, 1 to 10 in half steps, and it saves when you let go. Clear and Done sit underneath.'},
   {v:'2026.11.11-l', note:'CLEANER SLEEVES: the Side A and Side B headings are gone from album track lists. The sleeve is softer and lighter, with calmer type, a quieter rating pill and more room. The record now slides out as an album scrolls onto the screen instead of when you touch things, and it no longer jumps or resets when you tap a song or rating.'},
@@ -3852,10 +3855,10 @@ function artistView(a){
       rings.push(seg.length&&seg.every(i=>isDone(i.id)))}
     const ringHtml=rings.map((on,j)=>{const d=96-j*(52/Math.max(R,1));return `<i class="${on?'on':''}" style="--d:${d.toFixed(1)}%"></i>`}).join('');
     const trackRows=rows.map(({i,k})=>{const s=songShow(i),r=rating(i.id),dn=isDone(i.id);
-      return `<div class="track sl-t ${i.dx?'dx':''} ${dn?'done':''} ${UI.rOpen===i.id?'ropen':''}" data-act="ropen" data-id="${i.id}"${i.dx&&UI.dxAnim===g.id?` style="animation-delay:${Math.min(k,14)*26}ms"`:''}><span class="num">${k+1}</span>
+      const pc=r?r*10:0,dash=(pc*100.53/100).toFixed(2)+' 100.53';
+      return `<div class="track sl-t ${i.dx?'dx':''} ${dn?'done':''} ${r?'rated':''} ${UI.rOpen===i.id?'ropen':''}" data-act="ropen" data-id="${i.id}"${i.dx&&UI.dxAnim===g.id?` style="animation-delay:${Math.min(k,14)*26}ms"`:''}>${r?`<span class="wash" style="width:${pc}%" aria-hidden="true"></span>`:''}<span class="num">${k+1}</span>
         <span class="ttl">${esc(s.t)}${s.f.length?`<span class="feat">feat. ${esc(s.f.join(', '))}</span>`:''}</span>
-        ${r?`<button class="rnum set" data-act="ropen" data-id="${i.id}" aria-label="Your rating ${fmt(r)} for ${esc(s.t)}, change">${fmt(r)}</button>`:dn?`<button class="rnum" data-act="ropen" data-id="${i.id}" aria-label="Rate ${esc(s.t)}">Rate</button>`:'<span class="rnum"></span>'}
-        <button class="check" data-act="tog" data-id="${i.id}" aria-pressed="${dn}" aria-label="Heard ${esc(i.title)}"></button></div>
+        <button class="check" data-act="tog" data-id="${i.id}" aria-pressed="${dn}" aria-label="${r?'Rated '+fmt(r)+'. ':''}${dn?'Heard':'Not heard'}: ${esc(i.title)}"><svg viewBox="0 0 44 44" aria-hidden="true"><circle class="rg-t" cx="22" cy="22" r="16"/>${r?`<circle class="rg-v" cx="22" cy="22" r="16" stroke-dasharray="${dash}"/>`:''}</svg>${r?`<span class="rg-n">${fmt(r)}</span>`:dn?'<span class="rg-d"></span>':''}</button></div>
         ${UI.rOpen===i.id?rateMeter(i.id,s.t):''}`}).join('');
     return `<div class="group sleeve ${dx?'dxon':''} ${UI.dxAnim===g.id?'dxanim':''} ${SLIN.has(String(g.id))?'in':''}" data-acol="${g.id}" style="--ac:${col}">
       <div class="sl-hero">
