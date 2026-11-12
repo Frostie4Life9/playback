@@ -569,12 +569,18 @@ details.addart .add{border-top:1px solid var(--line)}
 .sl-cover{position:absolute;left:0;top:0;width:160px;height:160px;border-radius:10px;overflow:hidden;background:color-mix(in srgb,var(--ac) 60%,#000);box-shadow:0 14px 30px rgb(0 0 0 / .35);display:grid;place-items:center}
 .sl-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
 .sl-ph{font:900 64px Archivo,var(--display);font-stretch:125%;color:rgb(255 255 255 / .35)}
-.sl-disc{position:absolute;left:112px;top:4px;width:160px;height:160px;border-radius:50%;background:#141111;box-shadow:0 12px 26px rgb(0 0 0 / .35)}
+.sl-disc{position:absolute;left:112px;top:4px;width:160px;height:160px;border-radius:50%;background:#141111;box-shadow:0 12px 26px rgb(0 0 0 / .35);will-change:transform;backface-visibility:hidden;transform:translate3d(0,0,0)}
 .sl-disc i{position:absolute;left:50%;top:50%;width:var(--d);height:var(--d);transform:translate(-50%,-50%);border-radius:50%;border:1.5px solid rgb(255 255 255 / .09);box-sizing:border-box}
 .sl-disc i.on{border-color:color-mix(in srgb,var(--ac) 35%,#ffd9a8)}
+/* the pulse: as the record slides out, a ripple runs from the label outward through the grooves you have heard */
+@keyframes slPulse{
+  0%{transform:translate(-50%,-50%) scale(1);border-color:color-mix(in srgb,var(--ac) 35%,#ffd9a8);box-shadow:0 0 0 0 transparent}
+  35%{transform:translate(-50%,-50%) scale(1.045);border-color:color-mix(in srgb,var(--ac) 8%,#fff4e2);box-shadow:0 0 7px 1px color-mix(in srgb,var(--ac) 70%,#ffd9a8)}
+  100%{transform:translate(-50%,-50%) scale(1);border-color:color-mix(in srgb,var(--ac) 35%,#ffd9a8);box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion:no-preference){.group.sleeve.rip .sl-disc i.on{animation:slPulse .62s cubic-bezier(.3,.6,.3,1) calc(220ms + var(--o,0)*38ms) both}}
 .sl-lab{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:var(--ac);display:grid;place-items:center;font:800 12px Archivo,var(--display);color:#fff;font-variant-numeric:tabular-nums}
-@media (prefers-reduced-motion:no-preference){.sl-disc{transition:left .7s cubic-bezier(.2,.8,.2,1)}}
-.group.sleeve.in .sl-disc{left:128px}
+@media (prefers-reduced-motion:no-preference){.sl-disc{transition:transform .7s cubic-bezier(.2,.8,.2,1)}}
+.group.sleeve.in .sl-disc{transform:translate3d(16px,0,0)}
 .sl-meta{display:flex;flex-direction:column;gap:4px;min-width:0}
 .sl-kind{font:500 13px var(--body);letter-spacing:.01em;color:rgb(255 255 255 / .72)}
 .sl-meta h3{margin:0;font:650 28px/1.08 Archivo,var(--display);font-stretch:100%;letter-spacing:-.022em;overflow-wrap:anywhere}
@@ -1168,6 +1174,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.11-q', note:'RECORD PULSE: as a record slides out of its sleeve, a ripple now runs from the label out through the grooves you have heard, lighting each one in turn. The record’s slide is also smoother, so the lines no longer glitch while it moves. Singles lose their Mark all / Clear all button, since they are short enough to tap through, so their header lines up with the other releases.'},
   {v:'2026.11.11-p', note:'TRUER COLOR, SMOOTHER FADE: the wash behind each song now uses the album\u2019s real banner color instead of a washed-out version, and it eases out gradually with a soft, still visible end at the rating. The stray dark chip and off-center number in the rings are gone. Deluxe: switching to Deluxe now recolors the banner from the deluxe cover, and only the deluxe songs get the deluxe color in their fade; standard songs keep the standard album color.'},
   {v:'2026.11.11-o', note:'RINGS AND WASH: each song\u2019s heard-check is now a ring that fills to your rating with the number inside (a dot when it\u2019s heard but not rated, empty when you haven\u2019t heard it), and a soft wash of the album\u2019s color fades out behind the row toward the rating. Tap the ring to check a song off; tap anywhere else on the row to rate it.'},
   {v:'2026.11.11-n', note:'TAP A SONG: tapping anywhere on a song row opens its rating, not just the number, and rating a song you hadn\u2019t checked off counts it as heard. The record no longer slides over the start of the title. Singles lose the empty row: their listen-list and mark-all buttons now sit under the title.'},
@@ -3133,7 +3140,11 @@ function slObserve(){
   /* watch the header (where the record lives), not the whole tall sleeve, so the record
      slides back in as the header leaves the top of the screen */
   if(!slIO)slIO=new IntersectionObserver(es=>{for(const e of es){const sl=e.target.closest('.group.sleeve'),id=sl&&sl.dataset.acol;if(!id)continue;
-      const on=e.isIntersecting;if(on)SLIN.add(id);else SLIN.delete(id);sl.classList.toggle('in',on)}},{rootMargin:'-16% 0px -22% 0px',threshold:0.85});
+      const on=e.isIntersecting,was=SLIN.has(id);if(on)SLIN.add(id);else SLIN.delete(id);sl.classList.toggle('in',on);
+      /* ripple only when the record actually slides out now, not on every redraw of a sleeve already open */
+      if(on&&!was&&sl.querySelector('.sl-disc i.on')){sl.classList.remove('rip');void sl.offsetWidth;sl.classList.add('rip');
+        clearTimeout(sl._rt);sl._rt=setTimeout(()=>sl.classList.remove('rip'),1700)}
+      if(!on)sl.classList.remove('rip')}},{rootMargin:'-16% 0px -22% 0px',threshold:0.85});
   slIO.disconnect();document.querySelectorAll('.group.sleeve[data-acol] .sl-hero').forEach(el=>slIO.observe(el))}
 
 /* ---------- render ---------- */
@@ -3774,8 +3785,8 @@ function viewItems(g){return dxOn(g)?g.items:stdItems(g)}
 const rymSearchUrl=(a,g)=>'https://rateyourmusic.com/search?searchtype=l&searchterm='+encodeURIComponent((a&&a.name?a.name+' ':'')+g.title);
 function sleeveBtns(g,a,full,n){
   const on=llOn(a.name,g.title),sg=stdItems(g),heard=(sg.length>0&&sg.every(i=>isDone(i.id)))||!!rating(g.id),ll=on||!heard;
-  return `${ll?`<button class="sl-ic" data-act="lltog" data-a="${a.id}" data-g="${g.id}" aria-pressed="${on}" aria-label="${on?'On your listen list, remove':'Add to listen list'}" title="${on?'On your listen list':'Add to listen list'}">${on?ICO.listOn:ICO.list}</button>`:''}
-    ${n?`<button class="sl-ic" data-act="grpall" data-a="${a.id}" data-g="${g.id}" aria-label="${full?'Clear all checkmarks':'Mark all heard'}" title="${full?'Clear all':'Mark all heard'}" aria-pressed="${full}">${ICO.all}</button>`:''}`}
+  return `${ll?`<button class="sl-ic" data-act="lltog" data-a="${a.id}" data-g="${g.id}" aria-pressed="${on}" aria-label="${on?'On your listen list, remove':'Add to listen list'}" title="${on?'On your listen list':'Add to listen list'}">${on?ICO.listOn:ICO.list}</button>`:''}`}
+/* singles are short enough that they have no Mark all / Clear all button, so their header matches the rest */
 function albumBar(g,a,full,n){
   if(!RATEABLE.includes(g.kind))return '';   /* singles and the like have no album rating, so no empty row: their buttons sit in the header */
   const can=RATEABLE.includes(g.kind),dx=dxOn(g),its=dx?g.items:stdItems(g),rid=dx?dxId(g):g.id,rs=its.map(i=>rating(i.id)).filter(Boolean),rn=rs.length,r=can?rating(rid):0;
@@ -3859,7 +3870,7 @@ function artistView(a){
     const R=Math.min(shown.length,22),rings=[];
     for(let j=0;j<R;j++){const lo=Math.floor(j*shown.length/R),hi=Math.max(lo+1,Math.floor((j+1)*shown.length/R)),seg=shown.slice(lo,hi);
       rings.push(seg.length&&seg.every(i=>isDone(i.id)))}
-    const ringHtml=rings.map((on,j)=>{const d=96-j*(52/Math.max(R,1));return `<i class="${on?'on':''}" style="--d:${d.toFixed(1)}%"></i>`}).join('');
+    const ringHtml=rings.map((on,j)=>{const d=96-j*(52/Math.max(R,1));return `<i class="${on?'on':''}" style="--d:${d.toFixed(1)}%;--o:${R-1-j}"></i>`}).join('');
     const trackRows=rows.map(({i,k})=>{const s=songShow(i),r=rating(i.id),dn=isDone(i.id);
       const pc=r?r*10:0,dash=(pc*100.53/100).toFixed(2)+' 100.53';
       return `<div class="track sl-t ${i.dx?'dx':''} ${dn?'done':''} ${r?'rated':''} ${UI.rOpen===i.id?'ropen':''}" data-act="ropen" data-id="${i.id}"${i.dx&&UI.dxAnim===g.id?` style="animation-delay:${Math.min(k,14)*26}ms"`:''}>${r?`<span class="wash" style="width:${pc}%" aria-hidden="true"></span>`:''}<span class="num">${k+1}</span>
@@ -3872,7 +3883,7 @@ function artistView(a){
           <div class="sl-disc" role="img" aria-label="${gd} of ${shown.length} songs heard">${ringHtml}<span class="sl-lab">${shown.length?gd+'/'+shown.length:'\u2013'}</span></div>
           <div class="sl-cover">${art?`<img src="${esc(art)}" ${dx&&sArt&&art!==sArt?`data-f="${esc(sArt)}" `:''}alt="" loading="lazy" decoding="async" onerror="if(this.dataset.f){this.src=this.dataset.f;this.removeAttribute('data-f')}else this.remove()">`:''}<span class="sl-ph" aria-hidden="true">${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div>
         </div>
-        <div class="sl-meta"><span class="sl-kind">${esc(g.kind)} \u00b7 ${esc(g.year)}</span><h3>${esc(dx?dxName(g):g.title)}</h3>${dx?'<span class="dxbadge">Deluxe</span>':''}<span class="sl-sub">${gd} of ${shown.length} heard</span>${RATEABLE.includes(g.kind)?'':`<div class="sl-hacts">${sleeveBtns(g,a,full,shown.length)}</div>`}</div>
+        <div class="sl-meta"><span class="sl-kind">${esc(g.kind)} \u00b7 ${esc(g.year)}</span><h3>${esc(dx?dxName(g):g.title)}</h3>${dx?'<span class="dxbadge">Deluxe</span>':''}<span class="sl-sub">${gd} of ${shown.length} heard</span>${RATEABLE.includes(g.kind)?'':(sb=>sb?`<div class="sl-hacts">${sb}</div>`:'')(sleeveBtns(g,a,full,shown.length).trim())}</div>
       </div>
       ${dxs.length?`<div class="dxseg" role="group" aria-label="Edition" data-dx="${dx?1:0}"><button type="button" data-act="dxsel" data-g="${g.id}" data-v="0" aria-pressed="${!dx}">Standard<span class="mono">${sd}/${std.length}</span></button><button type="button" class="dx" data-act="dxsel" data-g="${g.id}" data-v="1" aria-pressed="${dx}">Deluxe<span class="mono">${dd}/${g.items.length}</span></button></div>`:''}
       ${albumBar(g,a,full,shown.length)}
