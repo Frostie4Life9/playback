@@ -1212,6 +1212,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.12-a', note:'SONGS WITH TYPOS FIND THEIR ALBUM TOO: a hand-made or RYM-made album whose song titles have typos (“Forgotten Battlefied”, “Gestral ViIllage”) used to sit beside the real album forever, with your ratings stuck on it. Now, when at least 3 of its songs each have one clear closest match on the same real album (and that covers most of them), the songs, checkmarks and ratings move onto the real album, and the album rating follows if that album has none. It never moves songs that differ by a number, short titles, a song with two equally close matches, songs spread across different albums, or songs whose ratings disagree with the real one; those stay put. Undo last import puts the artist back.'},
   {v:'2026.11.11-zd', note:'LONGER-TITLE MATCHING, TIE-BREAK: when an album has two songs that fit a longer title, like “don’t rely on other men” and its deluxe copy “don’t rely on other men (single)”, the plain one now wins, so a rating stuck on “Don’t Rely on Other Men (Album)” moves onto the album song and the stray one-song album copy goes away. If neither or both fit equally, nothing moves.'},
   {v:'2026.11.11-zc', note:'BANNER COLOR NO LONGER FLIPS: on some covers the banner could flip between dark and light depending on tiny differences in how the cover was read (I LAY DOWN MY LIFE FOR YOU came out pale blue-gray because of the white cross). The rule is now steadier: if the cover has a clear color, the best of those is used; if not (gray, black, cream, white), the banner follows the backdrop around the edge of the art. It also reads the same square of the cover that you see on screen. I checked each test cover 36 slightly different ways and the banner stayed in the same color family every time. Every cover is read again once.'},
   {v:'2026.11.11-zb', note:'BANNERS FOLLOW THE COVER\u2019S BRIGHTNESS: a pale cover now gets a pale banner (with dark text and buttons) and a near-black cover gets a near-black one, instead of every banner being forced to the same dark middle. The song rows keep a darker copy of the color so their text stays easy to read. Faces no longer set the color: Heavy Metal takes the gray wall behind him, not his skin. Every cover is read again once.'},
@@ -1602,6 +1603,27 @@ function mbLooseFind(items,title){
   const hits=items.filter(i=>{const k=mbItemKey(i);return !k.includes('~')&&!k.includes('@')&&mbLoose(i.title)===lk});
   return hits.length?mbPickLoose(hits,lk,mbItemKey):null;
 }
+/* Typos ("Battlefied", "ViIllage", "Festral"). A one-letter slip on its own proves nothing, so this is only
+   ever used for a whole group of songs at once (see mbMerge): a key needs 14+ characters to allow 1 slip and
+   30+ to allow 2, songs that differ in a digit never match, and a song needs ONE clearly closest candidate. */
+const mbFuzzyMax=len=>len>=30?2:len>=14?1:0;
+function mbDist(a,b,max){   /* edit distance, giving up (max+1) as soon as it is certain to be over max */
+  if(Math.abs(a.length-b.length)>max)return max+1;
+  let prev=Array.from({length:b.length+1},(_,j)=>j);
+  for(let i=1;i<=a.length;i++){
+    const cur=[i];let lo=i;
+    for(let j=1;j<=b.length;j++){const v=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));cur[j]=v;if(v<lo)lo=v}
+    if(lo>max)return max+1;prev=cur}
+  return prev[b.length];
+}
+function mbFuzzyPick(k,cands){   /* the one song whose key is within the allowed slips of k and at least 2 closer than any other */
+  const max=mbFuzzyMax(k.length);if(!max)return null;
+  const dg=k.replace(/\D/g,'');let best=null,d1=max+3,d2=max+3;
+  for(const c of cands){if(c.k.replace(/\D/g,'')!==dg)continue;
+    const d=mbDist(k,c.k,max+2);if(d>max+2)continue;
+    if(d<d1){d2=d1;d1=d;best=c}else if(d<d2)d2=d}
+  return best&&d1<=max&&d2>=d1+2?best:null;
+}
 function mbTrack(t,rgid){
   const rec=t.recording||{};if(rec.video)return null;
   const title=String(rec.title||t.title||'').trim();
@@ -1811,9 +1833,10 @@ function mbMerge(art,incoming,versions,tidy,sp){
   const looseIdx=new Map(),claimed=new Set();let folded=0,snapped=false;
   for(const G of groups)for(const t of G.items){if(t.k.includes('~')||t.k.includes('@'))continue;
     const lk=mbLoose(t.title);if(!lk)continue;if(!looseIdx.has(lk))looseIdx.set(lk,[]);looseIdx.get(lk).push(t)}
-  const looseFold=(i,k)=>{
-    if(k.includes('~')||k.includes('@'))return false;
-    const lk=mbLoose(i.title),hits=lk&&looseIdx.get(lk),t=hits&&mbPickLoose(hits,lk,x=>x.k);if(!t)return false;
+  const itemGroup=new Map(),incomingByKey=new Map();   /* song id -> its new album, song key -> song */
+  for(const G of groups)for(const t of G.items){itemGroup.set(t.id,G);incomingByKey.set(t.k,t)}
+  let land=null,nFold=0;   /* where the songs of the group being processed landed, and how many moved */
+  const foldOnto=(k,t)=>{
     const from=idFor(k);if(claimed.has(t.id)||t.id===from)return false;
     const rf=rating(from),rt=rating(t.id);if(rf&&rt&&rf!==rt)return false;
     const moved=mbMarked(from);
@@ -1821,17 +1844,60 @@ function mbMerge(art,incoming,versions,tidy,sp){
     mbFold(t.id,from);
     if(S.rymSeen&&S.rymSeen[from]!=null&&S.rymSeen[t.id]==null)S.rymSeen[t.id]=S.rymSeen[from];
     if(S.rymSeen)delete S.rymSeen[from];
-    delete S.marks[from];claimed.add(t.id);if(moved)folded++;return true;
+    delete S.marks[from];claimed.add(t.id);if(moved)folded++;nFold++;
+    if(land){const G=itemGroup.get(t.id);land.set(G,(land.get(G)||0)+1)}
+    return true;
   };
+  const looseFold=(i,k)=>{
+    if(k.includes('~')||k.includes('@'))return false;
+    const lk=mbLoose(i.title),hits=lk&&looseIdx.get(lk),t=hits&&mbPickLoose(hits,lk,x=>x.k);
+    return t?foldOnto(k,t):false;
+  };
+  /* Typos, decided one GROUP at a time (a hand-made album or the "Kept" list): the songs that match nothing
+     else each need exactly one clearly closest song (mbFuzzyPick), at least 3 of them, at least 60% of those
+     songs, and all landing on the same new album; two songs choosing the same target are both left alone. */
+  const fuzzyCands=groups.flatMap(G=>G.items).filter(t=>!t.k.includes('~')&&!t.k.includes('@'));
+  const fuzzyPlan=new Map();
+  const planFuzzy=g=>{
+    fuzzyPlan.clear();
+    const left=g.items.filter(i=>{const k=mbItemKey(i);if(incomingByKey.has(k)||k.includes('~')||k.includes('@'))return false;
+      const lk=mbLoose(i.title),hits=looseIdx.get(lk);return !(hits&&mbPickLoose(hits,lk,x=>x.k))});
+    if(left.length<3||left.length*fuzzyCands.length>40000)return;
+    const picks=[];for(const i of left){const k=mbItemKey(i),t=mbFuzzyPick(k,fuzzyCands);if(t)picks.push([k,t])}
+    if(picks.length<3)return;
+    const per=new Map();for(const [,t] of picks){const G=itemGroup.get(t.id);per.set(G,(per.get(G)||0)+1)}
+    const [H,n]=[...per.entries()].sort((x,y)=>y[1]-x[1])[0];
+    if(n<3||n<left.length*0.6)return;
+    const uses=new Map();for(const [,t] of picks)uses.set(t.id,(uses.get(t.id)||0)+1);
+    for(const [k,t] of picks)if(itemGroup.get(t.id)===H&&uses.get(t.id)===1)fuzzyPlan.set(k,t);
+  };
+  const fuzzyFold=k=>{const t=fuzzyPlan.get(k);return t?foldOnto(k,t):false};
+  /* the new album most of a group's songs landed on: at least 2 songs and 60% of the group */
+  const homeOf=(m,n)=>{const [H,c]=[...m.entries()].sort((x,y)=>y[1]-x[1])[0]||[];return H&&c>=2&&c>=n*0.6?H:null};
   const manual=[];
   for(const g of a.groups){if(replaced(g))continue;
-    const items=[];for(const i of g.items){const k=mbItemKey(i);if(placed.has(k))continue;placed.add(k);if(looseFold(i,k))continue;items.push(Object.assign({},i,{id:idFor(k)}))}
+    planFuzzy(g);land=new Map();nFold=0;
+    const items=[];for(const i of g.items){const k=mbItemKey(i);
+      if(placed.has(k)){const t0=incomingByKey.get(k);if(t0){const G=itemGroup.get(t0.id);land.set(G,(land.get(G)||0)+1)}continue}
+      placed.add(k);if(looseFold(i,k)||fuzzyFold(k))continue;items.push(Object.assign({},i,{id:idFor(k)}))}
+    const moved=land,moves=nFold;land=null;
     if(items.length)manual.push(Object.assign({},g,{items}));
-    else if(rating(g.id)&&!incoming.some(G=>nTitle(G.title)===nTitle(g.title)))manual.push(Object.assign({},g,{items}))}
+    else if(rating(g.id)&&!incoming.some(G=>nTitle(G.title)===nTitle(g.title))){
+      /* every song moved onto one new album under a different album title ("… (Original Soundtrack)"): the album
+         rating goes with them, unless that album already has a different one, then this stays as it is */
+      const H=moves?homeOf(moved,g.items.length):null,rg=rating(g.id);
+      /* that album's rating as it stands, which can still be under its previous id until the merge finishes */
+      const prior=H&&a.groups.find(x=>x!==g&&x.src==='mb'&&nTitle(x.title)===nTitle(H.title)),rH=H?(rating(H.id)||(prior?rating(prior.id):0)):0;
+      if(H&&(!rH||rH===rg)){
+        if(!rH)S.marks[H.id]={...(S.marks[H.id]||{}),r:rg};
+        if(S.rymSeen){if(S.rymSeen[g.id]!=null&&S.rymSeen[H.id]==null)S.rymSeen[H.id]=S.rymSeen[g.id];delete S.rymSeen[g.id]}
+        delete S.marks[g.id]}
+      else manual.push(Object.assign({},g,{items}))}}
   const kept=[];let dropped=0;const usedIds=new Set([...groups,...manual].flatMap(g=>g.items.map(i=>i.id)));
   for(const g of a.groups){if(!replaced(g))continue;
+    if(g.src==='kept')planFuzzy(g);else fuzzyPlan.clear();
     for(const i of g.items){const k=mbItemKey(i);if(placed.has(k))continue;placed.add(k);
-      if(looseFold(i,k))continue;
+      if(looseFold(i,k)||fuzzyFold(k))continue;
       const id=idFor(k);if(usedIds.has(id))continue;
       if(mbMarked(id)||(tidy&&g.src==='kept'))kept.push({id,title:i.title,k,...(i.f&&i.f.length?{f:i.f}:{})});else dropped++}}
   const oldR=a.groups.map(g=>[nTitle(g.title),rating(g.id)]).filter(x=>x[1]);
