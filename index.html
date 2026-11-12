@@ -613,19 +613,25 @@ button.rnum:not(.set){border:1px dashed var(--line);border-radius:10px;text-alig
 .track.sl-t .check[aria-pressed="true"]::after{content:"";position:absolute;left:19px;top:19px;width:6px;height:6px;border:0;border-radius:50%;background:var(--surface);transform:none}
 .track.sl-t.dx{background:transparent;box-shadow:inset 3px 0 0 var(--dx)}
 /* groove meter */
-.meter{margin:6px -6px 8px;padding:14px;border-radius:18px;background:#1b1514;color:#fff;display:flex;flex-direction:column;gap:10px}
-.mtop{display:flex;align-items:center;gap:10px}
-.mtop span{flex:1;min-width:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mtop b{font:900 32px/1 Archivo,var(--display);font-stretch:125%;color:color-mix(in srgb,var(--ac) 35%,#ffd9a8)}
-.grooves{display:flex;align-items:flex-end;height:52px;gap:2px}
-.grooves button{flex:1;height:100%;border:0;padding:0;background:transparent;display:flex;align-items:flex-end;justify-content:center;min-width:0}
-.grooves i{display:block;width:min(7px,70%);height:var(--h);border-radius:4px;background:#4a3d39;transition:background-color .12s}
-.grooves button.on i{background:color-mix(in srgb,var(--ac) 35%,#ffd9a8)}
-.grooves button:hover i{background:#8a7a74}
-.grooves button.on:hover i{filter:brightness(1.1)}
-.mfoot{display:flex;align-items:center;gap:10px;font-size:12px;color:#d8c6bc}
-.mfoot .mmid{flex:1;text-align:center}
-.mfoot .link{color:#fff;font-size:14px;min-height:36px;padding:0 6px}
+.rater{margin:8px 0 10px;padding:16px 18px 10px;border-radius:20px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
+.rt-top{display:flex;align-items:baseline;gap:12px}
+.rt-l{flex:1;min-width:0;font-size:14px;font-weight:500;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rt-v{font:650 34px/1 Archivo,var(--display);font-stretch:100%;letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums}
+.rt-s{-webkit-appearance:none;appearance:none;width:100%;height:36px;margin:6px 0 0;background:transparent;cursor:pointer;touch-action:pan-y}
+.rt-s:focus-visible{outline:2px solid var(--ac);outline-offset:2px;border-radius:12px}
+.rt-s::-webkit-slider-runnable-track{height:4px;border-radius:4px;background:linear-gradient(90deg,var(--ac) var(--p),var(--line) var(--p))}
+.rt-s::-moz-range-track{height:4px;border-radius:4px;background:var(--line)}
+.rt-s::-moz-range-progress{height:4px;border-radius:4px;background:var(--ac)}
+.rt-s::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:26px;height:26px;margin-top:-11px;border-radius:50%;background:var(--surface);border:2px solid var(--ac);box-shadow:0 2px 8px rgb(0 0 0 / .18)}
+.rt-s::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--surface);border:2px solid var(--ac);box-shadow:0 2px 8px rgb(0 0 0 / .18)}
+.rt-s.unset::-webkit-slider-runnable-track{background:var(--line)}
+.rt-s.unset::-webkit-slider-thumb{border-color:var(--muted)}
+.rt-s.unset::-moz-range-thumb{border-color:var(--muted)}
+.rt-ticks{display:flex;justify-content:space-between;padding:0 10px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.rt-foot{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
+.rt-hint{font-size:12px;color:var(--muted)}
+.rt-foot .link{font-size:14px;min-height:40px;padding:0 4px}
+.rt-done{font-weight:600}
 </style>
 
 <!-- suite:css v10 · shared by Kitchen, Grocery, Lift, DishLog, Protocol, Rail, Game Log, Playback — edit tools/suite.py in the kitchen repo, not here -->
@@ -1151,6 +1157,7 @@ button.rnum:not(.set){border:1px dashed var(--line);border-radius:10px;text-alig
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.11-m', note:'SMOOTHER RECORDS AND RATINGS: the record now slides back into its sleeve when you scroll the album\u2019s header off the top of the screen, as well as sliding out as it comes in. The rating bar of grooves is replaced by a clean slider: drag or tap along the line, 1 to 10 in half steps, and it saves when you let go. Clear and Done sit underneath.'},
   {v:'2026.11.11-l', note:'CLEANER SLEEVES: the Side A and Side B headings are gone from album track lists. The sleeve is softer and lighter, with calmer type, a quieter rating pill and more room. The record now slides out as an album scrolls onto the screen instead of when you touch things, and it no longer jumps or resets when you tap a song or rating.'},
   {v:'2026.11.11-k', note:'SAFER SYNC: a device that has fallen behind can no longer overwrite the newer log on your other devices. Each upload now says which saved version the device last saw, and your Worker turns it away if the log has changed since then, so you get the choice instead. That choice now shows what each version holds (ratings, songs and when it last changed), puts the fuller one first, and asks for a second tap before keeping a version with fewer ratings. Nothing uploads while the choice is waiting. Your Worker also keeps one dated copy of your log each day for two weeks, so a slip like this can be rolled back. Your log was restored today from Nov 5, plus your vinyl Collection; changes made after Nov 5 could not be recovered.'},
   {v:'2026.11.11-j', note:'TIDIER RECORDS: the Photos from Discogs strip is gone from opened records, since your own photos fill Open the record now. Open on Discogs moved to the buttons under each record.'},
@@ -3109,9 +3116,11 @@ function lRedraw(){const el=document.getElementById('llist');if(el)el.innerHTML=
 const SLIN=new Set();let slIO=null;
 function slObserve(){
   if(!('IntersectionObserver' in window))return;
-  if(!slIO)slIO=new IntersectionObserver(es=>{for(const e of es){const id=e.target.dataset.acol,on=e.isIntersecting;
-      if(on)SLIN.add(id);else SLIN.delete(id);e.target.classList.toggle('in',on)}},{rootMargin:'0px 0px -22% 0px',threshold:0.25});
-  slIO.disconnect();document.querySelectorAll('.group.sleeve[data-acol]').forEach(el=>slIO.observe(el))}
+  /* watch the header (where the record lives), not the whole tall sleeve, so the record
+     slides back in as the header leaves the top of the screen */
+  if(!slIO)slIO=new IntersectionObserver(es=>{for(const e of es){const sl=e.target.closest('.group.sleeve'),id=sl&&sl.dataset.acol;if(!id)continue;
+      const on=e.isIntersecting;if(on)SLIN.add(id);else SLIN.delete(id);sl.classList.toggle('in',on)}},{rootMargin:'-16% 0px -22% 0px',threshold:0.85});
+  slIO.disconnect();document.querySelectorAll('.group.sleeve[data-acol] .sl-hero').forEach(el=>slIO.observe(el))}
 
 /* ---------- render ---------- */
 function render(){
@@ -3724,15 +3733,20 @@ function acolRead(key,url){
   im.src=url}
 function acolFor(key,url,g){const c=ACOL[key];if(c)return c;if(c!==''&&url)acolRead(key,url);return acolFallback(g)}
 
-/* ---------- the groove meter ----------
-   Rating editor: 19 grooves for 1 to 10 in half steps, growing taller toward 10.
-   Tapping a groove sets the rating (tapping the current one clears it). */
+/* ---------- the rating slider ----------
+   Drag (or tap) along the line: 1 to 10 in half steps. The number follows your finger and the
+   rating saves when you let go. Clear removes it; Done closes. */
 function rateMeter(id,label){const r=rating(id);
-  return `<div class="meter" role="group" aria-label="Rate ${esc(label)}">
-    <div class="mtop"><span>${esc(label)}</span><b>${r?fmt(r):'\u2013'}</b></div>
-    <div class="grooves">${SCORES.slice(1).map((v,k)=>`<button data-act="rate" data-id="${id}" data-v="${v}" class="${r>=v?'on':''}" style="--h:${38+k*3.4}%" aria-label="Rate ${fmt(v)}${r===v?' (tap to clear)':''}"><i></i></button>`).join('')}</div>
-    <div class="mfoot"><span>1</span><span class="mmid">Tap a groove \u00b7 half steps</span><button class="link" data-act="rclose">Done</button><span>10</span></div>
+  return `<div class="rater" role="group" aria-label="Rate ${esc(label)}" style="--p:${r?(r-1)/9*100:0}%">
+    <div class="rt-top"><span class="rt-l">${esc(label)}</span><b class="rt-v">${r?fmt(r):'\u2013'}</b></div>
+    <input class="rt-s${r?'':' unset'}" type="range" min="1" max="10" step="0.5" value="${r||5}" data-rate="${id}" aria-label="Rating for ${esc(label)}, out of 10">
+    <div class="rt-ticks" aria-hidden="true">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<span>${n}</span>`).join('')}</div>
+    <div class="rt-foot">${r?`<button class="link" data-act="rclear" data-id="${id}">Clear</button>`:'<span class="rt-hint">Drag or tap to rate</span>'}<button class="link rt-done" data-act="rclose">Done</button></div>
   </div>`}
+function rateCommit(el){const id=el.dataset.rate,v=+el.value;if(!id||!v)return;
+  if(v===rating(id))return;
+  S.marks[id]={...(S.marks[id]||{}),r:v};touch();
+  const n=document.querySelector('.rt-s');if(n)n.focus({preventScroll:true})}
 
 function hasDx(g){return g.items.some(i=>i.dx)&&g.items.some(i=>!i.dx)}
 function dxItems(g){return hasDx(g)?g.items.filter(i=>i.dx):[]}
@@ -4013,7 +4027,7 @@ document.addEventListener('click',ev=>{
   else if(act==='splgo'){UI.spLogOpen=true;if(b.dataset.a){UI.view=null;UI.tab='music';UI.sel.music=b.dataset.a;UI.filter='all'}}
   else if(act==='spcopy'){const t=SP_REDIRECT;if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>{SPX.copied=true;render()},()=>{});return}
   else if(act==='rymadd'){const r=rymAddWaiting();RYX.report={total:r.albums,zero:0,filled:0,same:0,kept:[],waiting:[],notFound:[],dups:[],added:r};touch()}
-  else if(act==='rate'){const v=+b.dataset.v;S.marks[id]={...(S.marks[id]||{}),r:rating(id)===v?0:v};if(UI.rOpen===id)UI.rOpen=null;touch()}
+  else if(act==='rclear'){S.marks[id]={...(S.marks[id]||{}),r:0};touch()}
   else if(act==='grpall'){const a=S.music.find(x=>x.id===b.dataset.a),g=a.groups.find(x=>x.id===b.dataset.g),its=viewItems(g),full=its.every(i=>isDone(i.id));
     its.forEach(i=>S.marks[i.id]={...(S.marks[i.id]||{}),done:!full});touch()}
   else if(act==='dxsel'){UI.dxOpen[b.dataset.g]=b.dataset.v==='1';UI.dxAnim=b.dataset.g}
@@ -4076,11 +4090,15 @@ document.addEventListener('click',ev=>{
 });
 
 document.addEventListener('input',ev=>{
+  const rt=ev.target.dataset&&ev.target.dataset.rate;
+  if(rt){const el=ev.target,box=el.closest('.rater'),v=+el.value;el.classList.remove('unset');
+    if(box){box.style.setProperty('--p',((v-1)/9*100)+'%');const o=box.querySelector('.rt-v');if(o)o.textContent=fmt(v)}return}
   if(ev.target.id==='crop-z'){CROP.z=+ev.target.value;cropRedraw();return}
   if(ev.target.id==='crop-r'){CROP.r=+ev.target.value;cropRedraw();return}
   if(ev.target.id==='lq'){UI.lq[UI.tab]=ev.target.value;lRedraw()}
   if(ev.target.id==='col-q'){UI.colQ=ev.target.value;const l=document.getElementById('col-list');if(l)l.innerHTML=colListHTML()}
 });
+document.addEventListener('pointerup',ev=>{const el=ev.target;if(el&&el.classList&&el.classList.contains('rt-s')&&!rating(el.dataset.rate))setTimeout(()=>{if(+el.value)rateCommit(el)},0)});
 document.addEventListener('keydown',ev=>{
   if(ev.target.id==='lq'&&ev.key==='Escape'&&ev.target.value){ev.preventDefault();UI.lq[UI.tab]='';ev.target.value='';lRedraw()}
   /* Enter opens the top match */
@@ -4094,6 +4112,7 @@ document.addEventListener('keydown',ev=>{
   if(ev.key==='ArrowRight'||ev.key==='ArrowLeft'){const n=document.querySelectorAll('.vw-nav')[ev.key==='ArrowRight'?1:0];if(n&&!n.disabled){ev.preventDefault();n.click()}}
 });
 document.addEventListener('change',ev=>{
+  if(ev.target.dataset&&ev.target.dataset.rate){rateCommit(ev.target);return}
   if(ev.target.id==='new-type'){UI.addType=ev.target.value;render();return}
   if(ev.target.id==='col-sort'){UI.colS=ev.target.value;render();return}
   if(ev.target.dataset&&ev.target.dataset.photo){photoPick(ev.target);return}
