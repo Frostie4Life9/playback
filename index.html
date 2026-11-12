@@ -561,53 +561,49 @@ details.addart .add{border-top:1px solid var(--line)}
 .head h2{font:800 34px/1.02 Archivo,var(--display);font-stretch:115%;letter-spacing:-.025em}
 
 /* the sleeve */
-.group.sleeve{--ac:#7a3a24;gap:10px;border-radius:20px;overflow:hidden;background:var(--bg);border:1px solid var(--line);padding:0 0 8px}
+.group.sleeve{--ac:#7a3a24;gap:14px;border-radius:24px;overflow:hidden;background:var(--bg);border:1px solid color-mix(in srgb,var(--line) 60%,transparent);padding:0 0 10px}
 .sheet>.group.sleeve+.group.sleeve{margin-top:0}
-.sl-hero{background:var(--ac);color:#fff;display:flex;flex-direction:column;gap:14px;padding:18px 18px 18px;transition:background-color .5s}
+.sl-hero{background:linear-gradient(160deg,color-mix(in srgb,var(--ac) 88%,#fff),color-mix(in srgb,var(--ac) 82%,#000));color:#fff;display:flex;flex-direction:column;gap:18px;padding:22px 22px 24px;transition:background-color .5s}
 .sl-pack{position:relative;height:168px;width:100%;max-width:290px}
-.sl-cover{position:absolute;left:0;top:0;width:160px;height:160px;border-radius:6px;overflow:hidden;background:color-mix(in srgb,var(--ac) 60%,#000);box-shadow:0 14px 30px rgb(0 0 0 / .35);display:grid;place-items:center}
+.sl-cover{position:absolute;left:0;top:0;width:160px;height:160px;border-radius:10px;overflow:hidden;background:color-mix(in srgb,var(--ac) 60%,#000);box-shadow:0 14px 30px rgb(0 0 0 / .35);display:grid;place-items:center}
 .sl-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
 .sl-ph{font:900 64px Archivo,var(--display);font-stretch:125%;color:rgb(255 255 255 / .35)}
 .sl-disc{position:absolute;left:112px;top:4px;width:160px;height:160px;border-radius:50%;background:#141111;box-shadow:0 12px 26px rgb(0 0 0 / .35)}
 .sl-disc i{position:absolute;left:50%;top:50%;width:var(--d);height:var(--d);transform:translate(-50%,-50%);border-radius:50%;border:1.5px solid rgb(255 255 255 / .09);box-sizing:border-box}
 .sl-disc i.on{border-color:color-mix(in srgb,var(--ac) 35%,#ffd9a8)}
 .sl-lab{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:var(--ac);display:grid;place-items:center;font:800 12px Archivo,var(--display);color:#fff;font-variant-numeric:tabular-nums}
-@media (prefers-reduced-motion:no-preference){.sl-disc{transition:left .5s cubic-bezier(.2,.8,.2,1)}.group.sleeve:hover .sl-disc{left:128px}}
+@media (prefers-reduced-motion:no-preference){.sl-disc{transition:left .7s cubic-bezier(.2,.8,.2,1)}}
+.group.sleeve.in .sl-disc{left:128px}
 .sl-meta{display:flex;flex-direction:column;gap:4px;min-width:0}
-.sl-kind{font:600 12px var(--body);letter-spacing:.08em;text-transform:uppercase;color:rgb(255 255 255 / .82)}
-.sl-meta h3{margin:0;font:900 30px/.98 Archivo,var(--display);font-stretch:118%;letter-spacing:-.02em;text-transform:uppercase;overflow-wrap:anywhere}
-.sl-sub{font-size:14px;color:rgb(255 255 255 / .85)}
+.sl-kind{font:500 13px var(--body);letter-spacing:.01em;color:rgb(255 255 255 / .72)}
+.sl-meta h3{margin:0;font:650 28px/1.08 Archivo,var(--display);font-stretch:100%;letter-spacing:-.022em;overflow-wrap:anywhere}
+.sl-sub{font-size:14px;color:rgb(255 255 255 / .72)}
 .sl-meta .dxbadge{align-self:flex-start}
 @media (min-width:761px){.sl-hero{flex-direction:row;align-items:flex-end}.sl-pack{flex:0 0 260px}.sl-meta{flex:1;padding-bottom:6px}}
-.group.sleeve .dxseg{margin:4px 14px 0}
-.sl-acts{display:flex;gap:8px;align-items:stretch;padding:4px 14px 0}
+.group.sleeve .dxseg{margin:4px 18px 0}
+.sl-acts{display:flex;gap:10px;align-items:stretch;padding:4px 18px 0}
 .sl-sp{flex:1}
-.sl-rate{flex:1;min-width:0;min-height:56px;display:flex;align-items:center;gap:10px;border:0;border-radius:999px;background:var(--ink);color:var(--surface);padding:6px 6px 6px 18px;text-align:left}
-.sl-rate .t{flex:1;min-width:0;font-weight:700;font-size:15px;line-height:1.15}
-.sl-rate .v{font:900 22px Archivo,var(--display);font-stretch:118%;color:var(--surface)}
-.sl-rate .avg{flex:0 0 auto;min-width:64px;padding:0 8px;min-height:44px;border-radius:999px;background:var(--surface);color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;font-weight:600;line-height:1.1}
-.sl-rate .avg b{font:800 16px Archivo,var(--display);color:var(--ink)}
-.sl-ic{width:52px;min-height:52px;align-self:center;flex:0 0 auto;border-radius:50%;border:1.5px solid var(--ink);background:transparent;color:var(--ink);display:grid;place-items:center}
+.sl-rate{flex:1;min-width:0;min-height:56px;display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);padding:6px 6px 6px 20px;text-align:left;box-shadow:0 1px 2px rgb(0 0 0 / .04)}
+.sl-rate .t{flex:1;min-width:0;font-weight:500;font-size:15px;line-height:1.15;color:var(--muted)}
+.sl-rate .v{font:650 22px Archivo,var(--display);font-stretch:100%;color:var(--ink)}
+.sl-rate .avg{flex:0 0 auto;min-width:64px;padding:0 8px;min-height:44px;border-radius:999px;background:var(--sunk);color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;font-weight:600;line-height:1.1}
+.sl-rate .avg b{font:650 16px Archivo,var(--display);color:var(--ink)}
+.sl-ic{width:52px;min-height:52px;align-self:center;flex:0 0 auto;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);display:grid;place-items:center}
 .sl-ic svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .sl-ic[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
-.sl-note{margin:0;padding:0 16px;font-size:13px;color:var(--muted)}
+.sl-note{margin:0;padding:0 20px;font-size:13px;color:var(--muted)}
 .sl-note .diff.up{color:var(--done)}.sl-note .diff.down{color:var(--warn)}
-.tlist{display:flex;flex-direction:column;padding:2px 14px 0}
-.sidel{display:flex;align-items:center;gap:10px;margin:12px 0 2px}
-.sidel span{font:900 12px Archivo,var(--display);font-stretch:125%;letter-spacing:.14em;text-transform:uppercase;color:var(--ac)}
-:root[data-theme="dark"] .sidel span{color:color-mix(in srgb,var(--ac) 45%,#fff)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .sidel span{color:color-mix(in srgb,var(--ac) 45%,#fff)}}
-.sidel::after{content:"";flex:1;height:2px;background:var(--ink)}
-.track.sl-t,.track.sl-t.ep{grid-template-columns:30px minmax(0,1fr) auto 44px;gap:6px;min-height:52px;padding:0 0 0 2px;border-bottom:1px solid var(--line);border-radius:0}
+.tlist{display:flex;flex-direction:column;padding:6px 18px 0}
+.track.sl-t,.track.sl-t.ep{grid-template-columns:30px minmax(0,1fr) auto 44px;gap:6px;min-height:54px;padding:0 0 0 2px;border-bottom:1px solid color-mix(in srgb,var(--line) 55%,transparent);border-radius:0}
 @media (max-width:560px){.track.sl-t{grid-template-columns:30px minmax(0,1fr) auto 44px}}
 .track.sl-t:hover{background:transparent}
-.track.sl-t .num{font:800 17px Archivo,var(--display);text-align:left;color:var(--muted)}
+.track.sl-t .num{font:500 14px Archivo,var(--display);text-align:left;color:var(--muted);font-variant-numeric:tabular-nums}
 .track.sl-t.done .num{color:var(--ink)}
-.track.sl-t .ttl{font-size:16px;font-weight:500;color:var(--ink)}
+.track.sl-t .ttl{font-size:16px;font-weight:450;color:var(--ink)}
 .track.sl-t:not(.done) .ttl{color:color-mix(in srgb,var(--ink) 78%,var(--bg))}
 .rnum{min-width:44px;min-height:40px;border:0;background:transparent;padding:0 4px;text-align:right;font:600 13px var(--body);color:var(--muted)}
 button.rnum:not(.set){border:1px dashed var(--line);border-radius:10px;text-align:center}
-.rnum.set{font:900 19px Archivo,var(--display);font-stretch:112%;color:var(--ac)}
+.rnum.set{font:650 17px Archivo,var(--display);font-stretch:100%;color:var(--ac)}
 :root[data-theme="dark"] .rnum.set{color:color-mix(in srgb,var(--ac) 40%,#fff)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .rnum.set{color:color-mix(in srgb,var(--ac) 40%,#fff)}}
 .track.sl-t .check{width:44px;height:44px;border:0;border-radius:50%;background:transparent;position:relative}
@@ -1155,6 +1151,7 @@ button.rnum:not(.set){border:1px dashed var(--line);border-radius:10px;text-alig
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.11-l', note:'CLEANER SLEEVES: the Side A and Side B headings are gone from album track lists. The sleeve is softer and lighter, with calmer type, a quieter rating pill and more room. The record now slides out as an album scrolls onto the screen instead of when you touch things, and it no longer jumps or resets when you tap a song or rating.'},
   {v:'2026.11.11-k', note:'SAFER SYNC: a device that has fallen behind can no longer overwrite the newer log on your other devices. Each upload now says which saved version the device last saw, and your Worker turns it away if the log has changed since then, so you get the choice instead. That choice now shows what each version holds (ratings, songs and when it last changed), puts the fuller one first, and asks for a second tap before keeping a version with fewer ratings. Nothing uploads while the choice is waiting. Your Worker also keeps one dated copy of your log each day for two weeks, so a slip like this can be rolled back. Your log was restored today from Nov 5, plus your vinyl Collection; changes made after Nov 5 could not be recovered.'},
   {v:'2026.11.11-j', note:'TIDIER RECORDS: the Photos from Discogs strip is gone from opened records, since your own photos fill Open the record now. Open on Discogs moved to the buttons under each record.'},
   {v:'2026.11.11-i', note:'YOUR OWN PHOTOS: in Open the record, each view has an Add your photo button (front, back, inner sleeve, Side A and Side B labels). Take or pick a photo, drag, zoom and straighten it into the guide, and it is cropped, shrunk and saved by your sync Worker, so it shows on every device. Your photos win over scans and Discogs picks, your front photo becomes the cover in your crate, and a label photo becomes the record\u2019s center label. A label photo also reads the real color of your vinyl from the ring around the label, so the drawn disc matches your copy (Edit details can still override it). Removing a record removes its photos.'},
@@ -3107,10 +3104,19 @@ function lRedraw(){const el=document.getElementById('llist');if(el)el.innerHTML=
   const q=document.querySelector('.lfind .q');if(q){const has=!!UI.lq[UI.tab],btn=q.querySelector('button');
     if(has&&!btn)q.insertAdjacentHTML('beforeend','<button data-act="lqx" aria-label="Clear search">\u00d7</button>');if(!has&&btn)btn.remove()}}
 
+/* the record slides out of its sleeve as the sleeve scrolls into view. Which sleeves are on screen is
+   remembered across redraws, so a tap never replays or resets the motion. */
+const SLIN=new Set();let slIO=null;
+function slObserve(){
+  if(!('IntersectionObserver' in window))return;
+  if(!slIO)slIO=new IntersectionObserver(es=>{for(const e of es){const id=e.target.dataset.acol,on=e.isIntersecting;
+      if(on)SLIN.add(id);else SLIN.delete(id);e.target.classList.toggle('in',on)}},{rootMargin:'0px 0px -22% 0px',threshold:0.25});
+  slIO.disconnect();document.querySelectorAll('.group.sleeve[data-acol]').forEach(el=>slIO.observe(el))}
+
 /* ---------- render ---------- */
 function render(){
   const ll=document.getElementById('llist'),llTop=ll?ll.scrollTop:0,llTab=UI.llTab;UI.llTab=UI.tab;
-  renderMain();
+  renderMain();slObserve();
   const nl=document.getElementById('llist');
   if(nl){if(ll&&llTab===UI.tab)nl.scrollTop=llTop;
     else{const c=nl.querySelector('[aria-current="true"]');if(c)nl.scrollTop=c.offsetTop-nl.clientHeight/3}}
@@ -3819,16 +3825,13 @@ function artistView(a){
     for(let j=0;j<R;j++){const lo=Math.floor(j*shown.length/R),hi=Math.max(lo+1,Math.floor((j+1)*shown.length/R)),seg=shown.slice(lo,hi);
       rings.push(seg.length&&seg.every(i=>isDone(i.id)))}
     const ringHtml=rings.map((on,j)=>{const d=96-j*(52/Math.max(R,1));return `<i class="${on?'on':''}" style="--d:${d.toFixed(1)}%"></i>`}).join('');
-    const sides=!dx&&shown.length>=6&&/album|Live|Compilation|Archival/i.test(g.kind),half=Math.ceil(shown.length/2);
-    let lastSide=null;
     const trackRows=rows.map(({i,k})=>{const s=songShow(i),r=rating(i.id),dn=isDone(i.id);
-      let lab='';if(sides){const sd2=k<half?'A':'B';if(sd2!==lastSide){lab=`<div class="sidel"><span>Side ${sd2}</span></div>`;lastSide=sd2}}
-      return lab+`<div class="track sl-t ${i.dx?'dx':''} ${dn?'done':''}"${i.dx&&UI.dxAnim===g.id?` style="animation-delay:${Math.min(k,14)*26}ms"`:''}><span class="num">${k+1}</span>
+      return `<div class="track sl-t ${i.dx?'dx':''} ${dn?'done':''}"${i.dx&&UI.dxAnim===g.id?` style="animation-delay:${Math.min(k,14)*26}ms"`:''}><span class="num">${k+1}</span>
         <span class="ttl">${esc(s.t)}${s.f.length?`<span class="feat">feat. ${esc(s.f.join(', '))}</span>`:''}</span>
         ${r?`<button class="rnum set" data-act="ropen" data-id="${i.id}" aria-label="Your rating ${fmt(r)} for ${esc(s.t)}, change">${fmt(r)}</button>`:dn?`<button class="rnum" data-act="ropen" data-id="${i.id}" aria-label="Rate ${esc(s.t)}">Rate</button>`:'<span class="rnum"></span>'}
         <button class="check" data-act="tog" data-id="${i.id}" aria-pressed="${dn}" aria-label="Heard ${esc(i.title)}"></button></div>
         ${UI.rOpen===i.id?rateMeter(i.id,s.t):''}`}).join('');
-    return `<div class="group sleeve ${dx?'dxon':''} ${UI.dxAnim===g.id?'dxanim':''}" data-acol="${g.id}" style="--ac:${col}">
+    return `<div class="group sleeve ${dx?'dxon':''} ${UI.dxAnim===g.id?'dxanim':''} ${SLIN.has(String(g.id))?'in':''}" data-acol="${g.id}" style="--ac:${col}">
       <div class="sl-hero">
         <div class="sl-pack">
           <div class="sl-disc" role="img" aria-label="${gd} of ${shown.length} songs heard">${ringHtml}<span class="sl-lab">${shown.length?gd+'/'+shown.length:'\u2013'}</span></div>
