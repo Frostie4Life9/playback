@@ -572,15 +572,18 @@ details.addart .add{border-top:1px solid var(--line)}
 .sl-disc{position:absolute;left:112px;top:4px;width:160px;height:160px;border-radius:50%;background:#141111;box-shadow:0 12px 26px rgb(0 0 0 / .35);will-change:transform;backface-visibility:hidden;transform:translate3d(0,0,0)}
 @property --j{syntax:'<percentage>';inherits:false;initial-value:0%}
 .sl-disc i{position:absolute;left:calc(50% - (var(--d) + var(--j))/2);top:calc(50% - (var(--d) + var(--j))/2);width:calc(var(--d) + var(--j));height:calc(var(--d) + var(--j));border-radius:50%;border:1.5px solid rgb(255 255 255 / .09);box-sizing:border-box}
-.sl-disc i.on{border-color:color-mix(in srgb,var(--ac) 35%,#ffd9a8)}
+.sl-disc{--gv:color-mix(in srgb,var(--ac) 35%,#ffd9a8);--gp:color-mix(in srgb,var(--ac) 8%,#fff4e2);--gg:color-mix(in srgb,var(--ac) 70%,#ffd9a8)}
+/* grooves take the banner's own hue and amount of color: a gray cover gets pale gray grooves, a red one pale rose */
+@supports (color:oklch(from red l c h)){.sl-disc{--gv:oklch(from var(--ac) .86 calc(c*.7) h);--gp:oklch(from var(--ac) .96 calc(c*.25) h);--gg:oklch(from var(--ac) .7 calc(c*.9) h)}}
+.sl-disc i.on{border-color:var(--gv)}
 /* the pulse: a ripple runs from the label outward through the grooves you have heard. Each groove swells
    a little (its real size, via --j, rather than a transform) and glows, then settles. Because it never
    becomes a transform it is never lifted onto its own layer, so there is nothing to snap when it ends.
    --rb is the start delay: the slide-out waits for the record to emerge. */
 @keyframes slPulse{
-  0%{--j:0%;border-color:color-mix(in srgb,var(--ac) 35%,#ffd9a8);box-shadow:0 0 0 0 transparent}
-  35%{--j:4.2%;border-color:color-mix(in srgb,var(--ac) 8%,#fff4e2);box-shadow:0 0 8px 1.5px color-mix(in srgb,var(--ac) 70%,#ffd9a8)}
-  100%{--j:0%;border-color:color-mix(in srgb,var(--ac) 35%,#ffd9a8);box-shadow:0 0 0 0 transparent}}
+  0%{--j:0%;border-color:var(--gv);box-shadow:0 0 0 0 transparent}
+  35%{--j:4.2%;border-color:var(--gp);box-shadow:0 0 8px 1.5px var(--gg)}
+  100%{--j:0%;border-color:var(--gv);box-shadow:0 0 0 0 transparent}}
 @media (prefers-reduced-motion:no-preference){.group.sleeve.rip .sl-disc i.on{animation:slPulse .62s cubic-bezier(.3,.6,.3,1) calc(var(--rb,0ms) + var(--o,0)*38ms) backwards}}
 .sl-lab{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:var(--ac);display:grid;place-items:center;font:800 12px Archivo,var(--display);color:#fff;font-variant-numeric:tabular-nums}
 @media (prefers-reduced-motion:no-preference){.sl-disc{transition:transform .7s cubic-bezier(.2,.8,.2,1)}}
@@ -1204,6 +1207,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.11-z', note:'GRAY COVERS, FINISHED: the record\u2019s grooves used to be the same peach on every album, which stood out against a gray banner. They now take the banner\u2019s own hue and amount of color (pale gray on a gray cover, pale rose on a red one), and the glow when they pulse follows. Banners for gray and sepia covers are also a little darker so the cover and title stand out.'},
   {v:'2026.11.11-y', note:'GRAY COVERS GET GRAY BANNERS: an album with a black-and-white or sepia cover used to get a tan or olive banner, because the color picker pushed even a faint tint up to a minimum amount of color. Banners now follow how colorful the cover really is, so a near-gray cover gets a quiet charcoal banner and colorful covers look the same as before. Every cover is read again once so old banners update.'},
   {v:'2026.11.11-x', note:'SONGS WITH LONGER TITLES FIND THEIR MATCH: a song whose title only differs by a subtitle in brackets, like “2 + 2 = 5 (The Lukewarm.)” against “2 + 2 = 5”, or “Don’t Rely on Other Men (Album)” against “don’t rely on other men”, now lands on the matching song instead of being left on its own. Your checkmark and rating move with it, so the ratings stuck in Kept from your earlier list and the stray one-song album copies fold back into the real album the next time the app opens. It only does this when exactly one song fits, never when the two songs have different ratings, and (Reprise), (Part 2) and (Intro) still count as different songs. Song ratings from the RYM helper use the same rule, and the import summary lists every song it matched this way so you can check them. If it moves anything for an artist, Undo last import puts that artist back.'},
   {v:'2026.11.11-w', note:'UPDATE BAR RETRY FIX: right after you tap Reload, if GitHub is still handing out the old copy, the check now waits one quiet minute instead of queuing a new retry on every 30-second look.'},
@@ -3838,7 +3842,7 @@ function acolFix(r,gr,b){r/=255;gr/=255;b/=255;const mx=Math.max(r,gr,b),mn=Math
      almost none, so it keeps a quiet charcoal instead of being pushed up to the 28% color floor. */
   const t=Math.max(0,Math.min(1,(d-.04)/.16)),k=t*t*(3-2*t),q=.05*Math.min(1,d/.02),
         s=q+(Math.max(.28,Math.min(.62,sat))-q)*k;
-  return hslHex(h,s,Math.max(.22,Math.min(.36,l)))}
+  return hslHex(h,s,Math.max(.22,Math.min(.28+.08*k,l)))}
 function acolRead(key,url){
   if(ACOL_TRY[key]||!url)return;ACOL_TRY[key]=1;
   const im=new Image();im.crossOrigin='anonymous';im.decoding='async';
