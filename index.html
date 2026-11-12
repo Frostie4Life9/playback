@@ -578,8 +578,12 @@ details.addart .add{border-top:1px solid var(--line)}
 .sl-kind{font:500 13px var(--body);letter-spacing:.01em;color:rgb(255 255 255 / .72)}
 .sl-meta h3{margin:0;font:650 28px/1.08 Archivo,var(--display);font-stretch:100%;letter-spacing:-.022em;overflow-wrap:anywhere}
 .sl-sub{font-size:14px;color:rgb(255 255 255 / .72)}
+.sl-hacts{display:flex;gap:8px;margin-top:10px}
+.sl-hacts .sl-ic{width:42px;min-height:42px;border-color:rgb(255 255 255 / .38);color:#fff;background:rgb(255 255 255 / .1)}
+.sl-hacts .sl-ic svg{width:20px;height:20px}
+.sl-hacts .sl-ic[aria-pressed="true"]{background:#fff;color:var(--ac);border-color:#fff}
 .sl-meta .dxbadge{align-self:flex-start}
-@media (min-width:761px){.sl-hero{flex-direction:row;align-items:flex-end}.sl-pack{flex:0 0 260px}.sl-meta{flex:1;padding-bottom:6px}}
+@media (min-width:761px){.sl-hero{flex-direction:row;align-items:flex-end}.sl-pack{flex:0 0 312px}.sl-meta{flex:1;padding-bottom:6px}}
 .group.sleeve .dxseg{margin:4px 18px 0}
 .sl-acts{display:flex;gap:10px;align-items:stretch;padding:4px 18px 0}
 .sl-sp{flex:1}
@@ -596,7 +600,8 @@ details.addart .add{border-top:1px solid var(--line)}
 .tlist{display:flex;flex-direction:column;padding:6px 18px 0}
 .track.sl-t,.track.sl-t.ep{grid-template-columns:30px minmax(0,1fr) auto 44px;gap:6px;min-height:54px;padding:0 0 0 2px;border-bottom:1px solid color-mix(in srgb,var(--line) 55%,transparent);border-radius:0}
 @media (max-width:560px){.track.sl-t{grid-template-columns:30px minmax(0,1fr) auto 44px}}
-.track.sl-t:hover{background:transparent}
+.track.sl-t{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.track.sl-t:hover,.track.sl-t.ropen{background:color-mix(in srgb,var(--ink) 4%,transparent)}
 .track.sl-t .num{font:500 14px Archivo,var(--display);text-align:left;color:var(--muted);font-variant-numeric:tabular-nums}
 .track.sl-t.done .num{color:var(--ink)}
 .track.sl-t .ttl{font-size:16px;font-weight:450;color:var(--ink)}
@@ -1157,6 +1162,7 @@ button.rnum:not(.set){border:1px dashed var(--line);border-radius:10px;text-alig
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.11-n', note:'TAP A SONG: tapping anywhere on a song row opens its rating, not just the number, and rating a song you hadn\u2019t checked off counts it as heard. The record no longer slides over the start of the title. Singles lose the empty row: their listen-list and mark-all buttons now sit under the title.'},
   {v:'2026.11.11-m', note:'SMOOTHER RECORDS AND RATINGS: the record now slides back into its sleeve when you scroll the album\u2019s header off the top of the screen, as well as sliding out as it comes in. The rating bar of grooves is replaced by a clean slider: drag or tap along the line, 1 to 10 in half steps, and it saves when you let go. Clear and Done sit underneath.'},
   {v:'2026.11.11-l', note:'CLEANER SLEEVES: the Side A and Side B headings are gone from album track lists. The sleeve is softer and lighter, with calmer type, a quieter rating pill and more room. The record now slides out as an album scrolls onto the screen instead of when you touch things, and it no longer jumps or resets when you tap a song or rating.'},
   {v:'2026.11.11-k', note:'SAFER SYNC: a device that has fallen behind can no longer overwrite the newer log on your other devices. Each upload now says which saved version the device last saw, and your Worker turns it away if the log has changed since then, so you get the choice instead. That choice now shows what each version holds (ratings, songs and when it last changed), puts the fuller one first, and asks for a second tap before keeping a version with fewer ratings. Nothing uploads while the choice is waiting. Your Worker also keeps one dated copy of your log each day for two weeks, so a slip like this can be rolled back. Your log was restored today from Nov 5, plus your vinyl Collection; changes made after Nov 5 could not be recovered.'},
@@ -3745,7 +3751,8 @@ function rateMeter(id,label){const r=rating(id);
   </div>`}
 function rateCommit(el){const id=el.dataset.rate,v=+el.value;if(!id||!v)return;
   if(v===rating(id))return;
-  S.marks[id]={...(S.marks[id]||{}),r:v};touch();
+  const isGroup=S.music.some(a=>a.groups.some(g=>g.id===id||dxId(g)===id));
+  S.marks[id]={...(S.marks[id]||{}),r:v,...(isGroup||isDone(id)?{}:{done:true})};touch();
   const n=document.querySelector('.rt-s');if(n)n.focus({preventScroll:true})}
 
 function hasDx(g){return g.items.some(i=>i.dx)&&g.items.some(i=>!i.dx)}
@@ -3756,7 +3763,12 @@ function viewItems(g){return dxOn(g)?g.items:stdItems(g)}
 /* Link to RYM's own search for this album. It is only a link (nothing is fetched), and it uses
    the standard title so a deluxe view still finds the album's page. */
 const rymSearchUrl=(a,g)=>'https://rateyourmusic.com/search?searchtype=l&searchterm='+encodeURIComponent((a&&a.name?a.name+' ':'')+g.title);
+function sleeveBtns(g,a,full,n){
+  const on=llOn(a.name,g.title),sg=stdItems(g),heard=(sg.length>0&&sg.every(i=>isDone(i.id)))||!!rating(g.id),ll=on||!heard;
+  return `${ll?`<button class="sl-ic" data-act="lltog" data-a="${a.id}" data-g="${g.id}" aria-pressed="${on}" aria-label="${on?'On your listen list, remove':'Add to listen list'}" title="${on?'On your listen list':'Add to listen list'}">${on?ICO.listOn:ICO.list}</button>`:''}
+    ${n?`<button class="sl-ic" data-act="grpall" data-a="${a.id}" data-g="${g.id}" aria-label="${full?'Clear all checkmarks':'Mark all heard'}" title="${full?'Clear all':'Mark all heard'}" aria-pressed="${full}">${ICO.all}</button>`:''}`}
 function albumBar(g,a,full,n){
+  if(!RATEABLE.includes(g.kind))return '';   /* singles and the like have no album rating, so no empty row: their buttons sit in the header */
   const can=RATEABLE.includes(g.kind),dx=dxOn(g),its=dx?g.items:stdItems(g),rid=dx?dxId(g):g.id,rs=its.map(i=>rating(i.id)).filter(Boolean),rn=rs.length,r=can?rating(rid):0;
   const avg=rn?rs.reduce((x,y)=>x+y,0)/rn:0,d=r&&rn?r-avg:null,f1=v=>v.toFixed(1);
   const on=llOn(a.name,g.title),sg=stdItems(g),heard=(sg.length>0&&sg.every(i=>isDone(i.id)))||!!rating(g.id),ll=on||!heard;
@@ -3840,7 +3852,7 @@ function artistView(a){
       rings.push(seg.length&&seg.every(i=>isDone(i.id)))}
     const ringHtml=rings.map((on,j)=>{const d=96-j*(52/Math.max(R,1));return `<i class="${on?'on':''}" style="--d:${d.toFixed(1)}%"></i>`}).join('');
     const trackRows=rows.map(({i,k})=>{const s=songShow(i),r=rating(i.id),dn=isDone(i.id);
-      return `<div class="track sl-t ${i.dx?'dx':''} ${dn?'done':''}"${i.dx&&UI.dxAnim===g.id?` style="animation-delay:${Math.min(k,14)*26}ms"`:''}><span class="num">${k+1}</span>
+      return `<div class="track sl-t ${i.dx?'dx':''} ${dn?'done':''} ${UI.rOpen===i.id?'ropen':''}" data-act="ropen" data-id="${i.id}"${i.dx&&UI.dxAnim===g.id?` style="animation-delay:${Math.min(k,14)*26}ms"`:''}><span class="num">${k+1}</span>
         <span class="ttl">${esc(s.t)}${s.f.length?`<span class="feat">feat. ${esc(s.f.join(', '))}</span>`:''}</span>
         ${r?`<button class="rnum set" data-act="ropen" data-id="${i.id}" aria-label="Your rating ${fmt(r)} for ${esc(s.t)}, change">${fmt(r)}</button>`:dn?`<button class="rnum" data-act="ropen" data-id="${i.id}" aria-label="Rate ${esc(s.t)}">Rate</button>`:'<span class="rnum"></span>'}
         <button class="check" data-act="tog" data-id="${i.id}" aria-pressed="${dn}" aria-label="Heard ${esc(i.title)}"></button></div>
@@ -3851,7 +3863,7 @@ function artistView(a){
           <div class="sl-disc" role="img" aria-label="${gd} of ${shown.length} songs heard">${ringHtml}<span class="sl-lab">${shown.length?gd+'/'+shown.length:'\u2013'}</span></div>
           <div class="sl-cover">${art?`<img src="${esc(art)}" ${dx&&sArt&&art!==sArt?`data-f="${esc(sArt)}" `:''}alt="" loading="lazy" decoding="async" onerror="if(this.dataset.f){this.src=this.dataset.f;this.removeAttribute('data-f')}else this.remove()">`:''}<span class="sl-ph" aria-hidden="true">${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div>
         </div>
-        <div class="sl-meta"><span class="sl-kind">${esc(g.kind)} \u00b7 ${esc(g.year)}</span><h3>${esc(dx?dxName(g):g.title)}</h3>${dx?'<span class="dxbadge">Deluxe</span>':''}<span class="sl-sub">${gd} of ${shown.length} heard</span></div>
+        <div class="sl-meta"><span class="sl-kind">${esc(g.kind)} \u00b7 ${esc(g.year)}</span><h3>${esc(dx?dxName(g):g.title)}</h3>${dx?'<span class="dxbadge">Deluxe</span>':''}<span class="sl-sub">${gd} of ${shown.length} heard</span>${RATEABLE.includes(g.kind)?'':`<div class="sl-hacts">${sleeveBtns(g,a,full,shown.length)}</div>`}</div>
       </div>
       ${dxs.length?`<div class="dxseg" role="group" aria-label="Edition" data-dx="${dx?1:0}"><button type="button" data-act="dxsel" data-g="${g.id}" data-v="0" aria-pressed="${!dx}">Standard<span class="mono">${sd}/${std.length}</span></button><button type="button" class="dx" data-act="dxsel" data-g="${g.id}" data-v="1" aria-pressed="${dx}">Deluxe<span class="mono">${dd}/${g.items.length}</span></button></div>`:''}
       ${albumBar(g,a,full,shown.length)}
