@@ -561,8 +561,9 @@ details.addart .add{border-top:1px solid var(--line)}
 .head h2{font:800 34px/1.02 Archivo,var(--display);font-stretch:115%;letter-spacing:-.025em}
 
 /* the sleeve */
-.group.sleeve{--ac:#7a3a24;gap:14px;border-radius:24px;overflow:hidden;background:var(--bg);border:1px solid color-mix(in srgb,var(--line) 60%,transparent);padding:0 0 10px}
+.group.sleeve{--acs:#7a3a24;--acd:var(--acs);--ac:var(--acs);gap:14px;border-radius:24px;overflow:hidden;background:var(--bg);border:1px solid color-mix(in srgb,var(--line) 60%,transparent);padding:0 0 10px}
 .sheet>.group.sleeve+.group.sleeve{margin-top:0}
+.group.sleeve.dxon{--ac:var(--acd)}
 .sl-hero{background:linear-gradient(160deg,color-mix(in srgb,var(--ac) 88%,#fff),color-mix(in srgb,var(--ac) 82%,#000));color:#fff;display:flex;flex-direction:column;gap:18px;padding:22px 22px 24px;transition:background-color .5s}
 .sl-pack{position:relative;height:168px;width:100%;max-width:290px}
 .sl-cover{position:absolute;left:0;top:0;width:160px;height:160px;border-radius:10px;overflow:hidden;background:color-mix(in srgb,var(--ac) 60%,#000);box-shadow:0 14px 30px rgb(0 0 0 / .35);display:grid;place-items:center}
@@ -598,23 +599,26 @@ details.addart .add{border-top:1px solid var(--line)}
 .sl-note{margin:0;padding:0 20px;font-size:13px;color:var(--muted)}
 .sl-note .diff.up{color:var(--done)}.sl-note .diff.down{color:var(--warn)}
 .tlist{display:flex;flex-direction:column;padding:6px 18px 0}
-.group.sleeve{--acl:var(--ac)}
-:root[data-theme="dark"] .group.sleeve{--acl:color-mix(in srgb,var(--ac) 45%,#fff)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .group.sleeve{--acl:color-mix(in srgb,var(--ac) 45%,#fff)}}
-/* a song: number, title, and a ring that is the heard-check and the rating in one; a soft wash of the album's color fades out toward the rating */
+/* a song: number, title, and a ring that is the heard-check and the rating in one; a soft wash of the album's color eases out toward the rating.
+   Standard songs use the standard cover's color; deluxe songs use the deluxe cover's. */
+.track.sl-t{--rc:var(--acs);--rcl:var(--rc)}
+.track.sl-t.dx{--rc:var(--acd)}
+:root[data-theme="dark"] .track.sl-t{--rcl:color-mix(in srgb,var(--rc) 58%,#fff)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .track.sl-t{--rcl:color-mix(in srgb,var(--rc) 58%,#fff)}}
 .track.sl-t,.track.sl-t.ep{position:relative;overflow:hidden;grid-template-columns:30px minmax(0,1fr) 48px;gap:6px;min-height:52px;margin-bottom:4px;padding:0 4px 0 12px;border:0;border-radius:14px;background:color-mix(in srgb,var(--ink) 3.5%,transparent);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background-color .2s}
 .track.sl-t:hover,.track.sl-t.ropen{background:color-mix(in srgb,var(--ink) 6%,transparent)}
 .track.sl-t>*{position:relative}
-.track.sl-t>.wash{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,color-mix(in srgb,var(--acl) 34%,transparent),color-mix(in srgb,var(--acl) 3%,transparent));pointer-events:none}
+.track.sl-t>.wash{position:absolute;left:0;top:0;bottom:0;pointer-events:none;background:linear-gradient(90deg,color-mix(in srgb,var(--rc) 66%,transparent) 0%,color-mix(in srgb,var(--rc) 46%,transparent) 22%,color-mix(in srgb,var(--rc) 28%,transparent) 48%,color-mix(in srgb,var(--rc) 16%,transparent) 74%,color-mix(in srgb,var(--rc) 11%,transparent) 100%);-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 26px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 26px),transparent)}
 @media (prefers-reduced-motion:no-preference){.track.sl-t>.wash{transition:width .45s cubic-bezier(.2,.8,.2,1)}}
 .track.sl-t .num{font:500 14px Archivo,var(--display);text-align:left;color:var(--muted);font-variant-numeric:tabular-nums}
 .track.sl-t.done .num{color:var(--ink)}
 .track.sl-t .ttl{font-size:16px;font-weight:450;color:var(--ink)}
 .track.sl-t:not(.done):not(.rated) .ttl{color:color-mix(in srgb,var(--ink) 70%,var(--bg))}
 .track.sl-t .check{width:44px;height:44px;border:0;border-radius:50%;background:transparent;padding:0;display:grid;place-items:center;position:relative}
+.track.sl-t .check::before,.track.sl-t .check::after{content:none;display:none}
 .track.sl-t .check svg{position:absolute;inset:0;width:44px;height:44px}
 .track.sl-t .check .rg-t{fill:none;stroke:color-mix(in srgb,var(--ink) 16%,transparent);stroke-width:3}
-.track.sl-t .check .rg-v{fill:none;stroke:var(--acl);stroke-width:3;stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%}
+.track.sl-t .check .rg-v{fill:none;stroke:var(--rcl);stroke-width:3;stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%}
 @media (prefers-reduced-motion:no-preference){.track.sl-t .check .rg-v{transition:stroke-dasharray .45s cubic-bezier(.2,.8,.2,1)}}
 .track.sl-t .check .rg-n{position:relative;font:600 13px Archivo,var(--display);font-variant-numeric:tabular-nums;color:var(--ink)}
 .track.sl-t .check .rg-d{position:relative;width:8px;height:8px;border-radius:50%;background:var(--ink)}
@@ -1164,6 +1168,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.11-p', note:'TRUER COLOR, SMOOTHER FADE: the wash behind each song now uses the album\u2019s real banner color instead of a washed-out version, and it eases out gradually with a soft, still visible end at the rating. The stray dark chip and off-center number in the rings are gone. Deluxe: switching to Deluxe now recolors the banner from the deluxe cover, and only the deluxe songs get the deluxe color in their fade; standard songs keep the standard album color.'},
   {v:'2026.11.11-o', note:'RINGS AND WASH: each song\u2019s heard-check is now a ring that fills to your rating with the number inside (a dot when it\u2019s heard but not rated, empty when you haven\u2019t heard it), and a soft wash of the album\u2019s color fades out behind the row toward the rating. Tap the ring to check a song off; tap anywhere else on the row to rate it.'},
   {v:'2026.11.11-n', note:'TAP A SONG: tapping anywhere on a song row opens its rating, not just the number, and rating a song you hadn\u2019t checked off counts it as heard. The record no longer slides over the start of the title. Singles lose the empty row: their listen-list and mark-all buttons now sit under the title.'},
   {v:'2026.11.11-m', note:'SMOOTHER RECORDS AND RATINGS: the record now slides back into its sleeve when you scroll the album\u2019s header off the top of the screen, as well as sliding out as it comes in. The rating bar of grooves is replaced by a clean slider: drag or tap along the line, 1 to 10 in half steps, and it saves when you let go. Clear and Done sit underneath.'},
@@ -3737,7 +3742,8 @@ function acolRead(key,url){
       const d=x.getImageData(0,0,24,24).data;let R=0,G=0,B=0,W=0;
       for(let i=0;i<d.length;i+=4){const r=d[i],gg=d[i+1],b=d[i+2],mx=Math.max(r,gg,b),mn=Math.min(r,gg,b),w=(mx-mn)/255+.04;R+=r*w;G+=gg*w;B+=b*w;W+=w}
       if(!W)return;const col=acolFix(R/W,G/W,B/W);ACOL[key]=col;acolSave();
-      document.querySelectorAll('[data-acol="'+key+'"]').forEach(el=>el.style.setProperty('--ac',col))}catch(e){ACOL[key]='';acolSave()}};
+      const dxk=/~dx$/.test(key),base=dxk?key.slice(0,-3):key;
+      document.querySelectorAll('[data-acol="'+base+'"]').forEach(el=>{if(el.classList.contains('sleeve'))el.style.setProperty(dxk?'--acd':'--acs',col);else el.style.setProperty('--ac',col)})}catch(e){ACOL[key]='';acolSave()}};
   im.onerror=()=>{};
   im.src=url}
 function acolFor(key,url,g){const c=ACOL[key];if(c)return c;if(c!==''&&url)acolRead(key,url);return acolFallback(g)}
@@ -3848,7 +3854,7 @@ function artistView(a){
     const rows=shown.map((i,k)=>({i,k})).filter(({i})=>UI.filter==='all'||!isDone(i.id));
     if(UI.filter==='open'&&!rows.length&&(dx||!dxs.some(i=>!isDone(i.id))))return '';
     const sArt=g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-250':''),art=dx?(g.dxImg||sArt):sArt;
-    const col=acolFor(g.id,sArt,g);
+    const col=acolFor(g.id,sArt,g),colD=g.dxImg&&g.dxImg!==sArt?acolFor(g.id+'~dx',g.dxImg,{title:dxName(g),id:g.id}):col;
     /* one groove per song; a long release folds songs into at most 22 grooves */
     const R=Math.min(shown.length,22),rings=[];
     for(let j=0;j<R;j++){const lo=Math.floor(j*shown.length/R),hi=Math.max(lo+1,Math.floor((j+1)*shown.length/R)),seg=shown.slice(lo,hi);
@@ -3860,7 +3866,7 @@ function artistView(a){
         <span class="ttl">${esc(s.t)}${s.f.length?`<span class="feat">feat. ${esc(s.f.join(', '))}</span>`:''}</span>
         <button class="check" data-act="tog" data-id="${i.id}" aria-pressed="${dn}" aria-label="${r?'Rated '+fmt(r)+'. ':''}${dn?'Heard':'Not heard'}: ${esc(i.title)}"><svg viewBox="0 0 44 44" aria-hidden="true"><circle class="rg-t" cx="22" cy="22" r="16"/>${r?`<circle class="rg-v" cx="22" cy="22" r="16" stroke-dasharray="${dash}"/>`:''}</svg>${r?`<span class="rg-n">${fmt(r)}</span>`:dn?'<span class="rg-d"></span>':''}</button></div>
         ${UI.rOpen===i.id?rateMeter(i.id,s.t):''}`}).join('');
-    return `<div class="group sleeve ${dx?'dxon':''} ${UI.dxAnim===g.id?'dxanim':''} ${SLIN.has(String(g.id))?'in':''}" data-acol="${g.id}" style="--ac:${col}">
+    return `<div class="group sleeve ${dx?'dxon':''} ${UI.dxAnim===g.id?'dxanim':''} ${SLIN.has(String(g.id))?'in':''}" data-acol="${g.id}" style="--acs:${col};--acd:${colD}">
       <div class="sl-hero">
         <div class="sl-pack">
           <div class="sl-disc" role="img" aria-label="${gd} of ${shown.length} songs heard">${ringHtml}<span class="sl-lab">${shown.length?gd+'/'+shown.length:'\u2013'}</span></div>
