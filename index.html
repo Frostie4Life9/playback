@@ -561,14 +561,19 @@ details.addart .add{border-top:1px solid var(--line)}
 .head h2{font:800 34px/1.02 Archivo,var(--display);font-stretch:115%;letter-spacing:-.025em}
 
 /* the sleeve */
-.group.sleeve{--acs:#7a3a24;--acd:var(--acs);--ac:var(--acs);gap:14px;border-radius:24px;overflow:hidden;background:var(--bg);border:1px solid color-mix(in srgb,var(--line) 60%,transparent);padding:0 0 10px}
+.group.sleeve{--acs:#7a3a24;--acd:var(--acs);--ac:var(--acs);--acsw:var(--acs);--acdw:var(--acd);--hi:#fff;gap:14px;border-radius:24px;overflow:hidden;background:var(--bg);border:1px solid color-mix(in srgb,var(--line) 60%,transparent);padding:0 0 10px}
 .sheet>.group.sleeve+.group.sleeve{margin-top:0}
 .group.sleeve.dxon{--ac:var(--acd)}
-.sl-hero{position:relative;background:linear-gradient(160deg,color-mix(in srgb,var(--ac) 88%,#fff),color-mix(in srgb,var(--ac) 82%,#000));color:#fff;display:flex;flex-direction:column;gap:18px;padding:22px 22px 24px;transition:background-color .5s}
+/* The banner takes the cover's own brightness, so it can be light. --hi is the ink for text and buttons on it:
+   near-white on a dark banner, near-black on a light one. --acsw/--acdw are darker copies for the song-row wash,
+   so a song's white text stays readable even on a pale album. */
+@supports (color:oklch(from red l c h)){
+  .group.sleeve{--hi:oklch(from var(--ac) clamp(.14,calc((.6 - l) * 100),.985) 0 h);--acsw:oklch(from var(--acs) min(l,.46) c h);--acdw:oklch(from var(--acd) min(l,.46) c h)}}
+.sl-hero{position:relative;background:linear-gradient(160deg,color-mix(in srgb,var(--ac) 88%,#fff),color-mix(in srgb,var(--ac) 82%,#000));color:var(--hi);display:flex;flex-direction:column;gap:18px;padding:22px 22px 24px;transition:background-color .5s}
 .sl-pack{position:relative;height:168px;width:100%;max-width:290px}
 .sl-cover{position:absolute;left:0;top:0;width:160px;height:160px;border-radius:10px;overflow:hidden;background:color-mix(in srgb,var(--ac) 60%,#000);box-shadow:0 14px 30px rgb(0 0 0 / .35);display:grid;place-items:center}
 .sl-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
-.sl-ph{font:900 64px Archivo,var(--display);font-stretch:125%;color:rgb(255 255 255 / .35)}
+.sl-ph{font:900 64px Archivo,var(--display);font-stretch:125%;color:color-mix(in srgb,var(--hi) 35%,transparent)}
 .sl-disc{position:absolute;left:112px;top:4px;width:160px;height:160px;border-radius:50%;background:#141111;box-shadow:0 12px 26px rgb(0 0 0 / .35);will-change:transform;backface-visibility:hidden;transform:translate3d(0,0,0)}
 @property --j{syntax:'<percentage>';inherits:false;initial-value:0%}
 .sl-disc i{position:absolute;left:calc(50% - (var(--d) + var(--j))/2);top:calc(50% - (var(--d) + var(--j))/2);width:calc(var(--d) + var(--j));height:calc(var(--d) + var(--j));border-radius:50%;border:1.5px solid rgb(255 255 255 / .09);box-sizing:border-box}
@@ -585,21 +590,21 @@ details.addart .add{border-top:1px solid var(--line)}
   35%{--j:4.2%;border-color:var(--gp);box-shadow:0 0 8px 1.5px var(--gg)}
   100%{--j:0%;border-color:var(--gv);box-shadow:0 0 0 0 transparent}}
 @media (prefers-reduced-motion:no-preference){.group.sleeve.rip .sl-disc i.on{animation:slPulse .62s cubic-bezier(.3,.6,.3,1) calc(var(--rb,0ms) + var(--o,0)*38ms) backwards}}
-.sl-lab{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:var(--ac);display:grid;place-items:center;font:800 12px Archivo,var(--display);color:#fff;font-variant-numeric:tabular-nums}
+.sl-lab{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:var(--ac);display:grid;place-items:center;font:800 12px Archivo,var(--display);color:var(--hi);font-variant-numeric:tabular-nums}
 @media (prefers-reduced-motion:no-preference){.sl-disc{transition:transform .7s cubic-bezier(.2,.8,.2,1)}}
 .group.sleeve.in .sl-disc{transform:translate3d(16px,0,0)}
 .sl-meta{display:flex;flex-direction:column;gap:4px;min-width:0}
-.sl-kind{font:500 13px var(--body);letter-spacing:.01em;color:rgb(255 255 255 / .72)}
+.sl-kind{font:500 13px var(--body);letter-spacing:.01em;color:color-mix(in srgb,var(--hi) 72%,transparent)}
 .sl-meta h3{margin:0;font:650 28px/1.08 Archivo,var(--display);font-stretch:100%;letter-spacing:-.022em;overflow-wrap:anywhere}
-.sl-sub{font-size:14px;color:rgb(255 255 255 / .72)}
+.sl-sub{font-size:14px;color:color-mix(in srgb,var(--hi) 72%,transparent)}
 .sl-hacts{display:flex;gap:8px;margin-top:10px}
-.sl-hacts .sl-ic{width:42px;min-height:42px;border-color:rgb(255 255 255 / .38);color:#fff;background:rgb(255 255 255 / .1)}
+.sl-hacts .sl-ic{width:42px;min-height:42px;border-color:color-mix(in srgb,var(--hi) 38%,transparent);color:var(--hi);background:color-mix(in srgb,var(--hi) 10%,transparent)}
 .sl-hacts .sl-ic svg{width:20px;height:20px}
-.sl-hacts .sl-ic[aria-pressed="true"]{background:#fff;color:var(--ac);border-color:#fff}
-.sl-meta .dxbadge{align-self:flex-start}
-.sl-ic.sl-lbtn{position:absolute;top:14px;right:14px;z-index:2;width:42px;min-height:42px;border-color:rgb(255 255 255 / .38);color:#fff;background:rgb(255 255 255 / .12)}
+.sl-hacts .sl-ic[aria-pressed="true"]{background:var(--hi);color:var(--ac);border-color:var(--hi)}
+.sl-meta .dxbadge{align-self:flex-start;color:var(--hi);border-color:var(--hi)}
+.sl-ic.sl-lbtn{position:absolute;top:14px;right:14px;z-index:2;width:42px;min-height:42px;border-color:color-mix(in srgb,var(--hi) 38%,transparent);color:var(--hi);background:color-mix(in srgb,var(--hi) 12%,transparent)}
 .sl-ic.sl-lbtn svg{width:20px;height:20px}
-.sl-ic.sl-lbtn[aria-pressed="true"]{background:#fff;color:var(--ac);border-color:#fff}
+.sl-ic.sl-lbtn[aria-pressed="true"]{background:var(--hi);color:var(--ac);border-color:var(--hi)}
 @media (min-width:761px){.sl-hero{flex-direction:row;align-items:flex-end}.sl-pack{flex:0 0 312px}.sl-meta{flex:1;padding-bottom:6px}}
 .group.sleeve .dxseg{margin:4px 18px 0}
 .sl-acts{display:flex;gap:10px;align-items:stretch;padding:4px 18px 0}
@@ -617,8 +622,8 @@ details.addart .add{border-top:1px solid var(--line)}
 .tlist{display:flex;flex-direction:column;padding:6px 18px 0}
 /* a song: number, title, and a ring that is the heard-check and the rating in one; a soft wash of the album's color eases out toward the rating.
    Standard songs use the standard cover's color; deluxe songs use the deluxe cover's. */
-.track.sl-t{--rc:var(--acs);--rcl:var(--rc)}
-.track.sl-t.dx{--rc:var(--acd)}
+.track.sl-t{--rc:var(--acsw);--rcl:var(--rc)}
+.track.sl-t.dx{--rc:var(--acdw)}
 :root[data-theme="dark"] .track.sl-t{--rcl:color-mix(in srgb,var(--rc) 58%,#fff)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .track.sl-t{--rcl:color-mix(in srgb,var(--rc) 58%,#fff)}}
 .track.sl-t,.track.sl-t.ep{position:relative;overflow:hidden;grid-template-columns:30px minmax(0,1fr) 48px;gap:6px;min-height:52px;margin-bottom:4px;padding:0 4px 0 12px;border:0;border-radius:14px;background:color-mix(in srgb,var(--ink) 3.5%,transparent);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background-color .2s}
@@ -1207,6 +1212,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.11-zb', note:'BANNERS FOLLOW THE COVER\u2019S BRIGHTNESS: a pale cover now gets a pale banner (with dark text and buttons) and a near-black cover gets a near-black one, instead of every banner being forced to the same dark middle. The song rows keep a darker copy of the color so their text stays easy to read. Faces no longer set the color: Heavy Metal takes the gray wall behind him, not his skin. Every cover is read again once.'},
   {v:'2026.11.11-za', note:'BANNERS PICK THE COVER\u2019S REAL COLOR: instead of blending everything on the cover into one average, the app now finds the cover\u2019s main color groups and picks the most vivid one that covers a fair share of it. The Mercurial World deluxe banner is now the purple of its orb instead of a gray-violet, and covers with a clear color get a truer shade of it. Gray, black and cream covers look the same as before. Every cover is read again once.'},
   {v:'2026.11.11-z', note:'GRAY COVERS, FINISHED: the record\u2019s grooves used to be the same peach on every album, which stood out against a gray banner. They now take the banner\u2019s own hue and amount of color (pale gray on a gray cover, pale rose on a red one), and the glow when they pulse follows. Banners for gray and sepia covers are also a little darker so the cover and title stand out.'},
   {v:'2026.11.11-y', note:'GRAY COVERS GET GRAY BANNERS: an album with a black-and-white or sepia cover used to get a tan or olive banner, because the color picker pushed even a faint tint up to a minimum amount of color. Banners now follow how colorful the cover really is, so a near-gray cover gets a quiet charcoal banner and colorful covers look the same as before. Every cover is read again once so old banners update.'},
@@ -3829,7 +3835,7 @@ function delBtn(id,label){const armed=UI.armed===id;return `<button class="btn d
    the title instead. Near-gray covers stay a quiet charcoal rather than being tinted up.
    Colors are kept on this device so each cover is read once (the key's number goes up whenever
    the picking changes, so every cover is read again with the new rule). */
-const ACOL_KEY=KEY+'_acol3';
+const ACOL_KEY=KEY+'_acol4';
 let ACOL=(()=>{try{return JSON.parse(localStorage.getItem(ACOL_KEY))||{}}catch(e){return{}}})();
 const ACOL_TRY={};
 function acolSave(){try{localStorage.setItem(ACOL_KEY,JSON.stringify(ACOL))}catch(e){ACOL={}}}
@@ -3847,10 +3853,12 @@ function acolFix(r,gr,b){r/=255;gr/=255;b/=255;const mx=Math.max(r,gr,b),mn=Math
 /* The color of a cover (RGBA pixels). The cover's colors are grouped into a handful of clusters, and each
    cluster is scored as a banner color: how vivid it is counts most, how much of the cover it covers
    counts next, and a tiny patch (under about 3.5%) is ignored so a small logo cannot take over.
-   The winner is darkened to banner lightness while keeping its real chroma, so a pale pink becomes a
-   dusty rose, not brick red. A cover with no vivid cluster (gray, black, sepia) lands on its big,
-   quiet clusters, which acolFix then keeps neutral. */
-function acolFromPixels(d){
+   A skin-toned cluster is marked down, since a face is the subject of a cover, not its color.
+   The winner keeps its real chroma. For an album banner it also keeps its own brightness (a pale cover
+   gets a pale banner, a near-black cover a near-black one); the sleeve's CSS picks dark or light ink to
+   suit. With dark=true (the vinyl collection, which always uses white text) it is darkened to a fixed
+   banner range and run through acolFix. A cover with no vivid cluster lands on its big, quiet clusters. */
+function acolFromPixels(d,dark){
   const pts=[];let R=0,G=0,B=0,W=0,sr=0,sg=0,sb=0;
   for(let i=0;i<d.length;i+=4){if(d[i+3]<128)continue;const r=d[i],g=d[i+1],b=d[i+2];pts.push([r,g,b]);sr+=r;sg+=g;sb+=b;
     const w=(Math.max(r,g,b)-Math.min(r,g,b))/255+.04;R+=r*w;G+=g*w;B+=b*w;W+=w}
@@ -3866,21 +3874,23 @@ function acolFromPixels(d){
     const sum=cen.map(()=>[0,0,0,0]);for(let i=0;i<N;i++){const t=sum[as[i]];t[0]+=pts[i][0];t[1]+=pts[i][1];t[2]+=pts[i][2];t[3]++}
     for(let j=0;j<k;j++)if(sum[j][3])cen[j]=[sum[j][0]/sum[j][3],sum[j][1]/sum[j][3],sum[j][2]/sum[j][3]]}
   const cnt=new Array(k).fill(0);for(let i=0;i<N;i++)cnt[as[i]]++;
+  const hue=(r,g,b,mx,c)=>{if(!c)return 0;let h=mx===r?((g-b)/c)%6:mx===g?(b-r)/c+2:(r-g)/c+4;h*=60;return h<0?h+360:h};
   let best=null;
   for(let j=0;j<k;j++){const p=cnt[j]/N;if(p<.035)continue;
-    const r=cen[j][0]/255,g=cen[j][1]/255,b=cen[j][2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,c=mx-mn;
-    const sc=4*Math.min(1,c/.3)+2.5*Math.sqrt(Math.min(1,p/.25))+(1-Math.min(1,Math.abs(l-.5)/.5));
+    const r=cen[j][0]/255,g=cen[j][1]/255,b=cen[j][2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,c=mx-mn,h=hue(r,g,b,mx,c);
+    let sc=4*Math.min(1,c/.3)+2.5*Math.sqrt(Math.min(1,p/.25))+(1-Math.min(1,Math.abs(l-.5)/.5));
+    if((h>=350||h<=40)&&c>=.12&&c<=.26&&l>=.5&&l<=.92)sc*=.45;   /* skin tones */
     if(!best||sc>best.sc)best={sc,c:cen[j]}}
   if(!best)return acolFix(R/W,G/W,B/W);
-  const r=best.c[0]/255,g=best.c[1]/255,b=best.c[2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),c=mx-mn,l=(mx+mn)/2;
-  let h=0;if(c){h=mx===r?((g-b)/c)%6:mx===g?(b-r)/c+2:(r-g)/c+4;h*=60;if(h<0)h+=360}
-  const lt=Math.max(.22,Math.min(.36,l)),st=Math.min(1,c/(1-Math.abs(2*lt-1))),q=n=>{const t=(n+h/30)%12,a=st*Math.min(lt,1-lt);return Math.round(255*(lt-a*Math.max(-1,Math.min(t-3,9-t,1))))};
-  return acolFix(q(0),q(8),q(4))}
+  const r=best.c[0]/255,g=best.c[1]/255,b=best.c[2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),c=mx-mn,l=(mx+mn)/2,h=hue(r,g,b,mx,c);
+  const lt=dark?Math.max(.22,Math.min(.36,l)):Math.max(.09,Math.min(.82,l)),st=Math.min(dark?1:.75,c/(1-Math.abs(2*lt-1))),
+        q=n=>{const t=(n+h/30)%12,a=st*Math.min(lt,1-lt);return Math.round(255*(lt-a*Math.max(-1,Math.min(t-3,9-t,1))))};
+  return dark?acolFix(q(0),q(8),q(4)):'#'+[q(0),q(8),q(4)].map(v=>v.toString(16).padStart(2,'0')).join('')}
 function acolRead(key,url){
   if(ACOL_TRY[key]||!url)return;ACOL_TRY[key]=1;
   const im=new Image();im.crossOrigin='anonymous';im.decoding='async';
   im.onload=()=>{try{const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingQuality='high';x.drawImage(im,0,0,64,64);
-      const col=acolFromPixels(x.getImageData(0,0,64,64).data);if(!col)return;ACOL[key]=col;acolSave();
+      const col=acolFromPixels(x.getImageData(0,0,64,64).data,/^c_/.test(key));if(!col)return;ACOL[key]=col;acolSave();
       const dxk=/~dx$/.test(key),base=dxk?key.slice(0,-3):key;
       document.querySelectorAll('[data-acol="'+base+'"]').forEach(el=>{if(el.classList.contains('sleeve'))el.style.setProperty(dxk?'--acd':'--acs',col);else el.style.setProperty('--ac',col)})}catch(e){ACOL[key]='';acolSave()}};
   im.onerror=()=>{};
