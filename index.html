@@ -1204,6 +1204,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.11-v', note:'FASTER UPDATE CHECK: the new-build bar now checks every 30 seconds while the app is open (it was every couple of minutes). Each check reads about 2 KB.'},
   {v:'2026.11.11-u', note:'UPDATE BANNER KEEPS LOOKING: the \u201cnew build is ready\u201d bar used to check only when the app opened or when you came back to it after a few minutes, so it never appeared while you were using it. It now checks every couple of minutes while the app is open, using a tiny file so it costs almost nothing.'},
   {v:'2026.11.11-t', note:'SMOOTH SLIDER: the rating slider no longer jumps from half number to half number. The thumb and the filled line glide to each new value a moment behind your finger, while the number and the song\u2019s wash keep up live.'},
   {v:'2026.11.11-s', note:'JUMP BACK, NO SNAP: the grooves jump again as the ripple passes, but by swelling their real size instead of scaling, so they settle without snapping. An opened rating slider now simply starts at its rating instead of climbing from 1.'},
@@ -4266,11 +4267,11 @@ function buildKey(v){const m=/^(\d{4})\.(\d\d)\.(\d\d)-([a-z]+)$/.exec(v||'');re
 const UPD={last:0,dismissed:null,shown:null};
 async function checkUpdate(force){
   if(!/^https?:$/.test(location.protocol)||!window.fetch)return;
-  if(!force&&Date.now()-UPD.last<90e3)return;
+  if(!force&&Date.now()-UPD.last<20e3)return;
   UPD.last=Date.now();
   try{
     /* cheap look first: sw.js is ~2 KB and carries the same build id as the page, so polling it every
-       couple of minutes costs almost nothing. Only when it shows something newer (or can't be read) is the
+       30 seconds costs almost nothing. Only when it shows something newer (or can't be read) is the
        whole page fetched to confirm. The check at load always reads the page itself. */
     if(!force){try{const q=await fetch('sw.js?_='+Date.now(),{cache:'no-store'});
       if(q.ok){const sm=(await q.text()).match(/playback-(\d{4}\.\d\d\.\d\d-[a-z]+)/);if(sm&&!(buildKey(sm[1])>buildKey(BUILD)))return}}catch(e){}}
@@ -4305,7 +4306,7 @@ if(/[?&]v=\d+/.test(location.search))try{history.replaceState(null,'',location.p
 setTimeout(()=>checkUpdate(true),2500);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkUpdate(false)});
 /* and keep looking while the app is simply left open on screen */
-setInterval(()=>{if(document.visibilityState==='visible')checkUpdate(false)},2*60e3);
+setInterval(()=>{if(document.visibilityState==='visible')checkUpdate(false)},30e3);
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
