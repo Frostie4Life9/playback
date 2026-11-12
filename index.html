@@ -641,16 +641,20 @@ details.addart .add{border-top:1px solid var(--line)}
 .rt-top{display:flex;align-items:baseline;gap:12px}
 .rt-l{flex:1;min-width:0;font-size:14px;font-weight:500;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rt-v{font:650 34px/1 Archivo,var(--display);font-stretch:100%;letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums}
-.rt-s{-webkit-appearance:none;appearance:none;width:100%;height:36px;margin:6px 0 0;background:transparent;cursor:pointer;touch-action:pan-y}
-.rt-s:focus-visible{outline:2px solid var(--ac);outline-offset:2px;border-radius:12px}
-.rt-s::-webkit-slider-runnable-track{height:4px;border-radius:4px;background:linear-gradient(90deg,var(--ac) var(--p),var(--line) var(--p))}
-.rt-s::-moz-range-track{height:4px;border-radius:4px;background:var(--line)}
-.rt-s::-moz-range-progress{height:4px;border-radius:4px;background:var(--ac)}
-.rt-s::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:26px;height:26px;margin-top:-11px;border-radius:50%;background:var(--surface);border:2px solid var(--ac);box-shadow:0 2px 8px rgb(0 0 0 / .18)}
-.rt-s::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--surface);border:2px solid var(--ac);box-shadow:0 2px 8px rgb(0 0 0 / .18)}
-.rt-s.unset::-webkit-slider-runnable-track{background:var(--line)}
-.rt-s.unset::-webkit-slider-thumb{border-color:var(--muted)}
-.rt-s.unset::-moz-range-thumb{border-color:var(--muted)}
+.rt-wrap{position:relative;height:36px;margin:6px 0 0}
+.rt-rail{position:absolute;left:13px;right:13px;top:16px;height:4px;border-radius:4px;background:var(--line)}
+.rt-fill{position:absolute;left:0;top:0;bottom:0;width:var(--p);border-radius:4px;background:var(--ac)}
+.rt-thumb{position:absolute;top:50%;left:var(--p);width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:var(--surface);border:2px solid var(--ac);box-sizing:border-box;box-shadow:0 2px 8px rgb(0 0 0 / .18);pointer-events:none}
+.rt-wrap:has(.rt-s.unset) .rt-fill{width:0}
+.rt-wrap:has(.rt-s.unset) .rt-thumb{border-color:var(--muted)}
+.rt-wrap:has(.rt-s:focus-visible) .rt-thumb{outline:2px solid var(--ac);outline-offset:2px}
+/* the real slider sits on top, see-through, so touch, drag and the keyboard still work */
+.rt-s{-webkit-appearance:none;appearance:none;position:absolute;inset:0;z-index:2;width:100%;height:36px;min-height:0;margin:0;padding:0;border:0;border-radius:0;box-shadow:none;background:transparent;cursor:pointer;touch-action:pan-y}
+.rt-s:focus{outline:none;box-shadow:none}
+.rt-s::-webkit-slider-runnable-track{height:36px;background:transparent}
+.rt-s::-moz-range-track{height:36px;background:transparent}
+.rt-s::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:26px;height:26px;margin-top:5px;border:0;background:transparent;box-shadow:none}
+.rt-s::-moz-range-thumb{width:26px;height:26px;border:0;background:transparent;box-shadow:none}
 .rt-ticks{display:flex;justify-content:space-between;padding:0 10px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
 .rt-foot{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
 .rt-hint{font-size:12px;color:var(--muted)}
@@ -664,12 +668,11 @@ details.addart .add{border-top:1px solid var(--line)}
 @media (prefers-reduced-motion:no-preference){
   .rater.rt-in{overflow:hidden;animation:raterIn .36s cubic-bezier(.2,.8,.2,1) both}
   .rater.rt-out{overflow:hidden;animation:raterOut .22s cubic-bezier(.4,0,.8,.4) both}
-  .rater.rt-in .rt-s::-webkit-slider-thumb{animation:thumbPop .42s cubic-bezier(.2,.8,.2,1) .12s backwards}
-  .rater.rt-in .rt-s::-moz-range-thumb{animation:thumbPop .42s cubic-bezier(.2,.8,.2,1) .12s backwards}
-  .rt-s::-webkit-slider-thumb{transition:transform .14s ease-out,box-shadow .14s}
-  .rt-s::-moz-range-thumb{transition:transform .14s ease-out,box-shadow .14s}
-  .rt-s:active::-webkit-slider-thumb{transform:scale(1.22);box-shadow:0 4px 12px rgb(0 0 0 / .26)}
-  .rt-s:active::-moz-range-thumb{transform:scale(1.22);box-shadow:0 4px 12px rgb(0 0 0 / .26)}
+  /* the half-step jumps are eased: the thumb and fill glide a beat behind the finger instead of snapping */
+  .rt-fill{transition:width .2s cubic-bezier(.25,.9,.3,1)}
+  .rt-thumb{transition:left .2s cubic-bezier(.25,.9,.3,1),transform .14s ease-out,box-shadow .14s}
+  .rater.rt-in .rt-thumb{animation:thumbPop .42s cubic-bezier(.2,.8,.2,1) .12s backwards}
+  .rt-wrap:has(.rt-s:active) .rt-thumb{transform:scale(1.22);box-shadow:0 4px 12px rgb(0 0 0 / .26)}
   .rt-v{display:inline-block;transition:transform .12s ease-out}
   .rater:has(.rt-s:active) .rt-v{transform:scale(1.08);transform-origin:right bottom}
   .track.sl-t{transition:background-color .2s,transform .14s ease-out}
@@ -1201,6 +1204,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.11-t', note:'SMOOTH SLIDER: the rating slider no longer jumps from half number to half number. The thumb and the filled line glide to each new value a moment behind your finger, while the number and the song\u2019s wash keep up live.'},
   {v:'2026.11.11-s', note:'JUMP BACK, NO SNAP: the grooves jump again as the ripple passes, but by swelling their real size instead of scaling, so they settle without snapping. An opened rating slider now simply starts at its rating instead of climbing from 1.'},
   {v:'2026.11.11-r', note:'MORE MOTION: the groove ripple no longer lifts the lines, so they cannot snap when it finishes, and it now also plays when you switch to Deluxe or check off a song. Tapping a song settles it with a little press, and its rating slider unfolds out of it (and folds away when you close it); the thumb pops in and grows while you hold it. While you drag, the song\u2019s color wash, number and ring follow the slider live. The listen-list button now sits in the top right of every release\u2019s banner.'},
   {v:'2026.11.11-q', note:'RECORD PULSE: as a record slides out of its sleeve, a ripple now runs from the label out through the grooves you have heard, lighting each one in turn. The record’s slide is also smoother, so the lines no longer glitch while it moves. Singles lose their Mark all / Clear all button, since they are short enough to tap through, so their header lines up with the other releases.'},
@@ -3801,9 +3805,10 @@ function acolFor(key,url,g){const c=ACOL[key];if(c)return c;if(c!==''&&url)acolR
    Drag (or tap) along the line: 1 to 10 in half steps. The number follows your finger and the
    rating saves when you let go. Clear removes it; Done closes. */
 function rateMeter(id,label){const r=rating(id);
-  return `<div class="rater${UI.rAnim===id?' rt-in':''}" role="group" aria-label="Rate ${esc(label)}" style="--p:${r?(r-1)/9*100:0}%">
+  return `<div class="rater${UI.rAnim===id?' rt-in':''}" role="group" aria-label="Rate ${esc(label)}" style="--p:${((r||5)-1)/9*100}%">
     <div class="rt-top"><span class="rt-l">${esc(label)}</span><b class="rt-v">${r?fmt(r):'\u2013'}</b></div>
-    <input class="rt-s${r?'':' unset'}" type="range" min="1" max="10" step="0.5" value="${r||5}" data-rate="${id}" aria-label="Rating for ${esc(label)}, out of 10">
+    <div class="rt-wrap"><div class="rt-rail" aria-hidden="true"><i class="rt-fill"></i><i class="rt-thumb"></i></div>
+      <input class="rt-s${r?'':' unset'}" type="range" min="1" max="10" step="0.5" value="${r||5}" data-rate="${id}" aria-label="Rating for ${esc(label)}, out of 10"></div>
     <div class="rt-ticks" aria-hidden="true">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<span>${n}</span>`).join('')}</div>
     <div class="rt-foot">${r?`<button class="link" data-act="rclear" data-id="${id}">Clear</button>`:'<span class="rt-hint">Drag or tap to rate</span>'}<button class="link rt-done" data-act="rclose">Done</button></div>
   </div>`}
