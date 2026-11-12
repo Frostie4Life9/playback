@@ -1204,6 +1204,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.11-y', note:'GRAY COVERS GET GRAY BANNERS: an album with a black-and-white or sepia cover used to get a tan or olive banner, because the color picker pushed even a faint tint up to a minimum amount of color. Banners now follow how colorful the cover really is, so a near-gray cover gets a quiet charcoal banner and colorful covers look the same as before. Every cover is read again once so old banners update.'},
   {v:'2026.11.11-x', note:'SONGS WITH LONGER TITLES FIND THEIR MATCH: a song whose title only differs by a subtitle in brackets, like “2 + 2 = 5 (The Lukewarm.)” against “2 + 2 = 5”, or “Don’t Rely on Other Men (Album)” against “don’t rely on other men”, now lands on the matching song instead of being left on its own. Your checkmark and rating move with it, so the ratings stuck in Kept from your earlier list and the stray one-song album copies fold back into the real album the next time the app opens. It only does this when exactly one song fits, never when the two songs have different ratings, and (Reprise), (Part 2) and (Intro) still count as different songs. Song ratings from the RYM helper use the same rule, and the import summary lists every song it matched this way so you can check them. If it moves anything for an artist, Undo last import puts that artist back.'},
   {v:'2026.11.11-w', note:'UPDATE BAR RETRY FIX: right after you tap Reload, if GitHub is still handing out the old copy, the check now waits one quiet minute instead of queuing a new retry on every 30-second look.'},
   {v:'2026.11.11-v', note:'FASTER UPDATE CHECK: the new-build bar now checks every 30 seconds while the app is open (it was every couple of minutes). Each check reads about 2 KB.'},
@@ -3820,8 +3821,10 @@ function delBtn(id,label){const armed=UI.armed===id;return `<button class="btn d
    and the most colorful pixels are averaged; the result is darkened enough that
    white text stays readable on it in light and dark mode. Covers whose host does
    not allow reading pixels, and albums with no cover, get a steady color made from
-   the title instead. Colors are kept on this device so each cover is read once. */
-const ACOL_KEY=KEY+'_acol';
+   the title instead. Near-gray covers stay a quiet charcoal rather than being tinted up.
+   Colors are kept on this device so each cover is read once (_acol2: the first version's
+   saved colors were retired so old tan banners on gray covers get re-read). */
+const ACOL_KEY=KEY+'_acol2';
 let ACOL=(()=>{try{return JSON.parse(localStorage.getItem(ACOL_KEY))||{}}catch(e){return{}}})();
 const ACOL_TRY={};
 function acolSave(){try{localStorage.setItem(ACOL_KEY,JSON.stringify(ACOL))}catch(e){ACOL={}}}
@@ -3831,7 +3834,11 @@ function acolFallback(g){let x=5381;const t=String(g.title||g.id);for(let i=0;i<
 function acolFix(r,gr,b){r/=255;gr/=255;b/=255;const mx=Math.max(r,gr,b),mn=Math.min(r,gr,b),d=mx-mn;let h=0;
   if(d){h=mx===r?((gr-b)/d)%6:mx===gr?(b-r)/d+2:(r-gr)/d+4;h*=60;if(h<0)h+=360}
   const l=(mx+mn)/2,sat=d?d/(1-Math.abs(2*l-1)):0;
-  return hslHex(h,Math.max(.28,Math.min(.62,sat)),Math.max(.22,Math.min(.36,l)))}
+  /* How colorful the cover really is (chroma of the average, 0 to 1). A near-gray or sepia cover has
+     almost none, so it keeps a quiet charcoal instead of being pushed up to the 28% color floor. */
+  const t=Math.max(0,Math.min(1,(d-.04)/.16)),k=t*t*(3-2*t),q=.05*Math.min(1,d/.02),
+        s=q+(Math.max(.28,Math.min(.62,sat))-q)*k;
+  return hslHex(h,s,Math.max(.22,Math.min(.36,l)))}
 function acolRead(key,url){
   if(ACOL_TRY[key]||!url)return;ACOL_TRY[key]=1;
   const im=new Image();im.crossOrigin='anonymous';im.decoding='async';
