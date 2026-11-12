@@ -1,5 +1,5 @@
 /* =========================================================
-   Playback — sync  (worker version 6, 2026.11.11)
+   Playback — sync  (worker version 9, 2026.11.11)
    Cloudflare Worker + KV. Same setup pattern as protocol-sync
    and gamelog-sync.
 
@@ -32,9 +32,14 @@
                (content-type application/gzip, ?mtime=<log mtime>, up to
                20 MB compressed, which is roughly 80-100 MB of log). Refused
                with 409 (and the stored copy) if the stored copy is newer, so
-               a stale device can't overwrite fresher data. ?force=1 overrides
-               that when you choose "Keep this device". The previous copy is
-               kept under "state-prev" as a safety net.
+               a stale device can't overwrite fresher data. Since version 9 the
+               app also sends ?base=<the mtime it last synced>, and the upload is
+               refused when the stored log has changed since then, because a
+               device that fell behind stamps its upload with the current time
+               and would otherwise always look newer. ?force=1 overrides both
+               when you choose "Keep this device". The previous copy is kept
+               under "state-prev", and the first save of each day (Provo time)
+               files the log as it stood under "state-day-YYYY-MM-DD" for 15 days.
 
    Compressed uploads are stored as-is and never unpacked here, which keeps
    each request well inside the free plan's CPU limit. The log's mtime rides
@@ -106,7 +111,7 @@ const CORS = {
   'Access-Control-Allow-Headers': 'content-type, x-sync-key',
   'Access-Control-Expose-Headers': 'x-pb-worker, retry-after',
   'Access-Control-Max-Age': '86400',
-  'x-pb-worker': '8'
+  'x-pb-worker': '9'
 };
 const JSON_H = Object.assign({ 'content-type': 'application/json', 'cache-control': 'no-store' }, CORS);
 const GZ_H = Object.assign({ 'content-type': 'application/gzip', 'cache-control': 'no-store' }, CORS);
@@ -362,6 +367,18 @@ async function spotify(request, env, url) {
   return reply({ connected: true, err: meta.err || '', polled: meta.polled || 0, cronAt: meta.cronAt || 0, plays });
 }
 
+/* one dated copy a day (version 9): the first save of each day, Provo time, files the
+   log as it stood under state-day-YYYY-MM-DD, kept 15 days. Two extra writes a day. */
+const SNAP_LAST = 'snap-last', SNAP_TTL = 15 * 86400;
+async function daySnap(env, st) {
+  try {
+    const day = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Denver' });
+    if ((await env.STATE.get(SNAP_LAST)) === day) return;
+    await env.STATE.put('state-day-' + day, st.buf, { metadata: { enc: st.enc, mtime: st.mtime }, expirationTtl: SNAP_TTL });
+    await env.STATE.put(SNAP_LAST, day);
+  } catch (e) {}
+}
+
 export default {
   async scheduled(event, env, ctx) {
     if (env.STATE) ctx.waitUntil(spCheck(env, true, true));
@@ -418,7 +435,10 @@ export default {
       const st = await readStored(env);
       if (st) {
         const force = url.searchParams.get('force') === '1';
+        const baseQ = url.searchParams.get('base'), base = Number(baseQ);
+        if (!force && baseQ !== null && Number.isFinite(base) && st.mtime > base) return sendStored(st, wantGz, 409);
         if (!force && st.mtime > mtime) return sendStored(st, wantGz, 409);
+        await daySnap(env, st);
         await env.STATE.put(PREV, st.buf, { metadata: { enc: st.enc, mtime: st.mtime } });
       }
       await env.STATE.put(KEYNAME, body, { metadata: { enc: isGz ? 'gzip' : 'json', mtime } });

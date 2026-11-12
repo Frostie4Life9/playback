@@ -1155,6 +1155,7 @@ button.rnum:not(.set){border:1px dashed var(--line);border-radius:10px;text-alig
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.11-k', note:'SAFER SYNC: a device that has fallen behind can no longer overwrite the newer log on your other devices. Each upload now says which saved version the device last saw, and your Worker turns it away if the log has changed since then, so you get the choice instead. That choice now shows what each version holds (ratings, songs and when it last changed), puts the fuller one first, and asks for a second tap before keeping a version with fewer ratings. Nothing uploads while the choice is waiting. Your Worker also keeps one dated copy of your log each day for two weeks, so a slip like this can be rolled back. Your log was restored today from Nov 5, plus your vinyl Collection; changes made after Nov 5 could not be recovered.'},
   {v:'2026.11.11-j', note:'TIDIER RECORDS: the Photos from Discogs strip is gone from opened records, since your own photos fill Open the record now. Open on Discogs moved to the buttons under each record.'},
   {v:'2026.11.11-i', note:'YOUR OWN PHOTOS: in Open the record, each view has an Add your photo button (front, back, inner sleeve, Side A and Side B labels). Take or pick a photo, drag, zoom and straighten it into the guide, and it is cropped, shrunk and saved by your sync Worker, so it shows on every device. Your photos win over scans and Discogs picks, your front photo becomes the cover in your crate, and a label photo becomes the record\u2019s center label. A label photo also reads the real color of your vinyl from the ring around the label, so the drawn disc matches your copy (Edit details can still override it). Removing a record removes its photos.'},
   {v:'2026.11.11-h', note:'OPEN THE RECORD: every record in your Collection has an Open the record button. It fills the screen with the sleeve: flip it to the back, slide out the inner sleeve, then pull out the record, which spins, and flip it to Side B. It looks for clean, labelled scans on the Cover Art Archive (MusicBrainz), first for your exact Discogs pressing and then for another vinyl pressing of the album, and remembers what it found. Any Discogs photo can fill a spot with its new Use as\u2026 menu (Front, Back, Inner sleeve, Side A or B label). DISC COLORS are closer to the real thing: shade words count, so Red (Deep) is now a dark cranberry, and Edit details has a Disc color picker for when the guess is off.'},
@@ -2933,7 +2934,7 @@ function syncLabel(){
   if(SY.at)return 'Synced '+new Date(SY.at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
   return 'Sync ready';
 }
-function touch(){S.mtime=Date.now();save();if(syncOn()){clearTimeout(pushTimer);pushTimer=setTimeout(()=>push(false),1500)}}
+function touch(){S.mtime=Date.now();save();if(syncOn()&&SYS.status!=='conflict'){clearTimeout(pushTimer);pushTimer=setTimeout(()=>push(false),1500)}}
 /* Compressed sync: a Worker from 2026.11.03 on answers with x-pb-worker: 2 and
    takes the log gzipped (about 5x smaller, up to 20 MB after compression).
    Until the Worker is updated, plain JSON still works under its old 1 MB cap. */
@@ -2942,6 +2943,7 @@ const gzip=txt=>new Response(new Blob([txt]).stream().pipeThrough(new Compressio
 const gunzip=buf=>new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
 async function api(method,body,force){
   const q=[];if(force)q.push('force=1');if(GZ_OK)q.push('gz=1');
+  if(body&&!force)q.push('base='+(SY.last||0));   /* the saved version this device last saw: the Worker refuses the upload if the log has moved on since */
   const headers={'x-sync-key':SY.key};let payload;
   if(body){
     const txt=JSON.stringify(body);
@@ -2962,6 +2964,23 @@ function fail(status,j){
     :status===500&&j&&j.error?'The Worker is not set up yet: '+j.error+'.'
     :status===413?'Your log ('+mb(SV.bytes)+') is too big for this version of the sync Worker. Paste the new worker/playback-sync.js from GitHub into your Worker and deploy; the newer one takes the log compressed, so it fits logs many times larger.'
     :'Sync failed ('+status+'). Try again in a moment.';
+}
+/* the choice between this device and the synced log: show what each one holds so the
+   fuller one is obvious, and make keeping the one with fewer ratings take two taps */
+function logSum(o){let s=0,r=0;for(const a of (o&&o.music)||[])for(const g of a.groups||[])s+=(g.items||[]).length;
+  const m=(o&&o.marks)||{};for(const k in m)if(m[k]&&m[k].r)r++;return{s,r,t:(o&&o.mtime)||0}}
+function conflictBanner(){
+  const L=logSum(S),R=logSum(SYS.remote),n=x=>x.toLocaleString(),
+    when=t=>t?new Date(t).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'unknown',
+    localFirst=L.r>R.r||(L.r===R.r&&L.t>R.t),loses=Math.max(0,R.r-L.r),armed=UI.keepArm,
+    pl=(v,w)=>n(v)+' '+w+(v===1?'':'s'),
+    line=(lab,x)=>`<li><b>${lab}:</b> ${pl(x.r,'rating')}, ${pl(x.s,'song')}, last changed ${esc(when(x.t))}</li>`,
+    keep=`<button class="btn ${localFirst?'primary':''}" data-act="keeplocal">${armed?'Tap again to replace the synced log'+(loses?' ('+n(loses)+' fewer ratings)':''):'Keep this device'}</button>`,
+    use=`<button class="btn ${localFirst?'':'primary'}" data-act="keepremote">Use synced version</button>`;
+  return `<div class="banner" role="alert"><p>This device and the synced log both changed since this device last synced. Which version should win?</p>
+    <ul class="note">${line('Synced log',R)}${line('This device',L)}</ul>
+    ${loses&&!armed?`<p class="note">Keeping this device would replace the synced log, which has ${n(loses)} more ratings.</p>`:''}
+    ${localFirst?keep+use:use+keep}</div>`;
 }
 function ok(){SYS.status='ok';SYS.msg='';SY.at=Date.now();saveSync()}
 function adopt(j){S=j;S.flags=S.flags||{};S.marks=S.marks||{};S.music=S.music||[];S.screen=S.screen||[];seedAll();SY.last=S.mtime||0;save();ok();render()}
@@ -3007,7 +3026,7 @@ async function briefPush(){
   }catch(e){}
 }
 async function push(force){
-  if(!READY||!syncOn()||inflight)return;inflight=true;SYS.status='busy';render();
+  if(!READY||!syncOn()||inflight||(!force&&SYS.status==='conflict'))return;   /* never upload past an unanswered choice */inflight=true;SYS.status='busy';render();
   try{
     const{status,j}=await api('PUT',S,force);
     if(status===200){SY.last=S.mtime||0;ok();briefPush()}
@@ -3641,8 +3660,7 @@ function renderMain(){
     </div>
   </header>
   ${SV.err?`<div class="banner" role="alert"><p>This browser would not save your last change. It is still on screen, but it will be gone if you close the app. ${syncOn()?'Tap Upload now in Sync at the bottom so it is safe on your Worker, or copy a backup.':'Copy a backup at the bottom to keep it safe.'}</p></div>`:''}
-  ${SYS.status==='conflict'?`<div class="banner" role="alert"><p>This device and your other device both changed the log since the last sync. Which version should win?</p>
-    <button class="btn primary" data-act="keeplocal">Keep this device</button><button class="btn" data-act="keepremote">Use synced version</button></div>`:''}
+  ${SYS.status==='conflict'?conflictBanner():''}
 
 ${UI.view==='settings'?settingsView():UI.view==='collection'?collectionView():mainView(e,next,list)}
   <footer>
@@ -4032,8 +4050,8 @@ document.addEventListener('click',ev=>{
   else if(act==='opensync'){UI.view='settings';UI.syncOpen=true;render();const p=document.getElementById('syncpanel');if(p)p.scrollIntoView({behavior:'smooth',block:'center'});return}
   else if(act==='pushnow'){push(false);return}
   else if(act==='pullnow'){pull();return}
-  else if(act==='keeplocal'){SYS.remote=null;push(true);return}
-  else if(act==='keepremote'){const j=SYS.remote;SYS.remote=null;if(j)adopt(j);return}
+  else if(act==='keeplocal'){if(!UI.keepArm&&logSum(SYS.remote).r>logSum(S).r){UI.keepArm=true;render();return}UI.keepArm=false;SYS.remote=null;push(true);return}
+  else if(act==='keepremote'){UI.keepArm=false;const j=SYS.remote;SYS.remote=null;if(j)adopt(j);return}
   else if(act==='unsync'){SY={url:'',key:'',last:0,at:0};saveSync();SYS.status='off';SYS.msg=''}
   else if(act==='expalbums'){dlCSV('playback-albums.csv',csvAlbums());return}
   else if(act==='expsongs'){dlCSV('playback-songs.csv',csvSongs());return}
