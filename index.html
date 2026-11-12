@@ -1212,6 +1212,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.11-zc', note:'BANNER COLOR NO LONGER FLIPS: on some covers the banner could flip between dark and light depending on tiny differences in how the cover was read (I LAY DOWN MY LIFE FOR YOU came out pale blue-gray because of the white cross). The rule is now steadier: if the cover has a clear color, the best of those is used; if not (gray, black, cream, white), the banner follows the backdrop around the edge of the art. It also reads the same square of the cover that you see on screen. I checked each test cover 36 slightly different ways and the banner stayed in the same color family every time. Every cover is read again once.'},
   {v:'2026.11.11-zb', note:'BANNERS FOLLOW THE COVER\u2019S BRIGHTNESS: a pale cover now gets a pale banner (with dark text and buttons) and a near-black cover gets a near-black one, instead of every banner being forced to the same dark middle. The song rows keep a darker copy of the color so their text stays easy to read. Faces no longer set the color: Heavy Metal takes the gray wall behind him, not his skin. Every cover is read again once.'},
   {v:'2026.11.11-za', note:'BANNERS PICK THE COVER\u2019S REAL COLOR: instead of blending everything on the cover into one average, the app now finds the cover\u2019s main color groups and picks the most vivid one that covers a fair share of it. The Mercurial World deluxe banner is now the purple of its orb instead of a gray-violet, and covers with a clear color get a truer shade of it. Gray, black and cream covers look the same as before. Every cover is read again once.'},
   {v:'2026.11.11-z', note:'GRAY COVERS, FINISHED: the record\u2019s grooves used to be the same peach on every album, which stood out against a gray banner. They now take the banner\u2019s own hue and amount of color (pale gray on a gray cover, pale rose on a red one), and the glow when they pulse follows. Banners for gray and sepia covers are also a little darker so the cover and title stand out.'},
@@ -3835,7 +3836,7 @@ function delBtn(id,label){const armed=UI.armed===id;return `<button class="btn d
    the title instead. Near-gray covers stay a quiet charcoal rather than being tinted up.
    Colors are kept on this device so each cover is read once (the key's number goes up whenever
    the picking changes, so every cover is read again with the new rule). */
-const ACOL_KEY=KEY+'_acol4';
+const ACOL_KEY=KEY+'_acol5';
 let ACOL=(()=>{try{return JSON.parse(localStorage.getItem(ACOL_KEY))||{}}catch(e){return{}}})();
 const ACOL_TRY={};
 function acolSave(){try{localStorage.setItem(ACOL_KEY,JSON.stringify(ACOL))}catch(e){ACOL={}}}
@@ -3850,17 +3851,18 @@ function acolFix(r,gr,b){r/=255;gr/=255;b/=255;const mx=Math.max(r,gr,b),mn=Math
   const t=Math.max(0,Math.min(1,(d-.04)/.16)),k=t*t*(3-2*t),q=.05*Math.min(1,d/.02),
         s=q+(Math.max(.28,Math.min(.62,sat))-q)*k;
   return hslHex(h,s,Math.max(.22,Math.min(.28+.08*k,l)))}
-/* The color of a cover (RGBA pixels). The cover's colors are grouped into a handful of clusters, and each
-   cluster is scored as a banner color: how vivid it is counts most, how much of the cover it covers
-   counts next, and a tiny patch (under about 3.5%) is ignored so a small logo cannot take over.
-   A skin-toned cluster is marked down, since a face is the subject of a cover, not its color.
-   The winner keeps its real chroma. For an album banner it also keeps its own brightness (a pale cover
-   gets a pale banner, a near-black cover a near-black one); the sleeve's CSS picks dark or light ink to
-   suit. With dark=true (the vinyl collection, which always uses white text) it is darkened to a fixed
-   banner range and run through acolFix. A cover with no vivid cluster lands on its big, quiet clusters. */
+/* The color of a cover (RGBA pixels). The cover's colors are grouped into a handful of clusters (k-means).
+   If the cover has a clear color (a cluster that is colorful enough and not a skin tone, since a face is the
+   subject of a cover, not its color), the best of those wins: vividness first, then how much of the cover it
+   takes. A small patch only counts if it is strongly colorful (8% of the cover, or 2% if very colorful), so a
+   logo or a pale cross cannot take over. If nothing is colorful (gray, black, cream, white), the color that
+   dominates the outer frame of the art, which is the backdrop, is used. The winner keeps its real chroma. For
+   an album banner it also keeps its own brightness (a pale cover gets a pale banner, a near-black cover a
+   near-black one) and the sleeve's CSS picks dark or light ink to suit. With dark=true (the vinyl collection,
+   which always uses white text) it is darkened to a fixed banner range and run through acolFix. */
 function acolFromPixels(d,dark){
-  const pts=[];let R=0,G=0,B=0,W=0,sr=0,sg=0,sb=0;
-  for(let i=0;i<d.length;i+=4){if(d[i+3]<128)continue;const r=d[i],g=d[i+1],b=d[i+2];pts.push([r,g,b]);sr+=r;sg+=g;sb+=b;
+  const pts=[],pos=[];let R=0,G=0,B=0,W=0,sr=0,sg=0,sb=0;
+  for(let i=0;i<d.length;i+=4){if(d[i+3]<128)continue;const r=d[i],g=d[i+1],b=d[i+2];pts.push([r,g,b]);pos.push(i>>2);sr+=r;sg+=g;sb+=b;
     const w=(Math.max(r,g,b)-Math.min(r,g,b))/255+.04;R+=r*w;G+=g*w;B+=b*w;W+=w}
   const N=pts.length;if(!N)return '';
   const dist=(p,c)=>(p[0]-c[0])**2+(p[1]-c[1])**2+(p[2]-c[2])**2,K=7;
@@ -3875,12 +3877,17 @@ function acolFromPixels(d,dark){
     for(let j=0;j<k;j++)if(sum[j][3])cen[j]=[sum[j][0]/sum[j][3],sum[j][1]/sum[j][3],sum[j][2]/sum[j][3]]}
   const cnt=new Array(k).fill(0);for(let i=0;i<N;i++)cnt[as[i]]++;
   const hue=(r,g,b,mx,c)=>{if(!c)return 0;let h=mx===r?((g-b)/c)%6:mx===g?(b-r)/c+2:(r-g)/c+4;h*=60;return h<0?h+360:h};
-  let best=null;
-  for(let j=0;j<k;j++){const p=cnt[j]/N;if(p<.035)continue;
+  /* share of each cluster on the outer frame of the art, which is mostly the backdrop */
+  const S=Math.round(Math.sqrt(d.length/4)),m=Math.max(1,Math.round(S*.12)),fr=new Array(k).fill(0);let nf=0;
+  for(let i=0;i<N;i++){const x=pos[i]%S,y=(pos[i]/S)|0;if(x<m||y<m||x>=S-m||y>=S-m){fr[as[i]]++;nf++}}
+  let best=null,back=null;
+  for(let j=0;j<k;j++){const p=cnt[j]/N,f=nf?fr[j]/nf:p;
     const r=cen[j][0]/255,g=cen[j][1]/255,b=cen[j][2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,c=mx-mn,h=hue(r,g,b,mx,c);
-    let sc=4*Math.min(1,c/.3)+2.5*Math.sqrt(Math.min(1,p/.25))+(1-Math.min(1,Math.abs(l-.5)/.5));
-    if((h>=350||h<=40)&&c>=.12&&c<=.26&&l>=.5&&l<=.92)sc*=.45;   /* skin tones */
-    if(!best||sc>best.sc)best={sc,c:cen[j]}}
+    if(p<(c>=.25?.02:c>=.12?.08:.035))continue;     /* a small patch only counts if it is strongly colorful */
+    const skin=(h>=345||h<=45)&&c>=.1&&c<=.3&&l>=.6&&l<=.95;   /* a face is the subject, not the album's color */
+    if(c>=.12&&!skin){const sc=4*Math.min(1,(c-.06)/.24)+3*Math.sqrt(p);if(!best||sc>best.sc)best={sc,c:cen[j]}}
+    const bs=f+p*.01;if(!back||bs>back.bs)back={bs,c:cen[j]}}
+  if(!best&&back)best=back;          /* no clear color: follow the backdrop */
   if(!best)return acolFix(R/W,G/W,B/W);
   const r=best.c[0]/255,g=best.c[1]/255,b=best.c[2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),c=mx-mn,l=(mx+mn)/2,h=hue(r,g,b,mx,c);
   const lt=dark?Math.max(.22,Math.min(.36,l)):Math.max(.09,Math.min(.82,l)),st=Math.min(dark?1:.75,c/(1-Math.abs(2*lt-1))),
@@ -3889,7 +3896,8 @@ function acolFromPixels(d,dark){
 function acolRead(key,url){
   if(ACOL_TRY[key]||!url)return;ACOL_TRY[key]=1;
   const im=new Image();im.crossOrigin='anonymous';im.decoding='async';
-  im.onload=()=>{try{const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingQuality='high';x.drawImage(im,0,0,64,64);
+  im.onload=()=>{try{const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingQuality='high';
+      const iw=im.naturalWidth||64,ih=im.naturalHeight||64,sq=Math.min(iw,ih);x.drawImage(im,(iw-sq)/2,(ih-sq)/2,sq,sq,0,0,64,64);   /* the same square the cover is shown in */
       const col=acolFromPixels(x.getImageData(0,0,64,64).data,/^c_/.test(key));if(!col)return;ACOL[key]=col;acolSave();
       const dxk=/~dx$/.test(key),base=dxk?key.slice(0,-3):key;
       document.querySelectorAll('[data-acol="'+base+'"]').forEach(el=>{if(el.classList.contains('sleeve'))el.style.setProperty(dxk?'--acd':'--acs',col);else el.style.setProperty('--ac',col)})}catch(e){ACOL[key]='';acolSave()}};
