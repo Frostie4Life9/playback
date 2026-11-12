@@ -1212,6 +1212,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.11-zd', note:'LONGER-TITLE MATCHING, TIE-BREAK: when an album has two songs that fit a longer title, like “don’t rely on other men” and its deluxe copy “don’t rely on other men (single)”, the plain one now wins, so a rating stuck on “Don’t Rely on Other Men (Album)” moves onto the album song and the stray one-song album copy goes away. If neither or both fit equally, nothing moves.'},
   {v:'2026.11.11-zc', note:'BANNER COLOR NO LONGER FLIPS: on some covers the banner could flip between dark and light depending on tiny differences in how the cover was read (I LAY DOWN MY LIFE FOR YOU came out pale blue-gray because of the white cross). The rule is now steadier: if the cover has a clear color, the best of those is used; if not (gray, black, cream, white), the banner follows the backdrop around the edge of the art. It also reads the same square of the cover that you see on screen. I checked each test cover 36 slightly different ways and the banner stayed in the same color family every time. Every cover is read again once.'},
   {v:'2026.11.11-zb', note:'BANNERS FOLLOW THE COVER\u2019S BRIGHTNESS: a pale cover now gets a pale banner (with dark text and buttons) and a near-black cover gets a near-black one, instead of every banner being forced to the same dark middle. The song rows keep a darker copy of the color so their text stays easy to read. Faces no longer set the color: Heavy Metal takes the gray wall behind him, not his skin. Every cover is read again once.'},
   {v:'2026.11.11-za', note:'BANNERS PICK THE COVER\u2019S REAL COLOR: instead of blending everything on the cover into one average, the app now finds the cover\u2019s main color groups and picks the most vivid one that covers a fair share of it. The Mercurial World deluxe banner is now the purple of its orb instead of a gray-violet, and covers with a clear color get a truer shade of it. Gray, black and cream covers look the same as before. Every cover is read again once.'},
@@ -1587,11 +1588,19 @@ function mbLoose(title){
   const t=mbSplit(title).base,s=t.replace(/\s*[\(\[]([^\)\]]*)[\)\]]/g,(m,inner)=>MB_KEEP_BRACKET.test(inner)?m:' ');
   return mbK(s.trim()?s:t);
 }
-/* the one song in a list that fits a title loosely; none when nothing fits or when two songs do */
+/* When two songs fit a title loosely, the plain one wins if exactly one of them is plain, meaning its own
+   title has nothing in brackets to ignore: "don't rely on other men" beats "don't rely on other men (single)".
+   Two plain songs, or none, and nothing is guessed. */
+function mbPickLoose(hits,lk,keyOf){
+  if(hits.length===1)return hits[0];
+  const plain=hits.filter(t=>keyOf(t)===lk);
+  return plain.length===1?plain[0]:null;
+}
+/* the one song in a list that fits a title loosely; none when nothing fits or when it stays ambiguous */
 function mbLooseFind(items,title){
   const lk=mbLoose(title);if(!lk)return null;
   const hits=items.filter(i=>{const k=mbItemKey(i);return !k.includes('~')&&!k.includes('@')&&mbLoose(i.title)===lk});
-  return hits.length===1?hits[0]:null;
+  return hits.length?mbPickLoose(hits,lk,mbItemKey):null;
 }
 function mbTrack(t,rgid){
   const rec=t.recording||{};if(rec.video)return null;
@@ -1804,8 +1813,8 @@ function mbMerge(art,incoming,versions,tidy,sp){
     const lk=mbLoose(t.title);if(!lk)continue;if(!looseIdx.has(lk))looseIdx.set(lk,[]);looseIdx.get(lk).push(t)}
   const looseFold=(i,k)=>{
     if(k.includes('~')||k.includes('@'))return false;
-    const lk=mbLoose(i.title),hits=lk&&looseIdx.get(lk);if(!hits||hits.length!==1)return false;
-    const t=hits[0],from=idFor(k);if(claimed.has(t.id)||t.id===from)return false;
+    const lk=mbLoose(i.title),hits=lk&&looseIdx.get(lk),t=hits&&mbPickLoose(hits,lk,x=>x.k);if(!t)return false;
+    const from=idFor(k);if(claimed.has(t.id)||t.id===from)return false;
     const rf=rating(from),rt=rating(t.id);if(rf&&rt&&rf!==rt)return false;
     const moved=mbMarked(from);
     if(moved&&tidy&&!snapped){undoTake(a);snapped=true}
