@@ -1265,6 +1265,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.13-d', note:'GOLDER BANNERS: a banner now takes its color mostly from the cover\u2019s most vivid shades instead of averaging them with the dull ones next to them, so a gold cover like Thee Sacred Souls gets a real gold banner rather than khaki.'},
   {v:'2026.11.13-c', note:'Album banners now follow the biggest color on the cover even when it comes in several shades, so a mostly-teal cover like ii gets a teal banner instead of one picked off the gold chains.'},
   {v:'2026.11.13-b', note:'COLLAB CREDITS FILL IN BY THEMSELVES: when you import or check for new releases on an artist, Spotify and MusicBrainz now tell Playback who else is credited on an album, and the banner shows it (with Kenny Beats). Nothing changes until you tap Check for new releases on an artist, and a credit you typed in yourself is never overwritten.'},
   {v:'2026.11.13-a', note:'COLLAB CREDIT ON THE ALBUM BANNER: an album made with another artist now says so under its title (with Kenny Beats). Albums that RYM credits to a pair, like "Denzel Curry & Kenneth Blume", pick the other name up on their own when they fold into the artist\u2019s page. For any album already in your log, tap + collab under the song count, type the other artist (use & for more than one) and save; clear the box to remove it. A credit you set survives Check for new releases.'},
@@ -4077,7 +4078,7 @@ function delBtn(id,label){const armed=UI.armed===id;return `<button class="btn d
    the title instead. Near-gray covers stay a quiet charcoal rather than being tinted up.
    Colors are kept on this device so each cover is read once (the key's number goes up whenever
    the picking changes, so every cover is read again with the new rule). */
-const ACOL_KEY=KEY+'_acol6';
+const ACOL_KEY=KEY+'_acol7';
 let ACOL=(()=>{try{return JSON.parse(localStorage.getItem(ACOL_KEY))||{}}catch(e){return{}}})();
 const ACOL_TRY={};
 function acolSave(){try{localStorage.setItem(ACOL_KEY,JSON.stringify(ACOL))}catch(e){ACOL={}}}
@@ -4131,10 +4132,10 @@ function acolFromPixels(d,dark){
   for(const x of info.filter(x=>x.c>=.08&&!x.skin).sort((u,v)=>v.p-u.p)){
     let F=fam.find(y=>{let d=Math.abs(y.h-x.h);if(d>180)d=360-d;return d<=30});
     if(!F){F={h:x.h,p:0,rgb:[0,0,0],m:[]};fam.push(F)}
-    const w=x.p;F.rgb=F.rgb.map((v,i)=>v+cen[x.j][i]*w);F.p+=w;F.cw=(F.cw||0)+x.c*w;F.m.push(x);
+    const w=x.p,w2=x.p*x.c*x.c;F.rgb=F.rgb.map((v,i)=>v+cen[x.j][i]*w2);F.w2=(F.w2||0)+w2;F.p+=w;F.cw=(F.cw||0)+x.c*w;F.m.push(x);
     /* hue of the family follows its biggest member */}
   let best=null,back=null;
-  for(const F of fam){const c0=F.rgb.map(v=>v/F.p),c=F.cw/F.p;
+  for(const F of fam){const c0=F.rgb.map(v=>v/F.w2),c=F.cw/F.p;
     if(c<.1||F.p<(c>=.25?.02:c>=.18?.05:.08))continue;   /* a small patch only counts if it is strongly colorful */
     const sc=3*Math.min(1,(c-.06)/.24)+5*Math.sqrt(F.p);if(!best||sc>best.sc)best={sc,c:c0}}
   for(const x of info){const bs=x.f+x.p*.01;if(!back||bs>back.bs)back={bs,c:cen[x.j]}}
