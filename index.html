@@ -1268,6 +1268,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.13-l', note:'SPOTIFY NAMES + MISSING PHOTOS: when an artist goes by more than one name, Playback now shows the name Spotify uses (Mid-Air Thief instead of the Korean spelling) and keeps the other names so your RYM list and searches still find them. The artist-photo lookup used to search only the saved name, so artists saved under a different spelling never got a Spotify photo, and without one the tile could not show your favorite album in its corner. It now tries every name the artist goes by, then fills in the photo and the name. Artists that already have more than one name are checked once, about 25 at a time, and the photo lookup retries earlier misses once.'},
   {v:'2026.11.13-k', note:'ONE ALBUM, TWO ARTISTS: an album that sits on two artist pages, like An Evening With Silk Sonic on both Bruno Mars and Silk Sonic, is now linked. It stays on both pages, but a rating or a checkmark on either page shows on the other, so you no longer get an empty copy next to the rated one. Playback matches the copies by title when one is credited on the other (with ...) or both came from the same release, and any marks already on one copy move to the shared record. Exports list the album once. Deleting one artist keeps the ratings on the other.'},
   {v:'2026.11.13-j', note:'SPOTIFY CALL COUNTER: Settings now has a Spotify calls from this device line under the Spotify box. It counts every request Playback sends Spotify, today and over the last 24 hours, split into searches, release lists, albums and so on, plus how many your Worker answered free from its saved copy. Each time Spotify says the quota is used up it records how many calls had gone out in the hour and the day before, so after a day or two you can see the real daily limit and what is using it. It counts this device only, and not the Worker\u2019s hourly check. Copies from your Worker show as free once the Worker has redeployed.'},
   {v:'2026.11.13-i', note:'LESS SPOTIFY QUOTA USED: albums and artists Spotify has already told your Worker about are now saved there for 30 days and shared by your phone and PC, so a second device (or a rebuild) no longer asks Spotify again. The artist-photo pass now does 25 artists per visit, retries artists with no photo after 2 weeks instead of daily, and stops for at least 6 hours after Spotify says the quota is used up. Needs the updated sync Worker (playback-sync.js, version 10) pasted into Cloudflare; the app works without it, it just will not save the extra quota.'},
@@ -2085,7 +2086,7 @@ function mbMerge(art,incoming,versions,tidy,sp){
   a.groups=[...groups,...manual];
   const fromSp=tidy?a.src==='sp':!!sp;
   if(kept.length)a.groups.push({id:sid(a.id,'kept'),src:'kept',title:'Kept from your earlier list',year:'—',kind:fromSp?'Not on Spotify':'Not in the MusicBrainz import',items:kept});
-  a.mbid=art.id;if(!tidy){a.name=ARTIST_SHOW[nArtist(art.name)]||art.name;a.mbVersions=!!versions;a.mbAt=Date.now();a.src=sp?'sp':'mb';if(sp){a.spid=sp.id;if(sp.img)a.simg=sp.img}if(art.aka){a.akaAt=Date.now()}}
+  a.mbid=art.id;if(!tidy){a.name=ARTIST_SHOW[nArtist(art.name)]||(sp&&sp.name)||art.name;if(sp)a.snameAt=Date.now();a.mbVersions=!!versions;a.mbAt=Date.now();a.src=sp?'sp':'mb';if(sp){a.spid=sp.id;if(sp.img)a.simg=sp.img}if(art.aka){a.akaAt=Date.now()}}
   akaSet(a,art,sp,prevName);
   for(const g of a.groups){if(rating(g.id))continue;const o=oldR.find(x=>x[0]===nTitle(g.title));if(o)S.marks[g.id]={...(S.marks[g.id]||{}),r:o[1]}}
   for(const g of a.groups){if(!hasDx(g)||rating(dxId(g)))continue;
@@ -2861,29 +2862,38 @@ function imgNote(txt,kind,stay){
   el.hidden=false;el.classList.toggle('err',kind==='err');el.firstChild.textContent=txt;
   clearTimeout(imgNote.t);if(!stay)imgNote.t=setTimeout(()=>{el.hidden=true},9000);
 }
+/* when an artist goes by more than one name, the name Spotify uses is the one shown; the others stay as aliases */
+function spShowName(a,name){
+  if(!name||ARTIST_SHOW[nArtist(a.name)]||akaKey(name)===akaKey(a.name))return false;
+  if(nArtist(name)!==nArtist(a.name)&&!(a.aka||[]).some(n=>nArtist(n)===nArtist(name)))return false;   /* only a name he already goes by */
+  const old=a.name;a.name=name;akaSet(a,{name:old,aka:[]});return true}
 async function spImgBackfill(){
   if(SPX.imgRun||!READY||!spViaWorker())return;
   if(MBX.busy){if((SPX.imgWait=(SPX.imgWait||0)+1)<=20)setTimeout(spImgBackfill,15000);return}   /* an import is running: wait for it, then go */
   let cool=0;try{cool=+localStorage.getItem('pb_imgcool')||0}catch(e){}
   if(cool>Date.now())return;                          /* Spotify said quota: leave it alone until the cool-down ends */
-  const T=Date.now(),todo=(S.music||[]).filter(a=>a&&a.name&&!a.simg&&!(a.simgTry>T-12096e5)).slice(0,25);   /* a miss is retried after 2 weeks, not daily */
+  const T=Date.now(),todo=(S.music||[]).filter(a=>a&&a.name&&((!a.simg&&!(a.simgTry>T-12096e5&&a.simgV===2))||(a.spid&&a.aka&&a.aka.length&&!a.snameAt))).slice(0,25);   /* a miss is retried after 2 weeks, not daily; a many-named artist is checked once for Spotify's name */
   if(!todo.length)return;
-  SPX.imgRun=true;spGap=1200;let got=0,tried=0;const miss=[];let fail='';
+  SPX.imgRun=true;spGap=1200;let got=0,tried=0,renamed=0;const miss=[];let fail='';
   imgNote('Artist photos: starting, '+todo.length+' to look up','',true);
   try{
     for(const a of todo){
       if(MBX.busy){fail='an import started';break}
-      let u='';
-      if(a.spid){const j=await spApi('artists/'+a.spid+'?locale=en');u=spImg(j.images)}
-      else{const n=nArtist(a.name),j=await spApi('search?'+new URLSearchParams({q:a.name,type:'artist',limit:5})),
-        hit=((j.artists&&j.artists.items)||[]).filter(x=>x&&x.id&&nArtist(x.name)===n).sort((x,y)=>(y.popularity||0)-(x.popularity||0))[0];
-        u=hit?spImg(hit.images):''}
-      a.simgTry=Date.now();tried++;if(u){a.simg=u;got++;imgNote('Artist photos: '+a.name+' \u2713 ('+tried+' of '+todo.length+')','',true)}else{miss.push(a.name);imgNote('Artist photos: no photo found for '+a.name+' ('+tried+' of '+todo.length+')','',true)}
+      let u='',hit=null;
+      if(a.spid){hit=await spApi('artists/'+a.spid+'?locale=en');u=spImg(hit.images)}
+      else{const keys=new Set([a.name,...(a.aka||[])].map(nArtist)),qs=[a.name,...(a.aka||[])].slice(0,4);
+        for(const q of qs){const j=await spApi('search?'+new URLSearchParams({q,type:'artist',limit:10}));
+          hit=((j.artists&&j.artists.items)||[]).filter(x=>x&&x.id&&keys.has(nArtist(x.name))).sort((x,y)=>(y.popularity||0)-(x.popularity||0))[0]||null;
+          if(hit)break}
+        u=hit?spImg(hit.images):'';if(hit)a.spid=hit.id}
+      a.simgTry=Date.now();a.simgV=2;tried++;
+      if(hit&&hit.name){a.snameAt=Date.now();if(spShowName(a,hit.name))renamed++}
+      if(u&&!a.simg){a.simg=u;got++;imgNote('Artist photos: '+a.name+' \u2713 ('+tried+' of '+todo.length+')','',true)}else if(!u&&!a.simg){miss.push(a.name);imgNote('Artist photos: no photo found for '+a.name+' ('+tried+' of '+todo.length+')','',true)}
       save();
     }
   }catch(e){if(e&&(e.code==='quota'||e.code==='limited'||e.code==='busy')){try{localStorage.setItem('pb_imgcool',String(Date.now()+Math.min(Math.max((e.wait||0)*1000,216e5),1728e5)))}catch(_){}}
     fail=e&&e.code==='http'&&e.status===400?'the Worker refused the request, so it may not be updated yet':(e&&e.code?spMessage(e):'something unexpected happened')}
-  finally{SPX.imgRun=false;spGap=250;if(got)render()
+  finally{SPX.imgRun=false;spGap=250;if(renamed){rebuildAka();mergeSameArtists();touch()}if(got||renamed)render()
     if(fail)imgNote('Artist photos stopped after '+tried+' of '+todo.length+': '+fail+(got?' ('+got+' added)':'')+'. It will try again next time.','err',true);
     else imgNote('Artist photos done: '+got+' added'+(miss.length?', '+miss.length+' not found ('+miss.slice(0,3).join(', ')+(miss.length>3?'\u2026':'')+')':'')+'.','')}
 }
@@ -2895,11 +2905,11 @@ async function spFetchCatalog(art,existing){
   spGap=250;                                      /* each import starts at a gentle pace */
   MBX.step='Finding the artist on Spotify';MBX.n=0;MBX.of=0;mbProgress();
   if(!id){
-    let hit=null;const n=nArtist(art.name);
+    let hit=null;const n=nArtist(art.name),keys=new Set([n,...((art.aka)||(existing&&existing.aka)||[]).map(nArtist)]);
     for(const q of [alias||art.name,...((art.aka)||(existing&&existing.aka)||[])].slice(0,4)){   /* each name he goes by */
       const j=await spApi('search?'+new URLSearchParams({q,type:'artist',limit:10}));
       const list=(j.artists&&j.artists.items)||[];
-      hit=list.filter(x=>x&&x.id&&nArtist(x.name)===n).sort((a,b)=>(b.popularity||0)-(a.popularity||0))[0];
+      hit=list.filter(x=>x&&x.id&&keys.has(nArtist(x.name))).sort((a,b)=>(b.popularity||0)-(a.popularity||0))[0];
       if(hit)break}
     if(!hit)throw SPError('nomatch');
     id=hit.id;name=hit.name;simg=spImg(hit.images);
