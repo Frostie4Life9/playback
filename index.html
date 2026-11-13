@@ -1268,6 +1268,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.13-m', note:'CORNER ALBUM ALWAYS SHOWS: an artist tile now shows your best-rated album in its corner even when the tile picture is that same album cover, which is what Spotify uses for some artists like Mid-Air Thief. Before, the corner was hidden whenever the two matched.'},
   {v:'2026.11.13-l', note:'SPOTIFY NAMES + MISSING PHOTOS: when an artist goes by more than one name, Playback now shows the name Spotify uses (Mid-Air Thief instead of the Korean spelling) and keeps the other names so your RYM list and searches still find them. The artist-photo lookup used to search only the saved name, so artists saved under a different spelling never got a Spotify photo, and without one the tile could not show your favorite album in its corner. It now tries every name the artist goes by, then fills in the photo and the name. Artists that already have more than one name are checked once, about 25 at a time, and the photo lookup retries earlier misses once.'},
   {v:'2026.11.13-k', note:'ONE ALBUM, TWO ARTISTS: an album that sits on two artist pages, like An Evening With Silk Sonic on both Bruno Mars and Silk Sonic, is now linked. It stays on both pages, but a rating or a checkmark on either page shows on the other, so you no longer get an empty copy next to the rated one. Playback matches the copies by title when one is credited on the other (with ...) or both came from the same release, and any marks already on one copy move to the shared record. Exports list the album once. Deleting one artist keeps the ratings on the other.'},
   {v:'2026.11.13-j', note:'SPOTIFY CALL COUNTER: Settings now has a Spotify calls from this device line under the Spotify box. It counts every request Playback sends Spotify, today and over the last 24 hours, split into searches, release lists, albums and so on, plus how many your Worker answered free from its saved copy. Each time Spotify says the quota is used up it records how many calls had gone out in the hour and the day before, so after a day or two you can see the real daily limit and what is using it. It counts this device only, and not the Worker\u2019s hourly check. Copies from your Worker show as free once the Worker has redeployed.'},
@@ -3555,15 +3556,15 @@ function sideFinder(list){
     <div class="lrow lshow" role="group" aria-label="Show">${Object.entries(LSHOWS).map(([k,v])=>`<button class="chip" data-act="lshow" data-v="${k}" aria-pressed="${P.show===k}">${v}<span class="c">${c[k]}</span></button>`).join('')}</div>
   </div>`}
 /* The artist wall. Each artist is a square cover: your best-rated album (else the first with art), with your
-   average rating as a badge and how much you have heard as a bar. When the tile shows the artist's photo, your
-   best-rated album sits in its bottom-left corner (only if you have rated one). Colors the Sleeve already read are reused;
+   average rating as a badge and how much you have heard as a bar. Your best-rated album sits in the bottom-left
+   corner (only if you have rated one), even when it is the same picture as the tile. Colors the Sleeve already read are reused;
    no extra images are fetched just to tint a tile. */
 function lCover(x){let best=null,bs=-1;
   for(const g of x.groups||[]){const u=g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-250':'');
     if(!u)continue;const sc=rating(g.id)||0;if(!best||sc>bs){best={g,u,sc};bs=sc}}
   return best}
 function lTile(s,e){const x=s.x,cv=lCover(x),pic=x.simg||(cv&&cv.u)||'',col=(cv&&ACOL[cv.g.id])||acolFallback({title:x.name,id:x.id}),
-  ini=([...lName(x)][0]||'#').toUpperCase(),cor=!!(x.simg&&cv&&cv.sc>0&&cv.u!==x.simg),rv=s.r?fmt(Math.round(s.r*10)/10):'',
+  ini=([...lName(x)][0]||'#').toUpperCase(),cor=!!(cv&&cv.sc>0),rv=s.r?fmt(Math.round(s.r*10)/10):'',
   lab=x.name+', '+(s.p>=100?'finished':s.p+'% heard')+(rv?', rated '+rv:'');
   return `<button class="tile${s.p>=100?' done':''}" data-act="sel" data-id="${x.id}" aria-current="${!!(e&&e.id===x.id)}" aria-label="${esc(lab)}"><span class="tcov" style="--ac:${esc(col)}"><span class="tini" aria-hidden="true">${esc(ini)}</span>${pic?`<img src="${esc(pic)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${cor?`<span class="tcorner" title="${esc('Your best-rated album: '+(cv.g.title||''))}"><img src="${esc(cv.u)}" alt="" loading="lazy" decoding="async" onerror="this.parentNode.remove()"></span>`:''}${rv?`<span class="trate" title="Your average rating">${rv}</span>`:''}<i class="tbar" aria-hidden="true"><b style="width:${s.p}%"></b></i></span><span class="tn">${esc(x.name)}${x.example?'<span class="ex">Example</span>':''}</span></button>`}
 const L_ADD='<button class="tile add" data-act="addart"><span class="tcov"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="tn">Add an artist</span></button>';
