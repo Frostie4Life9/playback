@@ -1268,6 +1268,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.13-n', note:'OPENS WHERE YOU LEFT OFF: Playback used to open on the first artist in your list (Radiohead) every launch. It now remembers the last artist or title you had open and reopens it, falling back to the first only if that one was removed.'},
   {v:'2026.11.13-m', note:'CORNER ALBUM ALWAYS SHOWS: an artist tile now shows your best-rated album in its corner even when the tile picture is that same album cover, which is what Spotify uses for some artists like Mid-Air Thief. Before, the corner was hidden whenever the two matched.'},
   {v:'2026.11.13-l', note:'SPOTIFY NAMES + MISSING PHOTOS: when an artist goes by more than one name, Playback now shows the name Spotify uses (Mid-Air Thief instead of the Korean spelling) and keeps the other names so your RYM list and searches still find them. The artist-photo lookup used to search only the saved name, so artists saved under a different spelling never got a Spotify photo, and without one the tile could not show your favorite album in its corner. It now tries every name the artist goes by, then fills in the photo and the name. Artists that already have more than one name are checked once, about 25 at a time, and the photo lookup retries earlier misses once.'},
   {v:'2026.11.13-k', note:'ONE ALBUM, TWO ARTISTS: an album that sits on two artist pages, like An Evening With Silk Sonic on both Bruno Mars and Silk Sonic, is now linked. It stays on both pages, but a rating or a checkmark on either page shows on the other, so you no longer get an empty copy next to the rated one. Playback matches the copies by title when one is credited on the other (with ...) or both came from the same release, and any marks already on one copy move to the shared record. Exports list the album once. Deleting one artist keeps the ratings on the other.'},
@@ -3513,11 +3514,13 @@ window.addEventListener('online',()=>pull());
 document.addEventListener('toggle',ev=>{if(ev.target.id==='syncpanel')UI.syncOpen=ev.target.open;else if(ev.target.id==='addart')UI.addOpen=ev.target.open;else if(ev.target.id==='listenpanel')UI.llOpen=ev.target.open;else if(ev.target.id==='coladd')UI.colAdd=ev.target.open;else if(ev.target.id==='colhand')UI.colHand=ev.target.open;else if(ev.target.id==='coltok')UI.colTok=ev.target.open;else if(ev.target.classList&&ev.target.classList.contains('splog'))UI.spLogOpen=ev.target.open},true);
 const UI={view:null,libOpen:false,addOpen:false,rOpen:null,lq:{music:'',screen:''},tab:'music',sel:{music:null,screen:null},filter:'all',armed:null,addType:'show',copied:false,epOpen:{},dxOpen:{},wEdit:null};
 try{const t=localStorage.getItem(KEY+'_tab');if(t==='screen')UI.tab='screen'}catch(e){}
+try{for(const k of ['music','screen']){const v=localStorage.getItem(KEY+'_sel_'+k);if(v)UI.sel[k]=v}}catch(e){}   /* reopen the last artist / title instead of the first in the list */
 
 function current(){
   const list=S[UI.tab];
   let e=list.find(x=>x.id===UI.sel[UI.tab]);
   if(!e&&list.length){e=list[0];UI.sel[UI.tab]=e.id}
+  try{if(e&&localStorage.getItem(KEY+'_sel_'+UI.tab)!==e.id)localStorage.setItem(KEY+'_sel_'+UI.tab,e.id)}catch(x){}
   return e||null;
 }
 
