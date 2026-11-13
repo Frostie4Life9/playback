@@ -115,7 +115,7 @@ const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'content-type, x-sync-key',
-  'Access-Control-Expose-Headers': 'x-pb-worker, retry-after',
+  'Access-Control-Expose-Headers': 'x-pb-worker, retry-after, x-pb-cache',
   'Access-Control-Max-Age': '86400',
   'x-pb-worker': '10'
 };
@@ -216,7 +216,7 @@ async function spCatalog(env, url) {
   const ckey = CAT_CACHE.test(p) ? 'spcat:' + p : '';
   if (ckey && !bust) {
     const hit = await env.STATE.get(ckey).catch(() => null);
-    if (hit) return new Response(hit, { status: 200, headers: JSON_H });
+    if (hit) return new Response(hit, { status: 200, headers: Object.assign({ 'x-pb-cache': 'hit' }, JSON_H) });   /* x-pb-cache lets the app count this as free */
   }
   const auth = await getJSON(env, SP_AUTH);
   if (!auth) return reply({ error: 'not connected' }, 409);

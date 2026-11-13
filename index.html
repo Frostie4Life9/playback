@@ -1268,6 +1268,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.13-j', note:'SPOTIFY CALL COUNTER: Settings now has a Spotify calls from this device line under the Spotify box. It counts every request Playback sends Spotify, today and over the last 24 hours, split into searches, release lists, albums and so on, plus how many your Worker answered free from its saved copy. Each time Spotify says the quota is used up it records how many calls had gone out in the hour and the day before, so after a day or two you can see the real daily limit and what is using it. It counts this device only, and not the Worker\u2019s hourly check. Copies from your Worker show as free once the Worker has redeployed.'},
   {v:'2026.11.13-i', note:'LESS SPOTIFY QUOTA USED: albums and artists Spotify has already told your Worker about are now saved there for 30 days and shared by your phone and PC, so a second device (or a rebuild) no longer asks Spotify again. The artist-photo pass now does 25 artists per visit, retries artists with no photo after 2 weeks instead of daily, and stops for at least 6 hours after Spotify says the quota is used up. Needs the updated sync Worker (playback-sync.js, version 10) pasted into Cloudflare; the app works without it, it just will not save the extra quota.'},
   {v:'2026.11.13-h', note:'EVEN WIDER: on very wide screens the page now uses nearly the full width (up to about 2800px) and the artist wall gets a wider list with bigger portraits.'},
   {v:'2026.11.13-g', note:'USES WIDE SCREENS: the Music and Screen pages now grow with the window (up to about 1840px) instead of staying a narrow column, and the artist wall gets a wider list with bigger portraits.'},
@@ -2700,6 +2701,35 @@ function spCanImport(){
   if(spViaWorker())return (SY.wv||0)>=4&&!(SPX.wk&&SPX.wk.connected===false);
   return !!SPL.rt;
 }
+/* ---------- Spotify call counter (this device only) ----------
+   Spotify does not publish its quota, so this counts every request Playback sends it (answers the
+   Worker served from its saved copy are counted apart, they cost nothing). It keeps 14 days of
+   totals, the time of each call for the last 48 hours, and a note each time Spotify says the quota
+   is used up, so the real daily budget and what is spending it can be read off. Shown on the
+   Settings tab. It cannot see the Worker's own hourly check (about 24 calls a day). */
+const SPU_KEY=KEY+'_spusage';
+let SPU={d:{},t:[],q:[]};
+try{const v=JSON.parse(localStorage.getItem(SPU_KEY));if(v&&typeof v==='object'){SPU.d=v.d||{};SPU.t=Array.isArray(v.t)?v.t:[];SPU.q=Array.isArray(v.q)?v.q:[]}}catch(e){}
+let spuTimer=0;
+function spuSave(){clearTimeout(spuTimer);spuTimer=setTimeout(()=>{try{localStorage.setItem(SPU_KEY,JSON.stringify(SPU))}catch(e){}},1500)}
+const spuDay=ms=>new Date(ms||Date.now()).toLocaleDateString('en-CA');
+function spuKind(p){p=String(p||'');
+  if(/^search/.test(p))return 'search';
+  if(/^artists\/[^/?]+\/albums/.test(p))return 'albumlist';
+  if(/^artists\//.test(p))return 'artist';
+  if(/^albums\/[^/?]+\/tracks|offset=/.test(p))return 'tracks';
+  if(/^albums\//.test(p))return 'album';
+  return 'other'}
+function spuCount(kind,cached){
+  const now=Date.now(),day=spuDay(),r=SPU.d[day]||(SPU.d[day]={});
+  if(cached){r.cached=(r.cached||0)+1}else{r[kind]=(r[kind]||0)+1;r.total=(r.total||0)+1;SPU.t.push(now)}
+  const cut=now-48*36e5;if(SPU.t.length>5000||(SPU.t[0]&&SPU.t[0]<cut))SPU.t=SPU.t.filter(x=>x>=cut).slice(-5000);
+  const ks=Object.keys(SPU.d).sort();while(ks.length>14)delete SPU.d[ks.shift()];
+  spuSave()}
+function spuEvent(kind){   /* 'quota' = used up, 'rl' = short rate limit */
+  const now=Date.now(),day=spuDay(),r=SPU.d[day]||(SPU.d[day]={});r[kind]=(r[kind]||0)+1;
+  if(kind==='quota'){SPU.q.unshift({at:now,h1:SPU.t.filter(x=>x>now-36e5).length,h24:SPU.t.filter(x=>x>now-864e5).length,today:r.total||0});SPU.q=SPU.q.slice(0,10)}
+  spuSave()}
 let spLast=0,spGap=250;                /* ms between catalog requests; it widens when Spotify asks for a break */
 const spRel=u=>String(u||'').replace(/^https:\/\/api\.spotify\.com\/v1\//,'');
 async function spApi(path){
@@ -2712,9 +2742,11 @@ async function spApi(path){
       if(viaW)r=await fetch(SY.url.replace(/\/+$/,'')+'/spotify/api?p='+encodeURIComponent(path),{cache:'no-store',headers:{'x-sync-key':SY.key}});
       else{await spLocalToken();r=await fetch(SP_API+path,{headers:{authorization:'Bearer '+SPL.at}})}
     }catch(e){if(e&&e.code)throw e;throw SPError('network')}
+    spuCount(spuKind(path),viaW&&r.headers.get('x-pb-cache')==='hit');
     if(r.status===429||r.status===503||r.status===502){
       const ra=parseInt(r.headers.get('retry-after'),10);
       let quota=false;if(r.status===429){try{quota=/QUOTA_EXCEEDED/i.test(await r.text())}catch(e){}}   /* Spotify marks a used-up quota in the reply */
+      if(r.status===429)spuEvent(quota?'quota':'rl');
       if(r.status===429)spGap=Math.min(1500,spGap+250);          /* it asked for a break: go slower for the rest of this run */
       if(quota||ra>90)throw Object.assign(SPError(quota?'quota':'limited',r.status),{wait:ra>0?ra:0});   /* a long penalty: stop, don't keep knocking */
       if(tries>=5)throw SPError('busy',r.status);
@@ -2973,7 +3005,22 @@ function spSide(){
     h+=`<details class="spmiss"><summary class="note">${m.length} song${m.length===1?'':'s'} you played that are not in Playback</summary>
       <ul>${m.map(x=>`<li>${esc(x.a)} – ${esc(x.t)} <span class="why">(${why[x.why]||x.why})</span></li>`).join('')}</ul>
       <div><button type="button" class="link" data-act="spmissclear">Clear this list</button></div></details>`}
+  h+=spuHtml();
   return h+'</div>';
+}
+function spuHtml(){
+  const days=Object.keys(SPU.d).sort().reverse(),today=SPU.d[spuDay()]||{},now=Date.now();
+  if(!days.length)return '';
+  const h24=SPU.t.filter(x=>x>now-864e5).length;
+  const names={search:'searches',albumlist:'release lists',artist:'artist lookups',album:'albums',tracks:'long tracklists',other:'other'};
+  const parts=Object.keys(names).filter(k=>today[k]).map(k=>today[k]+' '+names[k]);
+  const when=p=>new Date(p).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+  const dl=d=>{const r=SPU.d[d];return '<li>'+esc(new Date(d+'T12:00').toLocaleDateString([],{month:'short',day:'numeric'}))+': '+(r.total||0)+' sent to Spotify'+(r.cached?', '+r.cached+' served free from the Worker':'')+(r.quota?', quota hit '+r.quota+'\u00d7':'')+(r.rl?', slow-down '+r.rl+'\u00d7':'')+'</li>'};
+  return `<details class="spmiss"><summary class="note">Spotify calls from this device: ${today.total||0} today, ${h24} in the last 24 hours</summary>
+    <p class="note">${parts.length?'Today: '+esc(parts.join(', '))+'. ':''}${today.cached?today.cached+' more were answered free from your Worker\u2019s saved copy. ':''}Spotify does not publish its limit, so this counts what Playback sends. It cannot see your other devices, or the Worker\u2019s hourly check (about 24 a day).</p>
+    ${SPU.q.length?`<p class="note"><b>When Spotify said the quota was used up</b> (calls from this device in the hour and in the 24 hours before):</p><ul>${SPU.q.map(e=>'<li>'+esc(when(e.at))+': '+e.h1+' in the last hour, '+e.h24+' in the last 24 hours</li>').join('')}</ul>`:''}
+    <ul>${days.slice(0,7).map(dl).join('')}</ul>
+    <div><button type="button" class="link" data-act="spuclear">Reset these counts</button></div></details>`;
 }
 
 /* ---------- TMDB for the Screen tab ----------
@@ -4468,6 +4515,7 @@ document.addEventListener('click',ev=>{
   else if(act==='rtimport'){rtImport()}
   else if(act==='spgo'){spConnect().catch(()=>{SPX.err='This browser could not start the Spotify sign-in.';render()});return}
   else if(act==='spnow'){spPoll(true);return}
+  else if(act==='spuclear'){SPU={d:{},t:[],q:[]};try{localStorage.removeItem(SPU_KEY)}catch(e){}render();return}
   else if(act==='spoff'){spDisconnect();return}
   else if(act==='spcid'){SPX.cidOpen=true;SPX.err=''}
   else if(act==='spcidcancel'){SPX.cidOpen=false;SPX.err=''}
