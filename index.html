@@ -60,7 +60,7 @@ button{cursor:pointer}
 .card .s{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* shell */
-.shell{display:grid;grid-template-columns:270px minmax(0,1fr);gap:20px;align-items:start}
+.shell{display:grid;grid-template-columns:clamp(270px,32vw,460px) minmax(0,1fr);gap:20px;align-items:start}
 @media (max-width:760px){.shell{grid-template-columns:minmax(0,1fr)}}
 .side{display:flex;flex-direction:column;gap:10px}
 .entry{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:transparent;padding:8px 10px;border-radius:8px}
@@ -76,7 +76,7 @@ button{cursor:pointer}
 .lrow .label{margin-right:2px}
 .lrow .chip{padding:3px 9px;font-size:12px}
 .lrow .chip .c{font-family:var(--mono);opacity:.7;margin-left:4px;font-weight:500}
-.llist{position:relative;max-height:min(62vh,640px);overflow-y:auto;overscroll-behavior:contain;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:4px;scrollbar-width:thin}
+.llist{position:relative;max-height:min(78vh,900px);overflow-y:auto;overscroll-behavior:contain;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:4px;scrollbar-width:thin}
 @media (max-width:760px){.llist{max-height:42vh}}
 .lsec{position:sticky;top:-4px;z-index:1;background:var(--bg);font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:8px 10px 4px;display:flex;justify-content:space-between}
 .entry .bar{width:44px;flex:0 0 auto}
@@ -96,7 +96,7 @@ button{cursor:pointer}
 .lshow .chip{flex:0 0 auto}
 .lwrap{position:relative;display:flex;flex-direction:column;min-height:0}
 .lrail{display:none}
-.lgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:12px 10px;padding:8px 6px 12px}
+.lgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:14px 12px;padding:8px 6px 12px}
 .tile{display:flex;flex-direction:column;gap:6px;min-width:0;border:0;background:transparent;padding:0;text-align:left;color:inherit;border-radius:12px}
 .tile .tcov{--ac:#2D5840;position:relative;display:block;width:100%;aspect-ratio:1/1;border-radius:12px;overflow:hidden;background:linear-gradient(160deg,color-mix(in srgb,var(--ac) 88%,#fff),color-mix(in srgb,var(--ac) 82%,#000));box-shadow:0 0 0 1px rgb(127 127 127 / .2)}
 .tile:hover .tcov{filter:brightness(1.1)}
@@ -109,7 +109,7 @@ button{cursor:pointer}
 .imgpill button{flex:0 0 auto;width:32px;height:32px;border:0;border-radius:50%;background:var(--sunk);color:var(--ink);font-size:18px;line-height:1;cursor:pointer}
 .tini{position:absolute;left:8px;bottom:-4px;font:900 58px/1 Archivo,var(--display);color:rgb(255 255 255 / .3)}
 .trate{position:absolute;top:6px;right:6px;z-index:1;background:rgb(10 14 12 / .72);color:#6FD3C6;font:600 11px var(--mono);padding:2px 6px;border-radius:999px;font-variant-numeric:tabular-nums}
-.tcorner{position:absolute;left:6px;bottom:10px;z-index:1;width:38%;max-width:44px;aspect-ratio:1/1;border-radius:7px;overflow:hidden;box-shadow:0 0 0 2px #fff,0 3px 10px rgb(0 0 0 / .5);background:rgb(10 14 12 / .6)}
+.tcorner{position:absolute;left:6px;bottom:10px;z-index:1;width:30%;max-width:38px;aspect-ratio:1/1;border-radius:7px;overflow:hidden;box-shadow:0 0 0 2px #fff,0 3px 10px rgb(0 0 0 / .5);background:rgb(10 14 12 / .6)}
 .tcorner img{display:block;width:100%;height:100%;object-fit:cover}
 .tbar{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgb(0 0 0 / .45);z-index:1}
 .tbar b{display:block;height:100%;background:#6FD3C6}
@@ -1267,6 +1267,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.13-f', note:'BIGGER ARTIST WALL: on wide screens the artist list is wider and taller with bigger tiles, so portraits have more room, and the corner album is smaller so it covers less of the photo.'},
   {v:'2026.11.13-e', note:'CORNER ALBUM: artist tiles in the Wall now show your best-rated album in the bottom-left corner of the artist photo. It only appears once you have rated an album for that artist.'},
   {v:'2026.11.13-d', note:'GOLDER BANNERS: a banner now takes its color mostly from the cover\u2019s most vivid shades instead of averaging them with the dull ones next to them, so a gold cover like Thee Sacred Souls gets a real gold banner rather than khaki.'},
   {v:'2026.11.13-c', note:'Album banners now follow the biggest color on the cover even when it comes in several shades, so a mostly-teal cover like ii gets a teal banner instead of one picked off the gold chains.'},
