@@ -15,8 +15,11 @@
    5. Deploy again, then paste the Worker URL and the secret into
       Playback's Sync panel (bottom of the app).
 
-   UPDATING an existing Worker: open it > Edit code > select all,
-   paste this file over it > Deploy. The binding and secret stay.
+   UPDATING an existing Worker: nothing to do. This Worker is connected to
+   GitHub (Workers Builds, set up by wrangler.jsonc at the repo root), so every
+   push to main deploys it, and the binding and secrets stay. Only if that
+   connection is ever removed: open it > Edit code > select all, paste this
+   file over it > Deploy.
 
    SPOTIFY HOURLY CHECK (version 3): Settings > Trigger events > Add >
    Cron trigger > every hour ("0 * * * *") > save. Without it the Worker
