@@ -1255,6 +1255,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.12-c', note:'ARTIST PHOTOS: each artist tile on the Music tab now shows the artist\u2019s own Spotify photo, falling back to their best-rated album cover and then a colored letter. New imports save the photo; artists you already have fill in a few at a time each time you open Playback (it needs the updated Worker file, playback-sync.js, redeployed).'},
   {v:'2026.11.12-b', note:'ARTIST WALL: the artist list on the Music tab is now a grid of covers instead of a box of rows. Each artist shows your best-rated album as its cover, your average rating as a small badge, and how much you have heard as a bar along the bottom; a dashed Add an artist tile sits at the end of the grid. On a phone, Switch artist opens the whole list as a full screen with a close button, search, and one Sort menu (Progress, A\u2013Z, Rating, Size) instead of two rows of chips, and on A\u2013Z a letter rail down the right edge jumps to a letter. The Screen tab keeps its list for now.'},
   {v:'2026.11.12-a', note:'SONGS WITH TYPOS FIND THEIR ALBUM TOO: a hand-made or RYM-made album whose song titles have typos (“Forgotten Battlefied”, “Gestral ViIllage”) used to sit beside the real album forever, with your ratings stuck on it. Now, when at least 3 of its songs each have one clear closest match on the same real album (and that covers most of them), the songs, checkmarks and ratings move onto the real album, and the album rating follows if that album has none. It never moves songs that differ by a number, short titles, a song with two equally close matches, songs spread across different albums, or songs whose ratings disagree with the real one; those stay put. Undo last import puts the artist back.'},
   {v:'2026.11.11-zd', note:'LONGER-TITLE MATCHING, TIE-BREAK: when an album has two songs that fit a longer title, like “don’t rely on other men” and its deluxe copy “don’t rely on other men (single)”, the plain one now wins, so a rating stuck on “Don’t Rely on Other Men (Album)” moves onto the album song and the stray one-song album copy goes away. If neither or both fit equally, nothing moves.'},
@@ -1467,6 +1468,7 @@ function mergeSameArtists(){
         }
       }
       if(!keep.spid&&o.spid)keep.spid=o.spid;
+      if(!keep.simg&&o.simg)keep.simg=o.simg;
       akaSet(keep,{name:o.name,aka:o.aka});
       S.music=S.music.filter(x=>x!==o);
     }
@@ -1949,7 +1951,7 @@ function mbMerge(art,incoming,versions,tidy,sp){
   a.groups=[...groups,...manual];
   const fromSp=tidy?a.src==='sp':!!sp;
   if(kept.length)a.groups.push({id:sid(a.id,'kept'),src:'kept',title:'Kept from your earlier list',year:'—',kind:fromSp?'Not on Spotify':'Not in the MusicBrainz import',items:kept});
-  a.mbid=art.id;if(!tidy){a.name=ARTIST_SHOW[nArtist(art.name)]||art.name;a.mbVersions=!!versions;a.mbAt=Date.now();a.src=sp?'sp':'mb';if(sp)a.spid=sp.id;if(art.aka){a.akaAt=Date.now()}}
+  a.mbid=art.id;if(!tidy){a.name=ARTIST_SHOW[nArtist(art.name)]||art.name;a.mbVersions=!!versions;a.mbAt=Date.now();a.src=sp?'sp':'mb';if(sp){a.spid=sp.id;if(sp.img)a.simg=sp.img}if(art.aka){a.akaAt=Date.now()}}
   akaSet(a,art,sp,prevName);
   for(const g of a.groups){if(rating(g.id))continue;const o=oldR.find(x=>x[0]===nTitle(g.title));if(o)S.marks[g.id]={...(S.marks[g.id]||{}),r:o[1]}}
   for(const g of a.groups){if(!hasDx(g)||rating(dxId(g)))continue;
@@ -2676,11 +2678,37 @@ function spPickImg(imgs){
   const im=(Array.isArray(imgs)?imgs:[]).filter(x=>x&&/^https:\/\/i\.scdn\.co\//.test(x.url||'')).sort((a,b)=>(a.width||0)-(b.width||0));
   return (im.find(x=>(x.width||0)>=100)||im[im.length-1]||{}).url||'';
 }
+/* artist photo: the smallest one that is still sharp on a tile (about 200px wide), else the biggest there is */
+function spImg(imgs){
+  const im=(Array.isArray(imgs)?imgs:[]).filter(x=>x&&/^https:\/\/i\.scdn\.co\//.test(x.url||'')).sort((a,b)=>(a.width||0)-(b.width||0));
+  return (im.find(x=>(x.width||0)>=200)||im[im.length-1]||{}).url||'';
+}
+/* Gives artists their Spotify photo, a few per visit so Spotify's quota is never strained. Artists with a saved
+   Spotify ID cost one request; others cost one search. Any trouble stops the pass quietly and it tries again later. */
+async function spImgBackfill(){
+  if(SPX.imgRun||MBX.busy||!READY||!spViaWorker())return;
+  const T=Date.now(),todo=(S.music||[]).filter(a=>a&&a.name&&!a.simg&&!(a.simgTry>T-864e5)).slice(0,10);
+  if(!todo.length)return;
+  SPX.imgRun=true;spGap=700;let got=0;
+  try{
+    for(const a of todo){
+      if(MBX.busy)break;
+      let u='';
+      if(a.spid){const j=await spApi('artists/'+a.spid+'?locale=en');u=spImg(j.images)}
+      else{const n=nArtist(a.name),j=await spApi('search?'+new URLSearchParams({q:a.name,type:'artist',limit:5})),
+        hit=((j.artists&&j.artists.items)||[]).filter(x=>x&&x.id&&nArtist(x.name)===n).sort((x,y)=>(y.popularity||0)-(x.popularity||0))[0];
+        u=hit?spImg(hit.images):''}
+      a.simgTry=Date.now();if(u){a.simg=u;got++}
+      save();
+    }
+  }catch(e){}
+  finally{SPX.imgRun=false;spGap=250;if(got)render()}
+}
 async function spFetchCatalog(art,existing){
   /* an artist with two names is looked up again every time: a saved Spotify ID may point at the
      wrong profile, and the most popular exact match is the real one */
   const alias=ARTIST_SHOW[nArtist(art.name)];
-  let id=!alias&&existing&&existing.spid,name=art.name;
+  let id=!alias&&existing&&existing.spid,name=art.name,simg=(existing&&existing.simg)||'';
   spGap=250;                                      /* each import starts at a gentle pace */
   MBX.step='Finding the artist on Spotify';MBX.n=0;MBX.of=0;mbProgress();
   if(!id){
@@ -2691,7 +2719,7 @@ async function spFetchCatalog(art,existing){
       hit=list.filter(x=>x&&x.id&&nArtist(x.name)===n).sort((a,b)=>(b.popularity||0)-(a.popularity||0))[0];
       if(hit)break}
     if(!hit)throw SPError('nomatch');
-    id=hit.id;name=hit.name;
+    id=hit.id;name=hit.name;simg=spImg(hit.images);
   }
   const albums=[],seen=new Set();let off=0,lim=50;
   MBX.step='Reading releases';mbProgress();
@@ -2718,7 +2746,7 @@ async function spFetchCatalog(art,existing){
       if(++since%10===0)spcSave();
     }
   }finally{spcSave()}                                   /* even a cut-off run keeps what it read */
-  return{artist:{id,name},albums,cached};
+  return{artist:{id,name,img:simg},albums,cached};
 }
 const SP_ED=/\b(deluxe|remaster(ed)?|edition|anniversary|expanded|extended|complete|collector'?s?|platinum|ultimate|bonus|special|explicit|clean|reissue)\b/i;
 const spEd=s=>nrm(String(s).replace(/\s*[\(\[]([^\)\]]*)[\)\]]/g,(m,x)=>SP_ED.test(x)?' ':m).replace(/\s+[-–—]\s+(.+)$/,(m,x)=>SP_ED.test(x)?'':m))||nrm(s);
@@ -2814,6 +2842,7 @@ async function spBoot(){
     finally{SPX.busy=false}}
   if(spViaWorker()&&!SPX.wk&&!SPL.rt){try{SPX.wk=await wkSp('GET',null,'after='+((S.sp&&S.sp.after)||0));SPX.last=Date.now();spApply(SPX.wk&&SPX.wk.connected?SPX.wk.plays||[]:[])}catch(e){SPX.err=spMessage(e)}render();return}
   await spPoll(true);
+  setTimeout(()=>{spImgBackfill()},4000);
 }
 async function spDisconnect(){
   SPX.busy=true;render();
@@ -3323,10 +3352,10 @@ function lCover(x){let best=null,bs=-1;
   for(const g of x.groups||[]){const u=g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-250':'');
     if(!u)continue;const sc=rating(g.id)||0;if(!best||sc>bs){best={g,u};bs=sc}}
   return best}
-function lTile(s,e){const x=s.x,cv=lCover(x),col=(cv&&ACOL[cv.g.id])||acolFallback({title:x.name,id:x.id}),
+function lTile(s,e){const x=s.x,cv=lCover(x),pic=x.simg||(cv&&cv.u)||'',col=(cv&&ACOL[cv.g.id])||acolFallback({title:x.name,id:x.id}),
   ini=([...lName(x)][0]||'#').toUpperCase(),rv=s.r?fmt(Math.round(s.r*10)/10):'',
   lab=x.name+', '+(s.p>=100?'finished':s.p+'% heard')+(rv?', rated '+rv:'');
-  return `<button class="tile${s.p>=100?' done':''}" data-act="sel" data-id="${x.id}" aria-current="${!!(e&&e.id===x.id)}" aria-label="${esc(lab)}"><span class="tcov" style="--ac:${esc(col)}"><span class="tini" aria-hidden="true">${esc(ini)}</span>${cv?`<img src="${esc(cv.u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${rv?`<span class="trate" title="Your average rating">${rv}</span>`:''}<i class="tbar" aria-hidden="true"><b style="width:${s.p}%"></b></i></span><span class="tn">${esc(x.name)}${x.example?'<span class="ex">Example</span>':''}</span></button>`}
+  return `<button class="tile${s.p>=100?' done':''}" data-act="sel" data-id="${x.id}" aria-current="${!!(e&&e.id===x.id)}" aria-label="${esc(lab)}"><span class="tcov" style="--ac:${esc(col)}"><span class="tini" aria-hidden="true">${esc(ini)}</span>${pic?`<img src="${esc(pic)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${rv?`<span class="trate" title="Your average rating">${rv}</span>`:''}<i class="tbar" aria-hidden="true"><b style="width:${s.p}%"></b></i></span><span class="tn">${esc(x.name)}${x.example?'<span class="ex">Example</span>':''}</span></button>`}
 const L_ADD='<button class="tile add" data-act="addart"><span class="tcov"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="tn">Add an artist</span></button>';
 /* the A-Z rail beside the wall: the letters that have artists, in the order the list shows them */
 let LRAIL=[];

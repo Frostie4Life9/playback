@@ -199,7 +199,7 @@ async function spRefresh(env, auth) {
 }
 
 /* read-only catalog requests for building tracklists */
-const CAT_OK = /^(search|artists\/[A-Za-z0-9]{22}\/albums|albums\/[A-Za-z0-9]{22}(\/tracks)?)\?[A-Za-z0-9_=&%.,:+*'()\-]{0,600}$/;
+const CAT_OK = /^(search|artists\/[A-Za-z0-9]{22}(\/albums)?|albums\/[A-Za-z0-9]{22}(\/tracks)?)\?[A-Za-z0-9_=&%.,:+*'()\-]{0,600}$/;
 async function spCatalog(env, url) {
   const p = url.searchParams.get('p') || '';
   if (!CAT_OK.test(p)) return reply({ error: 'path not allowed' }, 400);
