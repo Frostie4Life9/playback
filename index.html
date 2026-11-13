@@ -1260,6 +1260,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.12-h', note:'RYM NAMING FIXES: "Travi$ Scott" and "Travis Scott" are now read as one artist (a $ counts as an S), and any two artists whose names match once case and punctuation are set aside fold together, ratings and songs included. A collab RYM credits as one name, like "Denzel Curry & Kenneth Blume", folds into the member whose page already has that album, so you no longer get an empty copy next to the full one.'},
   {v:'2026.11.12-g', note:'PHOTO PASS SHOWS ITS WORK: a small pill near the bottom now says which artist just got a photo (or had none), and if the pass stops it says why. It disappears a few seconds after a clean finish and stays up, with an x, if something went wrong.'},
   {v:'2026.11.12-f', note:'ARTIST PHOTOS ALL AT ONCE: instead of ten artists per visit, the photo pass now works through everyone who is missing one in a single run, about a second and a half apart (roughly two minutes for 80 artists). It still stops quietly if Spotify asks it to slow down, and tries again next time you open Playback.'},
   {v:'2026.11.12-e', note:'ARTIST PHOTOS ACTUALLY START: the photo pass was skipped for anyone whose Spotify runs through the sync Worker, because it was started after a step that ends early for them. It now starts as soon as Playback opens.'},
@@ -1447,41 +1448,66 @@ function seedAll(){
   save();
 }
 
-/* An artist you already have under both names (Kanye West and Ye, say) becomes one:
-   releases and songs fold together, and every checkmark and rating moves with them.
-   Only names listed in ARTIST_SAME are ever joined, and two artists that both came
-   from MusicBrainz as different people are left alone. */
+/* A release from one artist folds into another's: ratings, checkmarks and songs move with it.
+   With onlyMatch, a release that has no twin on the keeper is left where it is (returns false). */
+function foldGroup(keep,g,onlyMatch){
+  const tg=keep.groups.find(x=>x.kind===g.kind&&nTitle(x.title)===nTitle(g.title))
+    ||(onlyMatch&&RATEABLE.includes(g.kind)?keep.groups.find(x=>RATEABLE.includes(x.kind)&&nTitle(x.title)===nTitle(g.title)):null);
+  if(!tg){if(onlyMatch)return false;keep.groups.push(g);return true}
+  if(!rating(tg.id)&&rating(g.id))S.marks[tg.id]={...(S.marks[tg.id]||{}),r:rating(g.id)};
+  if(S.rymSeen&&S.rymSeen[g.id]!=null&&S.rymSeen[tg.id]==null)S.rymSeen[tg.id]=S.rymSeen[g.id];
+  if(!rating(dxId(tg))&&rating(dxId(g)))S.marks[dxId(tg)]={...(S.marks[dxId(tg)]||{}),r:rating(dxId(g))};
+  delete S.marks[dxId(g)];
+  delete S.marks[g.id];
+  for(const i of g.items){
+    const ti=tg.items.find(x=>mbItemKey(x)===mbItemKey(i));
+    if(ti){mbFold(ti.id,i.id);delete S.marks[i.id];if(!(ti.f&&ti.f.length)&&i.f&&i.f.length)ti.f=i.f}
+    else tg.items.push(i);
+  }
+  return true;
+}
+/* "Denzel Curry & Kenneth Blume" -> its members, as artist keys. RYM credits a collab as one name,
+   while Spotify and MusicBrainz file the same album under each artist. */
+function collabParts(name){
+  const parts=String(name).split(/\s*(?:&|,|\band\b|\bx\b|\u00d7|\bwith\b|\bfeat\.?|\bft\.?|\bfeaturing\b)\s*/i).map(nArtist).filter(Boolean);
+  return parts.length>1?[...new Set(parts)]:[];
+}
+/* An artist you already have under two spellings becomes one: Kanye West and Ye, "Travi$ Scott" and
+   "Travis Scott", anything that reads as the same name once case, punctuation and "$" are set aside.
+   Releases and songs fold together, and every checkmark and rating moves with them. Two artists
+   that both came from MusicBrainz as different people are left alone. A hand-added collab
+   ("A & B") whose albums already sit under A or B folds into that artist. */
 function mergeSameArtists(){
   rebuildAka();
   const keys=new Set([...Object.values(ARTIST_SAME),...Object.values(AKA)]);
-  for(const p of Object.values(S.pendingR||{}))if(Array.isArray(p.n))p.n=[...new Set(p.n.map(nArtist))];   /* waiting RYM ratings follow the same names */
+  const seen=new Map();for(const a of S.music){const k=nArtist(a.name);seen.set(k,(seen.get(k)||0)+1)}
+  for(const [k,n] of seen)if(n>1)keys.add(k);
+  for(const p of Object.values(S.pendingR||{}))if(Array.isArray(p.n))p.n=[...new Set([...p.n,p.a||''].filter(Boolean).map(nArtist))];   /* waiting RYM ratings follow the same names */
   for(const key of keys){
     const list=S.music.filter(a=>nArtist(a.name)===key);
     if(ARTIST_SHOW[key])list.forEach(a=>{a.name=ARTIST_SHOW[key]});   /* a lone "Ye" is shown as Kanye West too */
     if(list.length<2)continue;
-    const keep=list.find(a=>a.mbid)||list[0];
+    const plain=a=>String(a.name).replace(/[\p{L}\p{N} ]/gu,'').length;   /* fewer symbols = the plainer spelling */
+    const keep=list.find(a=>a.mbid)||[...list].sort((x,y)=>plain(x)-plain(y))[0];
     for(const o of list){
       if(o===keep||(o.mbid&&keep.mbid&&o.mbid!==keep.mbid))continue;
-      for(const g of o.groups){
-        const tg=keep.groups.find(x=>x.kind===g.kind&&nTitle(x.title)===nTitle(g.title));
-        if(!tg){keep.groups.push(g);continue}
-        if(!rating(tg.id)&&rating(g.id))S.marks[tg.id]={...(S.marks[tg.id]||{}),r:rating(g.id)};
-        if(S.rymSeen&&S.rymSeen[g.id]!=null&&S.rymSeen[tg.id]==null)S.rymSeen[tg.id]=S.rymSeen[g.id];
-        if(!rating(dxId(tg))&&rating(dxId(g)))S.marks[dxId(tg)]={...(S.marks[dxId(tg)]||{}),r:rating(dxId(g))};
-        delete S.marks[dxId(g)];
-        delete S.marks[g.id];
-        for(const i of g.items){
-          const ti=tg.items.find(x=>mbItemKey(x)===mbItemKey(i));
-          if(ti){mbFold(ti.id,i.id);delete S.marks[i.id];if(!(ti.f&&ti.f.length)&&i.f&&i.f.length)ti.f=i.f}
-          else tg.items.push(i);
-        }
-      }
+      for(const g of o.groups)foldGroup(keep,g);
       if(!keep.spid&&o.spid)keep.spid=o.spid;
       if(!keep.simg&&o.simg)keep.simg=o.simg;
       akaSet(keep,{name:o.name,aka:o.aka});
       S.music=S.music.filter(x=>x!==o);
     }
     if(ARTIST_SHOW[key])keep.name=ARTIST_SHOW[key];
+  }
+  for(const c of [...S.music]){
+    if(c.mbid)continue;
+    const parts=collabParts(c.name);if(!parts.length)continue;
+    const members=S.music.filter(m=>m!==c&&parts.includes(nArtist(m.name)));if(!members.length)continue;
+    for(const g of [...c.groups]){
+      const m=members.find(x=>x.groups.some(t=>RATEABLE.includes(t.kind)&&nTitle(t.title)===nTitle(g.title)));
+      if(m&&foldGroup(m,g,true))c.groups=c.groups.filter(x=>x!==g);
+    }
+    if(!c.groups.length)S.music=S.music.filter(x=>x!==c);
   }
   rebuildAka();
 }
@@ -2100,7 +2126,7 @@ function mbSide(){
 const RATEABLE=['Studio album','EP','Live','Compilation','Other'];
 const RYX={err:'',report:null};
 const decodeEnt=x=>{const t=document.createElement('textarea');t.innerHTML=x;return t.value};
-const nrm=x=>decodeEnt(String(x)).normalize('NFKD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/&/g,' and ').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+const nrm=x=>decodeEnt(String(x)).normalize('NFKD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\$/g,'s').replace(/&/g,' and ').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
 /* one artist who goes by two names: the left name is read as the right one (Ye is Kanye West) everywhere
    artists are matched (RYM imports, Spotify plays, imports), so they never split in two */
 const ARTIST_SAME={'ye':'kanye west'};
@@ -2236,6 +2262,7 @@ function rymImport(text){
       }
     }
     rp.added=rymAddWaiting();
+    mergeSameArtists();
     RYX.report=rp;touch();
   }catch(err){
     RYX.err=err.message==='shape'?'That does not look like a Rate Your Music export (it needs Title, Rating and name columns). Nothing was changed.':'Could not read that file. Nothing was changed.';
