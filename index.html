@@ -1268,6 +1268,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.13-k', note:'ONE ALBUM, TWO ARTISTS: an album that sits on two artist pages, like An Evening With Silk Sonic on both Bruno Mars and Silk Sonic, is now linked. It stays on both pages, but a rating or a checkmark on either page shows on the other, so you no longer get an empty copy next to the rated one. Playback matches the copies by title when one is credited on the other (with ...) or both came from the same release, and any marks already on one copy move to the shared record. Exports list the album once. Deleting one artist keeps the ratings on the other.'},
   {v:'2026.11.13-j', note:'SPOTIFY CALL COUNTER: Settings now has a Spotify calls from this device line under the Spotify box. It counts every request Playback sends Spotify, today and over the last 24 hours, split into searches, release lists, albums and so on, plus how many your Worker answered free from its saved copy. Each time Spotify says the quota is used up it records how many calls had gone out in the hour and the day before, so after a day or two you can see the real daily limit and what is using it. It counts this device only, and not the Worker\u2019s hourly check. Copies from your Worker show as free once the Worker has redeployed.'},
   {v:'2026.11.13-i', note:'LESS SPOTIFY QUOTA USED: albums and artists Spotify has already told your Worker about are now saved there for 30 days and shared by your phone and PC, so a second device (or a rebuild) no longer asks Spotify again. The artist-photo pass now does 25 artists per visit, retries artists with no photo after 2 weeks instead of daily, and stops for at least 6 hours after Spotify says the quota is used up. Needs the updated sync Worker (playback-sync.js, version 10) pasted into Cloudflare; the app works without it, it just will not save the extra quota.'},
   {v:'2026.11.13-h', note:'EVEN WIDER: on very wide screens the page now uses nearly the full width (up to about 2800px) and the artist wall gets a wider list with bigger portraits.'},
@@ -1476,11 +1477,11 @@ function foldGroup(keep,g,onlyMatch){
   if(!rating(tg.id)&&rating(g.id))S.marks[tg.id]={...(S.marks[tg.id]||{}),r:rating(g.id)};
   if(S.rymSeen&&S.rymSeen[g.id]!=null&&S.rymSeen[tg.id]==null)S.rymSeen[tg.id]=S.rymSeen[g.id];
   if(!rating(dxId(tg))&&rating(dxId(g)))S.marks[dxId(tg)]={...(S.marks[dxId(tg)]||{}),r:rating(dxId(g))};
-  delete S.marks[dxId(g)];
-  delete S.marks[g.id];
+  unmark(dxId(g),dxId(tg));
+  unmark(g.id,tg.id);
   for(const i of g.items){
     const ti=tg.items.find(x=>mbItemKey(x)===mbItemKey(i));
-    if(ti){mbFold(ti.id,i.id);delete S.marks[i.id];if(!(ti.f&&ti.f.length)&&i.f&&i.f.length)ti.f=i.f}
+    if(ti){mbFold(ti.id,i.id);unmark(i.id,ti.id);if(!(ti.f&&ti.f.length)&&i.f&&i.f.length)ti.f=i.f}
     else tg.items.push(i);
   }
   return true;
@@ -1535,6 +1536,76 @@ function mergeSameArtists(){
     if(!c.groups.length)S.music=S.music.filter(x=>x!==c);
   }
   rebuildAka();
+  linkTwins();
+}
+
+/* ---------- one album, several artists ----------
+   An album made by two artists (Bruno Mars + Silk Sonic) sits on BOTH artist pages, each with its own
+   copy of the release. The copies are linked ("twins"): a twin's ratings and checkmarks are kept under
+   one shared id, so rating or checking a song on either page shows on the other. Twins are found again
+   on every start and after every import: same album title, on two different artists, where one is
+   credited on the other's copy ("with ...") or both came from the same MusicBrainz/Spotify release.
+   Nothing is moved between pages and no song or album is removed. */
+const TWIN=new Map();          /* a twin's id -> the shared id that holds its marks */
+const TWIN_RAW=new WeakMap();  /* the marks proxy -> the plain marks object under it */
+function canonK(k){
+  if(!TWIN.size||typeof k!=='string')return k;
+  const t=TWIN.get(k);if(t)return t;
+  if(k.endsWith('~dx')){const u=TWIN.get(k.slice(0,-3));if(u)return u+'~dx'}
+  return k;
+}
+const TWIN_MARKS={
+  get:(t,k)=>t[canonK(k)],
+  set:(t,k,v)=>{t[canonK(k)]=v;return true},
+  has:(t,k)=>canonK(k) in t,
+  deleteProperty:(t,k)=>{if(canonK(k)!==k)return true;delete t[k];return true}   /* a twin never owns marks, so deleting one must not wipe the shared record */
+};
+function twinWrap(){if(!S.marks||TWIN_RAW.has(S.marks))return;const p=new Proxy(S.marks,TWIN_MARKS);TWIN_RAW.set(p,S.marks);S.marks=p}
+const twinRaw=()=>TWIN_RAW.get(S.marks)||S.marks;
+/* remove a mark that has been folded onto another id, unless both are really the same shared record */
+function unmark(id,into){if(canonK(id)!==canonK(into))delete S.marks[id]}
+function linkTwins(){
+  TWIN.clear();twinWrap();
+  if(!Array.isArray(S.music)||S.music.length<2)return 0;
+  const by=new Map();
+  for(const a of S.music)for(const g of a.groups||[]){
+    if(g.src==='kept'||!g.items||!g.items.length)continue;
+    const k=(RATEABLE.includes(g.kind)?'*':g.kind)+'|'+nTitle(g.title);
+    if(!by.has(k))by.set(k,[]);by.get(k).push({a,g});
+  }
+  const credits=(x,y)=>{const n=nArtist(y.a.name);return (x.g.w||[]).some(w=>nArtist(w)===n)};
+  const related=(x,y)=>x.a!==y.a&&((x.g.mbid&&x.g.mbid===y.g.mbid)||credits(x,y)||credits(y,x));
+  for(const list of by.values()){
+    if(list.length<2)continue;
+    const up=list.map((_,i)=>i),find=i=>up[i]===i?i:(up[i]=find(up[i]));
+    for(let i=0;i<list.length;i++)for(let j=i+1;j<list.length;j++)if(related(list[i],list[j]))up[find(j)]=find(i);
+    const comps=new Map();list.forEach((m,i)=>{const r=find(i);if(!comps.has(r))comps.set(r,[]);comps.get(r).push(m)});
+    for(const comp of comps.values()){
+      if(comp.length<2)continue;
+      comp.sort((x,y)=>x.g.id<y.g.id?-1:x.g.id>y.g.id?1:0);   /* the lowest id keeps the marks, the same on every device */
+      for(const m of comp.slice(1))TWIN.set(m.g.id,comp[0].g.id);
+      const home=new Map();
+      for(const m of comp)for(const i of m.g.items){
+        const k=mbItemKey(i),h=home.get(k);
+        if(!h)home.set(k,{id:i.id,g:m.g});
+        else if(h.g!==m.g&&h.id!==i.id)TWIN.set(i.id,h.id);
+      }
+    }
+  }
+  /* marks already stored under a twin's own id (made before it was linked, or by an older copy of the app) move onto the shared id */
+  const raw=twinRaw(),seen=S.rymSeen;
+  for(const [al,ca] of TWIN)for(const suf of ['','~dx']){
+    const m=raw[al+suf];
+    if(m){const c=raw[ca+suf]||{},n={...m,...c};if(m.done)n.done=true;if(!n.r&&m.r)n.r=m.r;raw[ca+suf]=n;delete raw[al+suf]}
+    if(seen&&seen[al+suf]!=null){if(seen[ca+suf]==null)seen[ca+suf]=seen[al+suf];delete seen[al+suf]}
+  }
+  return TWIN.size;
+}
+/* deleting an artist must not take a twin's ratings with it: the shared record moves to a surviving copy first */
+function twinRehome(ids){
+  const raw=twinRaw();
+  for(const [al,ca] of TWIN){if(!ids.has(ca))continue;
+    for(const suf of ['','~dx'])if(raw[ca+suf]!==undefined&&raw[al+suf]===undefined)raw[al+suf]=raw[ca+suf]}
 }
 
 /* ---------- derived ---------- */
@@ -1953,7 +2024,7 @@ function mbMerge(art,incoming,versions,tidy,sp){
     mbFold(t.id,from);
     if(S.rymSeen&&S.rymSeen[from]!=null&&S.rymSeen[t.id]==null)S.rymSeen[t.id]=S.rymSeen[from];
     if(S.rymSeen)delete S.rymSeen[from];
-    delete S.marks[from];claimed.add(t.id);if(moved)folded++;nFold++;
+    unmark(from,t.id);claimed.add(t.id);if(moved)folded++;nFold++;
     if(land){const G=itemGroup.get(t.id);land.set(G,(land.get(G)||0)+1)}
     return true;
   };
@@ -2000,7 +2071,7 @@ function mbMerge(art,incoming,versions,tidy,sp){
       if(H&&(!rH||rH===rg)){
         if(!rH)S.marks[H.id]={...(S.marks[H.id]||{}),r:rg};
         if(S.rymSeen){if(S.rymSeen[g.id]!=null&&S.rymSeen[H.id]==null)S.rymSeen[H.id]=S.rymSeen[g.id];delete S.rymSeen[g.id]}
-        delete S.marks[g.id]}
+        unmark(g.id,H.id)}
       else manual.push(Object.assign({},g,{items}))}}
   const kept=[];let dropped=0;const usedIds=new Set([...groups,...manual].flatMap(g=>g.items.map(i=>i.id)));
   for(const g of a.groups){if(!replaced(g))continue;
@@ -2022,6 +2093,7 @@ function mbMerge(art,incoming,versions,tidy,sp){
     const o=oldX.find(x=>x[0]===nTitle(g.title))||(g.dxTitle?oldR.find(x=>x[0]===nTitle(g.dxTitle)):null);
     if(o)S.marks[dxId(g)]={...(S.marks[dxId(g)]||{}),r:o[1]}}
   applyPending(a);
+  linkTwins();
   const all=groups.flatMap(g=>g.items),kinds={};groups.forEach(g=>kinds[g.kind]=(kinds[g.kind]||0)+1);
   return{aid:a.id,name:a.name,kinds,songs:all.length,added:all.filter(i=>!before.has(i.id)).length,kept:kept.length,dropped,folded,src:fromSp?'sp':'mb'};
 }
@@ -2406,7 +2478,7 @@ function rtSide(){
    was never there, or differs from it, is "not yet in RYM". S.flags.rymBase is set
    once you tell Playback the ratings it already has are on RYM. */
 const EXP={open:false};
-function rymNote(id,r){(S.rymSeen=S.rymSeen||{})[id]=r}
+function rymNote(id,r){(S.rymSeen=S.rymSeen||{})[canonK(id)]=r}
 const csvCell=(v,text)=>{let s=v==null?'':String(v);if(text&&/^[=+\-@\t\r]/.test(s))s="'"+s;return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
 const csvText=(head,rows)=>'﻿'+[head,...rows].map(r=>r.map(c=>csvCell(c,typeof c==='string')).join(',')).join('\r\n')+'\r\n';
 function dlCSV(name,text){
@@ -2419,9 +2491,9 @@ const xArtists=()=>[...S.music].sort((x,y)=>x.name.localeCompare(y.name));
 const xGroups=a=>[...a.groups].sort((x,y)=>(xYear(x)||'9999').localeCompare(xYear(y)||'9999')||x.title.localeCompare(y.title));
 const r2=v=>Math.round(v*100)/100;
 function csvAlbums(){
-  const rows=[];
+  const rows=[],once=new Set();
   for(const a of xArtists())for(const g of xGroups(a)){
-    if(!RATEABLE.includes(g.kind))continue;
+    if(!RATEABLE.includes(g.kind)||once.has(canonK(g.id)))continue;once.add(canonK(g.id));
     const its=stdItems(g),r=rating(g.id),rs=its.map(i=>rating(i.id)).filter(Boolean);
     if(r||rs.length)rows.push([a.name,g.title,xYear(g),g.kind,r||'',rs.length?r2(rs.reduce((x,y)=>x+y,0)/rs.length):'',rs.length,its.length]);
     if(hasDx(g)){const dr=rating(dxId(g)),drs=g.items.map(i=>rating(i.id)).filter(Boolean);   /* the deluxe edition, rated on its own */
@@ -2432,7 +2504,7 @@ function csvAlbums(){
 function csvSongs(){
   const rows=[],seen=new Set();
   for(const a of xArtists())for(const g of xGroups(a))for(const i of g.items){
-    const r=rating(i.id);if(!r||seen.has(i.id))continue;seen.add(i.id);
+    const r=rating(i.id);if(!r||seen.has(canonK(i.id)))continue;seen.add(canonK(i.id));
     rows.push([a.name,g.title,xYear(g),g.kind,i.title,r]);
   }
   return csvText(['Artist','Release','Year','Type','Song','Rating'],rows);
@@ -2452,7 +2524,7 @@ function csvScreen(){
 }
 function rymTodo(){
   const seen=S.rymSeen||{},out=[],done=new Set();
-  const add=(a,g,i)=>{const id=i?i.id:g.id,r=rating(id);if(!r||seen[id]===r||done.has(id))return;done.add(id);
+  const add=(a,g,i)=>{const id=canonK(i?i.id:g.id),r=rating(id);if(!r||seen[id]===r||done.has(id))return;done.add(id);
     out.push({a:a.name,rel:g.title,song:i?i.title:'',r,was:seen[id]||0})};
   for(const a of xArtists())for(const g of xGroups(a)){if(RATEABLE.includes(g.kind)){add(a,g,null);if(hasDx(g))add(a,{id:dxId(g),title:dxName(g)},null)}g.items.forEach(i=>add(a,g,i))}
   return out;
@@ -2460,9 +2532,9 @@ function rymTodo(){
 function rymMark(){
   S.rymSeen=S.rymSeen||{};
   for(const a of S.music)for(const g of a.groups){
-    if(RATEABLE.includes(g.kind)&&rating(g.id))S.rymSeen[g.id]=rating(g.id);
-    if(RATEABLE.includes(g.kind)&&hasDx(g)&&rating(dxId(g)))S.rymSeen[dxId(g)]=rating(dxId(g));
-    for(const i of g.items)if(rating(i.id))S.rymSeen[i.id]=rating(i.id);
+    if(RATEABLE.includes(g.kind)&&rating(g.id))S.rymSeen[canonK(g.id)]=rating(g.id);
+    if(RATEABLE.includes(g.kind)&&hasDx(g)&&rating(dxId(g)))S.rymSeen[canonK(dxId(g))]=rating(dxId(g));
+    for(const i of g.items)if(rating(i.id))S.rymSeen[canonK(i.id)]=rating(i.id);
   }
   S.flags=S.flags||{};S.flags.rymBase=true;
 }
@@ -4537,7 +4609,7 @@ document.addEventListener('click',ev=>{
     if(UI.armed!==id){UI.armed=id}
     else{
       const inMusic=S.music.find(x=>x.id===id);
-      if(inMusic){artistItems(inMusic).forEach(i=>delete S.marks[i.id]);inMusic.groups.forEach(g=>{delete S.marks[g.id];delete S.marks[dxId(g)]});S.music=S.music.filter(x=>x.id!==id);if(id===sid('artist','radiohead'))S.flags.rhDeleted=true}
+      if(inMusic){twinRehome(new Set([...artistItems(inMusic).map(i=>i.id),...inMusic.groups.map(g=>g.id)]));artistItems(inMusic).forEach(i=>delete S.marks[i.id]);inMusic.groups.forEach(g=>{delete S.marks[g.id];delete S.marks[dxId(g)]});S.music=S.music.filter(x=>x.id!==id);linkTwins();if(id===sid('artist','radiohead'))S.flags.rhDeleted=true}
       else{const s=S.screen.find(x=>x.id===id);if(s){epIds(s).forEach(i=>delete S.marks[i]);delete S.marks[s.id];(s.seasons||[]).forEach(x=>delete S.marks[sid(s.id,'s',x.n)]);if(s.tmdb){delete TMC[s.tmdb];tmcSave()}S.screen=S.screen.filter(x=>x.id!==id)}}
       UI.armed=null;UI.sel[UI.tab]=null;touch();
     }
@@ -4652,7 +4724,7 @@ document.addEventListener('submit',ev=>{
     x.vc=d.vcauto?'':String(d.vc||'');
     x.paid=String(d.paid||'').replace(/[^0-9.]/g,'');x.bought=d.bought||'';x.wish=d.status==='wish';UI.colEdit=null;touch();render();return}
   if(kind==='gwith'){const a=S.music.find(x=>x.id===f.dataset.a),g=a&&a.groups.find(x=>x.id===f.dataset.g);
-    if(g){const w=[...new Set(String(d.w||'').split(/\s*(?:&|,|\band\b|\u00d7)\s*/i).map(x=>x.trim()).filter(Boolean))];if(w.length)g.w=w;else delete g.w;touch()}
+    if(g){const w=[...new Set(String(d.w||'').split(/\s*(?:&|,|\band\b|\u00d7)\s*/i).map(x=>x.trim()).filter(Boolean))];if(w.length)g.w=w;else delete g.w;linkTwins();touch()}
     UI.wEdit=null;render();return}
   if(kind==='listen'){if(llAdd(d.artist,d.title))touch();UI.llOpen=true;render();const el=document.getElementById('wl-artist');if(el)el.focus();return}
   if(kind==='spcid'){const c=(d.cid||'').trim();
