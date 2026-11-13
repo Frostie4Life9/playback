@@ -60,8 +60,8 @@ button{cursor:pointer}
 .card .s{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* shell */
-.wrap:has(>.shell),.wrap:has(.shell){max-width:min(94vw,1840px)}
-.shell{display:grid;grid-template-columns:clamp(270px,30vw,640px) minmax(0,1fr);gap:24px;align-items:start}
+.wrap:has(>.shell),.wrap:has(.shell){max-width:min(97vw,2800px)}
+.shell{display:grid;grid-template-columns:clamp(270px,30vw,900px) minmax(0,1fr);gap:24px;align-items:start}
 @media (max-width:760px){.shell{grid-template-columns:minmax(0,1fr)}}
 .side{display:flex;flex-direction:column;gap:10px}
 .entry{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:transparent;padding:8px 10px;border-radius:8px}
@@ -77,7 +77,7 @@ button{cursor:pointer}
 .lrow .label{margin-right:2px}
 .lrow .chip{padding:3px 9px;font-size:12px}
 .lrow .chip .c{font-family:var(--mono);opacity:.7;margin-left:4px;font-weight:500}
-.llist{position:relative;max-height:min(84vh,1300px);overflow-y:auto;overscroll-behavior:contain;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:4px;scrollbar-width:thin}
+.llist{position:relative;max-height:min(86vh,1800px);overflow-y:auto;overscroll-behavior:contain;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:4px;scrollbar-width:thin}
 @media (max-width:760px){.llist{max-height:42vh}}
 .lsec{position:sticky;top:-4px;z-index:1;background:var(--bg);font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:8px 10px 4px;display:flex;justify-content:space-between}
 .entry .bar{width:44px;flex:0 0 auto}
@@ -97,7 +97,7 @@ button{cursor:pointer}
 .lshow .chip{flex:0 0 auto}
 .lwrap{position:relative;display:flex;flex-direction:column;min-height:0}
 .lrail{display:none}
-.lgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(112px,7vw,164px),1fr));gap:16px 14px;padding:8px 6px 12px}
+.lgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(112px,6vw,210px),1fr));gap:16px 14px;padding:8px 6px 12px}
 .tile{display:flex;flex-direction:column;gap:6px;min-width:0;border:0;background:transparent;padding:0;text-align:left;color:inherit;border-radius:12px}
 .tile .tcov{--ac:#2D5840;position:relative;display:block;width:100%;aspect-ratio:1/1;border-radius:12px;overflow:hidden;background:linear-gradient(160deg,color-mix(in srgb,var(--ac) 88%,#fff),color-mix(in srgb,var(--ac) 82%,#000));box-shadow:0 0 0 1px rgb(127 127 127 / .2)}
 .tile:hover .tcov{filter:brightness(1.1)}
@@ -1268,6 +1268,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.13-h', note:'EVEN WIDER: on very wide screens the page now uses nearly the full width (up to about 2800px) and the artist wall gets a wider list with bigger portraits.'},
   {v:'2026.11.13-g', note:'USES WIDE SCREENS: the Music and Screen pages now grow with the window (up to about 1840px) instead of staying a narrow column, and the artist wall gets a wider list with bigger portraits.'},
   {v:'2026.11.13-f', note:'BIGGER ARTIST WALL: on wide screens the artist list is wider and taller with bigger tiles, so portraits have more room, and the corner album is smaller so it covers less of the photo.'},
   {v:'2026.11.13-e', note:'CORNER ALBUM: artist tiles in the Wall now show your best-rated album in the bottom-left corner of the artist photo. It only appears once you have rated an album for that artist.'},
