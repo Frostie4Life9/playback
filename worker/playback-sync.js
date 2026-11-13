@@ -1,5 +1,5 @@
 /* =========================================================
-   Playback — sync  (worker version 9, 2026.11.11)
+   Playback — sync  (worker version 10, 2026.11.13)
    Cloudflare Worker + KV. Same setup pattern as protocol-sync
    and gamelog-sync.
 
@@ -78,6 +78,9 @@
                     (artist search, an artist's albums, an album and its tracks)
                     made with the stored sign-in, so the app can build tracklists
                     from exactly what Spotify carries. Nothing else is allowed through.
+                    Since version 10 a single album or single artist answer is kept in KV
+                    for 30 days and shared by every device, so asking again costs Spotify
+                    nothing. Adding &bust=1 skips the saved copy and refreshes it.
    PUT    /photo?k=<copy>/<slot> (version 8) -> stores your own photo of a record
                     (front, back, inner, labA, labB) in the STATE KV under photo:<k>;
                     answers with a signed link the app keeps in your log
@@ -114,7 +117,7 @@ const CORS = {
   'Access-Control-Allow-Headers': 'content-type, x-sync-key',
   'Access-Control-Expose-Headers': 'x-pb-worker, retry-after',
   'Access-Control-Max-Age': '86400',
-  'x-pb-worker': '9'
+  'x-pb-worker': '10'
 };
 const JSON_H = Object.assign({ 'content-type': 'application/json', 'cache-control': 'no-store' }, CORS);
 const GZ_H = Object.assign({ 'content-type': 'application/gzip', 'cache-control': 'no-store' }, CORS);
@@ -203,9 +206,18 @@ async function spRefresh(env, auth) {
 
 /* read-only catalog requests for building tracklists */
 const CAT_OK = /^(search|artists\/[A-Za-z0-9]{22}(\/albums)?|albums\/[A-Za-z0-9]{22}(\/tracks)?)\?[A-Za-z0-9_=&%.,:+*'()\-]{0,600}$/;
+const CAT_CACHE = /^(albums|artists)\/[A-Za-z0-9]{22}(\?[A-Za-z0-9_=&%.,:+*'()\-]{0,200})?$/;   /* one album or one artist, never lists or searches */
+const CAT_TTL = 30 * 86400;
 async function spCatalog(env, url) {
-  const p = url.searchParams.get('p') || '';
+  let p = url.searchParams.get('p') || '';
   if (!CAT_OK.test(p)) return reply({ error: 'path not allowed' }, 400);
+  const bust = /[?&]bust=1(&|$)/.test(p);
+  if (bust) p = p.replace(/([?&])bust=1(&|$)/, (m, a, b) => (b ? a : ''));
+  const ckey = CAT_CACHE.test(p) ? 'spcat:' + p : '';
+  if (ckey && !bust) {
+    const hit = await env.STATE.get(ckey).catch(() => null);
+    if (hit) return new Response(hit, { status: 200, headers: JSON_H });
+  }
   const auth = await getJSON(env, SP_AUTH);
   if (!auth) return reply({ error: 'not connected' }, 409);
   let at = auth.at;
@@ -222,7 +234,9 @@ async function spCatalog(env, url) {
   if (r.status === 401) return new Response(JSON.stringify({ error: 'token' }), { status: 503, headers: Object.assign({ 'retry-after': '30' }, JSON_H) });
   const h = Object.assign({}, JSON_H);
   const ra = r.headers.get('retry-after'); if (ra) h['retry-after'] = ra;
-  return new Response(await r.text(), { status: r.status, headers: h });
+  const body = await r.text();
+  if (ckey && r.status === 200) { try { await env.STATE.put(ckey, body, { expirationTtl: CAT_TTL }); } catch (e) { /* KV write limit: just skip saving */ } }
+  return new Response(body, { status: r.status, headers: h });
 }
 
 /* Discogs vinyl pressing search (version 6). Read-only: it only ever calls the database

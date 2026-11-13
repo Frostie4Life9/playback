@@ -1268,6 +1268,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.13-i', note:'LESS SPOTIFY QUOTA USED: albums and artists Spotify has already told your Worker about are now saved there for 30 days and shared by your phone and PC, so a second device (or a rebuild) no longer asks Spotify again. The artist-photo pass now does 25 artists per visit, retries artists with no photo after 2 weeks instead of daily, and stops for at least 6 hours after Spotify says the quota is used up. Needs the updated sync Worker (playback-sync.js, version 10) pasted into Cloudflare; the app works without it, it just will not save the extra quota.'},
   {v:'2026.11.13-h', note:'EVEN WIDER: on very wide screens the page now uses nearly the full width (up to about 2800px) and the artist wall gets a wider list with bigger portraits.'},
   {v:'2026.11.13-g', note:'USES WIDE SCREENS: the Music and Screen pages now grow with the window (up to about 1840px) instead of staying a narrow column, and the artist wall gets a wider list with bigger portraits.'},
   {v:'2026.11.13-f', note:'BIGGER ARTIST WALL: on wide screens the artist list is wider and taller with bigger tiles, so portraits have more room, and the corner album is smaller so it covers less of the photo.'},
@@ -2759,7 +2760,9 @@ function imgNote(txt,kind,stay){
 async function spImgBackfill(){
   if(SPX.imgRun||!READY||!spViaWorker())return;
   if(MBX.busy){if((SPX.imgWait=(SPX.imgWait||0)+1)<=20)setTimeout(spImgBackfill,15000);return}   /* an import is running: wait for it, then go */
-  const T=Date.now(),todo=(S.music||[]).filter(a=>a&&a.name&&!a.simg&&!(a.simgTry>T-864e5)).slice(0,80);
+  let cool=0;try{cool=+localStorage.getItem('pb_imgcool')||0}catch(e){}
+  if(cool>Date.now())return;                          /* Spotify said quota: leave it alone until the cool-down ends */
+  const T=Date.now(),todo=(S.music||[]).filter(a=>a&&a.name&&!a.simg&&!(a.simgTry>T-12096e5)).slice(0,25);   /* a miss is retried after 2 weeks, not daily */
   if(!todo.length)return;
   SPX.imgRun=true;spGap=1200;let got=0,tried=0;const miss=[];let fail='';
   imgNote('Artist photos: starting, '+todo.length+' to look up','',true);
@@ -2774,7 +2777,8 @@ async function spImgBackfill(){
       a.simgTry=Date.now();tried++;if(u){a.simg=u;got++;imgNote('Artist photos: '+a.name+' \u2713 ('+tried+' of '+todo.length+')','',true)}else{miss.push(a.name);imgNote('Artist photos: no photo found for '+a.name+' ('+tried+' of '+todo.length+')','',true)}
       save();
     }
-  }catch(e){fail=e&&e.code==='http'&&e.status===400?'the Worker refused the request, so it may not be updated yet':(e&&e.code?spMessage(e):'something unexpected happened')}
+  }catch(e){if(e&&(e.code==='quota'||e.code==='limited'||e.code==='busy')){try{localStorage.setItem('pb_imgcool',String(Date.now()+Math.min(Math.max((e.wait||0)*1000,216e5),1728e5)))}catch(_){}}
+    fail=e&&e.code==='http'&&e.status===400?'the Worker refused the request, so it may not be updated yet':(e&&e.code?spMessage(e):'something unexpected happened')}
   finally{SPX.imgRun=false;spGap=250;if(got)render()
     if(fail)imgNote('Artist photos stopped after '+tried+' of '+todo.length+': '+fail+(got?' ('+got+' added)':'')+'. It will try again next time.','err',true);
     else imgNote('Artist photos done: '+got+' added'+(miss.length?', '+miss.length+' not found ('+miss.slice(0,3).join(', ')+(miss.length>3?'\u2026':'')+')':'')+'.','')}
@@ -2813,7 +2817,7 @@ async function spFetchCatalog(art,existing){
     for(const al of albums){
       const c=C[al.id];
       if(spcFresh(c,al)){al.tracks=c.t.map(spcUnpack);al.img=c.img||'';cached++;MBX.n++;mbProgress();continue}
-      const j=await spApi('albums/'+al.id+'?market=from_token');
+      const j=await spApi('albums/'+al.id+'?market=from_token'+(c?'&bust=1':''));   /* a saved copy that is out of date must not come back from the Worker's copy either */
       const tr=((j.tracks&&j.tracks.items)||[]).slice();let next=j.tracks&&j.tracks.next,g=0;
       while(next&&g++<20){const k=await spApi(spRel(next));tr.push(...(k.items||[]));next=k.next}
       al.tracks=tr;al.img=spPickImg(j.images||al.images);MBX.n++;mbProgress();
