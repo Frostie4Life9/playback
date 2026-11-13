@@ -1255,6 +1255,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.12-e', note:'ARTIST PHOTOS ACTUALLY START: the photo pass was skipped for anyone whose Spotify runs through the sync Worker, because it was started after a step that ends early for them. It now starts as soon as Playback opens.'},
   {v:'2026.11.12-d', note:'ARTIST PHOTOS WAIT THEIR TURN: if an import is running when Playback opens, the photo pass now waits for it to finish and then starts, instead of skipping that visit.'},
   {v:'2026.11.12-c', note:'ARTIST PHOTOS: each artist tile on the Music tab now shows the artist\u2019s own Spotify photo, falling back to their best-rated album cover and then a colored letter. New imports save the photo; artists you already have fill in a few at a time each time you open Playback (it needs the updated Worker file, playback-sync.js, redeployed).'},
   {v:'2026.11.12-b', note:'ARTIST WALL: the artist list on the Music tab is now a grid of covers instead of a box of rows. Each artist shows your best-rated album as its cover, your average rating as a small badge, and how much you have heard as a bar along the bottom; a dashed Add an artist tile sits at the end of the grid. On a phone, Switch artist opens the whole list as a full screen with a close button, search, and one Sort menu (Progress, A\u2013Z, Rating, Size) instead of two rows of chips, and on A\u2013Z a letter rail down the right edge jumps to a letter. The Screen tab keeps its list for now.'},
@@ -2839,12 +2840,12 @@ async function spPoll(force){
 }
 async function spBoot(){
   if(SPX.started)return;SPX.started=true;
+  setTimeout(()=>{spImgBackfill()},4000);   /* artist photos: started here so every path through boot gets it */
   if(SP_CB){SPX.busy=true;render();
     try{await spFinish(SP_CB);UI.tab='music'}catch(e){SPX.err=spMessage(e)}
     finally{SPX.busy=false}}
   if(spViaWorker()&&!SPX.wk&&!SPL.rt){try{SPX.wk=await wkSp('GET',null,'after='+((S.sp&&S.sp.after)||0));SPX.last=Date.now();spApply(SPX.wk&&SPX.wk.connected?SPX.wk.plays||[]:[])}catch(e){SPX.err=spMessage(e)}render();return}
   await spPoll(true);
-  setTimeout(()=>{spImgBackfill()},4000);
 }
 async function spDisconnect(){
   SPX.busy=true;render();
