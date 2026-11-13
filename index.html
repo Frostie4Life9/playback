@@ -1265,6 +1265,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.13-b', note:'COLLAB CREDITS FILL IN BY THEMSELVES: when you import or check for new releases on an artist, Spotify and MusicBrainz now tell Playback who else is credited on an album, and the banner shows it (with Kenny Beats). Nothing changes until you tap Check for new releases on an artist, and a credit you typed in yourself is never overwritten.'},
   {v:'2026.11.13-a', note:'COLLAB CREDIT ON THE ALBUM BANNER: an album made with another artist now says so under its title (with Kenny Beats). Albums that RYM credits to a pair, like "Denzel Curry & Kenneth Blume", pick the other name up on their own when they fold into the artist\u2019s page. For any album already in your log, tap + collab under the song count, type the other artist (use & for more than one) and save; clear the box to remove it. A credit you set survives Check for new releases.'},
   {v:'2026.11.12-h', note:'RYM NAMING FIXES: "Travi$ Scott" and "Travis Scott" are now read as one artist (a $ counts as an S), and any two artists whose names match once case and punctuation are set aside fold together, ratings and songs included. A collab RYM credits as one name, like "Denzel Curry & Kenneth Blume", folds into the member whose page already has that album, so you no longer get an empty copy next to the full one.'},
   {v:'2026.11.12-g', note:'PHOTO PASS SHOWS ITS WORK: a small pill near the bottom now says which artist just got a photo (or had none), and if the pass stops it says why. It disappears a few seconds after a clean finish and stays up, with an x, if something went wrong.'},
@@ -1745,6 +1746,8 @@ async function mbFetchCatalog(mbid){
     MBX.step='Reading releases';MBX.n=Math.min(off,total);MBX.of=total;mbProgress();
     if(!got.length||off>=total)break;
   }
+  /* anyone else credited on the release itself made it with this artist */
+  for(const r of rels){const w=[];for(const c of r['artist-credit']||[]){const nm=c&&c.artist&&c.artist.id!==mbid?String(c.name||c.artist.name||'').trim():'';if(nm&&!/^various artists$/i.test(nm)&&!w.includes(nm))w.push(nm)}if(w.length)r.w=w}
   /* anyone credited on a track besides this artist is a guest on it */
   for(const r of rels)for(const m of r.media||[])for(const t of m.tracks||[]){
     const ac=t['artist-credit']||(t.recording&&t.recording['artist-credit'])||[];
@@ -1830,7 +1833,7 @@ function mbBuild(rels,versions){
     /* albums: the standard edition first, bonus editions later. Singles and EPs
        often came as CD1/CD2, so every edition counts as the release itself. */
     const whole=kind!=='Studio album',restR=usable.filter(r=>r!==rep);
-    entries.push({rgid:rg.id,title:rg.title||rep.title,year:date.slice(0,4)||'—',kind,date:mbDateKey(date),
+    entries.push({rgid:rg.id,title:rg.title||rep.title,year:date.slice(0,4)||'—',kind,date:mbDateKey(date),...(rep.w&&rep.w.length?{w:rep.w}:{}),
       rep:(whole?[rep,...restR]:[rep]).flatMap(tracksOf),others:whole||!versions?[]:restR.flatMap(tracksOf),eds:whole||!versions?[]:restR.map(tracksOf),...mbDeluxeLook(whole||!versions?null:restR.map(r=>({n:tracksOf(r).length,title:r.title,id:r.id})),rg.title||rep.title),items:[]});
   }
   return mbClaim(edFold(entries,versions),versions);
@@ -1884,7 +1887,7 @@ function mbClaim(entries,versions){
   order.forEach(mbDeluxeOrder);
   return order.filter(E=>E.items.length)
     .sort((a,b)=>(MB_KIND_ORDER.indexOf(a.kind)-MB_KIND_ORDER.indexOf(b.kind))||(a.date<b.date?-1:a.date>b.date?1:0))
-    .map(E=>({rgid:E.rgid,title:E.title,year:E.year,kind:E.kind,img:E.img||'',...(E.dxImg?{dxImg:E.dxImg}:{}),...(E.dxTitle?{dxTitle:E.dxTitle}:{}),items:E.items}));
+    .map(E=>({rgid:E.rgid,title:E.title,year:E.year,kind:E.kind,img:E.img||'',...(E.dxImg?{dxImg:E.dxImg}:{}),...(E.dxTitle?{dxTitle:E.dxTitle}:{}),...(E.w&&E.w.length?{w:E.w}:{}),items:E.items}));
 }
 
 /* ---- merge into the log: safe to repeat, never drops a mark ---- */
@@ -1918,7 +1921,7 @@ function mbMerge(art,incoming,versions,tidy,sp){
     const items=[];
     for(const t of G.items){if(placed.has(t.k))continue;placed.add(t.k);items.push({id:idFor(t.k),title:t.title,k:t.k,...(t.f&&t.f.length?{f:t.f}:{}),...(t.dx?{dx:1}:{})})}
     const ow=(a.groups.find(x=>x.id===sid(a.id,'rg',G.rgid))||{}).w;
-    if(items.length)groups.push({id:sid(a.id,'rg',G.rgid),src:'mb',mbid:G.rgid,title:G.title,year:G.year,kind:G.kind,...(ow&&ow.length?{w:ow}:{}),...(G.img?{img:G.img}:{}),...(G.dxImg?{dxImg:G.dxImg}:{}),...(G.dxTitle?{dxTitle:G.dxTitle}:{}),items});
+    if(items.length)groups.push({id:sid(a.id,'rg',G.rgid),src:'mb',mbid:G.rgid,title:G.title,year:G.year,kind:G.kind,...(ow&&ow.length?{w:ow}:G.w&&G.w.length?{w:G.w}:{}),...(G.img?{img:G.img}:{}),...(G.dxImg?{dxImg:G.dxImg}:{}),...(G.dxTitle?{dxTitle:G.dxTitle}:{}),items});
   }
   /* A song with no exact match, when exactly ONE song on the new tracklists has the same title once a
      subtitle in brackets is ignored, moves onto that song with its checkmark and rating. Never when two
@@ -2035,7 +2038,7 @@ function undoApply(aid){
 }
 setTimeout(undoLoad,0);
 function mbTidy(a){
-  const inc=a.groups.filter(g=>g.src==='mb').map(g=>({rgid:g.mbid,title:g.title,year:g.year,kind:g.kind,img:g.img||'',...(g.dxImg?{dxImg:g.dxImg}:{}),...(g.dxTitle?{dxTitle:g.dxTitle}:{}),items:g.items.map(i=>({k:mbItemKey(i),title:i.title,...(i.f&&i.f.length?{f:i.f}:{}),...(i.dx?{dx:1}:{})}))}));
+  const inc=a.groups.filter(g=>g.src==='mb').map(g=>({rgid:g.mbid,title:g.title,year:g.year,kind:g.kind,img:g.img||'',...(g.dxImg?{dxImg:g.dxImg}:{}),...(g.dxTitle?{dxTitle:g.dxTitle}:{}),...(g.w&&g.w.length?{w:g.w}:{}),items:g.items.map(i=>({k:mbItemKey(i),title:i.title,...(i.f&&i.f.length?{f:i.f}:{}),...(i.dx?{dx:1}:{})}))}));
   mbMerge({id:a.mbid,name:a.name},inc,a.mbVersions,true);
 }
 function mbReportText(r){
@@ -2838,7 +2841,8 @@ function spBuild(albums,artistId,versions){
     const tagged=e=>spEd(e.al.name)!==nrm(e.al.name)?1:0,ex=e=>e.tr.filter(t=>t.explicit).length;
     eds.sort((a,b)=>(tagged(a)-tagged(b))||(ex(b)-ex(a))||(a.tr.length-b.tr.length)||(a.date<b.date?-1:a.date>b.date?1:0));
     const rep=eds[0],first=eds.map(e=>e.date).sort()[0];
-    entries.push({rgid:'sp:'+rep.al.id,title:rep.al.name,year:first.startsWith('9999')?'—':first.slice(0,4),kind:rep.kind,date:first,img:rep.al.img||'',
+    const w=[];for(const x of rep.al.artists||[])if(x&&x.name&&x.id!==artistId&&!/^various artists$/i.test(x.name)&&!w.includes(x.name))w.push(x.name);
+    entries.push({rgid:'sp:'+rep.al.id,title:rep.al.name,...(w.length?{w}:{}),year:first.startsWith('9999')?'—':first.slice(0,4),kind:rep.kind,date:first,img:rep.al.img||'',
       rep:rep.tr.map(T),others:eds.slice(1).flatMap(e=>e.tr.map(T)),eds:eds.slice(1).map(e=>e.tr.map(T)),...spDeluxeLook(eds.slice(1),rep.al.name),items:[]});
   }
   return mbClaim(edFold(entries,true),versions);
