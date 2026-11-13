@@ -645,6 +645,11 @@ details.addart .add{border-top:1px solid var(--line)}
 .sl-kind{font:500 13px var(--body);letter-spacing:.01em;color:color-mix(in srgb,var(--hi) 72%,transparent)}
 .sl-meta h3{margin:0;font:650 28px/1.08 Archivo,var(--display);font-stretch:100%;letter-spacing:-.022em;overflow-wrap:anywhere}
 .sl-sub{font-size:14px;color:color-mix(in srgb,var(--hi) 72%,transparent)}
+.sl-w{font:600 15px var(--body);color:var(--hi);overflow-wrap:anywhere}
+.sl-wb{align-self:flex-start;margin-top:2px;padding:4px 0;min-height:32px;border:0;background:none;font:500 12px var(--body);letter-spacing:.01em;color:color-mix(in srgb,var(--hi) 55%,transparent);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.sl-wf{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap}
+.sl-wf input{flex:1 1 150px;min-width:0;min-height:40px;padding:0 12px;border-radius:10px;border:1px solid color-mix(in srgb,var(--hi) 38%,transparent);background:color-mix(in srgb,var(--hi) 10%,transparent);color:var(--hi);font:500 15px var(--body)}
+.sl-wf button{min-height:40px;padding:0 14px;border-radius:10px;border:1px solid color-mix(in srgb,var(--hi) 38%,transparent);background:color-mix(in srgb,var(--hi) 16%,transparent);color:var(--hi);font:600 14px var(--body);cursor:pointer}
 .sl-hacts{display:flex;gap:8px;margin-top:10px}
 .sl-hacts .sl-ic{width:42px;min-height:42px;border-color:color-mix(in srgb,var(--hi) 38%,transparent);color:var(--hi);background:color-mix(in srgb,var(--hi) 10%,transparent)}
 .sl-hacts .sl-ic svg{width:20px;height:20px}
@@ -1260,6 +1265,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.13-a', note:'COLLAB CREDIT ON THE ALBUM BANNER: an album made with another artist now says so under its title (with Kenny Beats). Albums that RYM credits to a pair, like "Denzel Curry & Kenneth Blume", pick the other name up on their own when they fold into the artist\u2019s page. For any album already in your log, tap + collab under the song count, type the other artist (use & for more than one) and save; clear the box to remove it. A credit you set survives Check for new releases.'},
   {v:'2026.11.12-h', note:'RYM NAMING FIXES: "Travi$ Scott" and "Travis Scott" are now read as one artist (a $ counts as an S), and any two artists whose names match once case and punctuation are set aside fold together, ratings and songs included. A collab RYM credits as one name, like "Denzel Curry & Kenneth Blume", folds into the member whose page already has that album, so you no longer get an empty copy next to the full one.'},
   {v:'2026.11.12-g', note:'PHOTO PASS SHOWS ITS WORK: a small pill near the bottom now says which artist just got a photo (or had none), and if the pass stops it says why. It disappears a few seconds after a clean finish and stays up, with an x, if something went wrong.'},
   {v:'2026.11.12-f', note:'ARTIST PHOTOS ALL AT ONCE: instead of ten artists per visit, the photo pass now works through everyone who is missing one in a single run, about a second and a half apart (roughly two minutes for 80 artists). It still stops quietly if Spotify asks it to slow down, and tries again next time you open Playback.'},
@@ -1454,6 +1460,7 @@ function foldGroup(keep,g,onlyMatch){
   const tg=keep.groups.find(x=>x.kind===g.kind&&nTitle(x.title)===nTitle(g.title))
     ||(onlyMatch&&RATEABLE.includes(g.kind)?keep.groups.find(x=>RATEABLE.includes(x.kind)&&nTitle(x.title)===nTitle(g.title)):null);
   if(!tg){if(onlyMatch)return false;keep.groups.push(g);return true}
+  if(g.w&&g.w.length&&!(tg.w&&tg.w.length))tg.w=g.w;   /* a collab credit comes along with the album */
   if(!rating(tg.id)&&rating(g.id))S.marks[tg.id]={...(S.marks[tg.id]||{}),r:rating(g.id)};
   if(S.rymSeen&&S.rymSeen[g.id]!=null&&S.rymSeen[tg.id]==null)S.rymSeen[tg.id]=S.rymSeen[g.id];
   if(!rating(dxId(tg))&&rating(dxId(g)))S.marks[dxId(tg)]={...(S.marks[dxId(tg)]||{}),r:rating(dxId(g))};
@@ -1471,6 +1478,11 @@ function foldGroup(keep,g,onlyMatch){
 function collabParts(name){
   const parts=String(name).split(/\s*(?:&|,|\band\b|\bx\b|\u00d7|\bwith\b|\bfeat\.?|\bft\.?|\bfeaturing\b)\s*/i).map(nArtist).filter(Boolean);
   return parts.length>1?[...new Set(parts)]:[];
+}
+/* "Denzel Curry & Kenneth Blume" seen from Denzel Curry's page -> ["Kenneth Blume"], the name shown as "with ..." on the album */
+function collabOthers(name,member){
+  const me=nArtist(member);
+  return String(name).split(/\s*(?:&|,|\band\b|\bx\b|\u00d7|\bwith\b)\s*/i).map(x=>x.trim()).filter(x=>x&&nArtist(x)!==me&&nArtist(x));
 }
 /* An artist you already have under two spellings becomes one: Kanye West and Ye, "Travi$ Scott" and
    "Travis Scott", anything that reads as the same name once case, punctuation and "$" are set aside.
@@ -1505,7 +1517,8 @@ function mergeSameArtists(){
     const members=S.music.filter(m=>m!==c&&parts.includes(nArtist(m.name)));if(!members.length)continue;
     for(const g of [...c.groups]){
       const m=members.find(x=>x.groups.some(t=>RATEABLE.includes(t.kind)&&nTitle(t.title)===nTitle(g.title)));
-      if(m&&foldGroup(m,g,true))c.groups=c.groups.filter(x=>x!==g);
+      if(m){const w=collabOthers(c.name,m.name);if(w.length)g.w=w;
+        if(foldGroup(m,g,true))c.groups=c.groups.filter(x=>x!==g);else delete g.w}
     }
     if(!c.groups.length)S.music=S.music.filter(x=>x!==c);
   }
@@ -1904,7 +1917,8 @@ function mbMerge(art,incoming,versions,tidy,sp){
   for(const G of incoming){
     const items=[];
     for(const t of G.items){if(placed.has(t.k))continue;placed.add(t.k);items.push({id:idFor(t.k),title:t.title,k:t.k,...(t.f&&t.f.length?{f:t.f}:{}),...(t.dx?{dx:1}:{})})}
-    if(items.length)groups.push({id:sid(a.id,'rg',G.rgid),src:'mb',mbid:G.rgid,title:G.title,year:G.year,kind:G.kind,...(G.img?{img:G.img}:{}),...(G.dxImg?{dxImg:G.dxImg}:{}),...(G.dxTitle?{dxTitle:G.dxTitle}:{}),items});
+    const ow=(a.groups.find(x=>x.id===sid(a.id,'rg',G.rgid))||{}).w;
+    if(items.length)groups.push({id:sid(a.id,'rg',G.rgid),src:'mb',mbid:G.rgid,title:G.title,year:G.year,kind:G.kind,...(ow&&ow.length?{w:ow}:{}),...(G.img?{img:G.img}:{}),...(G.dxImg?{dxImg:G.dxImg}:{}),...(G.dxTitle?{dxTitle:G.dxTitle}:{}),items});
   }
   /* A song with no exact match, when exactly ONE song on the new tracklists has the same title once a
      subtitle in brackets is ignored, moves onto that song with its checkmark and rating. Never when two
@@ -3350,7 +3364,7 @@ async function push(force){
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pull()});
 window.addEventListener('online',()=>pull());
 document.addEventListener('toggle',ev=>{if(ev.target.id==='syncpanel')UI.syncOpen=ev.target.open;else if(ev.target.id==='addart')UI.addOpen=ev.target.open;else if(ev.target.id==='listenpanel')UI.llOpen=ev.target.open;else if(ev.target.id==='coladd')UI.colAdd=ev.target.open;else if(ev.target.id==='colhand')UI.colHand=ev.target.open;else if(ev.target.id==='coltok')UI.colTok=ev.target.open;else if(ev.target.classList&&ev.target.classList.contains('splog'))UI.spLogOpen=ev.target.open},true);
-const UI={view:null,libOpen:false,addOpen:false,rOpen:null,lq:{music:'',screen:''},tab:'music',sel:{music:null,screen:null},filter:'all',armed:null,addType:'show',copied:false,epOpen:{},dxOpen:{}};
+const UI={view:null,libOpen:false,addOpen:false,rOpen:null,lq:{music:'',screen:''},tab:'music',sel:{music:null,screen:null},filter:'all',armed:null,addType:'show',copied:false,epOpen:{},dxOpen:{},wEdit:null};
 try{const t=localStorage.getItem(KEY+'_tab');if(t==='screen')UI.tab='screen'}catch(e){}
 
 function current(){
@@ -4252,7 +4266,7 @@ function artistView(a){
           <div class="sl-disc" role="img" aria-label="${gd} of ${shown.length} songs heard">${ringHtml}<span class="sl-lab">${shown.length?gd+'/'+shown.length:'\u2013'}</span></div>
           <div class="sl-cover">${art?`<img src="${esc(art)}" ${dx&&sArt&&art!==sArt?`data-f="${esc(sArt)}" `:''}alt="" loading="lazy" decoding="async" onerror="if(this.dataset.f){this.src=this.dataset.f;this.removeAttribute('data-f')}else this.remove()">`:''}<span class="sl-ph" aria-hidden="true">${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div>
         </div>
-        <div class="sl-meta"><span class="sl-kind">${esc(g.kind)} \u00b7 ${esc(g.year)}</span><h3>${esc(dx?dxName(g):g.title)}</h3>${dx?'<span class="dxbadge">Deluxe</span>':''}<span class="sl-sub">${gd} of ${shown.length} heard</span></div>
+        <div class="sl-meta"><span class="sl-kind">${esc(g.kind)} \u00b7 ${esc(g.year)}</span><h3>${esc(dx?dxName(g):g.title)}</h3>${dx?'<span class="dxbadge">Deluxe</span>':''}${g.w&&g.w.length?`<span class="sl-w">with ${esc(g.w.join(' & '))}</span>`:''}<span class="sl-sub">${gd} of ${shown.length} heard</span>${UI.wEdit===g.id?`<form class="sl-wf" data-form="gwith" data-a="${a.id}" data-g="${g.id}"><input name="w" value="${esc((g.w||[]).join(' & '))}" placeholder="Other artist, like Kenny Beats" aria-label="Collab with" autocomplete="off" autocapitalize="words"><button>Save</button></form>`:`<button type="button" class="sl-wb" data-act="wedit" data-g="${g.id}">${g.w&&g.w.length?'edit collab':'+ collab'}</button>`}</div>
       </div>
       ${dxs.length?`<div class="dxseg" role="group" aria-label="Edition" data-dx="${dx?1:0}"><button type="button" data-act="dxsel" data-g="${g.id}" data-v="0" aria-pressed="${!dx}">Standard<span class="mono">${sd}/${std.length}</span></button><button type="button" class="dx" data-act="dxsel" data-g="${g.id}" data-v="1" aria-pressed="${dx}">Deluxe<span class="mono">${dd}/${g.items.length}</span></button></div>`:''}
       ${albumBar(g,a,full,shown.length)}
@@ -4438,6 +4452,7 @@ document.addEventListener('click',ev=>{
   else if(act==='rclear'){S.marks[id]={...(S.marks[id]||{}),r:0};touch()}
   else if(act==='grpall'){const a=S.music.find(x=>x.id===b.dataset.a),g=a.groups.find(x=>x.id===b.dataset.g),its=viewItems(g),full=its.every(i=>isDone(i.id));
     its.forEach(i=>S.marks[i.id]={...(S.marks[i.id]||{}),done:!full});if(!full)slPulseAsk(g.id,0);touch()}
+  else if(act==='wedit'){UI.wEdit=UI.wEdit===b.dataset.g?null:b.dataset.g}
   else if(act==='dxsel'){UI.dxOpen[b.dataset.g]=b.dataset.v==='1';UI.dxAnim=b.dataset.g;slPulseAsk(b.dataset.g,140)}
   else if(act==='seasonall'){const s=S.screen.find(x=>x.id===b.dataset.s),n=+b.dataset.n,se=s.seasons.find(x=>x.n===n);
     const ids=Array.from({length:se.eps},(_,k)=>sid(s.id,'s',n,'e',k+1)),full=ids.every(isDone);
@@ -4560,6 +4575,9 @@ document.addEventListener('submit',ev=>{
     for(const k of ['artist','title','year','country','label','catno','barcode','fmt','color','edition','media','sleeve','where','notes'])x[k]=(d[k]||'').trim();
     x.vc=d.vcauto?'':String(d.vc||'');
     x.paid=String(d.paid||'').replace(/[^0-9.]/g,'');x.bought=d.bought||'';x.wish=d.status==='wish';UI.colEdit=null;touch();render();return}
+  if(kind==='gwith'){const a=S.music.find(x=>x.id===f.dataset.a),g=a&&a.groups.find(x=>x.id===f.dataset.g);
+    if(g){const w=[...new Set(String(d.w||'').split(/\s*(?:&|,|\band\b|\u00d7)\s*/i).map(x=>x.trim()).filter(Boolean))];if(w.length)g.w=w;else delete g.w;touch()}
+    UI.wEdit=null;render();return}
   if(kind==='listen'){if(llAdd(d.artist,d.title))touch();UI.llOpen=true;render();const el=document.getElementById('wl-artist');if(el)el.focus();return}
   if(kind==='spcid'){const c=(d.cid||'').trim();
     if(!/^[0-9a-f]{32}$/i.test(c)){SPX.err='That does not look like a Client ID. It is 32 letters and numbers, under Settings on your Spotify app\u2019s page.';render();return}
