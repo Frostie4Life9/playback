@@ -109,6 +109,8 @@ button{cursor:pointer}
 .imgpill button{flex:0 0 auto;width:32px;height:32px;border:0;border-radius:50%;background:var(--sunk);color:var(--ink);font-size:18px;line-height:1;cursor:pointer}
 .tini{position:absolute;left:8px;bottom:-4px;font:900 58px/1 Archivo,var(--display);color:rgb(255 255 255 / .3)}
 .trate{position:absolute;top:6px;right:6px;z-index:1;background:rgb(10 14 12 / .72);color:#6FD3C6;font:600 11px var(--mono);padding:2px 6px;border-radius:999px;font-variant-numeric:tabular-nums}
+.tcorner{position:absolute;left:6px;bottom:10px;z-index:1;width:38%;max-width:44px;aspect-ratio:1/1;border-radius:7px;overflow:hidden;box-shadow:0 0 0 2px #fff,0 3px 10px rgb(0 0 0 / .5);background:rgb(10 14 12 / .6)}
+.tcorner img{display:block;width:100%;height:100%;object-fit:cover}
 .tbar{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgb(0 0 0 / .45);z-index:1}
 .tbar b{display:block;height:100%;background:#6FD3C6}
 .tile.done .tbar b{background:#6FCB9A}
@@ -1265,6 +1267,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.13-e', note:'CORNER ALBUM: artist tiles in the Wall now show your best-rated album in the bottom-left corner of the artist photo. It only appears once you have rated an album for that artist.'},
   {v:'2026.11.13-d', note:'GOLDER BANNERS: a banner now takes its color mostly from the cover\u2019s most vivid shades instead of averaging them with the dull ones next to them, so a gold cover like Thee Sacred Souls gets a real gold banner rather than khaki.'},
   {v:'2026.11.13-c', note:'Album banners now follow the biggest color on the cover even when it comes in several shades, so a mostly-teal cover like ii gets a teal banner instead of one picked off the gold chains.'},
   {v:'2026.11.13-b', note:'COLLAB CREDITS FILL IN BY THEMSELVES: when you import or check for new releases on an artist, Spotify and MusicBrainz now tell Playback who else is credited on an album, and the banner shows it (with Kenny Beats). Nothing changes until you tap Check for new releases on an artist, and a credit you typed in yourself is never overwritten.'},
@@ -3415,16 +3418,17 @@ function sideFinder(list){
     <div class="lrow lshow" role="group" aria-label="Show">${Object.entries(LSHOWS).map(([k,v])=>`<button class="chip" data-act="lshow" data-v="${k}" aria-pressed="${P.show===k}">${v}<span class="c">${c[k]}</span></button>`).join('')}</div>
   </div>`}
 /* The artist wall. Each artist is a square cover: your best-rated album (else the first with art), with your
-   average rating as a badge and how much you have heard as a bar. Colors the Sleeve already read are reused;
+   average rating as a badge and how much you have heard as a bar. When the tile shows the artist's photo, your
+   best-rated album sits in its bottom-left corner (only if you have rated one). Colors the Sleeve already read are reused;
    no extra images are fetched just to tint a tile. */
 function lCover(x){let best=null,bs=-1;
   for(const g of x.groups||[]){const u=g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-250':'');
-    if(!u)continue;const sc=rating(g.id)||0;if(!best||sc>bs){best={g,u};bs=sc}}
+    if(!u)continue;const sc=rating(g.id)||0;if(!best||sc>bs){best={g,u,sc};bs=sc}}
   return best}
 function lTile(s,e){const x=s.x,cv=lCover(x),pic=x.simg||(cv&&cv.u)||'',col=(cv&&ACOL[cv.g.id])||acolFallback({title:x.name,id:x.id}),
-  ini=([...lName(x)][0]||'#').toUpperCase(),rv=s.r?fmt(Math.round(s.r*10)/10):'',
+  ini=([...lName(x)][0]||'#').toUpperCase(),cor=!!(x.simg&&cv&&cv.sc>0&&cv.u!==x.simg),rv=s.r?fmt(Math.round(s.r*10)/10):'',
   lab=x.name+', '+(s.p>=100?'finished':s.p+'% heard')+(rv?', rated '+rv:'');
-  return `<button class="tile${s.p>=100?' done':''}" data-act="sel" data-id="${x.id}" aria-current="${!!(e&&e.id===x.id)}" aria-label="${esc(lab)}"><span class="tcov" style="--ac:${esc(col)}"><span class="tini" aria-hidden="true">${esc(ini)}</span>${pic?`<img src="${esc(pic)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${rv?`<span class="trate" title="Your average rating">${rv}</span>`:''}<i class="tbar" aria-hidden="true"><b style="width:${s.p}%"></b></i></span><span class="tn">${esc(x.name)}${x.example?'<span class="ex">Example</span>':''}</span></button>`}
+  return `<button class="tile${s.p>=100?' done':''}" data-act="sel" data-id="${x.id}" aria-current="${!!(e&&e.id===x.id)}" aria-label="${esc(lab)}"><span class="tcov" style="--ac:${esc(col)}"><span class="tini" aria-hidden="true">${esc(ini)}</span>${pic?`<img src="${esc(pic)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${cor?`<span class="tcorner" title="${esc('Your best-rated album: '+(cv.g.title||''))}"><img src="${esc(cv.u)}" alt="" loading="lazy" decoding="async" onerror="this.parentNode.remove()"></span>`:''}${rv?`<span class="trate" title="Your average rating">${rv}</span>`:''}<i class="tbar" aria-hidden="true"><b style="width:${s.p}%"></b></i></span><span class="tn">${esc(x.name)}${x.example?'<span class="ex">Example</span>':''}</span></button>`}
 const L_ADD='<button class="tile add" data-act="addart"><span class="tcov"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="tn">Add an artist</span></button>';
 /* the A-Z rail beside the wall: the letters that have artists, in the order the list shows them */
 let LRAIL=[];
