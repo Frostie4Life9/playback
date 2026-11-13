@@ -102,6 +102,11 @@ button{cursor:pointer}
 .tile:hover .tcov{filter:brightness(1.1)}
 .tile[aria-current="true"] .tcov{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--accent)}
 .tile .tcov img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.imgpill{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 96px);z-index:95;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 32px);min-height:44px;box-sizing:border-box;padding:6px 8px 6px 14px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:999px;box-shadow:0 6px 20px rgb(0 0 0 / .35);font:500 13px var(--body,system-ui)}
+.imgpill[hidden]{display:none}
+.imgpill span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.imgpill.err{border-color:#D9825B}
+.imgpill button{flex:0 0 auto;width:32px;height:32px;border:0;border-radius:50%;background:var(--sunk);color:var(--ink);font-size:18px;line-height:1;cursor:pointer}
 .tini{position:absolute;left:8px;bottom:-4px;font:900 58px/1 Archivo,var(--display);color:rgb(255 255 255 / .3)}
 .trate{position:absolute;top:6px;right:6px;z-index:1;background:rgb(10 14 12 / .72);color:#6FD3C6;font:600 11px var(--mono);padding:2px 6px;border-radius:999px;font-variant-numeric:tabular-nums}
 .tbar{position:absolute;left:0;right:0;bottom:0;height:4px;background:rgb(0 0 0 / .45);z-index:1}
@@ -1255,6 +1260,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.12-g', note:'PHOTO PASS SHOWS ITS WORK: a small pill near the bottom now says which artist just got a photo (or had none), and if the pass stops it says why. It disappears a few seconds after a clean finish and stays up, with an x, if something went wrong.'},
   {v:'2026.11.12-f', note:'ARTIST PHOTOS ALL AT ONCE: instead of ten artists per visit, the photo pass now works through everyone who is missing one in a single run, about a second and a half apart (roughly two minutes for 80 artists). It still stops quietly if Spotify asks it to slow down, and tries again next time you open Playback.'},
   {v:'2026.11.12-e', note:'ARTIST PHOTOS ACTUALLY START: the photo pass was skipped for anyone whose Spotify runs through the sync Worker, because it was started after a step that ends early for them. It now starts as soon as Playback opens.'},
   {v:'2026.11.12-d', note:'ARTIST PHOTOS WAIT THEIR TURN: if an import is running when Playback opens, the photo pass now waits for it to finish and then starts, instead of skipping that visit.'},
@@ -2688,25 +2694,37 @@ function spImg(imgs){
 }
 /* Gives artists their Spotify photo, a few per visit so Spotify's quota is never strained. Artists with a saved
    Spotify ID cost one request; others cost one search. Any trouble stops the pass quietly and it tries again later. */
+/* a small status pill, outside the page redraw, so the photo pass shows what it is doing and when it is not working */
+function imgNote(txt,kind,stay){
+  let el=document.getElementById('imgpill');
+  if(!el){el=document.createElement('div');el.id='imgpill';el.className='imgpill';el.setAttribute('role','status');
+    el.innerHTML='<span></span><button type="button" aria-label="Dismiss">\u00d7</button>';document.body.appendChild(el);
+    el.querySelector('button').onclick=()=>{el.hidden=true}}
+  el.hidden=false;el.classList.toggle('err',kind==='err');el.firstChild.textContent=txt;
+  clearTimeout(imgNote.t);if(!stay)imgNote.t=setTimeout(()=>{el.hidden=true},9000);
+}
 async function spImgBackfill(){
   if(SPX.imgRun||!READY||!spViaWorker())return;
   if(MBX.busy){if((SPX.imgWait=(SPX.imgWait||0)+1)<=20)setTimeout(spImgBackfill,15000);return}   /* an import is running: wait for it, then go */
   const T=Date.now(),todo=(S.music||[]).filter(a=>a&&a.name&&!a.simg&&!(a.simgTry>T-864e5)).slice(0,80);
   if(!todo.length)return;
-  SPX.imgRun=true;spGap=1200;let got=0;
+  SPX.imgRun=true;spGap=1200;let got=0,tried=0;const miss=[];let fail='';
+  imgNote('Artist photos: starting, '+todo.length+' to look up','',true);
   try{
     for(const a of todo){
-      if(MBX.busy)break;
+      if(MBX.busy){fail='an import started';break}
       let u='';
       if(a.spid){const j=await spApi('artists/'+a.spid+'?locale=en');u=spImg(j.images)}
       else{const n=nArtist(a.name),j=await spApi('search?'+new URLSearchParams({q:a.name,type:'artist',limit:5})),
         hit=((j.artists&&j.artists.items)||[]).filter(x=>x&&x.id&&nArtist(x.name)===n).sort((x,y)=>(y.popularity||0)-(x.popularity||0))[0];
         u=hit?spImg(hit.images):''}
-      a.simgTry=Date.now();if(u){a.simg=u;got++}
+      a.simgTry=Date.now();tried++;if(u){a.simg=u;got++;imgNote('Artist photos: '+a.name+' \u2713 ('+tried+' of '+todo.length+')','',true)}else{miss.push(a.name);imgNote('Artist photos: no photo found for '+a.name+' ('+tried+' of '+todo.length+')','',true)}
       save();
     }
-  }catch(e){}
-  finally{SPX.imgRun=false;spGap=250;if(got)render()}
+  }catch(e){fail=e&&e.code==='http'&&e.status===400?'the Worker refused the request, so it may not be updated yet':(e&&e.code?spMessage(e):'something unexpected happened')}
+  finally{SPX.imgRun=false;spGap=250;if(got)render()
+    if(fail)imgNote('Artist photos stopped after '+tried+' of '+todo.length+': '+fail+(got?' ('+got+' added)':'')+'. It will try again next time.','err',true);
+    else imgNote('Artist photos done: '+got+' added'+(miss.length?', '+miss.length+' not found ('+miss.slice(0,3).join(', ')+(miss.length>3?'\u2026':'')+')':'')+'.','')}
 }
 async function spFetchCatalog(art,existing){
   /* an artist with two names is looked up again every time: a saved Spotify ID may point at the
