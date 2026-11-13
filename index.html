@@ -1255,6 +1255,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.12-f', note:'ARTIST PHOTOS ALL AT ONCE: instead of ten artists per visit, the photo pass now works through everyone who is missing one in a single run, about a second and a half apart (roughly two minutes for 80 artists). It still stops quietly if Spotify asks it to slow down, and tries again next time you open Playback.'},
   {v:'2026.11.12-e', note:'ARTIST PHOTOS ACTUALLY START: the photo pass was skipped for anyone whose Spotify runs through the sync Worker, because it was started after a step that ends early for them. It now starts as soon as Playback opens.'},
   {v:'2026.11.12-d', note:'ARTIST PHOTOS WAIT THEIR TURN: if an import is running when Playback opens, the photo pass now waits for it to finish and then starts, instead of skipping that visit.'},
   {v:'2026.11.12-c', note:'ARTIST PHOTOS: each artist tile on the Music tab now shows the artist\u2019s own Spotify photo, falling back to their best-rated album cover and then a colored letter. New imports save the photo; artists you already have fill in a few at a time each time you open Playback (it needs the updated Worker file, playback-sync.js, redeployed).'},
@@ -2690,9 +2691,9 @@ function spImg(imgs){
 async function spImgBackfill(){
   if(SPX.imgRun||!READY||!spViaWorker())return;
   if(MBX.busy){if((SPX.imgWait=(SPX.imgWait||0)+1)<=20)setTimeout(spImgBackfill,15000);return}   /* an import is running: wait for it, then go */
-  const T=Date.now(),todo=(S.music||[]).filter(a=>a&&a.name&&!a.simg&&!(a.simgTry>T-864e5)).slice(0,10);
+  const T=Date.now(),todo=(S.music||[]).filter(a=>a&&a.name&&!a.simg&&!(a.simgTry>T-864e5)).slice(0,80);
   if(!todo.length)return;
-  SPX.imgRun=true;spGap=700;let got=0;
+  SPX.imgRun=true;spGap=1200;let got=0;
   try{
     for(const a of todo){
       if(MBX.busy)break;
