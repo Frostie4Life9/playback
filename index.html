@@ -1276,6 +1276,7 @@ const CHANGELOG=[
   {v:'2026.11.12-b', note:'ARTIST WALL: the artist list on the Music tab is now a grid of covers instead of a box of rows. Each artist shows your best-rated album as its cover, your average rating as a small badge, and how much you have heard as a bar along the bottom; a dashed Add an artist tile sits at the end of the grid. On a phone, Switch artist opens the whole list as a full screen with a close button, search, and one Sort menu (Progress, A\u2013Z, Rating, Size) instead of two rows of chips, and on A\u2013Z a letter rail down the right edge jumps to a letter. The Screen tab keeps its list for now.'},
   {v:'2026.11.12-a', note:'SONGS WITH TYPOS FIND THEIR ALBUM TOO: a hand-made or RYM-made album whose song titles have typos (“Forgotten Battlefied”, “Gestral ViIllage”) used to sit beside the real album forever, with your ratings stuck on it. Now, when at least 3 of its songs each have one clear closest match on the same real album (and that covers most of them), the songs, checkmarks and ratings move onto the real album, and the album rating follows if that album has none. It never moves songs that differ by a number, short titles, a song with two equally close matches, songs spread across different albums, or songs whose ratings disagree with the real one; those stay put. Undo last import puts the artist back.'},
   {v:'2026.11.11-zd', note:'LONGER-TITLE MATCHING, TIE-BREAK: when an album has two songs that fit a longer title, like “don’t rely on other men” and its deluxe copy “don’t rely on other men (single)”, the plain one now wins, so a rating stuck on “Don’t Rely on Other Men (Album)” moves onto the album song and the stray one-song album copy goes away. If neither or both fit equally, nothing moves.'},
+  {v:'2026.11.11-zd', note:'Album banners now follow the biggest color on the cover even when it comes in several shades, so a mostly-teal cover like ii gets a teal banner instead of one picked off the gold chains.'},
   {v:'2026.11.11-zc', note:'BANNER COLOR NO LONGER FLIPS: on some covers the banner could flip between dark and light depending on tiny differences in how the cover was read (I LAY DOWN MY LIFE FOR YOU came out pale blue-gray because of the white cross). The rule is now steadier: if the cover has a clear color, the best of those is used; if not (gray, black, cream, white), the banner follows the backdrop around the edge of the art. It also reads the same square of the cover that you see on screen. I checked each test cover 36 slightly different ways and the banner stayed in the same color family every time. Every cover is read again once.'},
   {v:'2026.11.11-zb', note:'BANNERS FOLLOW THE COVER\u2019S BRIGHTNESS: a pale cover now gets a pale banner (with dark text and buttons) and a near-black cover gets a near-black one, instead of every banner being forced to the same dark middle. The song rows keep a darker copy of the color so their text stays easy to read. Faces no longer set the color: Heavy Metal takes the gray wall behind him, not his skin. Every cover is read again once.'},
   {v:'2026.11.11-za', note:'BANNERS PICK THE COVER\u2019S REAL COLOR: instead of blending everything on the cover into one average, the app now finds the cover\u2019s main color groups and picks the most vivid one that covers a fair share of it. The Mercurial World deluxe banner is now the purple of its orb instead of a gray-violet, and covers with a clear color get a truer shade of it. Gray, black and cream covers look the same as before. Every cover is read again once.'},
@@ -4076,7 +4077,7 @@ function delBtn(id,label){const armed=UI.armed===id;return `<button class="btn d
    the title instead. Near-gray covers stay a quiet charcoal rather than being tinted up.
    Colors are kept on this device so each cover is read once (the key's number goes up whenever
    the picking changes, so every cover is read again with the new rule). */
-const ACOL_KEY=KEY+'_acol5';
+const ACOL_KEY=KEY+'_acol6';
 let ACOL=(()=>{try{return JSON.parse(localStorage.getItem(ACOL_KEY))||{}}catch(e){return{}}})();
 const ACOL_TRY={};
 function acolSave(){try{localStorage.setItem(ACOL_KEY,JSON.stringify(ACOL))}catch(e){ACOL={}}}
@@ -4120,13 +4121,23 @@ function acolFromPixels(d,dark){
   /* share of each cluster on the outer frame of the art, which is mostly the backdrop */
   const S=Math.round(Math.sqrt(d.length/4)),m=Math.max(1,Math.round(S*.12)),fr=new Array(k).fill(0);let nf=0;
   for(let i=0;i<N;i++){const x=pos[i]%S,y=(pos[i]/S)|0;if(x<m||y<m||x>=S-m||y>=S-m){fr[as[i]]++;nf++}}
-  let best=null,back=null;
+  /* Clusters of one hue family (within 30 degrees) are merged before scoring: k-means often splits one big color
+     (a teal field) into several shades, and each shade alone would look too small to win. */
+  const info=[];
   for(let j=0;j<k;j++){const p=cnt[j]/N,f=nf?fr[j]/nf:p;
     const r=cen[j][0]/255,g=cen[j][1]/255,b=cen[j][2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,c=mx-mn,h=hue(r,g,b,mx,c);
-    if(p<(c>=.25?.02:c>=.12?.08:.035))continue;     /* a small patch only counts if it is strongly colorful */
-    const skin=(h>=345||h<=45)&&c>=.1&&c<=.3&&l>=.6&&l<=.95;   /* a face is the subject, not the album's color */
-    if(c>=.12&&!skin){const sc=4*Math.min(1,(c-.06)/.24)+3*Math.sqrt(p);if(!best||sc>best.sc)best={sc,c:cen[j]}}
-    const bs=f+p*.01;if(!back||bs>back.bs)back={bs,c:cen[j]}}
+    info.push({j,p,f,l,c,h,skin:(h>=345||h<=45)&&c>=.1&&c<=.3&&l>=.6&&l<=.95})}
+  const fam=[];
+  for(const x of info.filter(x=>x.c>=.08&&!x.skin).sort((u,v)=>v.p-u.p)){
+    let F=fam.find(y=>{let d=Math.abs(y.h-x.h);if(d>180)d=360-d;return d<=30});
+    if(!F){F={h:x.h,p:0,rgb:[0,0,0],m:[]};fam.push(F)}
+    const w=x.p;F.rgb=F.rgb.map((v,i)=>v+cen[x.j][i]*w);F.p+=w;F.cw=(F.cw||0)+x.c*w;F.m.push(x);
+    /* hue of the family follows its biggest member */}
+  let best=null,back=null;
+  for(const F of fam){const c0=F.rgb.map(v=>v/F.p),c=F.cw/F.p;
+    if(c<.1||F.p<(c>=.25?.02:c>=.18?.05:.08))continue;   /* a small patch only counts if it is strongly colorful */
+    const sc=3*Math.min(1,(c-.06)/.24)+5*Math.sqrt(F.p);if(!best||sc>best.sc)best={sc,c:c0}}
+  for(const x of info){const bs=x.f+x.p*.01;if(!back||bs>back.bs)back={bs,c:cen[x.j]}}
   if(!best&&back)best=back;          /* no clear color: follow the backdrop */
   if(!best)return acolFix(R/W,G/W,B/W);
   const r=best.c[0]/255,g=best.c[1]/255,b=best.c[2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),c=mx-mn,l=(mx+mn)/2,h=hue(r,g,b,mx,c);
