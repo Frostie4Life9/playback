@@ -1268,6 +1268,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.13-o', note:'DELETE AN ALBUM: every album now has a Delete album button at the bottom (tap twice to confirm). It removes that one album, its songs and their ratings, and leaves the rest of the artist alone. A later MusicBrainz import of the same artist can bring a removed album back, so use Undo import if that happens.'},
   {v:'2026.11.13-n', note:'OPENS WHERE YOU LEFT OFF: Playback used to open on the first artist in your list (Radiohead) every launch. It now remembers the last artist or title you had open and reopens it, falling back to the first only if that one was removed.'},
   {v:'2026.11.13-m', note:'CORNER ALBUM ALWAYS SHOWS: an artist tile now shows your best-rated album in its corner even when the tile picture is that same album cover, which is what Spotify uses for some artists like Mid-Air Thief. Before, the corner was hidden whenever the two matched.'},
   {v:'2026.11.13-l', note:'SPOTIFY NAMES + MISSING PHOTOS: when an artist goes by more than one name, Playback now shows the name Spotify uses (Mid-Air Thief instead of the Korean spelling) and keeps the other names so your RYM list and searches still find them. The artist-photo lookup used to search only the saved name, so artists saved under a different spelling never got a Spotify photo, and without one the tile could not show your favorite album in its corner. It now tries every name the artist goes by, then fills in the photo and the name. Artists that already have more than one name are checked once, about 25 at a time, and the photo lookup retries earlier misses once.'},
@@ -4207,6 +4208,7 @@ const SCORES=Array.from({length:20},(_,k)=>(k+1)/2);
 const fmt=v=>Number.isInteger(v)?String(v):v.toFixed(1);
 function rateDots(id){const r=rating(id);
   return `<span class="rate" role="group" aria-label="Rating out of 10"><span class="dots">${[1,2,3,4,5,6,7,8,9,10].map(d=>`<span class="dot ${r>=d?'full':r>=d-.5?'half':''}"><button data-act="rate" data-id="${id}" data-v="${d-.5}" aria-label="Rate ${fmt(d-.5)}"></button><button data-act="rate" data-id="${id}" data-v="${d}" aria-label="Rate ${d}"></button></span>`).join('')}</span><span class="rv ${r?'set':''}">${r?fmt(r):'–'}</span></span>`}
+function delGBtn(g,a){const armed=UI.armed===g.id;return `<button class="btn danger ${armed?'armed':''}" data-act="delg" data-g="${g.id}" data-a="${a.id}">${armed?'Tap again to delete this album':'Delete album'}</button>`}
 function delBtn(id,label){const armed=UI.armed===id;return `<button class="btn danger ${armed?'armed':''}" data-act="del" data-id="${id}">${armed?'Tap again to delete':label}</button>`}
 
 /* Albums and EPs (and live/compilation albums) get an overall rating; singles and
@@ -4433,6 +4435,7 @@ function artistView(a){
       ${albumBar(g,a,full,shown.length)}
       ${g.items.length?'':'<p class="note">No songs listed yet. Tap Find on MusicBrainz above to fill them in; your album rating stays.</p>'}
       <div class="tlist">${trackRows}</div>
+      <div style="padding:12px 4px 4px">${delGBtn(g,a)}</div>
     </div>`}).join('');
   UI.dxAnim=null;                                    /* the switch animation plays once, on the draw it was asked for */
   return `<div class="head"><div class="ring" style="--p:${p}"><span>${p}%</span></div>
@@ -4626,6 +4629,15 @@ document.addEventListener('click',ev=>{
       if(inMusic){twinRehome(new Set([...artistItems(inMusic).map(i=>i.id),...inMusic.groups.map(g=>g.id)]));artistItems(inMusic).forEach(i=>delete S.marks[i.id]);inMusic.groups.forEach(g=>{delete S.marks[g.id];delete S.marks[dxId(g)]});S.music=S.music.filter(x=>x.id!==id);linkTwins();if(id===sid('artist','radiohead'))S.flags.rhDeleted=true}
       else{const s=S.screen.find(x=>x.id===id);if(s){epIds(s).forEach(i=>delete S.marks[i]);delete S.marks[s.id];(s.seasons||[]).forEach(x=>delete S.marks[sid(s.id,'s',x.n)]);if(s.tmdb){delete TMC[s.tmdb];tmcSave()}S.screen=S.screen.filter(x=>x.id!==id)}}
       UI.armed=null;UI.sel[UI.tab]=null;touch();
+    }
+  }
+  else if(act==='delg'){   /* remove one album from an artist: its songs, ratings and deluxe rating go with it */
+    const gid=b.dataset.g;
+    if(UI.armed!==gid){UI.armed=gid}
+    else{
+      const a=S.music.find(x=>x.id===b.dataset.a),g=a&&a.groups.find(x=>x.id===gid);
+      if(g){twinRehome(new Set([g.id,...g.items.map(i=>i.id)]));g.items.forEach(i=>delete S.marks[i.id]);delete S.marks[g.id];delete S.marks[dxId(g)];a.groups=a.groups.filter(x=>x.id!==gid);linkTwins()}
+      UI.armed=null;touch();
     }
   }
   else if(act==='mbpick'){MBX.pick=MBX.results&&MBX.results[+b.dataset.i]||null;MBX.err=''}
