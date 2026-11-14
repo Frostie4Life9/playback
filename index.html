@@ -1287,6 +1287,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.13-r', note:'RATING SLIDES SOONER: the number now starts flying into its circle right after a quick lift, while the slider is still folding away, instead of waiting for it to finish.'},
   {v:'2026.11.13-q', note:'RATING LANDS IN ITS CIRCLE: when you rate a song or album for the first time and close the slider (Done, or tapping another song), the big number now lifts off the slider and flies into its circle instead of popping in. The ring then draws itself around it and the circle gives a small bump. Changing an existing rating still follows your finger live, as before.'},
   {v:'2026.11.13-p', note:'DELETE ALBUM FIXED AND TUCKED AWAY: the second tap now actually deletes (it was resetting itself), and the button lives behind a small ... at the bottom-right of each album instead of sitting out in the open.'},
   {v:'2026.11.13-o', note:'DELETE AN ALBUM: every album now has a Delete album button at the bottom (tap twice to confirm). It removes that one album, its songs and their ratings, and leaves the rest of the artist alone. A later MusicBrainz import of the same artist can bring a removed album back, so use Undo import if that happens.'},
@@ -4349,16 +4350,18 @@ function rtFlyPrep(id){
   const cs=getComputedStyle(src),el=document.createElement('b');el.className='rt-fly';el.textContent=src.textContent;
   Object.assign(el.style,{left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',fontFamily:cs.fontFamily,fontSize:cs.fontSize,fontWeight:cs.fontWeight,fontStretch:cs.fontStretch,letterSpacing:cs.letterSpacing,fontVariantNumeric:'tabular-nums',lineHeight:'1',color:cs.color});
   document.body.appendChild(el);src.style.visibility='hidden';
-  const wind=el.animate([{transform:'translate(0,0) scale(1)'},{transform:'translate(0,-6px) scale(1.14)'}],{duration:200,easing:'cubic-bezier(.3,0,.2,1)',fill:'forwards'});
+  const wind=el.animate([{transform:'translate(0,0) scale(1)'},{transform:'translate(0,-6px) scale(1.14)'}],{duration:110,easing:'cubic-bezier(.3,0,.2,1)',fill:'forwards'});
   return{id,el,wind,r,fs:parseFloat(cs.fontSize)||34,col:cs.color}}
 function rtFlyGo(p){
   if(!p)return;
   const done=()=>{UI.rLand=null;p.el.remove();const h=rtHost(p.id);if(!h)return;h.classList.remove('landing');h.classList.add('landed');setTimeout(()=>h.classList.remove('landed'),800)};
-  p.wind.finished.then(()=>{
-    const d=(h=>h&&(h.querySelector('.rg-n')||h.querySelector('.v')))(rtHost(p.id));if(!d){done();return}
+  const find=()=>(h=>h&&(h.querySelector('.rg-n')||h.querySelector('.v')||h.querySelector('.check')))(rtHost(p.id));
+  const wait=n=>new Promise(ok=>{const t=()=>find()||n--<=0?ok(find()):requestAnimationFrame(t);t()});   /* an album pill only exists after the redraw, so wait for it (about a second at most) */
+  p.wind.finished.then(()=>wait(60)).then(d=>{
+    if(!d){done();return}
     const b=d.getBoundingClientRect(),dc=getComputedStyle(d),
-      dx=b.left+b.width/2-(p.r.left+p.r.width/2),dy=b.top+b.height/2-(p.r.top+p.r.height/2),sc=(parseFloat(dc.fontSize)||13)/p.fs;
-    p.el.animate([{transform:'translate(0,-6px) scale(1.14)',color:p.col},{transform:'translate('+dx+'px,'+dy+'px) scale('+sc+')',color:dc.color}],{duration:380,easing:'cubic-bezier(.6,0,.2,1)',fill:'forwards'}).finished.then(done,done)
+      dx=b.left+b.width/2-(p.r.left+p.r.width/2),dy=b.top+b.height/2-(p.r.top+p.r.height/2),sc=(d.classList.contains('check')?13:parseFloat(dc.fontSize)||13)/p.fs;
+    p.el.animate([{transform:'translate(0,-6px) scale(1.14)',color:p.col},{transform:'translate('+dx+'px,'+dy+'px) scale('+sc+')',color:d.classList.contains('check')?p.col:dc.color}],{duration:380,easing:'cubic-bezier(.6,0,.2,1)',fill:'forwards'}).finished.then(done,done)
   },done)}
 function rateCommit(el){const id=el.dataset.rate,v=+el.value;if(!id||!v)return;
   if(v===rating(id))return;
@@ -4600,7 +4603,7 @@ document.addEventListener('click',ev=>{
   if((act==='rclose'||(act==='ropen'&&UI.rOpen===id))&&!UI.rClosing){
     const rt=document.querySelector('.rater');
     if(rt&&!matchMedia('(prefers-reduced-motion:reduce)').matches){UI.rClosing=true;const cid=UI.rOpen,fly=rtFlyPrep(cid);rt.classList.remove('rt-in');rt.classList.add('rt-out');
-      setTimeout(()=>{UI.rClosing=false;UI.rOpen=null;if(fly)UI.rLand=cid;render();rtFlyGo(fly)},230);return}}
+      setTimeout(()=>{UI.rClosing=false;UI.rOpen=null;if(fly)UI.rLand=cid;render()},230);rtFlyGo(fly);return}}
   if(act==='view'){UI.view=b.dataset.v;UI.rOpen=null;window.scrollTo({top:0})}
   else if(act==='lib'){UI.libOpen=!UI.libOpen}
   else if(act==='addart'){UI.libOpen=false;UI.addOpen=true;UI.toAdd=true}
