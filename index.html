@@ -673,6 +673,7 @@ details.addart .add{border-top:1px solid var(--line)}
 .sl-sub{font-size:14px;color:color-mix(in srgb,var(--hi) 72%,transparent)}
 .sl-w{font:600 15px var(--body);color:var(--hi);overflow-wrap:anywhere}
 .sl-wb{align-self:flex-start;margin-top:2px;padding:4px 0;min-height:32px;border:0;background:none;font:500 12px var(--body);letter-spacing:.01em;color:color-mix(in srgb,var(--hi) 55%,transparent);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.sl-rd{text-decoration:none;font-weight:600;font-size:13px;letter-spacing:.02em;color:color-mix(in srgb,var(--hi) 72%,transparent)}
 .sl-wf{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap}
 .sl-wf input{flex:1 1 150px;min-width:0;min-height:40px;padding:0 12px;border-radius:10px;border:1px solid color-mix(in srgb,var(--hi) 38%,transparent);background:color-mix(in srgb,var(--hi) 10%,transparent);color:var(--hi);font:500 15px var(--body)}
 .sl-wf button{min-height:40px;padding:0 14px;border-radius:10px;border:1px solid color-mix(in srgb,var(--hi) 38%,transparent);background:color-mix(in srgb,var(--hi) 16%,transparent);color:var(--hi);font:600 14px var(--body);cursor:pointer}
@@ -1309,6 +1310,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.14-h', note:'DATE RATED: an album\u2019s banner now shows the day you rated it (Rated Nov 14, 2026), and so does the share card, under the rating. From now on the day is saved when you set a rating. Albums you rated before today have no day yet, so their banner shows + date rated: tap it, pick the day and save. Tap the date any time to change it, or clear the box to remove it. Rating an album again sets the day to today.'},
   {v:'2026.11.14-g', note:'ANIMATED CARD NO LONGER GETS CUT OFF IN MESSAGES: iMessage crops very tall pictures, which sliced off the top of the cover and the bottom song rows. The animated card is now padded wider (same artwork, side margins) so its shape fits and nothing is cropped.'},
   {v:'2026.11.14-f', note:'SHARE SENDS ONLY THE CARD: the share sheet no longer adds the "My album rating for..." text line, so Messages gets just the picture.'},
   {v:'2026.11.14-e', note:'LONGER SPIN ON THE ANIMATED CARD: the GIF now plays the reveal once (record slides out, ring fills, bars fill, favorites appear), then the record keeps spinning for several more seconds before it slows to a stop on the finished card. It still plays once, so the pull-out never repeats.'},
@@ -1533,9 +1535,9 @@ function foldGroup(keep,g,onlyMatch){
     ||(onlyMatch&&RATEABLE.includes(g.kind)?keep.groups.find(x=>RATEABLE.includes(x.kind)&&nTitle(x.title)===nTitle(g.title)):null);
   if(!tg){if(onlyMatch)return false;keep.groups.push(g);return true}
   if(g.w&&g.w.length&&!(tg.w&&tg.w.length))tg.w=g.w;   /* a collab credit comes along with the album */
-  if(!rating(tg.id)&&rating(g.id))S.marks[tg.id]={...(S.marks[tg.id]||{}),r:rating(g.id)};
+  if(!rating(tg.id)&&rating(g.id))S.marks[tg.id]={...(S.marks[tg.id]||{}),r:rating(g.id),...rdCarry(g.id)};
   if(S.rymSeen&&S.rymSeen[g.id]!=null&&S.rymSeen[tg.id]==null)S.rymSeen[tg.id]=S.rymSeen[g.id];
-  if(!rating(dxId(tg))&&rating(dxId(g)))S.marks[dxId(tg)]={...(S.marks[dxId(tg)]||{}),r:rating(dxId(g))};
+  if(!rating(dxId(tg))&&rating(dxId(g)))S.marks[dxId(tg)]={...(S.marks[dxId(tg)]||{}),r:rating(dxId(g)),...rdCarry(dxId(g))};
   unmark(dxId(g),dxId(tg));
   unmark(g.id,tg.id);
   for(const i of g.items){
@@ -1670,6 +1672,11 @@ function twinRehome(ids){
 /* ---------- derived ---------- */
 const isDone=id=>!!(S.marks[id]&&S.marks[id].done);
 const rating=id=>(S.marks[id]&&S.marks[id].r)||0;
+/* the day a rating was set, kept as YYYY-MM-DD on the same mark (rd). Ratings made before this build have no day until you add one. */
+const ratedDate=id=>(S.marks[id]&&S.marks[id].r&&S.marks[id].rd)||'';
+const rdCarry=id=>ratedDate(id)?{rd:ratedDate(id)}:{};
+const todayISO=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const fmtRd=d=>{const m=/^(\d{4})-(\d\d)-(\d\d)$/.exec(d||'');return m?new Date(+m[1],+m[2]-1,+m[3]).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'}):''};
 function artistItems(a){return a.groups.flatMap(g=>g.items)}
 /* function declarations on purpose: the start-up tidy-up uses these before this point in the file runs */
 function dxId(g){return g.id+'~dx'}                /* where an album's deluxe rating lives */
@@ -2037,7 +2044,7 @@ const mbMarked=id=>{const m=S.marks[id];return !!(m&&(m.done||m.r))};
 function mbFold(into,from){            /* a duplicate's checkmark/rating moves onto the item that stays */
   if(into===from||!S.marks[from])return;
   const a=S.marks[into]||{},b=S.marks[from],m=Object.assign({},a);
-  if(b.done)m.done=true;if(!m.r&&b.r)m.r=b.r;S.marks[into]=m;
+  if(b.done)m.done=true;if(!m.r&&b.r){m.r=b.r;if(b.rd)m.rd=b.rd}S.marks[into]=m;
 }
 function mbMerge(art,incoming,versions,tidy,sp){
   let a=S.music.find(x=>x.mbid===art.id);
@@ -3568,7 +3575,7 @@ async function push(force){
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pull()});
 window.addEventListener('online',()=>pull());
 document.addEventListener('toggle',ev=>{if(ev.target.id==='syncpanel')UI.syncOpen=ev.target.open;else if(ev.target.id==='addart')UI.addOpen=ev.target.open;else if(ev.target.id==='listenpanel')UI.llOpen=ev.target.open;else if(ev.target.id==='coladd')UI.colAdd=ev.target.open;else if(ev.target.id==='colhand')UI.colHand=ev.target.open;else if(ev.target.id==='coltok')UI.colTok=ev.target.open;else if(ev.target.classList&&ev.target.classList.contains('splog'))UI.spLogOpen=ev.target.open},true);
-const UI={view:null,libOpen:false,addOpen:false,rOpen:null,lq:{music:'',screen:''},tab:'music',sel:{music:null,screen:null},filter:'all',armed:null,addType:'show',copied:false,epOpen:{},dxOpen:{},wEdit:null};
+const UI={view:null,libOpen:false,addOpen:false,rOpen:null,lq:{music:'',screen:''},tab:'music',sel:{music:null,screen:null},filter:'all',armed:null,addType:'show',copied:false,epOpen:{},dxOpen:{},wEdit:null,dEdit:null};
 try{const t=localStorage.getItem(KEY+'_tab');if(t==='screen')UI.tab='screen'}catch(e){}
 try{for(const k of ['music','screen']){const v=localStorage.getItem(KEY+'_sel_'+k);if(v)UI.sel[k]=v}}catch(e){}   /* reopen the last artist / title instead of the first in the list */
 
@@ -4399,7 +4406,7 @@ function rtFlyGo(p){
 function rateCommit(el){const id=el.dataset.rate,v=+el.value;if(!id||!v)return;
   if(v===rating(id))return;
   const isGroup=S.music.some(a=>a.groups.some(g=>g.id===id||dxId(g)===id));
-  S.marks[id]={...(S.marks[id]||{}),r:v,...(isGroup||isDone(id)?{}:{done:true})};touch();
+  S.marks[id]={...(S.marks[id]||{}),r:v,...(isGroup?{rd:todayISO()}:{}),...(isGroup||isDone(id)?{}:{done:true})};touch();
   const n=document.querySelector('.rt-s');if(n)n.focus({preventScroll:true})}
 
 function hasDx(g){return g.items.some(i=>i.dx)&&g.items.some(i=>!i.dx)}
@@ -4424,7 +4431,7 @@ function shareInfo(a,g){
   const dx=dxOn(g),its=dx?g.items:stdItems(g),rid=dx?dxId(g):g.id,
         rs=its.map(i=>({t:(i.title||'').trim(),v:rating(i.id)})).filter(x=>x.v),
         r=RATEABLE.includes(g.kind)?rating(rid):0,avg=rs.length?rs.reduce((x,y)=>x+y.v,0)/rs.length:0;
-  return {dx,its,rid,rs,r,avg,what:dx?'deluxe':g.kind==='EP'?'EP':'album'}}
+  return {dx,its,rid,rs,r,avg,rd:r?fmtRd(ratedDate(rid)):'',what:dx?'deluxe':g.kind==='EP'?'EP':'album'}}
 function shareBtn(g,a){
   const f=shareInfo(a,g);if(!f.r&&!f.rs.length)return '<span></span>';
   return `<button type="button" class="sl-share" data-act="shareopen" data-a="${a.id}" data-g="${g.id}" aria-label="Share your rating">${ICO.share}Share</button>`}
@@ -4478,11 +4485,12 @@ async function shareScene(a,g,withSongs,wide){
     if(rp>0){x.strokeStyle=ink;x.beginPath();x.arc(rx,ry,rr,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,big/10)*rp);x.stroke()}
     x.fillStyle=ink;x.textAlign='center';x.textBaseline='middle';x.font='800 '+(f.r?86:70)+'px Archivo,sans-serif';
     x.fillText(f.r?fmt(A?f.r:Math.round(f.r*rp*2)/2):(big*rp).toFixed(1),rx,ry+4);
-    x.textAlign='left';let tx=rx+rr+44;
-    x.fillStyle=ink;x.font='700 42px Archivo,sans-serif';x.textBaseline='alphabetic';x.fillText(f.r?'My '+f.what+' rating':'Song average',tx,ry-14);
+    x.textAlign='left';let tx=rx+rr+44;const dY=f.rd?-18:0;   /* with a date line the three lines sit a little higher so the block stays centered on the ring */
+    x.fillStyle=ink;x.font='700 42px Archivo,sans-serif';x.textBaseline='alphabetic';x.fillText(f.r?'My '+f.what+' rating':'Song average',tx,ry-14+dY);
     x.fillStyle=inkSoft;x.font='500 30px Archivo,sans-serif';
     const sub=f.r?(f.rs.length?'Song average '+f.avg.toFixed(1)+' · '+f.rs.length+' of '+f.its.length+' rated':'out of 10'):f.rs.length+' of '+f.its.length+' songs rated';
-    x.fillText(shFit(x,sub,W-tx-110),tx,ry+34);
+    x.fillText(shFit(x,sub,W-tx-110),tx,ry+34+dY);
+    if(f.rd){x.font='600 26px "JetBrains Mono",monospace';x.fillText('RATED '+f.rd.toUpperCase(),tx,ry+80+dY)}
     /* favorites */
     if(fav.length){const fy=songs?ry+rr+72:H-104;x.save();x.globalAlpha=A?1:ease(pr(songs?2.1:1.4,songs?2.6:1.9));x.textAlign='left';x.textBaseline='alphabetic';x.fillStyle=inkSoft;x.font='600 24px "JetBrains Mono",monospace';x.fillText('FAVORITES',110,fy);
       x.fillStyle=ink;x.font='600 30px Archivo,sans-serif';x.fillText(shFit(x,fav.map(z=>z.t).join('  ·  '),W-220),110,fy+42);x.restore()}
@@ -4592,6 +4600,13 @@ function albumBar(g,a,full,n){
   </div>
   ${can&&(d!==null||rn)?`<p class="sl-note">${rn?rn+' of '+its.length+' songs rated':''}${d===null?'':` \u00b7 <span class="diff ${Math.abs(d)<.05?'even':d>0?'up':'down'}">${Math.abs(d)<.05?'same as the songs':(d>0?'+':'\u2212')+f1(Math.abs(d))+' vs the songs'}</span>`} \u00b7 <a class="link" href="${esc(rymSearchUrl(a,g))}" target="_blank" rel="noopener">Find on RYM</a></p>`:can?`<p class="sl-note"><a class="link" href="${esc(rymSearchUrl(a,g))}" target="_blank" rel="noopener">Find on RYM</a></p>`:''}
   ${can&&UI.rOpen===rid?rateMeter(rid,(dx?dxName(g):g.title)):''}`}
+function rdLine(g,dx){
+  if(!RATEABLE.includes(g.kind))return '';
+  const id=dx?dxId(g):g.id;if(!rating(id))return '';
+  const d=ratedDate(id);
+  if(UI.dEdit===g.id)return `<form class="sl-wf" data-form="grd" data-g="${g.id}"><input name="rd" type="date" value="${esc(d||todayISO())}" max="${todayISO()}" aria-label="Date rated"><button>Save</button></form>`;
+  return d?`<button type="button" class="sl-wb sl-rd" data-act="dedit" data-g="${g.id}" aria-label="Rated ${esc(fmtRd(d))}. Change the date">Rated ${esc(fmtRd(d))}</button>`
+          :`<button type="button" class="sl-wb" data-act="dedit" data-g="${g.id}">+ date rated</button>`}
 function albumRate(g,a){
   if(!RATEABLE.includes(g.kind))return '';
   const dx=dxOn(g),its=dx?g.items:stdItems(g),rid=dx?dxId(g):g.id,rs=its.map(i=>rating(i.id)).filter(Boolean),n=rs.length,r=rating(rid);
@@ -4676,7 +4691,7 @@ function artistView(a){
           <div class="sl-disc" role="img" aria-label="${gd} of ${shown.length} songs heard">${ringHtml}<span class="sl-lab">${shown.length?gd+'/'+shown.length:'\u2013'}</span></div>
           <div class="sl-cover">${art?`<img src="${esc(art)}" ${dx&&sArt&&art!==sArt?`data-f="${esc(sArt)}" `:''}alt="" loading="lazy" decoding="async" onerror="if(this.dataset.f){this.src=this.dataset.f;this.removeAttribute('data-f')}else this.remove()">`:''}<span class="sl-ph" aria-hidden="true">${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div>
         </div>
-        <div class="sl-meta"><span class="sl-kind">${esc(g.kind)} \u00b7 ${esc(g.year)}</span><h3>${esc(dx?dxName(g):g.title)}</h3>${dx?'<span class="dxbadge">Deluxe</span>':''}${g.w&&g.w.length?`<span class="sl-w">with ${esc(g.w.join(' & '))}</span>`:''}<span class="sl-sub">${gd} of ${shown.length} heard</span>${UI.wEdit===g.id?`<form class="sl-wf" data-form="gwith" data-a="${a.id}" data-g="${g.id}"><input name="w" value="${esc((g.w||[]).join(' & '))}" placeholder="Other artist, like Kenny Beats" aria-label="Collab with" autocomplete="off" autocapitalize="words"><button>Save</button></form>`:`<button type="button" class="sl-wb" data-act="wedit" data-g="${g.id}">${g.w&&g.w.length?'edit collab':'+ collab'}</button>`}</div>
+        <div class="sl-meta"><span class="sl-kind">${esc(g.kind)} \u00b7 ${esc(g.year)}</span><h3>${esc(dx?dxName(g):g.title)}</h3>${dx?'<span class="dxbadge">Deluxe</span>':''}${g.w&&g.w.length?`<span class="sl-w">with ${esc(g.w.join(' & '))}</span>`:''}<span class="sl-sub">${gd} of ${shown.length} heard</span>${rdLine(g,dx)}${UI.wEdit===g.id?`<form class="sl-wf" data-form="gwith" data-a="${a.id}" data-g="${g.id}"><input name="w" value="${esc((g.w||[]).join(' & '))}" placeholder="Other artist, like Kenny Beats" aria-label="Collab with" autocomplete="off" autocapitalize="words"><button>Save</button></form>`:`<button type="button" class="sl-wb" data-act="wedit" data-g="${g.id}">${g.w&&g.w.length?'edit collab':'+ collab'}</button>`}</div>
       </div>
       ${dxs.length?`<div class="dxseg" role="group" aria-label="Edition" data-dx="${dx?1:0}"><button type="button" data-act="dxsel" data-g="${g.id}" data-v="0" aria-pressed="${!dx}">Standard<span class="mono">${sd}/${std.length}</span></button><button type="button" class="dx" data-act="dxsel" data-g="${g.id}" data-v="1" aria-pressed="${dx}">Deluxe<span class="mono">${dd}/${g.items.length}</span></button></div>`:''}
       ${albumBar(g,a,full,shown.length)}
@@ -4862,10 +4877,11 @@ document.addEventListener('click',ev=>{
   else if(act==='splgo'){UI.spLogOpen=true;if(b.dataset.a){UI.view=null;UI.tab='music';UI.sel.music=b.dataset.a;UI.filter='all'}}
   else if(act==='spcopy'){const t=SP_REDIRECT;if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>{SPX.copied=true;render()},()=>{});return}
   else if(act==='rymadd'){const r=rymAddWaiting();RYX.report={total:r.albums,zero:0,filled:0,same:0,kept:[],waiting:[],notFound:[],dups:[],added:r};touch()}
-  else if(act==='rclear'){S.marks[id]={...(S.marks[id]||{}),r:0};touch()}
+  else if(act==='rclear'){const m0={...(S.marks[id]||{}),r:0};delete m0.rd;S.marks[id]=m0;touch()}
   else if(act==='grpall'){const a=S.music.find(x=>x.id===b.dataset.a),g=a.groups.find(x=>x.id===b.dataset.g),its=viewItems(g),full=its.every(i=>isDone(i.id));
     its.forEach(i=>S.marks[i.id]={...(S.marks[i.id]||{}),done:!full});if(!full)slPulseAsk(g.id,0);touch()}
   else if(act==='wedit'){UI.wEdit=UI.wEdit===b.dataset.g?null:b.dataset.g}
+  else if(act==='dedit'){UI.dEdit=UI.dEdit===b.dataset.g?null:b.dataset.g}
   else if(act==='dxsel'){UI.dxOpen[b.dataset.g]=b.dataset.v==='1';UI.dxAnim=b.dataset.g;slPulseAsk(b.dataset.g,140)}
   else if(act==='seasonall'){const s=S.screen.find(x=>x.id===b.dataset.s),n=+b.dataset.n,se=s.seasons.find(x=>x.n===n);
     const ids=Array.from({length:se.eps},(_,k)=>sid(s.id,'s',n,'e',k+1)),full=ids.every(isDone);
@@ -5001,6 +5017,12 @@ document.addEventListener('submit',ev=>{
   if(kind==='gwith'){const a=S.music.find(x=>x.id===f.dataset.a),g=a&&a.groups.find(x=>x.id===f.dataset.g);
     if(g){const w=[...new Set(String(d.w||'').split(/\s*(?:&|,|\band\b|\u00d7)\s*/i).map(x=>x.trim()).filter(Boolean))];if(w.length)g.w=w;else delete g.w;linkTwins();touch()}
     UI.wEdit=null;render();return}
+  if(kind==='grd'){const g=S.music.flatMap(x=>x.groups).find(x=>x.id===f.dataset.g);
+    if(g){const id=dxOn(g)?dxId(g):g.id,v=String(d.rd||'').trim();
+      if(rating(id)&&/^\d{4}-\d\d-\d\d$/.test(v)&&v<=todayISO())S.marks[id]={...S.marks[id],rd:v};
+      else if(rating(id)&&!v){const m0={...S.marks[id]};delete m0.rd;S.marks[id]=m0}
+      touch()}
+    UI.dEdit=null;render();return}
   if(kind==='listen'){if(llAdd(d.artist,d.title))touch();UI.llOpen=true;render();const el=document.getElementById('wl-artist');if(el)el.focus();return}
   if(kind==='spcid'){const c=(d.cid||'').trim();
     if(!/^[0-9a-f]{32}$/i.test(c)){SPX.err='That does not look like a Client ID. It is 32 letters and numbers, under Settings on your Spotify app\u2019s page.';render();return}
