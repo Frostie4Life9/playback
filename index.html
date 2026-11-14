@@ -1310,6 +1310,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.14-i', note:'QUIETER BANNERS: the + collab and + date rated links are gone from every album banner. Add or change a collab credit or the date rated from the \u22ef menu at the bottom of the album; the form opens up on the banner. A collab credit or date you have set still shows on the banner.'},
   {v:'2026.11.14-h', note:'DATE RATED: an album\u2019s banner now shows the day you rated it (Rated Nov 14, 2026), and so does the share card, under the rating. From now on the day is saved when you set a rating. Albums you rated before today have no day yet, so their banner shows + date rated: tap it, pick the day and save. Tap the date any time to change it, or clear the box to remove it. Rating an album again sets the day to today.'},
   {v:'2026.11.14-g', note:'ANIMATED CARD NO LONGER GETS CUT OFF IN MESSAGES: iMessage crops very tall pictures, which sliced off the top of the cover and the bottom song rows. The animated card is now padded wider (same artwork, side margins) so its shape fits and nothing is cropped.'},
   {v:'2026.11.14-f', note:'SHARE SENDS ONLY THE CARD: the share sheet no longer adds the "My album rating for..." text line, so Messages gets just the picture.'},
@@ -4270,6 +4271,11 @@ const SCORES=Array.from({length:20},(_,k)=>(k+1)/2);
 const fmt=v=>Number.isInteger(v)?String(v):v.toFixed(1);
 function rateDots(id){const r=rating(id);
   return `<span class="rate" role="group" aria-label="Rating out of 10"><span class="dots">${[1,2,3,4,5,6,7,8,9,10].map(d=>`<span class="dot ${r>=d?'full':r>=d-.5?'half':''}"><button data-act="rate" data-id="${id}" data-v="${d-.5}" aria-label="Rate ${fmt(d-.5)}"></button><button data-act="rate" data-id="${id}" data-v="${d}" aria-label="Rate ${d}"></button></span>`).join('')}</span><span class="rv ${r?'set':''}">${r?fmt(r):'–'}</span></span>`}
+function moreBtns(g,dx){
+  const id=dx?dxId(g):g.id,rated=RATEABLE.includes(g.kind)&&rating(id);
+  return `<button class="btn" data-act="wedit" data-g="${g.id}">${g.w&&g.w.length?'Edit collab credit':'Add collab credit'}</button>`
+    +(rated?`<button class="btn" data-act="dedit" data-g="${g.id}">${ratedDate(id)?'Change date rated':'Add date rated'}</button>`:'')}
+function formUp(){setTimeout(()=>{const i=document.querySelector('.sl-wf input');if(i){i.scrollIntoView({block:'center',behavior:'smooth'});i.focus({preventScroll:true})}},60)}
 function delGBtn(g,a){const armed=UI.armed===g.id;return `<button class="btn danger ${armed?'armed':''}" data-act="delg" data-g="${g.id}" data-a="${a.id}">${armed?'Tap again to delete this album':'Delete album'}</button>`}
 function delBtn(id,label){const armed=UI.armed===id;return `<button class="btn danger ${armed?'armed':''}" data-act="del" data-id="${id}">${armed?'Tap again to delete':label}</button>`}
 
@@ -4606,7 +4612,7 @@ function rdLine(g,dx){
   const d=ratedDate(id);
   if(UI.dEdit===g.id)return `<form class="sl-wf" data-form="grd" data-g="${g.id}"><input name="rd" type="date" value="${esc(d||todayISO())}" max="${todayISO()}" aria-label="Date rated"><button>Save</button></form>`;
   return d?`<button type="button" class="sl-wb sl-rd" data-act="dedit" data-g="${g.id}" aria-label="Rated ${esc(fmtRd(d))}. Change the date">Rated ${esc(fmtRd(d))}</button>`
-          :`<button type="button" class="sl-wb" data-act="dedit" data-g="${g.id}">+ date rated</button>`}
+          :''}
 function albumRate(g,a){
   if(!RATEABLE.includes(g.kind))return '';
   const dx=dxOn(g),its=dx?g.items:stdItems(g),rid=dx?dxId(g):g.id,rs=its.map(i=>rating(i.id)).filter(Boolean),n=rs.length,r=rating(rid);
@@ -4691,13 +4697,13 @@ function artistView(a){
           <div class="sl-disc" role="img" aria-label="${gd} of ${shown.length} songs heard">${ringHtml}<span class="sl-lab">${shown.length?gd+'/'+shown.length:'\u2013'}</span></div>
           <div class="sl-cover">${art?`<img src="${esc(art)}" ${dx&&sArt&&art!==sArt?`data-f="${esc(sArt)}" `:''}alt="" loading="lazy" decoding="async" onerror="if(this.dataset.f){this.src=this.dataset.f;this.removeAttribute('data-f')}else this.remove()">`:''}<span class="sl-ph" aria-hidden="true">${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div>
         </div>
-        <div class="sl-meta"><span class="sl-kind">${esc(g.kind)} \u00b7 ${esc(g.year)}</span><h3>${esc(dx?dxName(g):g.title)}</h3>${dx?'<span class="dxbadge">Deluxe</span>':''}${g.w&&g.w.length?`<span class="sl-w">with ${esc(g.w.join(' & '))}</span>`:''}<span class="sl-sub">${gd} of ${shown.length} heard</span>${rdLine(g,dx)}${UI.wEdit===g.id?`<form class="sl-wf" data-form="gwith" data-a="${a.id}" data-g="${g.id}"><input name="w" value="${esc((g.w||[]).join(' & '))}" placeholder="Other artist, like Kenny Beats" aria-label="Collab with" autocomplete="off" autocapitalize="words"><button>Save</button></form>`:`<button type="button" class="sl-wb" data-act="wedit" data-g="${g.id}">${g.w&&g.w.length?'edit collab':'+ collab'}</button>`}</div>
+        <div class="sl-meta"><span class="sl-kind">${esc(g.kind)} \u00b7 ${esc(g.year)}</span><h3>${esc(dx?dxName(g):g.title)}</h3>${dx?'<span class="dxbadge">Deluxe</span>':''}${g.w&&g.w.length?`<span class="sl-w">with ${esc(g.w.join(' & '))}</span>`:''}<span class="sl-sub">${gd} of ${shown.length} heard</span>${rdLine(g,dx)}${UI.wEdit===g.id?`<form class="sl-wf" data-form="gwith" data-a="${a.id}" data-g="${g.id}"><input name="w" value="${esc((g.w||[]).join(' & '))}" placeholder="Other artist, like Kenny Beats" aria-label="Collab with" autocomplete="off" autocapitalize="words"><button>Save</button></form>`:''}</div>
       </div>
       ${dxs.length?`<div class="dxseg" role="group" aria-label="Edition" data-dx="${dx?1:0}"><button type="button" data-act="dxsel" data-g="${g.id}" data-v="0" aria-pressed="${!dx}">Standard<span class="mono">${sd}/${std.length}</span></button><button type="button" class="dx" data-act="dxsel" data-g="${g.id}" data-v="1" aria-pressed="${dx}">Deluxe<span class="mono">${dd}/${g.items.length}</span></button></div>`:''}
       ${albumBar(g,a,full,shown.length)}
       ${g.items.length?'':'<p class="note">No songs listed yet. Tap Find on MusicBrainz above to fill them in; your album rating stays.</p>'}
       <div class="tlist">${trackRows}</div>
-      <div class="sl-foot">${shareBtn(g,a)}<details class="gmore"${UI.armed===g.id?' open':''}><summary aria-label="More for this album">\u22ef</summary>${delGBtn(g,a)}</details></div>
+      <div class="sl-foot">${shareBtn(g,a)}<details class="gmore"${UI.armed===g.id?' open':''}><summary aria-label="More for this album">\u22ef</summary>${moreBtns(g,dx)}${delGBtn(g,a)}</details></div>
     </div>`}).join('');
   UI.dxAnim=null;                                    /* the switch animation plays once, on the draw it was asked for */
   return `<div class="head"><div class="ring" style="--p:${p}"><span>${p}%</span></div>
@@ -4880,8 +4886,8 @@ document.addEventListener('click',ev=>{
   else if(act==='rclear'){const m0={...(S.marks[id]||{}),r:0};delete m0.rd;S.marks[id]=m0;touch()}
   else if(act==='grpall'){const a=S.music.find(x=>x.id===b.dataset.a),g=a.groups.find(x=>x.id===b.dataset.g),its=viewItems(g),full=its.every(i=>isDone(i.id));
     its.forEach(i=>S.marks[i.id]={...(S.marks[i.id]||{}),done:!full});if(!full)slPulseAsk(g.id,0);touch()}
-  else if(act==='wedit'){UI.wEdit=UI.wEdit===b.dataset.g?null:b.dataset.g}
-  else if(act==='dedit'){UI.dEdit=UI.dEdit===b.dataset.g?null:b.dataset.g}
+  else if(act==='wedit'){UI.wEdit=UI.wEdit===b.dataset.g?null:b.dataset.g;formUp()}
+  else if(act==='dedit'){UI.dEdit=UI.dEdit===b.dataset.g?null:b.dataset.g;formUp()}
   else if(act==='dxsel'){UI.dxOpen[b.dataset.g]=b.dataset.v==='1';UI.dxAnim=b.dataset.g;slPulseAsk(b.dataset.g,140)}
   else if(act==='seasonall'){const s=S.screen.find(x=>x.id===b.dataset.s),n=+b.dataset.n,se=s.seasons.find(x=>x.n===n);
     const ids=Array.from({length:se.eps},(_,k)=>sid(s.id,'s',n,'e',k+1)),full=ids.every(isDone);
