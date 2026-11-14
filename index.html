@@ -324,11 +324,23 @@ code.uri{font:500 12px var(--mono);background:var(--sunk);border-radius:4px;padd
 @media (max-width:560px){.track{grid-template-columns:28px 26px minmax(0,1fr)}.track .rate{grid-column:3}}
 
 
-details.gmore{margin:2px 4px 0;text-align:right}
-details.gmore summary{display:inline-block;cursor:pointer;list-style:none;color:var(--muted,#8a948f);font-size:18px;line-height:1;padding:6px 10px;border-radius:999px;opacity:.55}
+/* album footer: Share on the left, the ... menu on the right. The ... button is centred on the same line as the rating circles above it. */
+.sl-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 26px 0 18px;min-height:48px}
+.sl-share{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px 0 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);font:600 14px var(--body,inherit);cursor:pointer}
+.sl-share svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sl-share:hover{background:var(--sunk)}
+details.gmore{margin:0 0 0 auto;text-align:right}
+details.gmore summary{display:grid;place-items:center;width:44px;height:44px;cursor:pointer;list-style:none;color:var(--muted,#8a948f);font-size:20px;line-height:1;border-radius:50%;opacity:.7}
 details.gmore summary::-webkit-details-marker{display:none}
-details.gmore[open] summary,details.gmore summary:hover{opacity:1}
+details.gmore[open] summary,details.gmore summary:hover{opacity:1;background:var(--sunk)}
 details.gmore .btn{display:block;margin:4px 0 8px auto}
+/* share card */
+.shr{position:fixed;inset:0;z-index:140;display:flex;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));background:rgb(6 9 8 / .72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.shr-box{width:min(420px,100%);max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:14px;background:var(--bg);border:1px solid var(--line);border-radius:24px;padding:16px;box-shadow:0 24px 60px rgb(0 0 0 / .45)}
+.shr-box img,.shr-box canvas{display:block;width:100%;height:auto;border-radius:16px;background:var(--sunk);aspect-ratio:4/5}
+.shr-acts{display:flex;gap:10px}
+.shr-acts .btn{flex:1;min-height:48px}
+.shr-note{margin:0;text-align:center;font-size:13px;color:var(--muted)}
 details.more{border-top:1px solid var(--line);padding-top:12px}
 details.more summary{cursor:pointer;font-weight:600;color:var(--accent)}
 details.more form{display:flex;flex-direction:column;gap:8px;margin-top:10px;max-width:460px}
@@ -1287,6 +1299,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.13-s', note:'SHARE YOUR RATING: under each album you have rated there is now a Share button. It makes a picture of your rating with the cover, your album number, your song average and your favorite songs, then opens your phone\u2019s share sheet so you can send it to a friend in Messages (on a computer it saves the picture instead). The three dots at the bottom of an album also moved: they now sit in line with the rating circles above them instead of floating at the edge.'},
   {v:'2026.11.13-r', note:'RATING SLIDES SOONER: the number now starts flying into its circle right after a quick lift, while the slider is still folding away, instead of waiting for it to finish.'},
   {v:'2026.11.13-q', note:'RATING LANDS IN ITS CIRCLE: when you rate a song or album for the first time and close the slider (Done, or tapping another song), the big number now lifts off the slider and flies into its circle instead of popping in. The ring then draws itself around it and the circle gives a small bump. Changing an existing rating still follows your finger live, as before.'},
   {v:'2026.11.13-p', note:'DELETE ALBUM FIXED AND TUCKED AWAY: the second tap now actually deletes (it was resetting itself), and the button lives behind a small ... at the bottom-right of each album instead of sitting out in the open.'},
@@ -4381,6 +4394,87 @@ function listBtn(g,a){
   const on=llOn(a.name,g.title),sg=stdItems(g),heard=(sg.length>0&&sg.every(i=>isDone(i.id)))||!!rating(g.id);
   if(!on&&heard)return '';
   return `<button class="sl-ic sl-lbtn" data-act="lltog" data-a="${a.id}" data-g="${g.id}" aria-pressed="${on}" aria-label="${on?'On your listen list, remove':'Add to listen list'}" title="${on?'On your listen list':'Add to listen list'}">${on?ICO.listOn:ICO.list}</button>`}
+
+/* ---------- share card ----------
+   Share under an album opens a picture of your rating (cover, big number, song average, favorites).
+   Share sends it as an image through the phone's share sheet (Messages and so on); where that is not
+   available it saves the image instead. Everything is drawn right here, nothing is uploaded. */
+ICO.share='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3M7.5 7.5L12 3l4.5 4.5M5 12v8h14v-8"/></svg>';
+function shareInfo(a,g){
+  const dx=dxOn(g),its=dx?g.items:stdItems(g),rid=dx?dxId(g):g.id,
+        rs=its.map(i=>({t:(i.title||'').trim(),v:rating(i.id)})).filter(x=>x.v),
+        r=RATEABLE.includes(g.kind)?rating(rid):0,avg=rs.length?rs.reduce((x,y)=>x+y.v,0)/rs.length:0;
+  return {dx,its,rid,rs,r,avg,what:dx?'deluxe':g.kind==='EP'?'EP':'album'}}
+function shareBtn(g,a){
+  const f=shareInfo(a,g);if(!f.r&&!f.rs.length)return '<span></span>';
+  return `<button type="button" class="sl-share" data-act="shareopen" data-a="${a.id}" data-g="${g.id}" aria-label="Share your rating">${ICO.share}Share</button>`}
+function shMix(h,t){const n=parseInt(h.slice(1),16),c=[n>>16&255,n>>8&255,n&255];return c.map(v=>Math.round(t>0?v+(255-v)*t:v*(1+t)))}
+function shRound(x,l,t,w,h,r){x.beginPath();x.moveTo(l+r,t);x.arcTo(l+w,t,l+w,t+h,r);x.arcTo(l+w,t+h,l,t+h,r);x.arcTo(l,t+h,l,t,r);x.arcTo(l,t,l+w,t,r);x.closePath()}
+function shFit(x,txt,max){if(x.measureText(txt).width<=max)return txt;while(txt.length>1&&x.measureText(txt+'…').width>max)txt=txt.slice(0,-1);return txt.trim()+'…'}
+async function shareDraw(a,g){
+  const f=shareInfo(a,g),W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
+  const sArt=g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-500':''),art=f.dx?(g.dxImg||sArt):sArt;
+  const base=(f.dx&&g.dxImg&&g.dxImg!==sArt?ACOL[g.id+'~dx']:ACOL[g.id])||acolFallback(g);
+  try{await Promise.all(['800 40px Archivo','500 40px Archivo','600 40px "JetBrains Mono"'].map(q=>document.fonts.load(q)))}catch(e){}
+  const img=await new Promise(res=>{if(!art)return res(null);const im=new Image();im.crossOrigin='anonymous';im.onload=()=>res(im);im.onerror=()=>res(null);im.src=art;setTimeout(()=>res(null),6000)});
+  const top=shMix(base,.14),bot=shMix(base,-.32),lum=(.299*top[0]+.587*top[1]+.114*top[2])/255,ink=lum>.62?'#16201b':'#ffffff',inkSoft=lum>.62?'rgb(22 32 27 / .66)':'rgb(255 255 255 / .74)';
+  const gr=x.createLinearGradient(0,0,W*.35,H);gr.addColorStop(0,`rgb(${top})`);gr.addColorStop(1,`rgb(${bot})`);x.fillStyle=gr;x.fillRect(0,0,W,H);
+  /* record peeking out behind the cover */
+  const cs=560,cx0=110,cy0=96,dcx=cx0+cs*.78,dcy=cy0+cs/2;
+  x.save();x.fillStyle='rgb(14 16 15 / .92)';x.beginPath();x.arc(dcx,dcy,cs/2,0,7);x.fill();
+  x.strokeStyle='rgb(255 255 255 / .07)';x.lineWidth=2;for(let r=cs/2-14;r>cs*.2;r-=11){x.beginPath();x.arc(dcx,dcy,r,0,7);x.stroke()}
+  x.fillStyle=`rgb(${top})`;x.beginPath();x.arc(dcx,dcy,cs*.15,0,7);x.fill();x.fillStyle='rgb(14 16 15)';x.beginPath();x.arc(dcx,dcy,9,0,7);x.fill();x.restore();
+  /* cover */
+  x.save();x.shadowColor='rgb(0 0 0 / .4)';x.shadowBlur=50;x.shadowOffsetY=18;shRound(x,cx0,cy0,cs,cs,22);x.fillStyle=`rgb(${bot})`;x.fill();x.restore();
+  x.save();shRound(x,cx0,cy0,cs,cs,22);x.clip();
+  if(img){const sq=Math.min(img.naturalWidth,img.naturalHeight);x.drawImage(img,(img.naturalWidth-sq)/2,(img.naturalHeight-sq)/2,sq,sq,cx0,cy0,cs,cs)}
+  else{x.fillStyle='rgb(255 255 255 / .12)';x.fillRect(cx0,cy0,cs,cs);x.fillStyle=ink;x.font='800 260px Archivo,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText((g.title||'?').trim().charAt(0).toUpperCase(),cx0+cs/2,cy0+cs/2+10)}
+  x.restore();
+  /* title block */
+  x.textAlign='left';x.textBaseline='alphabetic';let y=cy0+cs+86;
+  x.fillStyle=inkSoft;x.font='600 28px "JetBrains Mono",monospace';
+  x.fillText(shFit(x,(g.kind+' · '+g.year+(f.dx?' · Deluxe':'')).toUpperCase(),W-220-190),110,y);
+  x.save();x.textAlign='right';x.font='700 24px "JetBrains Mono",monospace';x.fillText('PLAYBACK',W-110,y);x.restore();
+  const name=f.dx?dxName(g):g.title;let fs=76;x.fillStyle=ink;
+  do{x.font='800 '+fs+'px Archivo,sans-serif';fs-=4}while(x.measureText(name).width>W-220&&fs>44);
+  y+=fs+34;x.fillText(shFit(x,name,W-220),110,y);
+  x.fillStyle=inkSoft;x.font='500 38px Archivo,sans-serif';y+=58;
+  x.fillText(shFit(x,a.name+(g.w&&g.w.length?' & '+g.w.join(' & '):''),W-220),110,y);
+  /* rating ring + number */
+  const big=f.r||f.avg,ry=H-286,rr=92,rx=110+rr;
+  x.lineWidth=16;x.lineCap='round';x.strokeStyle='rgb(255 255 255 / .22)';if(lum>.62)x.strokeStyle='rgb(0 0 0 / .14)';
+  x.beginPath();x.arc(rx,ry,rr,0,7);x.stroke();
+  x.strokeStyle=ink;x.beginPath();x.arc(rx,ry,rr,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,big/10));x.stroke();
+  x.fillStyle=ink;x.textAlign='center';x.textBaseline='middle';x.font='800 '+(f.r?86:70)+'px Archivo,sans-serif';x.fillText(f.r?fmt(f.r):big.toFixed(1),rx,ry+4);
+  x.textAlign='left';let tx=rx+rr+44;
+  x.fillStyle=ink;x.font='700 42px Archivo,sans-serif';x.textBaseline='alphabetic';x.fillText(f.r?'My '+f.what+' rating':'Song average',tx,ry-14);
+  x.fillStyle=inkSoft;x.font='500 30px Archivo,sans-serif';
+  const sub=f.r?(f.rs.length?'Song average '+f.avg.toFixed(1)+' · '+f.rs.length+' of '+f.its.length+' rated':'out of 10'):f.rs.length+' of '+f.its.length+' songs rated';
+  x.fillText(shFit(x,sub,W-tx-110),tx,ry+34);
+  /* favorites */
+  const fav=f.rs.slice().sort((p,q)=>q.v-p.v).filter(z=>z.v>=8).slice(0,3);
+  if(fav.length){x.fillStyle=inkSoft;x.font='600 24px "JetBrains Mono",monospace';x.fillText('FAVORITES',110,H-104);
+    x.fillStyle=ink;x.font='600 30px Archivo,sans-serif';x.fillText(shFit(x,fav.map(z=>z.t).join('  ·  '),W-220),110,H-62)}
+  const blob=await new Promise(r=>{try{c.toBlob(r,'image/png')}catch(e){r(null)}});
+  return {canvas:c,blob,name:(a.name+' - '+name).replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'-')+'.png',text:'My '+f.what+' rating for '+name+' by '+a.name+': '+(f.r?fmt(f.r)+'/10':f.avg.toFixed(1)+'/10 song average')}}
+function shareClose(){const o=document.getElementById('shr');if(o){if(o._url)URL.revokeObjectURL(o._url);o.remove()}document.removeEventListener('keydown',shareKey)}
+function shareKey(e){if(e.key==='Escape')shareClose()}
+async function shareOpen(a,g){
+  shareClose();const o=document.createElement('div');o.id='shr';o.className='shr';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-label','Share your rating');
+  o.innerHTML='<div class="shr-box"><div class="shr-prev" aria-live="polite"><p class="shr-note" style="padding:60px 0">Making your card…</p></div><div class="shr-acts"><button class="btn" data-sh="close">Close</button><button class="btn primary" data-sh="send" disabled>Share</button></div><p class="shr-note" hidden></p></div>';
+  document.body.appendChild(o);document.addEventListener('keydown',shareKey);
+  o.addEventListener('click',e=>{if(e.target===o||e.target.closest('[data-sh="close"]'))shareClose()});
+  let R;try{R=await shareDraw(a,g)}catch(e){R=null}
+  if(!document.getElementById('shr'))return;
+  const prev=o.querySelector('.shr-prev'),send=o.querySelector('[data-sh="send"]'),note=o.querySelector('.shr-box>.shr-note');
+  if(!R||!R.blob){prev.innerHTML='<p class="shr-note" style="padding:40px 0">The card could not be made. Try again in a moment.</p>';return}
+  o._url=URL.createObjectURL(R.blob);prev.innerHTML='<img alt="Your rating card for '+esc(g.title)+'" src="'+o._url+'">';
+  const file=new File([R.blob],R.name,{type:'image/png'}),canFile=!!(navigator.canShare&&navigator.canShare({files:[file]}));
+  send.disabled=false;send.textContent=canFile?'Share':'Save image';
+  send.addEventListener('click',async()=>{
+    if(canFile){try{await navigator.share({files:[file],text:R.text})}catch(e){if(e&&e.name==='AbortError')return;note.hidden=false;note.textContent='Sharing did not open. Press and hold the picture to save it.'}return}
+    const l=document.createElement('a');l.href=o._url;l.download=R.name;document.body.appendChild(l);l.click();l.remove();note.hidden=false;note.textContent='Saved. Attach it to a message to send it.'});
+}
 function albumBar(g,a,full,n){
   if(!RATEABLE.includes(g.kind))return '';   /* singles and the like have no album rating, so no empty row: their buttons sit in the header */
   const can=RATEABLE.includes(g.kind),dx=dxOn(g),its=dx?g.items:stdItems(g),rid=dx?dxId(g):g.id,rs=its.map(i=>rating(i.id)).filter(Boolean),rn=rs.length,r=can?rating(rid):0;
@@ -4483,7 +4577,7 @@ function artistView(a){
       ${albumBar(g,a,full,shown.length)}
       ${g.items.length?'':'<p class="note">No songs listed yet. Tap Find on MusicBrainz above to fill them in; your album rating stays.</p>'}
       <div class="tlist">${trackRows}</div>
-      <details class="gmore"${UI.armed===g.id?' open':''}><summary aria-label="More for this album">\u22ef</summary>${delGBtn(g,a)}</details>
+      <div class="sl-foot">${shareBtn(g,a)}<details class="gmore"${UI.armed===g.id?' open':''}><summary aria-label="More for this album">\u22ef</summary>${delGBtn(g,a)}</details></div>
     </div>`}).join('');
   UI.dxAnim=null;                                    /* the switch animation plays once, on the draw it was asked for */
   return `<div class="head"><div class="ring" style="--p:${p}"><span>${p}%</span></div>
@@ -4644,6 +4738,7 @@ document.addEventListener('click',ev=>{
   else if(act==='filter'){UI.filter=b.dataset.v}
   else if(act==='epx'){UI.epOpen[id]=!UI.epOpen[id]}
   else if(act==='tog'){const was=isDone(id);S.marks[id]={...(S.marks[id]||{}),done:!was};if(!was){const g=grpOfItem(id);if(g)slPulseAsk(g.id,0)}touch()}
+  else if(act==='shareopen'){const a=S.music.find(x=>x.id===b.dataset.a),g=a&&a.groups.find(x=>x.id===b.dataset.g);if(g)shareOpen(a,g);return}
   else if(act==='lltog'){const a=S.music.find(x=>x.id===b.dataset.a),g=a&&a.groups.find(x=>x.id===b.dataset.g);if(!g)return;
     if(llOn(a.name,g.title)){const lid=llId(a.name,g.title);S.listen=listenAll().filter(x=>x.id!==lid)}else llAdd(a.name,g.title,g.year);touch()}
   else if(act==='lldel'){S.listen=listenAll().filter(x=>x.id!==id);touch()}
