@@ -1309,6 +1309,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.14-c', note:'COPY ON A COMPUTER: on Windows the share window showed Share instead of Copy image, because those browsers report they can share files. A computer now always shows Copy image first with Save beside it, and phones keep Share. If a copy is ever blocked, the message now says why.'},
   {v:'2026.11.14-b', note:'ANIMATED CARD FIXES: the animated card now includes every song rating (the bars fill in one after another) and follows the Show every song rating switch, and the shine on the spinning record no longer has a hard edge.'},
   {v:'2026.11.14-a', note:'ANIMATED SHARE CARD: the share window now has Still and Animated. Animated makes a looping GIF of your card: the record slides out of the sleeve and keeps spinning, the rating ring fills as the number counts up, and your favorites fade in. A GIF plays by itself in chats, with no play button. It takes a few seconds to make and shares like the still card. Browsers cannot copy an animation to the clipboard, so on a computer it is Save GIF, then drop the file into your chat.'},
   {v:'2026.11.13-v', note:'COPY THE SHARE CARD ON A COMPUTER: the share window now has Copy image, so you can paste the card straight into Discord, Messages or an email with Ctrl+V. Save is still there beside it. Phones keep the normal Share button.'},
@@ -4550,9 +4551,11 @@ async function shareOpen(a,g){
     const say=t=>{note.hidden=false;note.textContent=t};
     const save=()=>{const l=document.createElement('a');l.href=o._url;l.download=R.name;document.body.appendChild(l);l.click();l.remove();say(anim?'Saved. Send the file in your chat and it will play by itself.':'Saved. Attach it to a message to send it.')};
     const share=async()=>{try{await navigator.share({files:[file],text:R.text})}catch(e){if(e&&e.name==='AbortError')return;say('Sharing did not open. Press and hold the picture to save it.')}};
-    const copy=async()=>{try{await navigator.clipboard.write([new ClipboardItem({'image/png':R.blob})]);send.textContent='Copied ✓';say('Copied. Paste it into a message with Ctrl+V.');setTimeout(()=>{if(send.isConnected)send.textContent='Copy image'},2200)}catch(e){say('Copying was blocked here. Use Save instead.');saveB.hidden=false;saveB.onclick=save}};
+    const copy=async()=>{try{await navigator.clipboard.write([new ClipboardItem({'image/png':R.blob})]);send.textContent='Copied ✓';say('Copied. Paste it into a message with Ctrl+V.');setTimeout(()=>{if(send.isConnected)send.textContent='Copy image'},2200)}catch(e){say('Copying did not work here ('+((e&&e.name)||'error')+'). Use Save instead.');saveB.hidden=false;saveB.onclick=save}};
     send.disabled=false;
-    if(canFile){send.textContent='Share';send.onclick=share}
+    /* phones and tablets use the share sheet; on a computer Copy comes first (Windows browsers also report that they can share files, which used to hide it) */
+    const phone=matchMedia('(pointer:coarse)').matches;
+    if(phone&&canFile){send.textContent='Share';send.onclick=share}
     else if(canCopy){send.textContent='Copy image';send.onclick=copy;saveB.hidden=false;saveB.onclick=save}
     else{send.textContent=anim?'Save GIF':'Save image';send.onclick=save;if(anim)say('Browsers cannot copy an animation, so save it and drop the file into your chat.')}}
   o.querySelectorAll('[data-sh="mode"]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.m===mode)return;mode=b.dataset.m;o.querySelectorAll('[data-sh="mode"]').forEach(x=>x.setAttribute('aria-pressed',x===b));make()}));
