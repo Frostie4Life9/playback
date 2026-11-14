@@ -1309,6 +1309,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.14-d', note:'ANIMATED CARD STOPS: the GIF now plays once and stays on the finished card instead of looping. The record spins up and slows to a stop as the card finishes. If an app loops it anyway, the finished card is held for 30 seconds before it restarts.'},
   {v:'2026.11.14-c', note:'COPY ON A COMPUTER: on Windows the share window showed Share instead of Copy image, because those browsers report they can share files. A computer now always shows Copy image first with Save beside it, and phones keep Share. If a copy is ever blocked, the message now says why.'},
   {v:'2026.11.14-b', note:'ANIMATED CARD FIXES: the animated card now includes every song rating (the bars fill in one after another) and follows the Show every song rating switch, and the shine on the spinning record no longer has a hard edge.'},
   {v:'2026.11.14-a', note:'ANIMATED SHARE CARD: the share window now has Still and Animated. Animated makes a looping GIF of your card: the record slides out of the sleeve and keeps spinning, the rating ring fills as the number counts up, and your favorites fade in. A GIF plays by itself in chats, with no play button. It takes a few seconds to make and shares like the still card. Browsers cannot copy an animation to the clipboard, so on a computer it is Save GIF, then drop the file into your chat.'},
@@ -4434,14 +4435,14 @@ async function shareScene(a,g,withSongs){
   try{await Promise.race([Promise.all(['800 40px Archivo','500 40px Archivo','600 40px "JetBrains Mono"'].map(q=>document.fonts.load(q))),new Promise(r=>setTimeout(r,1200))])}catch(e){}
   const img=await new Promise(res=>{if(!art)return res(null);const im=new Image();im.crossOrigin='anonymous';im.onload=()=>res(im);im.onerror=()=>res(null);im.src=art;setTimeout(()=>res(null),6000)});
   const top=shMix(base,.14),bot=shMix(base,-.32),lum=(.299*top[0]+.587*top[1]+.114*top[2])/255,light=lum>.62,ink=light?'#16201b':'#ffffff',inkSoft=light?'rgb(22 32 27 / .66)':'rgb(255 255 255 / .74)';
-  const LOOP=songs?4:3.2,cs=560,cx0=110,cy0=96,name=f.dx?dxName(g):g.title,clamp=v=>Math.max(0,Math.min(1,v)),ease=v=>1-Math.pow(1-clamp(v),3);
+  const LOOP=songs?4:3.2,END=LOOP-.05,cs=560,cx0=110,cy0=96,name=f.dx?dxName(g):g.title,clamp=v=>Math.max(0,Math.min(1,v)),ease=v=>1-Math.pow(1-clamp(v),3);
   /* paint(x) draws the finished card. paint(x,T) draws the moment T seconds into the animation:
      the record slides out and keeps turning, the ring fills, the number counts up, the song bars fill in. */
   function paint(x,T){
     const A=T===undefined,pr=(t0,t1)=>A?1:clamp((T-t0)/(t1-t0));
     const gr=x.createLinearGradient(0,0,W*.35,H);gr.addColorStop(0,`rgb(${top})`);gr.addColorStop(1,`rgb(${bot})`);x.fillStyle=gr;x.fillRect(0,0,W,H);
     /* record, sliding out from behind the cover and spinning */
-    const slide=A?1:ease(pr(.1,songs?1:.8)),dcx=cx0+cs/2+(cs*.78-cs/2)*slide,dcy=cy0+cs/2,ang=A?0:T/LOOP*Math.PI*4;
+    const slide=A?1:ease(pr(.1,songs?1:.8)),dcx=cx0+cs/2+(cs*.78-cs/2)*slide,dcy=cy0+cs/2,ang=A?0:Math.PI*4*ease(T/END);   /* the record spins up fast and slows to a stop on the last frame, which is the finished card */
     x.save();x.translate(dcx,dcy);x.fillStyle='rgb(14 16 15 / .92)';x.beginPath();x.arc(0,0,cs/2,0,7);x.fill();
     x.strokeStyle='rgb(255 255 255 / .07)';x.lineWidth=2;for(let r=cs/2-14;r>cs*.2;r-=11){x.beginPath();x.arc(0,0,r,0,7);x.stroke()}
     if(x.createConicGradient){const cg=x.createConicGradient(ang,0,0);
@@ -4514,7 +4515,9 @@ async function shareGif(a,g,prog,withSongs){
     const idx=G.applyPalette(d,pal.slice(0,255),'rgb565');
     let out=idx;
     if(prev){out=new Uint8Array(idx.length);for(let i=0;i<idx.length;i++)out[i]=idx[i]===prev[i]?255:idx[i]}
-    enc.writeFrame(out,OW,OH,k===0?{palette:pal,delay:1000/FPS,repeat:0}:{delay:1000/FPS,transparent:true,transparentIndex:255,dispose:1});
+    /* play once and stay on the finished card: no loop, and the last frame is held for 30 s in case an app loops anyway */
+    const dl=k===N-1?30000:1000/FPS;
+    enc.writeFrame(out,OW,OH,k===0?{palette:pal,delay:dl,repeat:-1}:{delay:dl,transparent:true,transparentIndex:255,dispose:1});
     prev=idx;prog&&prog(k+1,N);await new Promise(r=>setTimeout(r));
   }
   enc.finish();
