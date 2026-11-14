@@ -1309,6 +1309,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.14-f', note:'SHARE SENDS ONLY THE CARD: the share sheet no longer adds the "My album rating for..." text line, so Messages gets just the picture.'},
   {v:'2026.11.14-e', note:'LONGER SPIN ON THE ANIMATED CARD: the GIF now plays the reveal once (record slides out, ring fills, bars fill, favorites appear), then the record keeps spinning for several more seconds before it slows to a stop on the finished card. It still plays once, so the pull-out never repeats.'},
   {v:'2026.11.14-d', note:'ANIMATED CARD STOPS: the GIF now plays once and stays on the finished card instead of looping. The record spins up and slows to a stop as the card finishes. If an app loops it anyway, the finished card is held for 30 seconds before it restarts.'},
   {v:'2026.11.14-c', note:'COPY ON A COMPUTER: on Windows the share window showed Share instead of Copy image, because those browsers report they can share files. A computer now always shows Copy image first with Save beside it, and phones keep Share. If a copy is ever blocked, the message now says why.'},
@@ -4565,7 +4566,7 @@ async function shareOpen(a,g){
     const canCopy=!anim&&!!(window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write);
     const say=t=>{note.hidden=false;note.textContent=t};
     const save=()=>{const l=document.createElement('a');l.href=o._url;l.download=R.name;document.body.appendChild(l);l.click();l.remove();say(anim?'Saved. Send the file in your chat and it will play by itself.':'Saved. Attach it to a message to send it.')};
-    const share=async()=>{try{await navigator.share({files:[file],text:R.text})}catch(e){if(e&&e.name==='AbortError')return;say('Sharing did not open. Press and hold the picture to save it.')}};
+    const share=async()=>{try{await navigator.share({files:[file]})}catch(e){if(e&&e.name==='AbortError')return;say('Sharing did not open. Press and hold the picture to save it.')}};
     const copy=async()=>{try{await navigator.clipboard.write([new ClipboardItem({'image/png':R.blob})]);send.textContent='Copied ✓';say('Copied. Paste it into a message with Ctrl+V.');setTimeout(()=>{if(send.isConnected)send.textContent='Copy image'},2200)}catch(e){say('Copying did not work here ('+((e&&e.name)||'error')+'). Use Save instead.');saveB.hidden=false;saveB.onclick=save}};
     send.disabled=false;
     /* phones and tablets use the share sheet; on a computer Copy comes first (Windows browsers also report that they can share files, which used to hide it) */
