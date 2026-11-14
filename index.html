@@ -748,6 +748,20 @@ details.addart .add{border-top:1px solid var(--line)}
   .track.sl-t:active{transform:scale(.982)}
   .track.sl-t.opening{animation:rowSettle .34s cubic-bezier(.2,.8,.2,1)}
 }
+/* a first rating lands in its circle: on Done the big number is lifted off the slider and pushed into the song's circle
+   (or the album's rating pill). While it flies the real number and ring wait, then the ring draws itself and the circle takes a bump. */
+.rt-fly{position:fixed;margin:0;z-index:9999;pointer-events:none;display:grid;place-items:center;white-space:nowrap;will-change:transform}
+.track.sl-t.landing .rg-n,.sl-rate.landing .v{opacity:0}
+.track.sl-t.landing .rg-v{stroke-dasharray:0 100.53;transition:none}
+@keyframes rgNum{0%{transform:scale(1)}35%{transform:scale(1.35)}100%{transform:scale(1)}}
+@keyframes rgBump{0%{transform:scale(1)}40%{transform:scale(1.16)}100%{transform:scale(1)}}
+@keyframes rgRing{from{box-shadow:0 0 0 0 color-mix(in srgb,var(--rcl) 55%,transparent)}to{box-shadow:0 0 0 5px color-mix(in srgb,var(--rcl) 0%,transparent)}}
+@media (prefers-reduced-motion:no-preference){
+  .track.sl-t.landed .rg-v{transition:stroke-dasharray .7s cubic-bezier(.2,.85,.25,1)}
+  .track.sl-t.landed .check{animation:rgRing .6s ease-out}
+  .track.sl-t.landed .check svg{animation:rgBump .5s cubic-bezier(.2,.8,.2,1)}
+  .track.sl-t.landed .rg-n,.sl-rate.landed .v{display:inline-block;animation:rgNum .45s cubic-bezier(.2,.8,.2,1)}
+}
 </style>
 
 <!-- suite:css v10 · shared by Kitchen, Grocery, Lift, DishLog, Protocol, Rail, Game Log, Playback — edit tools/suite.py in the kitchen repo, not here -->
@@ -1273,6 +1287,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.13-q', note:'RATING LANDS IN ITS CIRCLE: when you rate a song or album for the first time and close the slider (Done, or tapping another song), the big number now lifts off the slider and flies into its circle instead of popping in. The ring then draws itself around it and the circle gives a small bump. Changing an existing rating still follows your finger live, as before.'},
   {v:'2026.11.13-p', note:'DELETE ALBUM FIXED AND TUCKED AWAY: the second tap now actually deletes (it was resetting itself), and the button lives behind a small ... at the bottom-right of each album instead of sitting out in the open.'},
   {v:'2026.11.13-o', note:'DELETE AN ALBUM: every album now has a Delete album button at the bottom (tap twice to confirm). It removes that one album, its songs and their ratings, and leaves the rest of the artist alone. A later MusicBrainz import of the same artist can bring a removed album back, so use Undo import if that happens.'},
   {v:'2026.11.13-n', note:'OPENS WHERE YOU LEFT OFF: Playback used to open on the first artist in your list (Radiohead) every launch. It now remembers the last artist or title you had open and reopens it, falling back to the first only if that one was removed.'},
@@ -4321,6 +4336,30 @@ function rateMeter(id,label){const r=rating(id);
     <div class="rt-ticks" aria-hidden="true">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<span>${n}</span>`).join('')}</div>
     <div class="rt-foot">${r?`<button class="link" data-act="rclear" data-id="${id}">Clear</button>`:'<span class="rt-hint">Drag or tap to rate</span>'}<button class="link rt-done" data-act="rclose">Done</button></div>
   </div>`}
+/* The first rating lands in its circle. When a rater is closed on something that had no rating until now, the big
+   number is copied, lifted a little, then flown into the song's circle (or the album's rating pill) while the page
+   redraws with the real number and ring held back (class landing); when the copy arrives they appear (class landed). */
+const rtQ=s=>window.CSS&&CSS.escape?CSS.escape(s):s;
+const rtHost=id=>document.querySelector('.track.sl-t[data-id="'+rtQ(id)+'"]')||document.querySelector('.sl-rate[data-id="'+rtQ(id)+'"]');
+function rtFlyPrep(id){
+  if(!id||!rating(id)||!Element.prototype.animate||matchMedia('(prefers-reduced-motion:reduce)').matches)return null;
+  const h=rtHost(id),src=document.querySelector('.rater .rt-v');if(!h||!src)return null;
+  if(h.classList.contains('sl-t')?h.querySelector('.rg-n'):h.classList.contains('set'))return null;   /* only a first rating; changing one already follows the slider live */
+  const r=src.getBoundingClientRect();if(!r.width)return null;
+  const cs=getComputedStyle(src),el=document.createElement('b');el.className='rt-fly';el.textContent=src.textContent;
+  Object.assign(el.style,{left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',fontFamily:cs.fontFamily,fontSize:cs.fontSize,fontWeight:cs.fontWeight,fontStretch:cs.fontStretch,letterSpacing:cs.letterSpacing,fontVariantNumeric:'tabular-nums',lineHeight:'1',color:cs.color});
+  document.body.appendChild(el);src.style.visibility='hidden';
+  const wind=el.animate([{transform:'translate(0,0) scale(1)'},{transform:'translate(0,-6px) scale(1.14)'}],{duration:200,easing:'cubic-bezier(.3,0,.2,1)',fill:'forwards'});
+  return{id,el,wind,r,fs:parseFloat(cs.fontSize)||34,col:cs.color}}
+function rtFlyGo(p){
+  if(!p)return;
+  const done=()=>{UI.rLand=null;p.el.remove();const h=rtHost(p.id);if(!h)return;h.classList.remove('landing');h.classList.add('landed');setTimeout(()=>h.classList.remove('landed'),800)};
+  p.wind.finished.then(()=>{
+    const d=(h=>h&&(h.querySelector('.rg-n')||h.querySelector('.v')))(rtHost(p.id));if(!d){done();return}
+    const b=d.getBoundingClientRect(),dc=getComputedStyle(d),
+      dx=b.left+b.width/2-(p.r.left+p.r.width/2),dy=b.top+b.height/2-(p.r.top+p.r.height/2),sc=(parseFloat(dc.fontSize)||13)/p.fs;
+    p.el.animate([{transform:'translate(0,-6px) scale(1.14)',color:p.col},{transform:'translate('+dx+'px,'+dy+'px) scale('+sc+')',color:dc.color}],{duration:380,easing:'cubic-bezier(.6,0,.2,1)',fill:'forwards'}).finished.then(done,done)
+  },done)}
 function rateCommit(el){const id=el.dataset.rate,v=+el.value;if(!id||!v)return;
   if(v===rating(id))return;
   const isGroup=S.music.some(a=>a.groups.some(g=>g.id===id||dxId(g)===id));
@@ -4346,7 +4385,7 @@ function albumBar(g,a,full,n){
   const on=llOn(a.name,g.title),sg=stdItems(g),heard=(sg.length>0&&sg.every(i=>isDone(i.id)))||!!rating(g.id),ll=on||!heard;
   const what=dx?'deluxe':g.kind==='EP'?'EP':'album';
   return `<div class="sl-acts">
-    ${can?`<button class="sl-rate ${r?'set':''}" data-act="ropen" data-id="${rid}" aria-expanded="${UI.rOpen===rid}"><span class="t">${r?'Your '+what:'Rate the '+what}</span>${r?`<b class="v">${fmt(r)}</b>`:''}<span class="avg">${rn?`<b>${f1(avg)}</b>song avg`:'<b>\u2013</b>song avg'}</span></button>`:'<span class="sl-sp"></span>'}
+    ${can?`<button class="sl-rate ${r?'set':''}${UI.rLand===rid?' landing':''}" data-act="ropen" data-id="${rid}" aria-expanded="${UI.rOpen===rid}"><span class="t">${r?'Your '+what:'Rate the '+what}</span>${r?`<b class="v">${fmt(r)}</b>`:''}<span class="avg">${rn?`<b>${f1(avg)}</b>song avg`:'<b>\u2013</b>song avg'}</span></button>`:'<span class="sl-sp"></span>'}
     ${n?`<button class="sl-ic" data-act="grpall" data-a="${a.id}" data-g="${g.id}" aria-label="${full?'Clear all checkmarks':'Mark all heard'}" title="${full?'Clear all':'Mark all heard'}" aria-pressed="${full}">${ICO.all}</button>`:''}
   </div>
   ${can&&(d!==null||rn)?`<p class="sl-note">${rn?rn+' of '+its.length+' songs rated':''}${d===null?'':` \u00b7 <span class="diff ${Math.abs(d)<.05?'even':d>0?'up':'down'}">${Math.abs(d)<.05?'same as the songs':(d>0?'+':'\u2212')+f1(Math.abs(d))+' vs the songs'}</span>`} \u00b7 <a class="link" href="${esc(rymSearchUrl(a,g))}" target="_blank" rel="noopener">Find on RYM</a></p>`:can?`<p class="sl-note"><a class="link" href="${esc(rymSearchUrl(a,g))}" target="_blank" rel="noopener">Find on RYM</a></p>`:''}
@@ -4424,7 +4463,7 @@ function artistView(a){
     const ringHtml=rings.map((on,j)=>{const d=96-j*(52/Math.max(R,1));return `<i class="${on?'on':''}" style="--d:${d.toFixed(1)}%;--o:${R-1-j}"></i>`}).join('');
     const trackRows=rows.map(({i,k})=>{const s=songShow(i),r=rating(i.id),dn=isDone(i.id);
       const pc=r?r*10:0,dash=(pc*100.53/100).toFixed(2)+' 100.53';
-      return `<div class="track sl-t ${i.dx?'dx':''} ${dn?'done':''} ${r?'rated':''} ${UI.rOpen===i.id?'ropen':''} ${UI.rAnim===i.id?'opening':''}" data-act="ropen" data-id="${i.id}"${i.dx&&UI.dxAnim===g.id?` style="animation-delay:${Math.min(k,14)*26}ms"`:''}>${r?`<span class="wash" style="width:${pc}%" aria-hidden="true"></span>`:''}<span class="num">${k+1}</span>
+      return `<div class="track sl-t ${i.dx?'dx':''} ${dn?'done':''} ${r?'rated':''} ${UI.rOpen===i.id?'ropen':''} ${UI.rAnim===i.id?'opening':''} ${UI.rLand===i.id?'landing':''}" data-act="ropen" data-id="${i.id}"${i.dx&&UI.dxAnim===g.id?` style="animation-delay:${Math.min(k,14)*26}ms"`:''}>${r?`<span class="wash" style="width:${pc}%" aria-hidden="true"></span>`:''}<span class="num">${k+1}</span>
         <span class="ttl">${esc(s.t)}${s.f.length?`<span class="feat">feat. ${esc(s.f.join(', '))}</span>`:''}</span>
         <button class="check" data-act="tog" data-id="${i.id}" aria-pressed="${dn}" aria-label="${r?'Rated '+fmt(r)+'. ':''}${dn?'Heard':'Not heard'}: ${esc(i.title)}"><svg viewBox="0 0 44 44" aria-hidden="true"><circle class="rg-t" cx="22" cy="22" r="16"/>${r?`<circle class="rg-v" cx="22" cy="22" r="16" stroke-dasharray="${dash}"/>`:''}</svg>${r?`<span class="rg-n">${fmt(r)}</span>`:dn?'<span class="rg-d"></span>':''}</button></div>
         ${UI.rOpen===i.id?rateMeter(i.id,s.t):''}`}).join('');
@@ -4560,8 +4599,8 @@ document.addEventListener('click',ev=>{
   /* closing a rater: let it fold away first, then redraw */
   if((act==='rclose'||(act==='ropen'&&UI.rOpen===id))&&!UI.rClosing){
     const rt=document.querySelector('.rater');
-    if(rt&&!matchMedia('(prefers-reduced-motion:reduce)').matches){UI.rClosing=true;rt.classList.remove('rt-in');rt.classList.add('rt-out');
-      setTimeout(()=>{UI.rClosing=false;UI.rOpen=null;render()},230);return}}
+    if(rt&&!matchMedia('(prefers-reduced-motion:reduce)').matches){UI.rClosing=true;const cid=UI.rOpen,fly=rtFlyPrep(cid);rt.classList.remove('rt-in');rt.classList.add('rt-out');
+      setTimeout(()=>{UI.rClosing=false;UI.rOpen=null;if(fly)UI.rLand=cid;render();rtFlyGo(fly)},230);return}}
   if(act==='view'){UI.view=b.dataset.v;UI.rOpen=null;window.scrollTo({top:0})}
   else if(act==='lib'){UI.libOpen=!UI.libOpen}
   else if(act==='addart'){UI.libOpen=false;UI.addOpen=true;UI.toAdd=true}
@@ -4589,7 +4628,7 @@ document.addEventListener('click',ev=>{
     S.collection=colAll().filter(x=>x.id!==id);UI.colDel=null;if(UI.colEdit===id)UI.colEdit=null;if(UI.colOpen===id)UI.colOpen=null;touch()}else UI.colDel=id}
   else if(act==='colgot'){const x=colAll().find(c=>c.id===id);if(x){x.wish=false;if(!x.bought)x.bought=colToday();touch()}}
   else if(act==='colexport'){dlCSV('playback-collection.csv',csvCollection());return}
-  else if(act==='ropen'){UI.rOpen=UI.rOpen===id?null:id;UI.rAnim=UI.rOpen}
+  else if(act==='ropen'){const prev=UI.rOpen,fly=prev&&prev!==id?rtFlyPrep(prev):null;UI.rOpen=UI.rOpen===id?null:id;UI.rAnim=UI.rOpen;if(fly){UI.rLand=prev;UI.rFly=fly}}
   else if(act==='rclose'){UI.rOpen=null}
   else if(act==='tab'){UI.view=null;UI.rOpen=null;UI.tab=b.dataset.v;try{localStorage.setItem(KEY+'_tab',UI.tab)}catch(e){}}
   else if(act==='sel'){UI.sel[UI.tab]=id;UI.libOpen=false;UI.rOpen=null;
@@ -4690,6 +4729,7 @@ document.addEventListener('click',ev=>{
     catch(e){ta.value='';ta.placeholder='That text is not a Playback backup. Paste the full text you copied earlier, then try again.';return}
   }
   render();
+  if(UI.rFly){const f=UI.rFly;UI.rFly=null;rtFlyGo(f)}
 });
 
 document.addEventListener('input',ev=>{
