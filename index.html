@@ -1309,6 +1309,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.14-e', note:'LONGER SPIN ON THE ANIMATED CARD: the GIF now plays the reveal once (record slides out, ring fills, bars fill, favorites appear), then the record keeps spinning for several more seconds before it slows to a stop on the finished card. It still plays once, so the pull-out never repeats.'},
   {v:'2026.11.14-d', note:'ANIMATED CARD STOPS: the GIF now plays once and stays on the finished card instead of looping. The record spins up and slows to a stop as the card finishes. If an app loops it anyway, the finished card is held for 30 seconds before it restarts.'},
   {v:'2026.11.14-c', note:'COPY ON A COMPUTER: on Windows the share window showed Share instead of Copy image, because those browsers report they can share files. A computer now always shows Copy image first with Save beside it, and phones keep Share. If a copy is ever blocked, the message now says why.'},
   {v:'2026.11.14-b', note:'ANIMATED CARD FIXES: the animated card now includes every song rating (the bars fill in one after another) and follows the Show every song rating switch, and the shine on the spinning record no longer has a hard edge.'},
@@ -4435,14 +4436,14 @@ async function shareScene(a,g,withSongs){
   try{await Promise.race([Promise.all(['800 40px Archivo','500 40px Archivo','600 40px "JetBrains Mono"'].map(q=>document.fonts.load(q))),new Promise(r=>setTimeout(r,1200))])}catch(e){}
   const img=await new Promise(res=>{if(!art)return res(null);const im=new Image();im.crossOrigin='anonymous';im.onload=()=>res(im);im.onerror=()=>res(null);im.src=art;setTimeout(()=>res(null),6000)});
   const top=shMix(base,.14),bot=shMix(base,-.32),lum=(.299*top[0]+.587*top[1]+.114*top[2])/255,light=lum>.62,ink=light?'#16201b':'#ffffff',inkSoft=light?'rgb(22 32 27 / .66)':'rgb(255 255 255 / .74)';
-  const LOOP=songs?4:3.2,END=LOOP-.05,cs=560,cx0=110,cy0=96,name=f.dx?dxName(g):g.title,clamp=v=>Math.max(0,Math.min(1,v)),ease=v=>1-Math.pow(1-clamp(v),3);
+  const LOOP=songs?9:8,END=LOOP-.05,REVEAL=songs?2.7:2,SPIN=Math.PI,DEC=1.5,cs=560,cx0=110,cy0=96,name=f.dx?dxName(g):g.title,clamp=v=>Math.max(0,Math.min(1,v)),ease=v=>1-Math.pow(1-clamp(v),3);
   /* paint(x) draws the finished card. paint(x,T) draws the moment T seconds into the animation:
      the record slides out and keeps turning, the ring fills, the number counts up, the song bars fill in. */
   function paint(x,T){
     const A=T===undefined,pr=(t0,t1)=>A?1:clamp((T-t0)/(t1-t0));
     const gr=x.createLinearGradient(0,0,W*.35,H);gr.addColorStop(0,`rgb(${top})`);gr.addColorStop(1,`rgb(${bot})`);x.fillStyle=gr;x.fillRect(0,0,W,H);
     /* record, sliding out from behind the cover and spinning */
-    const slide=A?1:ease(pr(.1,songs?1:.8)),dcx=cx0+cs/2+(cs*.78-cs/2)*slide,dcy=cy0+cs/2,ang=A?0:Math.PI*4*ease(T/END);   /* the record spins up fast and slows to a stop on the last frame, which is the finished card */
+    const slide=A?1:ease(pr(.1,songs?1:.8)),dcx=cx0+cs/2+(cs*.78-cs/2)*slide,dcy=cy0+cs/2,ang=A?0:(T<=END-DEC?SPIN*T:SPIN*(END-DEC)+SPIN*DEC*(u=>u-u*u/2)(clamp((T-END+DEC)/DEC)));   /* turns at a steady pace after the reveal, then slows to a stop on the last frame */
     x.save();x.translate(dcx,dcy);x.fillStyle='rgb(14 16 15 / .92)';x.beginPath();x.arc(0,0,cs/2,0,7);x.fill();
     x.strokeStyle='rgb(255 255 255 / .07)';x.lineWidth=2;for(let r=cs/2-14;r>cs*.2;r-=11){x.beginPath();x.arc(0,0,r,0,7);x.stroke()}
     if(x.createConicGradient){const cg=x.createConicGradient(ang,0,0);
@@ -4494,7 +4495,7 @@ async function shareScene(a,g,withSongs){
         x.fillStyle=ink;x.font='500 27px Archivo,sans-serif';x.fillText(shFit(x,(it.title||'').trim(),cw-160),cx+62,cy+rh/2+9);
         x.save();x.globalAlpha=bp;x.textAlign='right';x.font='700 28px Archivo,sans-serif';x.fillStyle=v?ink:inkSoft;x.fillText(v?fmt(v):'–',cx+cw-18,cy+rh/2+10);x.restore()})}
   }
-  return {W,H,LOOP,paint,name,f,text:'My '+f.what+' rating for '+name+' by '+a.name+': '+(f.r?fmt(f.r)+'/10':f.avg.toFixed(1)+'/10 song average')}}
+  return {W,H,LOOP,REVEAL,paint,name,f,text:'My '+f.what+' rating for '+name+' by '+a.name+': '+(f.r?fmt(f.r)+'/10':f.avg.toFixed(1)+'/10 song average')}}
 /* Animated card: paints the card at each moment, then writes a looping GIF. One shared 255-color palette, a fixed dither
    pattern so still parts of the card stay identical from frame to frame, and every unchanged pixel marked transparent so
    the file only stores what moves. Takes a few seconds; progress is reported as it goes. */
@@ -4508,17 +4509,28 @@ async function shareGif(a,g,prog,withSongs){
   const take=[0,.4,.9,1.5,2.2,3,sc.LOOP-.05].filter(t=>t<sc.LOOP).map(grab).map(d=>{const o=new Uint8ClampedArray(Math.ceil(d.length/12)*4);let j=0;for(let i=0;i<d.length;i+=12){o[j++]=d[i];o[j++]=d[i+1];o[j++]=d[i+2];o[j++]=255}return o});
   const all=new Uint8ClampedArray(take.reduce((n,t)=>n+t.length,0));let off=0;take.forEach(t=>{all.set(t,off);off+=t.length});
   const pal=G.quantize(all,255,{format:'rgb565'});while(pal.length<256)pal.push([0,0,0]);
-  const bay=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5],enc=G.GIFEncoder();let prev=null;
+  const bay=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5],enc=G.GIFEncoder(),pal255=pal.slice(0,255);let prev=null;
+  /* after the reveal only the part of the record that sticks out from behind the cover keeps changing */
+  const RX=430,RY=56,RW=Math.min(130,OW-430),RH=Math.min(392,OH-56);
   for(let k=0;k<N;k++){
-    const d=grab(k/FPS);
-    for(let y=0,i=0;y<OH;y++)for(let xx=0;xx<OW;xx++,i+=4){const t=(bay[(y&3)*4+(xx&3)]-7.5)*.8;d[i]=d[i]+t;d[i+1]=d[i+1]+t;d[i+2]=d[i+2]+t}   /* ordered dither */
-    const idx=G.applyPalette(d,pal.slice(0,255),'rgb565');
-    let out=idx;
-    if(prev){out=new Uint8Array(idx.length);for(let i=0;i<idx.length;i++)out[i]=idx[i]===prev[i]?255:idx[i]}
+    const T=k/FPS,strip=!!prev&&T>=sc.REVEAL&&!window.__gifFull;
+    let idx,out;
+    if(strip){
+      sc.paint(bx,T);sx.drawImage(big,0,0,OW,OH);const d=sx.getImageData(RX,RY,RW,RH).data;
+      for(let y=0,i=0;y<RH;y++)for(let xx=0;xx<RW;xx++,i+=4){const t=(bay[((y+RY)&3)*4+((xx+RX)&3)]-7.5)*.8;d[i]+=t;d[i+1]+=t;d[i+2]+=t}
+      const si=G.applyPalette(d,pal255,'rgb565');out=new Uint8Array(OW*OH).fill(255);
+      for(let y=0,q=0;y<RH;y++)for(let xx=0;xx<RW;xx++,q++){const f=(y+RY)*OW+RX+xx;if(si[q]!==prev[f]){out[f]=si[q];prev[f]=si[q]}}
+    }else{
+      const d=grab(T);
+      for(let y=0,i=0;y<OH;y++)for(let xx=0;xx<OW;xx++,i+=4){const t=(bay[(y&3)*4+(xx&3)]-7.5)*.8;d[i]=d[i]+t;d[i+1]=d[i+1]+t;d[i+2]=d[i+2]+t}   /* ordered dither */
+      idx=G.applyPalette(d,pal255,'rgb565');out=idx;
+      if(prev){out=new Uint8Array(idx.length);for(let i=0;i<idx.length;i++)out[i]=idx[i]===prev[i]?255:idx[i]}
+      prev=idx;
+    }
     /* play once and stay on the finished card: no loop, and the last frame is held for 30 s in case an app loops anyway */
     const dl=k===N-1?30000:1000/FPS;
     enc.writeFrame(out,OW,OH,k===0?{palette:pal,delay:dl,repeat:-1}:{delay:dl,transparent:true,transparentIndex:255,dispose:1});
-    prev=idx;prog&&prog(k+1,N);await new Promise(r=>setTimeout(r));
+    prog&&prog(k+1,N);await new Promise(r=>setTimeout(r));
   }
   enc.finish();
   return {blob:new Blob([enc.bytes()],{type:'image/gif'}),name:(a.name+' - '+sc.name).replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'-')+'.gif',text:sc.text}}
