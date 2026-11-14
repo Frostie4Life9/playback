@@ -324,6 +324,11 @@ code.uri{font:500 12px var(--mono);background:var(--sunk);border-radius:4px;padd
 @media (max-width:560px){.track{grid-template-columns:28px 26px minmax(0,1fr)}.track .rate{grid-column:3}}
 
 
+details.gmore{margin:2px 4px 0;text-align:right}
+details.gmore summary{display:inline-block;cursor:pointer;list-style:none;color:var(--muted,#8a948f);font-size:18px;line-height:1;padding:6px 10px;border-radius:999px;opacity:.55}
+details.gmore summary::-webkit-details-marker{display:none}
+details.gmore[open] summary,details.gmore summary:hover{opacity:1}
+details.gmore .btn{display:block;margin:4px 0 8px auto}
 details.more{border-top:1px solid var(--line);padding-top:12px}
 details.more summary{cursor:pointer;font-weight:600;color:var(--accent)}
 details.more form{display:flex;flex-direction:column;gap:8px;margin-top:10px;max-width:460px}
@@ -1268,6 +1273,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.13-p', note:'DELETE ALBUM FIXED AND TUCKED AWAY: the second tap now actually deletes (it was resetting itself), and the button lives behind a small ... at the bottom-right of each album instead of sitting out in the open.'},
   {v:'2026.11.13-o', note:'DELETE AN ALBUM: every album now has a Delete album button at the bottom (tap twice to confirm). It removes that one album, its songs and their ratings, and leaves the rest of the artist alone. A later MusicBrainz import of the same artist can bring a removed album back, so use Undo import if that happens.'},
   {v:'2026.11.13-n', note:'OPENS WHERE YOU LEFT OFF: Playback used to open on the first artist in your list (Radiohead) every launch. It now remembers the last artist or title you had open and reopens it, falling back to the first only if that one was removed.'},
   {v:'2026.11.13-m', note:'CORNER ALBUM ALWAYS SHOWS: an artist tile now shows your best-rated album in its corner even when the tile picture is that same album cover, which is what Spotify uses for some artists like Mid-Air Thief. Before, the corner was hidden whenever the two matched.'},
@@ -4435,7 +4441,7 @@ function artistView(a){
       ${albumBar(g,a,full,shown.length)}
       ${g.items.length?'':'<p class="note">No songs listed yet. Tap Find on MusicBrainz above to fill them in; your album rating stays.</p>'}
       <div class="tlist">${trackRows}</div>
-      <div style="padding:12px 4px 4px">${delGBtn(g,a)}</div>
+      <details class="gmore"${UI.armed===g.id?' open':''}><summary aria-label="More for this album">\u22ef</summary>${delGBtn(g,a)}</details>
     </div>`}).join('');
   UI.dxAnim=null;                                    /* the switch animation plays once, on the draw it was asked for */
   return `<div class="head"><div class="ring" style="--p:${p}"><span>${p}%</span></div>
@@ -4547,7 +4553,7 @@ function filmView(f){
 document.addEventListener('click',ev=>{
   const b=ev.target.closest('[data-act]');if(!b)return;
   const act=b.dataset.act,id=b.dataset.id;
-  if(act!=='del')UI.armed=null;
+  if(act!=='del'&&act!=='delg')UI.armed=null;
   if(act!=='mbundo')UI.undoArm=null;
   if(act!=='copy')UI.copied=false;
   if(act!=='coldel')UI.colDel=null;
