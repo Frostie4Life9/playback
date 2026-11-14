@@ -101,6 +101,7 @@ button{cursor:pointer}
 .tile{display:flex;flex-direction:column;gap:6px;min-width:0;border:0;background:transparent;padding:0;text-align:left;color:inherit;border-radius:12px}
 .tile .tcov{--ac:#2D5840;position:relative;display:block;width:100%;aspect-ratio:1/1;border-radius:12px;overflow:hidden;background:linear-gradient(160deg,color-mix(in srgb,var(--ac) 88%,#fff),color-mix(in srgb,var(--ac) 82%,#000));box-shadow:0 0 0 1px rgb(127 127 127 / .2)}
 .tile:hover .tcov{filter:brightness(1.1)}
+.tile .ts{margin-top:-4px;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tile[aria-current="true"] .tcov{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--accent)}
 .tile .tcov img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .imgpill{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 96px);z-index:95;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 32px);min-height:44px;box-sizing:border-box;padding:6px 8px 6px 14px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:999px;box-shadow:0 6px 20px rgb(0 0 0 / .35);font:500 13px var(--body,system-ui)}
@@ -1310,6 +1311,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.14-j', note:'SEARCH ALBUMS TOO: the search box on the Music tab now finds albums as well as artists. Type part of an album title (or the artist and the title together) and an Albums section appears above the matching artists, with each cover, its artist, year and your rating. Tap one to open that artist and jump to the album. Enter still opens the top artist match, or the first album if no artist matches. Singles stay out of the album results.'},
   {v:'2026.11.14-i', note:'QUIETER BANNERS: the + collab and + date rated links are gone from every album banner. Add or change a collab credit or the date rated from the \u22ef menu at the bottom of the album; the form opens up on the banner. A collab credit or date you have set still shows on the banner.'},
   {v:'2026.11.14-h', note:'DATE RATED: an album\u2019s banner now shows the day you rated it (Rated Nov 14, 2026), and so does the share card, under the rating. From now on the day is saved when you set a rating. Albums you rated before today have no day yet, so their banner shows + date rated: tap it, pick the day and save. Tap the date any time to change it, or clear the box to remove it. Rating an album again sets the day to today.'},
   {v:'2026.11.14-g', note:'ANIMATED CARD NO LONGER GETS CUT OFF IN MESSAGES: iMessage crops very tall pictures, which sliced off the top of the cover and the bottom song rows. The animated card is now padded wider (same artwork, side margins) so its shape fits and nothing is cropped.'},
@@ -3617,7 +3619,7 @@ function sideFinder(list){
   <div class="lfind">
     <span class="label">${title} · ${list.length}</span>
     <div class="lqrow">
-      <div class="q"><input id="lq" type="search" autocomplete="off" placeholder="Search ${noun}" value="${esc(UI.lq[UI.tab]||'')}" aria-label="Search ${noun}">${UI.lq[UI.tab]?'<button data-act="lqx" aria-label="Clear search">×</button>':''}</div>
+      <div class="q"><input id="lq" type="search" autocomplete="off" placeholder="Search ${music?'artists & albums':noun}" value="${esc(UI.lq[UI.tab]||'')}" aria-label="Search ${music?'artists and albums':noun}">${UI.lq[UI.tab]?'<button data-act="lqx" aria-label="Clear search">×</button>':''}</div>
       <label class="lsort"><select id="lsort" aria-label="Sort ${noun}">${Object.entries(LSORTS).map(([k,v])=>`<option value="${k}"${P.sort===k?' selected':''}>${v}</option>`).join('')}</select></label>
     </div>
     <div class="lrow lshow" role="group" aria-label="Show">${Object.entries(LSHOWS).map(([k,v])=>`<button class="chip" data-act="lshow" data-v="${k}" aria-pressed="${P.show===k}">${v}<span class="c">${c[k]}</span></button>`).join('')}</div>
@@ -3638,13 +3640,32 @@ const L_ADD='<button class="tile add" data-act="addart"><span class="tcov"><svg 
 /* the A-Z rail beside the wall: the letters that have artists, in the order the list shows them */
 let LRAIL=[];
 const lRailHTML=()=>LRAIL.map(k=>`<button data-act="ljump" data-l="${esc(k)}" aria-label="Jump to ${esc(k)}">${esc(k)}</button>`).join('');
+/* Albums that match the search box on the Music tab (title, or artist + title when the artist alone does not
+   already match, so "radiohead ok computer" works but "radiohead" does not list every Radiohead release).
+   Singles stay out. Each tile opens the artist and scrolls to that album. */
+function lAlbums(sums,q){
+  const hits=[];
+  for(const s of sums){const a=s.x,an=nrm(a.name||'');
+    for(const g of a.groups||[]){if(!RATEABLE.includes(g.kind))continue;
+      const names=[g.title];if(hasDx(g))names.push(dxName(g));
+      if(names.some(n=>{const t=nrm(n);return t.includes(q)||(!an.includes(q)&&(an+' '+t).includes(q))}))hits.push({a,g,st:s})}}
+  if(!hits.length)return '';
+  hits.sort((x,y)=>LCOL.compare(x.g.title,y.g.title));
+  const shown=hits.slice(0,60);
+  const tile=({a,g})=>{const u=g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-250':''),
+    col=ACOL[g.id]||acolFallback({title:g.title,id:g.id}),r=rating(g.id),rv=r?fmt(r):'',ini=([...lName(g)][0]||'#').toUpperCase(),
+    lab=g.title+' by '+a.name+(rv?', rated '+rv:'');
+    return `<button class="tile alb" data-act="selalb" data-id="${a.id}" data-g="${esc(String(g.id))}" aria-label="${esc(lab)}"><span class="tcov" style="--ac:${esc(col)}"><span class="tini" aria-hidden="true">${esc(ini)}</span>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${rv?`<span class="trate" title="Your rating">${rv}</span>`:''}</span><span class="tn">${esc(g.title)}</span><span class="ts">${esc(a.name)}${/^\d{4}/.test(g.year||'')?' \u00b7 '+esc(String(g.year).slice(0,4)):''}</span></button>`};
+  return `<section class="lsect"><div class="lsec" data-sec="Albums"><span>Albums</span><span>${hits.length}</span></div><div class="lgrid">${shown.map(tile).join('')}</div></section>`}
 function sideList(list,e){
   LRAIL=[];
   if(!list.length)return '<p class="lempty">Nothing here yet.</p>';
   const P=lPrefs(),q=nrm(UI.lq[UI.tab]||'').trim();
   let sums=list.map(lSum);
   if(P.show!=='all')sums=sums.filter(s=>s.st===P.show);
+  const albHtml=UI.tab==='music'&&q?lAlbums(sums,q):'';
   if(q)sums=sums.filter(s=>nrm(s.x.name||s.x.title||'').includes(q)||nrm(lName(s.x)).includes(q));
+  if(!sums.length&&albHtml)return albHtml;
   if(!sums.length)return `<p class="lempty">${q?'Nothing matches \u201c'+esc(UI.lq[UI.tab])+'\u201d':'Nothing under '+LSHOWS[P.show]}${P.show!=='all'?'. <button class="link" data-act="lshow" data-v="all">Show all</button>':'.'}</p>`;
   const az=(a,b)=>LCOL.compare(lName(a.x),lName(b.x));
   /* each sort groups into sections so a long list has landmarks */
@@ -3659,7 +3680,7 @@ function sideList(list,e){
     sec=s=>({going:'In progress',fresh:'Not started',done:'Finished'})[s.st]}
   const cnt={};sums.forEach(s=>{const k=sec(s);cnt[k]=(cnt[k]||0)+1});
   const wall=UI.tab==='music';
-  let last=null,h='';
+  let last=null,h=albHtml;
   for(const s of sums){const k=sec(s),x=s.x;
     if(k!==last){if(P.sort==='az')LRAIL.push(k);
       h+=(wall&&last!==null?'</div></section>':'')+(wall?'<section class="lsect">':'')+`<div class="lsec" data-sec="${esc(k)}"><span>${esc(k)}</span><span>${cnt[k]}</span></div>`+(wall?'<div class="lgrid">':'');last=k}
@@ -3704,6 +3725,9 @@ function render(){
   if(nl){if(ll&&llTab===UI.tab)nl.scrollTop=llTop;
     else{const c=nl.querySelector('[aria-current="true"]');if(c)nl.scrollTop=c.offsetTop-nl.clientHeight/3}}
   if(UI.toAdd){UI.toAdd=false;const ad=document.getElementById('addart');if(ad)ad.scrollIntoView({behavior:'smooth',block:'start'})}
+  if(UI.toAlb){const gid=UI.toAlb;UI.toAlb=null;
+    const al=document.querySelector('.group.sleeve[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(gid):gid)+'"]');
+    if(al){al.scrollIntoView({behavior:'smooth',block:'start'});slRipple(al,500)}}
   if(UI.toSheet){UI.toSheet=false;const sh=document.querySelector('.sheet');if(sh)sh.scrollIntoView({behavior:'smooth',block:'start'})}
 }
 function mainView(e,next,list){return `
@@ -4856,6 +4880,7 @@ document.addEventListener('click',ev=>{
   else if(act==='tab'){UI.view=null;UI.rOpen=null;UI.tab=b.dataset.v;try{localStorage.setItem(KEY+'_tab',UI.tab)}catch(e){}}
   else if(act==='sel'){UI.sel[UI.tab]=id;UI.libOpen=false;UI.rOpen=null;
     if(matchMedia('(max-width:760px)').matches)UI.toSheet=true}
+  else if(act==='selalb'){UI.tab='music';UI.sel.music=id;UI.libOpen=false;UI.rOpen=null;UI.filter='all';UI.toAlb=b.dataset.g}
   else if(act==='lsort'||act==='lshow'){const P=lPrefs();P[act==='lsort'?'sort':'show']=b.dataset.v;lSave(P);UI.llTab=null}
   else if(act==='ljump'){const ll=document.getElementById('llist'),h=[...document.querySelectorAll('#llist .lsec')].find(z=>z.dataset.sec===b.dataset.l),sc=h&&h.parentElement;if(ll&&sc)ll.scrollTo({top:sc.offsetTop-4});return}
   else if(act==='lqx'){UI.lq[UI.tab]='';lRedraw();const i=document.getElementById('lq');if(i){i.value='';i.focus()}return}
@@ -4979,7 +5004,7 @@ document.addEventListener('pointerup',ev=>{const el=ev.target;if(el&&el.classLis
 document.addEventListener('keydown',ev=>{
   if(ev.target.id==='lq'&&ev.key==='Escape'&&ev.target.value){ev.preventDefault();UI.lq[UI.tab]='';ev.target.value='';lRedraw()}
   /* Enter opens the top match */
-  if(ev.target.id==='lq'&&ev.key==='Enter'){const f=document.querySelector('#llist .entry,#llist .tile:not(.add)');if(f){ev.preventDefault();f.click()}}
+  if(ev.target.id==='lq'&&ev.key==='Enter'){const f=document.querySelector('#llist .entry,#llist .tile:not(.add):not(.alb)')||document.querySelector('#llist .tile.alb');if(f){ev.preventDefault();f.click()}}
 });
 
 document.addEventListener('keydown',ev=>{
