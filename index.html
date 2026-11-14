@@ -339,6 +339,9 @@ details.gmore .btn{display:block;margin:4px 0 8px auto}
 .shr-box{width:min(420px,100%);max-height:100%;overflow:hidden;display:flex;flex-direction:column;gap:14px;background:var(--bg);border:1px solid var(--line);border-radius:24px;padding:16px;box-shadow:0 24px 60px rgb(0 0 0 / .45)}
 .shr-prev{flex:1 1 auto;min-height:0;overflow:auto;border-radius:16px;-webkit-overflow-scrolling:touch}
 .shr-box img{display:block;width:100%;height:auto;border-radius:16px;background:var(--sunk)}
+.shr-seg{display:flex;gap:4px;padding:4px;background:var(--sunk);border-radius:999px}
+.shr-seg button{flex:1;min-height:40px;border:0;border-radius:999px;background:transparent;color:var(--muted);font:600 14px var(--body,inherit);cursor:pointer}
+.shr-seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgb(0 0 0 / .14)}
 .shr-tog{display:flex;align-items:center;gap:10px;min-height:40px;font-size:14px;font-weight:500;color:var(--ink);cursor:pointer}
 .shr-tog input{width:20px;height:20px;accent-color:var(--accent,#0f7a74)}
 .shr-acts{display:flex;gap:10px}
@@ -1296,12 +1299,17 @@ details.addart .add{border-top:1px solid var(--line)}
 </div>
 
 <script>
+/* gifenc 1.0.3, Matt DesLauriers, MIT License (https://github.com/mattdesl/gifenc). Writes the animated share card. */
+(function(){var X={signature:"GIF",version:"89a",trailer:59,extensionIntroducer:33,applicationExtensionLabel:255,graphicControlExtensionLabel:249,imageSeparator:44,signatureSize:3,versionSize:3,globalColorTableFlagMask:128,colorResolutionMask:112,sortFlagMask:8,globalColorTableSizeMask:7,applicationIdentifierSize:8,applicationAuthCodeSize:3,disposalMethodMask:28,userInputFlagMask:2,transparentColorFlagMask:1,localColorTableFlagMask:128,interlaceFlagMask:64,idSortFlagMask:32,localColorTableSizeMask:7};function F(t=256){let e=0,s=new Uint8Array(t);return{get buffer(){return s.buffer},reset(){e=0},bytesView(){return s.subarray(0,e)},bytes(){return s.slice(0,e)},writeByte(r){n(e+1),s[e]=r,e++},writeBytes(r,o=0,i=r.length){n(e+i);for(let c=0;c<i;c++)s[e++]=r[c+o]},writeBytesView(r,o=0,i=r.byteLength){n(e+i),s.set(r.subarray(o,o+i),e),e+=i}};function n(r){var o=s.length;if(o>=r)return;var i=1024*1024;r=Math.max(r,o*(o<i?2:1.125)>>>0),o!=0&&(r=Math.max(r,256));let c=s;s=new Uint8Array(r),e>0&&s.set(c.subarray(0,e),0)}}var O=12,J=5003,lt=[0,1,3,7,15,31,63,127,255,511,1023,2047,4095,8191,16383,32767,65535];function at(t,e,s,n,r=F(512),o=new Uint8Array(256),i=new Int32Array(J),c=new Int32Array(J)){let x=i.length,a=Math.max(2,n);o.fill(0),c.fill(0),i.fill(-1);let l=0,f=0,g=a+1,h=g,b=!1,w=h,_=(1<<w)-1,u=1<<g-1,k=u+1,B=u+2,p=0,A=s[0],z=0;for(let y=x;y<65536;y*=2)++z;z=8-z,r.writeByte(a),I(u);let d=s.length;for(let y=1;y<d;y++){t:{let m=s[y],v=(m<<O)+A,M=m<<z^A;if(i[M]===v){A=c[M];break t}let V=M===0?1:x-M;for(;i[M]>=0;)if(M-=V,M<0&&(M+=x),i[M]===v){A=c[M];break t}I(A),A=m,B<1<<O?(c[M]=B++,i[M]=v):(i.fill(-1),B=u+2,b=!0,I(u))}}return I(A),I(k),r.writeByte(0),r.bytesView();function I(y){for(l&=lt[f],f>0?l|=y<<f:l=y,f+=w;f>=8;)o[p++]=l&255,p>=254&&(r.writeByte(p),r.writeBytesView(o,0,p),p=0),l>>=8,f-=8;if((B>_||b)&&(b?(w=h,_=(1<<w)-1,b=!1):(++w,_=w===O?1<<w:(1<<w)-1)),y==k){for(;f>0;)o[p++]=l&255,p>=254&&(r.writeByte(p),r.writeBytesView(o,0,p),p=0),l>>=8,f-=8;p>0&&(r.writeByte(p),r.writeBytesView(o,0,p),p=0)}}}var $=at;function D(t,e,s){return t<<8&63488|e<<2&992|s>>3}function G(t,e,s,n){return t>>4|e&240|(s&240)<<4|(n&240)<<8}function j(t,e,s){return t>>4<<8|e&240|s>>4}function R(t,e,s){return t<e?e:t>s?s:t}function T(t){return t*t}function tt(t,e,s){var n=0,r=1e100;let o=t[e],i=o.cnt,c=o.ac,x=o.rc,a=o.gc,l=o.bc;for(var f=o.fw;f!=0;f=t[f].fw){let h=t[f],b=h.cnt,w=i*b/(i+b);if(!(w>=r)){var g=0;s&&(g+=w*T(h.ac-c),g>=r)||(g+=w*T(h.rc-x),!(g>=r)&&(g+=w*T(h.gc-a),!(g>=r)&&(g+=w*T(h.bc-l),!(g>=r)&&(r=g,n=f))))}}o.err=r,o.nn=n}function Q(){return{ac:0,rc:0,gc:0,bc:0,cnt:0,nn:0,fw:0,bk:0,tm:0,mtm:0,err:0}}function ut(t,e){let s=e==="rgb444"?4096:65536,n=new Array(s),r=t.length;if(e==="rgba4444")for(let o=0;o<r;++o){let i=t[o],c=i>>24&255,x=i>>16&255,a=i>>8&255,l=i&255,f=G(l,a,x,c),g=f in n?n[f]:n[f]=Q();g.rc+=l,g.gc+=a,g.bc+=x,g.ac+=c,g.cnt++}else if(e==="rgb444")for(let o=0;o<r;++o){let i=t[o],c=i>>16&255,x=i>>8&255,a=i&255,l=j(a,x,c),f=l in n?n[l]:n[l]=Q();f.rc+=a,f.gc+=x,f.bc+=c,f.cnt++}else for(let o=0;o<r;++o){let i=t[o],c=i>>16&255,x=i>>8&255,a=i&255,l=D(a,x,c),f=l in n?n[l]:n[l]=Q();f.rc+=a,f.gc+=x,f.bc+=c,f.cnt++}return n}function H(t,e,s={}){let{format:n="rgb565",clearAlpha:r=!0,clearAlphaColor:o=0,clearAlphaThreshold:i=0,oneBitAlpha:c=!1}=s;if(!t||!t.buffer)throw new Error("quantize() expected RGBA Uint8Array data");if(!(t instanceof Uint8Array)&&!(t instanceof Uint8ClampedArray))throw new Error("quantize() expected RGBA Uint8Array data");let x=new Uint32Array(t.buffer),a=s.useSqrt!==!1,l=n==="rgba4444",f=ut(x,n),g=f.length,h=g-1,b=new Uint32Array(g+1);for(var w=0,u=0;u<g;++u){let C=f[u];if(C!=null){var _=1/C.cnt;l&&(C.ac*=_),C.rc*=_,C.gc*=_,C.bc*=_,f[w++]=C}}T(e)/w<.022&&(a=!1);for(var u=0;u<w-1;++u)f[u].fw=u+1,f[u+1].bk=u,a&&(f[u].cnt=Math.sqrt(f[u].cnt));a&&(f[u].cnt=Math.sqrt(f[u].cnt));var k,B,p;for(u=0;u<w;++u){tt(f,u,!1);var A=f[u].err;for(B=++b[0];B>1&&(p=B>>1,!(f[k=b[p]].err<=A));B=p)b[B]=k;b[B]=u}var z=w-e;for(u=0;u<z;){for(var d;;){var I=b[1];if(d=f[I],d.tm>=d.mtm&&f[d.nn].mtm<=d.tm)break;d.mtm==h?I=b[1]=b[b[0]--]:(tt(f,I,!1),d.tm=u);var A=f[I].err;for(B=1;(p=B+B)<=b[0]&&(p<b[0]&&f[b[p]].err>f[b[p+1]].err&&p++,!(A<=f[k=b[p]].err));B=p)b[B]=k;b[B]=I}var y=f[d.nn],m=d.cnt,v=y.cnt,_=1/(m+v);l&&(d.ac=_*(m*d.ac+v*y.ac)),d.rc=_*(m*d.rc+v*y.rc),d.gc=_*(m*d.gc+v*y.gc),d.bc=_*(m*d.bc+v*y.bc),d.cnt+=y.cnt,d.mtm=++u,f[y.bk].fw=y.fw,f[y.fw].bk=y.bk,y.mtm=h}let M=[];var V=0;for(u=0;;++V){let L=R(Math.round(f[u].rc),0,255),C=R(Math.round(f[u].gc),0,255),Y=R(Math.round(f[u].bc),0,255),E=255;if(l){if(E=R(Math.round(f[u].ac),0,255),c){let st=typeof c=="number"?c:127;E=E<=st?0:255}r&&E<=i&&(L=C=Y=o,E=0)}let K=l?[L,C,Y,E]:[L,C,Y];if(xt(M,K)||M.push(K),(u=f[u].fw)==0)break}return M}function xt(t,e){for(let s=0;s<t.length;s++){let n=t[s],r=n[0]===e[0]&&n[1]===e[1]&&n[2]===e[2],o=n.length>=4&&e.length>=4?n[3]===e[3]:!0;if(r&&o)return!0}return!1}function U(t,e){var s=0,n;for(n=0;n<t.length;n++){let r=t[n]-e[n];s+=r*r}return s}function P(t,e){return e>1?Math.round(t/e)*e:t}function et(t,{roundRGB:e=5,roundAlpha:s=10,oneBitAlpha:n=null}={}){let r=new Uint32Array(t.buffer);for(let o=0;o<r.length;o++){let i=r[o],c=i>>24&255,x=i>>16&255,a=i>>8&255,l=i&255;if(c=P(c,s),n){let f=typeof n=="number"?n:127;c=c<=f?0:255}l=P(l,e),a=P(a,e),x=P(x,e),r[o]=c<<24|x<<16|a<<8|l<<0}}function nt(t,e,s="rgb565"){if(!t||!t.buffer)throw new Error("quantize() expected RGBA Uint8Array data");if(!(t instanceof Uint8Array)&&!(t instanceof Uint8ClampedArray))throw new Error("quantize() expected RGBA Uint8Array data");if(e.length>256)throw new Error("applyPalette() only works with 256 colors or less");let n=new Uint32Array(t.buffer),r=n.length,o=s==="rgb444"?4096:65536,i=new Uint8Array(r),c=new Array(o),x=s==="rgba4444";if(s==="rgba4444")for(let a=0;a<r;a++){let l=n[a],f=l>>24&255,g=l>>16&255,h=l>>8&255,b=l&255,w=G(b,h,g,f),_=w in c?c[w]:c[w]=gt(b,h,g,f,e);i[a]=_}else{let a=s==="rgb444"?j:D;for(let l=0;l<r;l++){let f=n[l],g=f>>16&255,h=f>>8&255,b=f&255,w=a(b,h,g),_=w in c?c[w]:c[w]=bt(b,h,g,e);i[l]=_}}return i}function gt(t,e,s,n,r){let o=0,i=1e100;for(let c=0;c<r.length;c++){let x=r[c],a=x[3],l=q(a-n);if(l>i)continue;let f=x[0];if(l+=q(f-t),l>i)continue;let g=x[1];if(l+=q(g-e),l>i)continue;let h=x[2];l+=q(h-s),!(l>i)&&(i=l,o=c)}return o}function bt(t,e,s,n){let r=0,o=1e100;for(let i=0;i<n.length;i++){let c=n[i],x=c[0],a=q(x-t);if(a>o)continue;let l=c[1];if(a+=q(l-e),a>o)continue;let f=c[2];a+=q(f-s),!(a>o)&&(o=a,r=i)}return r}function rt(t,e,s=5){if(!t.length||!e.length)return;let n=t.map(i=>i.slice(0,3)),r=s*s,o=t[0].length;for(let i=0;i<e.length;i++){let c=e[i];c.length<o?c=[c[0],c[1],c[2],255]:c.length>o?c=c.slice(0,3):c=c.slice();let x=N(n,c.slice(0,3),U),a=x[0],l=x[1];l>0&&l<=r&&(t[a]=c)}}function q(t){return t*t}function W(t,e,s=U){let n=Infinity,r=-1;for(let o=0;o<t.length;o++){let i=t[o],c=s(e,i);c<n&&(n=c,r=o)}return r}function N(t,e,s=U){let n=Infinity,r=-1;for(let o=0;o<t.length;o++){let i=t[o],c=s(e,i);c<n&&(n=c,r=o)}return[r,n]}function ot(t,e,s=U){return t[W(t,e,s)]}function ct(t={}){let{initialCapacity:e=4096,auto:s=!0}=t,n=F(e),r=5003,o=new Uint8Array(256),i=new Int32Array(r),c=new Int32Array(r),x=!1;return{reset(){n.reset(),x=!1},finish(){n.writeByte(X.trailer)},bytes(){return n.bytes()},bytesView(){return n.bytesView()},get buffer(){return n.buffer},get stream(){return n},writeHeader:a,writeFrame(l,f,g,h={}){let{transparent:b=!1,transparentIndex:w=0,delay:_=0,palette:u=null,repeat:k=0,colorDepth:B=8,dispose:p=-1}=h,A=!1;if(s?x||(A=!0,a(),x=!0):A=Boolean(h.first),f=Math.max(0,Math.floor(f)),g=Math.max(0,Math.floor(g)),A){if(!u)throw new Error("First frame must include a { palette } option");pt(n,f,g,u,B),it(n,u),k>=0&&dt(n,k)}let z=Math.round(_/10);wt(n,p,z,b,w);let d=Boolean(u)&&!A;ht(n,f,g,d?u:null),d&&it(n,u),yt(n,l,f,g,B,o,i,c)}};function a(){ft(n,"GIF89a")}}function wt(t,e,s,n,r){t.writeByte(33),t.writeByte(249),t.writeByte(4),r<0&&(r=0,n=!1);var o,i;n?(o=1,i=2):(o=0,i=0),e>=0&&(i=e&7),i<<=2;let c=0;t.writeByte(0|i|c|o),S(t,s),t.writeByte(r||0),t.writeByte(0)}function pt(t,e,s,n,r=8){let o=1,i=0,c=Z(n.length)-1,x=o<<7|r-1<<4|i<<3|c,a=0,l=0;S(t,e),S(t,s),t.writeBytes([x,a,l])}function dt(t,e){t.writeByte(33),t.writeByte(255),t.writeByte(11),ft(t,"NETSCAPE2.0"),t.writeByte(3),t.writeByte(1),S(t,e),t.writeByte(0)}function it(t,e){let s=1<<Z(e.length);for(let n=0;n<s;n++){let r=[0,0,0];n<e.length&&(r=e[n]),t.writeByte(r[0]),t.writeByte(r[1]),t.writeByte(r[2])}}function ht(t,e,s,n){if(t.writeByte(44),S(t,0),S(t,0),S(t,e),S(t,s),n){let r=0,o=0,i=Z(n.length)-1;t.writeByte(128|r|o|0|i)}else t.writeByte(0)}function yt(t,e,s,n,r=8,o,i,c){$(s,n,e,r,t,o,i,c)}function S(t,e){t.writeByte(e&255),t.writeByte(e>>8&255)}function ft(t,e){for(var s=0;s<e.length;s++)t.writeByte(e.charCodeAt(s))}function Z(t){return Math.max(Math.ceil(Math.log2(t)),1)}var Bt=ct;window.GIFenc={GIFEncoder:ct,applyPalette:nt,quantize:H};})();
+</script>
+<script>
 /* Newest first. BUILD is read from the top entry, so the version and the note
    describing it can't drift apart. THE DATE IS THE DAY THE BUILD WAS MADE, in
    Provo, and the letter counts builds within that day (a, b, c...). The update
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.14-a', note:'ANIMATED SHARE CARD: the share window now has Still and Animated. Animated makes a looping GIF of your card: the record slides out of the sleeve and keeps spinning, the rating ring fills as the number counts up, and your favorites fade in. A GIF plays by itself in chats, with no play button. It takes a few seconds to make and shares like the still card. Browsers cannot copy an animation to the clipboard, so on a computer it is Save GIF, then drop the file into your chat.'},
   {v:'2026.11.13-v', note:'COPY THE SHARE CARD ON A COMPUTER: the share window now has Copy image, so you can paste the card straight into Discord, Messages or an email with Ctrl+V. Save is still there beside it. Phones keep the normal Share button.'},
   {v:'2026.11.13-u', note:'FAVORITES STAY ON THE FULL CARD: with every song rating shown, your favorite songs now sit in their own line between the album rating and the song list instead of disappearing.'},
   {v:'2026.11.13-t', note:'SONGS ON THE SHARE CARD: the share card now lists every song with its rating, in track order, each on a bar that fills with the score. Switch off Show every song rating under the picture for the short card with just your favorites.'},
@@ -4417,89 +4425,136 @@ function shareBtn(g,a){
 function shMix(h,t){const n=parseInt(h.slice(1),16),c=[n>>16&255,n>>8&255,n&255];return c.map(v=>Math.round(t>0?v+(255-v)*t:v*(1+t)))}
 function shRound(x,l,t,w,h,r){x.beginPath();x.moveTo(l+r,t);x.arcTo(l+w,t,l+w,t+h,r);x.arcTo(l+w,t+h,l,t+h,r);x.arcTo(l,t+h,l,t,r);x.arcTo(l,t,l+w,t,r);x.closePath()}
 function shFit(x,txt,max){if(x.measureText(txt).width<=max)return txt;while(txt.length>1&&x.measureText(txt+'…').width>max)txt=txt.slice(0,-1);return txt.trim()+'…'}
-async function shareDraw(a,g,withSongs){
-  const f=shareInfo(a,g),W=1080,n=f.its.length,two=n>6,rows=two?Math.ceil(n/2):n,songs=!!withSongs&&n>0,fav=f.rs.slice().sort((p,q)=>q.v-p.v).filter(z=>z.v>=8).slice(0,3),favH=fav.length?112:0,H=songs?1330+favH+rows*66:1350,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
+async function shareScene(a,g,withSongs){
+  const f=shareInfo(a,g),W=1080,n=f.its.length,two=n>6,rows=two?Math.ceil(n/2):n,songs=!!withSongs&&n>0,fav=f.rs.slice().sort((p,q)=>q.v-p.v).filter(z=>z.v>=8).slice(0,3),favH=fav.length?112:0,H=songs?1330+favH+rows*66:1350;
   const sArt=g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-500':''),art=f.dx?(g.dxImg||sArt):sArt;
   const base=(f.dx&&g.dxImg&&g.dxImg!==sArt?ACOL[g.id+'~dx']:ACOL[g.id])||acolFallback(g);
   try{await Promise.race([Promise.all(['800 40px Archivo','500 40px Archivo','600 40px "JetBrains Mono"'].map(q=>document.fonts.load(q))),new Promise(r=>setTimeout(r,1200))])}catch(e){}
   const img=await new Promise(res=>{if(!art)return res(null);const im=new Image();im.crossOrigin='anonymous';im.onload=()=>res(im);im.onerror=()=>res(null);im.src=art;setTimeout(()=>res(null),6000)});
-  const top=shMix(base,.14),bot=shMix(base,-.32),lum=(.299*top[0]+.587*top[1]+.114*top[2])/255,ink=lum>.62?'#16201b':'#ffffff',inkSoft=lum>.62?'rgb(22 32 27 / .66)':'rgb(255 255 255 / .74)';
-  const gr=x.createLinearGradient(0,0,W*.35,H);gr.addColorStop(0,`rgb(${top})`);gr.addColorStop(1,`rgb(${bot})`);x.fillStyle=gr;x.fillRect(0,0,W,H);
-  /* record peeking out behind the cover */
-  const cs=560,cx0=110,cy0=96,dcx=cx0+cs*.78,dcy=cy0+cs/2;
-  x.save();x.fillStyle='rgb(14 16 15 / .92)';x.beginPath();x.arc(dcx,dcy,cs/2,0,7);x.fill();
-  x.strokeStyle='rgb(255 255 255 / .07)';x.lineWidth=2;for(let r=cs/2-14;r>cs*.2;r-=11){x.beginPath();x.arc(dcx,dcy,r,0,7);x.stroke()}
-  x.fillStyle=`rgb(${top})`;x.beginPath();x.arc(dcx,dcy,cs*.15,0,7);x.fill();x.fillStyle='rgb(14 16 15)';x.beginPath();x.arc(dcx,dcy,9,0,7);x.fill();x.restore();
-  /* cover */
-  x.save();x.shadowColor='rgb(0 0 0 / .4)';x.shadowBlur=50;x.shadowOffsetY=18;shRound(x,cx0,cy0,cs,cs,22);x.fillStyle=`rgb(${bot})`;x.fill();x.restore();
-  x.save();shRound(x,cx0,cy0,cs,cs,22);x.clip();
-  if(img){const sq=Math.min(img.naturalWidth,img.naturalHeight);x.drawImage(img,(img.naturalWidth-sq)/2,(img.naturalHeight-sq)/2,sq,sq,cx0,cy0,cs,cs)}
-  else{x.fillStyle='rgb(255 255 255 / .12)';x.fillRect(cx0,cy0,cs,cs);x.fillStyle=ink;x.font='800 260px Archivo,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText((g.title||'?').trim().charAt(0).toUpperCase(),cx0+cs/2,cy0+cs/2+10)}
-  x.restore();
-  /* title block */
-  x.textAlign='left';x.textBaseline='alphabetic';let y=cy0+cs+86;
-  x.fillStyle=inkSoft;x.font='600 28px "JetBrains Mono",monospace';
-  x.fillText(shFit(x,(g.kind+' · '+g.year+(f.dx?' · Deluxe':'')).toUpperCase(),W-220-190),110,y);
-  x.save();x.textAlign='right';x.font='700 24px "JetBrains Mono",monospace';x.fillText('PLAYBACK',W-110,y);x.restore();
-  const name=f.dx?dxName(g):g.title;let fs=76;x.fillStyle=ink;
-  do{x.font='800 '+fs+'px Archivo,sans-serif';fs-=4}while(x.measureText(name).width>W-220&&fs>44);
-  y+=fs+34;x.fillText(shFit(x,name,W-220),110,y);
-  x.fillStyle=inkSoft;x.font='500 38px Archivo,sans-serif';y+=58;
-  x.fillText(shFit(x,a.name+(g.w&&g.w.length?' & '+g.w.join(' & '):''),W-220),110,y);
-  /* rating ring + number */
-  const big=f.r||f.avg,ry=1064,rr=92,rx=110+rr;
-  x.lineWidth=16;x.lineCap='round';x.strokeStyle='rgb(255 255 255 / .22)';if(lum>.62)x.strokeStyle='rgb(0 0 0 / .14)';
-  x.beginPath();x.arc(rx,ry,rr,0,7);x.stroke();
-  x.strokeStyle=ink;x.beginPath();x.arc(rx,ry,rr,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,big/10));x.stroke();
-  x.fillStyle=ink;x.textAlign='center';x.textBaseline='middle';x.font='800 '+(f.r?86:70)+'px Archivo,sans-serif';x.fillText(f.r?fmt(f.r):big.toFixed(1),rx,ry+4);
-  x.textAlign='left';let tx=rx+rr+44;
-  x.fillStyle=ink;x.font='700 42px Archivo,sans-serif';x.textBaseline='alphabetic';x.fillText(f.r?'My '+f.what+' rating':'Song average',tx,ry-14);
-  x.fillStyle=inkSoft;x.font='500 30px Archivo,sans-serif';
-  const sub=f.r?(f.rs.length?'Song average '+f.avg.toFixed(1)+' · '+f.rs.length+' of '+f.its.length+' rated':'out of 10'):f.rs.length+' of '+f.its.length+' songs rated';
-  x.fillText(shFit(x,sub,W-tx-110),tx,ry+34);
-  /* favorites */
-  if(fav.length){const fy=songs?ry+rr+72:H-104;x.textAlign='left';x.textBaseline='alphabetic';x.fillStyle=inkSoft;x.font='600 24px "JetBrains Mono",monospace';x.fillText('FAVORITES',110,fy);
-    x.fillStyle=ink;x.font='600 30px Archivo,sans-serif';x.fillText(shFit(x,fav.map(z=>z.t).join('  ·  '),W-220),110,fy+42)}
-  /* every song, in order, with its rating and a bar that fills with the score */
-  if(songs){
-    const y0=ry+rr+80+favH,gap=8,rh=58,cw=two?(W-220-40)/2:W-220;
-    x.textAlign='left';x.textBaseline='alphabetic';x.fillStyle=inkSoft;x.font='600 24px "JetBrains Mono",monospace';x.fillText('SONG RATINGS',110,y0);
-    f.its.forEach((it,k)=>{
-      const col2=two&&k>=rows,cx=110+(col2?cw+40:0),cy=y0+24+(col2?k-rows:k)*(rh+gap),v=rating(it.id);
-      x.save();shRound(x,cx,cy,cw,rh,16);x.fillStyle=lum>.62?'rgb(0 0 0 / .07)':'rgb(255 255 255 / .09)';x.fill();x.clip();
-      if(v){x.fillStyle=lum>.62?'rgb(0 0 0 / .14)':'rgb(255 255 255 / .2)';x.fillRect(cx,cy,cw*Math.min(1,v/10),rh)}x.restore();
-      x.textAlign='left';x.fillStyle=inkSoft;x.font='500 22px Archivo,sans-serif';x.fillText(String(k+1),cx+18,cy+rh/2+8);
-      x.fillStyle=ink;x.font='500 27px Archivo,sans-serif';x.fillText(shFit(x,(it.title||'').trim(),cw-160),cx+62,cy+rh/2+9);
-      x.textAlign='right';x.font='700 28px Archivo,sans-serif';x.fillStyle=v?ink:inkSoft;x.fillText(v?fmt(v):'\u2013',cx+cw-18,cy+rh/2+10)})}
+  const top=shMix(base,.14),bot=shMix(base,-.32),lum=(.299*top[0]+.587*top[1]+.114*top[2])/255,light=lum>.62,ink=light?'#16201b':'#ffffff',inkSoft=light?'rgb(22 32 27 / .66)':'rgb(255 255 255 / .74)';
+  const LOOP=songs?4:3.2,cs=560,cx0=110,cy0=96,name=f.dx?dxName(g):g.title,clamp=v=>Math.max(0,Math.min(1,v)),ease=v=>1-Math.pow(1-clamp(v),3);
+  /* paint(x) draws the finished card. paint(x,T) draws the moment T seconds into the animation:
+     the record slides out and keeps turning, the ring fills, the number counts up, the song bars fill in. */
+  function paint(x,T){
+    const A=T===undefined,pr=(t0,t1)=>A?1:clamp((T-t0)/(t1-t0));
+    const gr=x.createLinearGradient(0,0,W*.35,H);gr.addColorStop(0,`rgb(${top})`);gr.addColorStop(1,`rgb(${bot})`);x.fillStyle=gr;x.fillRect(0,0,W,H);
+    /* record, sliding out from behind the cover and spinning */
+    const slide=A?1:ease(pr(.1,songs?1:.8)),dcx=cx0+cs/2+(cs*.78-cs/2)*slide,dcy=cy0+cs/2,ang=A?0:T/LOOP*Math.PI*4;
+    x.save();x.translate(dcx,dcy);x.fillStyle='rgb(14 16 15 / .92)';x.beginPath();x.arc(0,0,cs/2,0,7);x.fill();
+    x.strokeStyle='rgb(255 255 255 / .07)';x.lineWidth=2;for(let r=cs/2-14;r>cs*.2;r-=11){x.beginPath();x.arc(0,0,r,0,7);x.stroke()}
+    if(x.createConicGradient){const cg=x.createConicGradient(ang,0,0);
+      [[0,0],[.07,.2],[.15,0],[.5,0],[.57,.2],[.65,0],[1,0]].forEach(([o,al])=>cg.addColorStop(o,'rgb(255 255 255 / '+al+')'));
+      x.fillStyle=cg;x.beginPath();x.arc(0,0,cs/2-6,0,7);x.arc(0,0,cs*.16,0,7,true);x.fill('evenodd')}
+    x.fillStyle=`rgb(${top})`;x.beginPath();x.arc(0,0,cs*.15,0,7);x.fill();
+    x.save();x.rotate(ang);x.strokeStyle=light?'rgb(22 32 27 / .55)':'rgb(255 255 255 / .6)';x.lineWidth=6;x.lineCap='round';x.beginPath();x.moveTo(cs*.05,0);x.lineTo(cs*.125,0);x.stroke();x.restore();
+    x.fillStyle='rgb(14 16 15)';x.beginPath();x.arc(0,0,9,0,7);x.fill();x.restore();
+    /* cover */
+    x.save();x.shadowColor='rgb(0 0 0 / .4)';x.shadowBlur=50;x.shadowOffsetY=18;shRound(x,cx0,cy0,cs,cs,22);x.fillStyle=`rgb(${bot})`;x.fill();x.restore();
+    x.save();shRound(x,cx0,cy0,cs,cs,22);x.clip();
+    if(img){const sq=Math.min(img.naturalWidth,img.naturalHeight);x.drawImage(img,(img.naturalWidth-sq)/2,(img.naturalHeight-sq)/2,sq,sq,cx0,cy0,cs,cs)}
+    else{x.fillStyle='rgb(255 255 255 / .12)';x.fillRect(cx0,cy0,cs,cs);x.fillStyle=ink;x.font='800 260px Archivo,sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText((g.title||'?').trim().charAt(0).toUpperCase(),cx0+cs/2,cy0+cs/2+10)}
+    x.restore();
+    /* title block */
+    x.textAlign='left';x.textBaseline='alphabetic';let y=cy0+cs+86;
+    x.fillStyle=inkSoft;x.font='600 28px "JetBrains Mono",monospace';
+    x.fillText(shFit(x,(g.kind+' · '+g.year+(f.dx?' · Deluxe':'')).toUpperCase(),W-220-190),110,y);
+    x.save();x.textAlign='right';x.font='700 24px "JetBrains Mono",monospace';x.fillText('PLAYBACK',W-110,y);x.restore();
+    let fs=76;x.fillStyle=ink;
+    do{x.font='800 '+fs+'px Archivo,sans-serif';fs-=4}while(x.measureText(name).width>W-220&&fs>44);
+    y+=fs+34;x.fillText(shFit(x,name,W-220),110,y);
+    x.fillStyle=inkSoft;x.font='500 38px Archivo,sans-serif';y+=58;
+    x.fillText(shFit(x,a.name+(g.w&&g.w.length?' & '+g.w.join(' & '):''),W-220),110,y);
+    /* rating ring + number */
+    const big=f.r||f.avg,ry=1064,rr=92,rx=110+rr,rp=A?1:ease(pr(.3,songs?1.6:1.3));
+    x.lineWidth=16;x.lineCap='round';x.strokeStyle=light?'rgb(0 0 0 / .14)':'rgb(255 255 255 / .22)';
+    x.beginPath();x.arc(rx,ry,rr,0,7);x.stroke();
+    if(rp>0){x.strokeStyle=ink;x.beginPath();x.arc(rx,ry,rr,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,big/10)*rp);x.stroke()}
+    x.fillStyle=ink;x.textAlign='center';x.textBaseline='middle';x.font='800 '+(f.r?86:70)+'px Archivo,sans-serif';
+    x.fillText(f.r?fmt(A?f.r:Math.round(f.r*rp*2)/2):(big*rp).toFixed(1),rx,ry+4);
+    x.textAlign='left';let tx=rx+rr+44;
+    x.fillStyle=ink;x.font='700 42px Archivo,sans-serif';x.textBaseline='alphabetic';x.fillText(f.r?'My '+f.what+' rating':'Song average',tx,ry-14);
+    x.fillStyle=inkSoft;x.font='500 30px Archivo,sans-serif';
+    const sub=f.r?(f.rs.length?'Song average '+f.avg.toFixed(1)+' · '+f.rs.length+' of '+f.its.length+' rated':'out of 10'):f.rs.length+' of '+f.its.length+' songs rated';
+    x.fillText(shFit(x,sub,W-tx-110),tx,ry+34);
+    /* favorites */
+    if(fav.length){const fy=songs?ry+rr+72:H-104;x.save();x.globalAlpha=A?1:ease(pr(songs?2.1:1.4,songs?2.6:1.9));x.textAlign='left';x.textBaseline='alphabetic';x.fillStyle=inkSoft;x.font='600 24px "JetBrains Mono",monospace';x.fillText('FAVORITES',110,fy);
+      x.fillStyle=ink;x.font='600 30px Archivo,sans-serif';x.fillText(shFit(x,fav.map(z=>z.t).join('  ·  '),W-220),110,fy+42);x.restore()}
+    /* every song, in order, with its rating and a bar that fills with the score */
+    if(songs){
+      const y0=ry+rr+80+favH,gap=8,rh=58,cw=two?(W-220-40)/2:W-220;
+      x.textAlign='left';x.textBaseline='alphabetic';x.fillStyle=inkSoft;x.font='600 24px "JetBrains Mono",monospace';x.fillText('SONG RATINGS',110,y0);
+      f.its.forEach((it,k)=>{
+        const col2=two&&k>=rows,cx=110+(col2?cw+40:0),cy=y0+24+(col2?k-rows:k)*(rh+gap),v=rating(it.id),bp=A?1:ease(pr(1+k*.07,1.5+k*.07));
+        x.save();shRound(x,cx,cy,cw,rh,16);x.fillStyle=light?'rgb(0 0 0 / .07)':'rgb(255 255 255 / .09)';x.fill();x.clip();
+        if(v){x.fillStyle=light?'rgb(0 0 0 / .14)':'rgb(255 255 255 / .2)';x.fillRect(cx,cy,cw*Math.min(1,v/10)*bp,rh)}x.restore();
+        x.textAlign='left';x.fillStyle=inkSoft;x.font='500 22px Archivo,sans-serif';x.fillText(String(k+1),cx+18,cy+rh/2+8);
+        x.fillStyle=ink;x.font='500 27px Archivo,sans-serif';x.fillText(shFit(x,(it.title||'').trim(),cw-160),cx+62,cy+rh/2+9);
+        x.save();x.globalAlpha=bp;x.textAlign='right';x.font='700 28px Archivo,sans-serif';x.fillStyle=v?ink:inkSoft;x.fillText(v?fmt(v):'–',cx+cw-18,cy+rh/2+10);x.restore()})}
+  }
+  return {W,H,LOOP,paint,name,f,text:'My '+f.what+' rating for '+name+' by '+a.name+': '+(f.r?fmt(f.r)+'/10':f.avg.toFixed(1)+'/10 song average')}}
+/* Animated card: paints the card at each moment, then writes a looping GIF. One shared 255-color palette, a fixed dither
+   pattern so still parts of the card stay identical from frame to frame, and every unchanged pixel marked transparent so
+   the file only stores what moves. Takes a few seconds; progress is reported as it goes. */
+async function shareGif(a,g,prog){
+  const G=window.GIFenc;if(!G)throw new Error('no encoder');
+  const sc=await shareScene(a,g,false),FPS=20,N=Math.round(sc.LOOP*FPS),OW=720,OH=Math.round(sc.H*OW/sc.W);
+  const big=document.createElement('canvas');big.width=sc.W;big.height=sc.H;const bx=big.getContext('2d');
+  const sm=document.createElement('canvas');sm.width=OW;sm.height=OH;const sx=sm.getContext('2d',{willReadFrequently:true});sx.imageSmoothingQuality='high';
+  const grab=T=>{sc.paint(bx,T);sx.drawImage(big,0,0,OW,OH);return sx.getImageData(0,0,OW,OH).data};
+  /* palette from a few moments spread across the loop (every 3rd pixel is plenty) */
+  const take=[0,.4,.9,1.5,2.2,sc.LOOP-.05].map(grab).map(d=>{const o=new Uint8ClampedArray(Math.ceil(d.length/12)*4);let j=0;for(let i=0;i<d.length;i+=12){o[j++]=d[i];o[j++]=d[i+1];o[j++]=d[i+2];o[j++]=255}return o});
+  const all=new Uint8ClampedArray(take.reduce((n,t)=>n+t.length,0));let off=0;take.forEach(t=>{all.set(t,off);off+=t.length});
+  const pal=G.quantize(all,255,{format:'rgb565'});while(pal.length<256)pal.push([0,0,0]);
+  const bay=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5],enc=G.GIFEncoder();let prev=null;
+  for(let k=0;k<N;k++){
+    const d=grab(k/FPS);
+    for(let y=0,i=0;y<OH;y++)for(let xx=0;xx<OW;xx++,i+=4){const t=(bay[(y&3)*4+(xx&3)]-7.5)*.8;d[i]=d[i]+t;d[i+1]=d[i+1]+t;d[i+2]=d[i+2]+t}   /* ordered dither */
+    const idx=G.applyPalette(d,pal.slice(0,255),'rgb565');
+    let out=idx;
+    if(prev){out=new Uint8Array(idx.length);for(let i=0;i<idx.length;i++)out[i]=idx[i]===prev[i]?255:idx[i]}
+    enc.writeFrame(out,OW,OH,k===0?{palette:pal,delay:1000/FPS,repeat:0}:{delay:1000/FPS,transparent:true,transparentIndex:255,dispose:1});
+    prev=idx;prog&&prog(k+1,N);await new Promise(r=>setTimeout(r));
+  }
+  enc.finish();
+  return {blob:new Blob([enc.bytes()],{type:'image/gif'}),name:(a.name+' - '+sc.name).replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'-')+'.gif',text:sc.text}}
+async function shareDraw(a,g,withSongs){
+  const S0=await shareScene(a,g,withSongs),c=document.createElement('canvas');c.width=S0.W;c.height=S0.H;S0.paint(c.getContext('2d'));
   const blob=await new Promise(r=>{try{c.toBlob(r,'image/png')}catch(e){r(null)}});
-  return {canvas:c,blob,name:(a.name+' - '+name).replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'-')+'.png',text:'My '+f.what+' rating for '+name+' by '+a.name+': '+(f.r?fmt(f.r)+'/10':f.avg.toFixed(1)+'/10 song average')}}
+  return {canvas:c,blob,scene:S0,name:(a.name+' - '+S0.name).replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'-')+'.png',text:S0.text}}
 function shareClose(){const o=document.getElementById('shr');if(o){if(o._url)URL.revokeObjectURL(o._url);o.remove()}document.removeEventListener('keydown',shareKey)}
 function shareKey(e){if(e.key==='Escape')shareClose()}
 async function shareOpen(a,g){
   shareClose();const o=document.createElement('div');o.id='shr';o.className='shr';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-label','Share your rating');
   const f=shareInfo(a,g);
-  o.innerHTML='<div class="shr-box"><div class="shr-prev" aria-live="polite"><p class="shr-note" style="padding:60px 0">Making your card\u2026</p></div>'+(f.its.length?'<label class="shr-tog"><input type="checkbox" data-sh="songs" checked>Show every song rating</label>':'')+'<div class="shr-acts"><button class="btn" data-sh="close">Close</button><button class="btn" data-sh="save" hidden>Save</button><button class="btn primary" data-sh="send" disabled>Share</button></div><p class="shr-note" hidden></p></div>';
+  o.innerHTML='<div class="shr-box"><div class="shr-seg" role="group" aria-label="Card style"><button type="button" data-sh="mode" data-m="still" aria-pressed="true">Still</button><button type="button" data-sh="mode" data-m="anim" aria-pressed="false">Animated</button></div><div class="shr-prev" aria-live="polite"><p class="shr-note" style="padding:60px 0">Making your card…</p></div>'+(f.its.length?'<label class="shr-tog"><input type="checkbox" data-sh="songs" checked>Show every song rating</label>':'')+'<div class="shr-acts"><button class="btn" data-sh="close">Close</button><button class="btn" data-sh="save" hidden>Save</button><button class="btn primary" data-sh="send" disabled>Share</button></div><p class="shr-note" hidden></p></div>';
   document.body.appendChild(o);document.addEventListener('keydown',shareKey);
   o.addEventListener('click',e=>{if(e.target===o||e.target.closest('[data-sh="close"]'))shareClose()});
-  const prev=o.querySelector('.shr-prev'),send=o.querySelector('[data-sh="send"]'),saveB=o.querySelector('[data-sh="save"]'),note=o.querySelector('.shr-box>.shr-note'),tog=o.querySelector('[data-sh="songs"]');
-  let seq=0;
+  const prev=o.querySelector('.shr-prev'),send=o.querySelector('[data-sh="send"]'),saveB=o.querySelector('[data-sh="save"]'),note=o.querySelector('.shr-box>.shr-note'),tog=o.querySelector('[data-sh="songs"]'),togL=tog&&tog.parentNode;
+  let seq=0,mode='still';
   async function make(){
-    const my=++seq;send.disabled=true;note.hidden=true;
-    let R;try{R=await shareDraw(a,g,tog?tog.checked:false)}catch(e){R=null}
+    const my=++seq;send.disabled=true;note.hidden=true;saveB.hidden=true;if(togL)togL.hidden=mode==='anim';
+    let R;
+    try{
+      if(mode==='anim'){
+        prev.innerHTML='<p class="shr-note" style="padding:60px 0" id="shr-pg">Making your animation…</p>';
+        R=await shareGif(a,g,(k,n)=>{if(my!==seq)throw 0;const e=document.getElementById('shr-pg');if(e)e.textContent='Making your animation… '+Math.round(k/n*100)+'%'})}
+      else R=await shareDraw(a,g,tog?tog.checked:false)}
+    catch(e){R=null}
     if(my!==seq||!document.getElementById('shr'))return;
     if(!R||!R.blob){prev.innerHTML='<p class="shr-note" style="padding:40px 0">The card could not be made. Try again in a moment.</p>';return}
     if(o._url)URL.revokeObjectURL(o._url);
     o._url=URL.createObjectURL(R.blob);prev.innerHTML='<img alt="Your rating card for '+esc(g.title)+'" src="'+o._url+'">';
-    const file=new File([R.blob],R.name,{type:'image/png'}),canFile=!!(navigator.canShare&&navigator.canShare({files:[file]}));
-    const canCopy=!!(window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write);
+    const file=new File([R.blob],R.name,{type:R.blob.type}),canFile=!!(navigator.canShare&&navigator.canShare({files:[file]})),anim=mode==='anim';
+    const canCopy=!anim&&!!(window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write);
     const say=t=>{note.hidden=false;note.textContent=t};
-    const save=()=>{const l=document.createElement('a');l.href=o._url;l.download=R.name;document.body.appendChild(l);l.click();l.remove();say('Saved. Attach it to a message to send it.')};
+    const save=()=>{const l=document.createElement('a');l.href=o._url;l.download=R.name;document.body.appendChild(l);l.click();l.remove();say(anim?'Saved. Send the file in your chat and it will play by itself.':'Saved. Attach it to a message to send it.')};
     const share=async()=>{try{await navigator.share({files:[file],text:R.text})}catch(e){if(e&&e.name==='AbortError')return;say('Sharing did not open. Press and hold the picture to save it.')}};
-    const copy=async()=>{try{await navigator.clipboard.write([new ClipboardItem({'image/png':R.blob})]);send.textContent='Copied \u2713';say('Copied. Paste it into a message with Ctrl+V.');setTimeout(()=>{if(send.isConnected)send.textContent='Copy image'},2200)}catch(e){say('Copying was blocked here. Use Save instead.');saveB.hidden=false;saveB.onclick=save}};
-    send.disabled=false;saveB.hidden=true;
+    const copy=async()=>{try{await navigator.clipboard.write([new ClipboardItem({'image/png':R.blob})]);send.textContent='Copied ✓';say('Copied. Paste it into a message with Ctrl+V.');setTimeout(()=>{if(send.isConnected)send.textContent='Copy image'},2200)}catch(e){say('Copying was blocked here. Use Save instead.');saveB.hidden=false;saveB.onclick=save}};
+    send.disabled=false;
     if(canFile){send.textContent='Share';send.onclick=share}
     else if(canCopy){send.textContent='Copy image';send.onclick=copy;saveB.hidden=false;saveB.onclick=save}
-    else{send.textContent='Save image';send.onclick=save}}
+    else{send.textContent=anim?'Save GIF':'Save image';send.onclick=save;if(anim)say('Browsers cannot copy an animation, so save it and drop the file into your chat.')}}
+  o.querySelectorAll('[data-sh="mode"]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.m===mode)return;mode=b.dataset.m;o.querySelectorAll('[data-sh="mode"]').forEach(x=>x.setAttribute('aria-pressed',x===b));make()}));
   if(tog)tog.addEventListener('change',make);
   make();
 }
