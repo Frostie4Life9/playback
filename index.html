@@ -1302,6 +1302,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.13-u', note:'FAVORITES STAY ON THE FULL CARD: with every song rating shown, your favorite songs now sit in their own line between the album rating and the song list instead of disappearing.'},
   {v:'2026.11.13-t', note:'SONGS ON THE SHARE CARD: the share card now lists every song with its rating, in track order, each on a bar that fills with the score. Switch off Show every song rating under the picture for the short card with just your favorites.'},
   {v:'2026.11.13-s', note:'SHARE YOUR RATING: under each album you have rated there is now a Share button. It makes a picture of your rating with the cover, your album number, your song average and your favorite songs, then opens your phone\u2019s share sheet so you can send it to a friend in Messages (on a computer it saves the picture instead). The three dots at the bottom of an album also moved: they now sit in line with the rating circles above them instead of floating at the edge.'},
   {v:'2026.11.13-r', note:'RATING SLIDES SOONER: the number now starts flying into its circle right after a quick lift, while the slider is still folding away, instead of waiting for it to finish.'},
@@ -4416,7 +4417,7 @@ function shMix(h,t){const n=parseInt(h.slice(1),16),c=[n>>16&255,n>>8&255,n&255]
 function shRound(x,l,t,w,h,r){x.beginPath();x.moveTo(l+r,t);x.arcTo(l+w,t,l+w,t+h,r);x.arcTo(l+w,t+h,l,t+h,r);x.arcTo(l,t+h,l,t,r);x.arcTo(l,t,l+w,t,r);x.closePath()}
 function shFit(x,txt,max){if(x.measureText(txt).width<=max)return txt;while(txt.length>1&&x.measureText(txt+'…').width>max)txt=txt.slice(0,-1);return txt.trim()+'…'}
 async function shareDraw(a,g,withSongs){
-  const f=shareInfo(a,g),W=1080,n=f.its.length,two=n>6,rows=two?Math.ceil(n/2):n,songs=!!withSongs&&n>0,H=songs?1330+rows*66:1350,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
+  const f=shareInfo(a,g),W=1080,n=f.its.length,two=n>6,rows=two?Math.ceil(n/2):n,songs=!!withSongs&&n>0,fav=f.rs.slice().sort((p,q)=>q.v-p.v).filter(z=>z.v>=8).slice(0,3),favH=fav.length?112:0,H=songs?1330+favH+rows*66:1350,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
   const sArt=g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-500':''),art=f.dx?(g.dxImg||sArt):sArt;
   const base=(f.dx&&g.dxImg&&g.dxImg!==sArt?ACOL[g.id+'~dx']:ACOL[g.id])||acolFallback(g);
   try{await Promise.race([Promise.all(['800 40px Archivo','500 40px Archivo','600 40px "JetBrains Mono"'].map(q=>document.fonts.load(q))),new Promise(r=>setTimeout(r,1200))])}catch(e){}
@@ -4456,12 +4457,11 @@ async function shareDraw(a,g,withSongs){
   const sub=f.r?(f.rs.length?'Song average '+f.avg.toFixed(1)+' · '+f.rs.length+' of '+f.its.length+' rated':'out of 10'):f.rs.length+' of '+f.its.length+' songs rated';
   x.fillText(shFit(x,sub,W-tx-110),tx,ry+34);
   /* favorites */
-  const fav=f.rs.slice().sort((p,q)=>q.v-p.v).filter(z=>z.v>=8).slice(0,3);
-  if(!songs&&fav.length){x.fillStyle=inkSoft;x.font='600 24px "JetBrains Mono",monospace';x.fillText('FAVORITES',110,H-104);
-    x.fillStyle=ink;x.font='600 30px Archivo,sans-serif';x.fillText(shFit(x,fav.map(z=>z.t).join('  ·  '),W-220),110,H-62)}
+  if(fav.length){const fy=songs?ry+rr+72:H-104;x.textAlign='left';x.textBaseline='alphabetic';x.fillStyle=inkSoft;x.font='600 24px "JetBrains Mono",monospace';x.fillText('FAVORITES',110,fy);
+    x.fillStyle=ink;x.font='600 30px Archivo,sans-serif';x.fillText(shFit(x,fav.map(z=>z.t).join('  ·  '),W-220),110,fy+42)}
   /* every song, in order, with its rating and a bar that fills with the score */
   if(songs){
-    const y0=ry+rr+80,gap=8,rh=58,cw=two?(W-220-40)/2:W-220;
+    const y0=ry+rr+80+favH,gap=8,rh=58,cw=two?(W-220-40)/2:W-220;
     x.textAlign='left';x.textBaseline='alphabetic';x.fillStyle=inkSoft;x.font='600 24px "JetBrains Mono",monospace';x.fillText('SONG RATINGS',110,y0);
     f.its.forEach((it,k)=>{
       const col2=two&&k>=rows,cx=110+(col2?cw+40:0),cy=y0+24+(col2?k-rows:k)*(rh+gap),v=rating(it.id);
