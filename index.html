@@ -1311,6 +1311,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.14-l', note:'APPLE MUSIC IMPORTS: discographies can now be read from Apple Music, with no account, key or Worker needed, so a friend who only has Apple Music (or nothing at all) gets real tracklists and covers instead of MusicBrainz\u2019s. Settings has a new Import source card: Automatic (Spotify when it is connected, Apple Music when it is not), Apple Music, or MusicBrainz only. Apple\u2019s releases are reshaped to look like Spotify\u2019s, so the same rules fold deluxe, clean and explicit editions into one album, keep deluxe songs inside the standard album and leave out remixes and live albums unless you ask. When Spotify says it is out of quota, the error now offers Use Apple Music this time next to MusicBrainz. Apple allows about 20 lookups a minute, so a big artist takes a few extra seconds; tracklists are saved on this device so a repeat run is quicker. Artist photos still come from Spotify, so Apple-only artists show an album cover instead.'},
   {v:'2026.11.14-k', note:'SHARE RECORD MATCHES THE APP: the record on the share card (still and animated) now has one groove per song like the record in the app, and the songs you have heard light up in the cover\u2019s color. In the animation they light one after another as the record slides out.'},
   {v:'2026.11.14-j', note:'SEARCH ALBUMS TOO: the search box on the Music tab now finds albums as well as artists. Type part of an album title (or the artist and the title together) and an Albums section appears above the matching artists, with each cover, its artist, year and your rating. Tap one to open that artist and jump to the album. Enter still opens the top artist match, or the first album if no artist matches. Singles stay out of the album results.'},
   {v:'2026.11.14-i', note:'QUIETER BANNERS: the + collab and + date rated links are gone from every album banner. Add or change a collab credit or the date rated from the \u22ef menu at the bottom of the album; the form opens up on the banner. A collab credit or date you have set still shows on the banner.'},
@@ -2153,10 +2154,10 @@ function mbMerge(art,incoming,versions,tidy,sp){
   const oldR=a.groups.map(g=>[nTitle(g.title),rating(g.id)]).filter(x=>x[1]);
   const oldX=a.groups.map(g=>[nTitle(g.title),rating(dxId(g))]).filter(x=>x[1]);
   a.groups=[...groups,...manual];
-  const fromSp=tidy?a.src==='sp':!!sp;
-  if(kept.length)a.groups.push({id:sid(a.id,'kept'),src:'kept',title:'Kept from your earlier list',year:'—',kind:fromSp?'Not on Spotify':'Not in the MusicBrainz import',items:kept});
-  a.mbid=art.id;if(!tidy){a.name=ARTIST_SHOW[nArtist(art.name)]||(sp&&sp.name)||art.name;if(sp)a.snameAt=Date.now();a.mbVersions=!!versions;a.mbAt=Date.now();a.src=sp?'sp':'mb';if(sp){a.spid=sp.id;if(sp.img)a.simg=sp.img}if(art.aka){a.akaAt=Date.now()}}
-  akaSet(a,art,sp,prevName);
+  const srcKey=tidy?(a.src||'mb'):(sp?(sp.am?'am':'sp'):'mb'),fromSp=srcKey!=='mb';
+  if(kept.length)a.groups.push({id:sid(a.id,'kept'),src:'kept',title:'Kept from your earlier list',year:'—',kind:srcKey==='am'?'Not on Apple Music':fromSp?'Not on Spotify':'Not in the MusicBrainz import',items:kept});
+  a.mbid=art.id;if(!tidy){a.name=ARTIST_SHOW[nArtist(art.name)]||(sp&&!sp.am&&sp.name)||art.name;if(sp&&!sp.am)a.snameAt=Date.now();a.mbVersions=!!versions;a.mbAt=Date.now();a.src=srcKey;if(sp&&!sp.am){a.spid=sp.id;if(sp.img)a.simg=sp.img}if(sp&&sp.am){a.amid=sp.id;a.amname=sp.name}if(art.aka){a.akaAt=Date.now()}}
+  akaSet(a,art,sp&&!sp.am?sp:null,prevName);
   for(const g of a.groups){if(rating(g.id))continue;const o=oldR.find(x=>x[0]===nTitle(g.title));if(o)S.marks[g.id]={...(S.marks[g.id]||{}),r:o[1]}}
   for(const g of a.groups){if(!hasDx(g)||rating(dxId(g)))continue;
     /* its own deluxe rating from before, or the rating of the separate deluxe album it has just absorbed */
@@ -2165,7 +2166,7 @@ function mbMerge(art,incoming,versions,tidy,sp){
   applyPending(a);
   linkTwins();
   const all=groups.flatMap(g=>g.items),kinds={};groups.forEach(g=>kinds[g.kind]=(kinds[g.kind]||0)+1);
-  return{aid:a.id,name:a.name,kinds,songs:all.length,added:all.filter(i=>!before.has(i.id)).length,kept:kept.length,dropped,folded,src:fromSp?'sp':'mb'};
+  return{aid:a.id,name:a.name,kinds,songs:all.length,added:all.filter(i=>!before.has(i.id)).length,kept:kept.length,dropped,folded,src:srcKey};
 }
 /* ---- undo for imports: before an import changes an artist that is already in your log, the artist
    and the marks on its releases and songs are saved on this device (IndexedDB, last 8 artists), so
@@ -2198,11 +2199,11 @@ function mbReportText(r){
   const names={'Studio album':['studio album','studio albums'],'EP':['EP','EPs'],'Single':['single','singles'],'Compilation':['compilation','compilations'],'Live':['live release','live releases'],'Other':['other release','other releases']};
   const parts=MB_KIND_ORDER.filter(k=>r.kinds[k]).map(k=>r.kinds[k]+' '+names[k][r.kinds[k]===1?0:1]);
   let s=r.name+': '+parts.join(', ')+' · '+r.songs+' songs'+(r.added===r.songs?'.':'. '+r.added+' new, '+(r.songs-r.added)+' were already in your log with their checkmarks and ratings.');
-  const where=r.src==='sp'?'on Spotify':'on MusicBrainz';
-  if(r.src==='sp')s=r.name+' (tracklists from Spotify): '+s.slice(r.name.length+2);
+  const where='on '+SRC_NAME[r.src||'mb'];
+  if(r.src==='sp'||r.src==='am')s=r.name+' (tracklists from '+SRC_NAME[r.src]+'): '+s.slice(r.name.length+2);
   if(r.kept)s+=' '+r.kept+' song'+(r.kept===1?'':'s')+' you had marked '+(r.kept===1?"isn't":"aren't")+' '+where+', so '+(r.kept===1?'it stays':'they stay')+' in “Kept from your earlier list”.';
   if(r.folded)s+=' '+r.folded+' song'+(r.folded===1?'':'s')+' you had marked '+(r.folded===1?'was':'were')+' listed under a slightly different title, so '+(r.folded===1?'it moved':'they moved')+' onto the matching song with '+(r.folded===1?'its':'their')+' checkmark and rating.';
-  if(r.dropped)s+=' '+r.dropped+' unmarked song'+(r.dropped===1?' from the old list was':'s from the old list were')+' not '+(r.src==='sp'?'on Spotify':'found')+' and removed.';
+  if(r.dropped)s+=' '+r.dropped+' unmarked song'+(r.dropped===1?' from the old list was':'s from the old list were')+' not '+(r.src==='sp'||r.src==='am'?where:'found')+' and removed.';
   return s;
 }
 
@@ -2218,17 +2219,18 @@ async function mbSearch(q){
   }catch(e){MBX.err=mbMessage(e,q)}
   MBX.searching=false;MBX.cancel=false;render();
 }
-async function mbImport(art,where,forceMb){
+async function mbImport(art,where,forceMb,forceSrc){
   if(MBX.busy)return;
   const findExisting=()=>S.music.find(x=>x.mbid===art.id)||S.music.find(x=>x.id===sid('artist',art.name)&&!x.mbid)||S.music.find(x=>!x.mbid&&nArtist(x.name)===nArtist(art.name));
   let existing=findExisting();
   Object.assign(MBX,{busy:true,cancel:false,err:'',report:'',spFallback:null,where,errWhere:where,aid:existing?existing.id:null,name:art.name,step:'Asking MusicBrainz',n:0,of:0,note:''});render();
-  let phase='mb',hint=forceMb?' This one came from MusicBrainz because Spotify was not available. Tap Rebuild from Spotify later for its covers and exact tracklists.':'';
+  const want=importSource(),pick=forceMb?'mb':(forceSrc||want);
+  let phase='mb',hint=forceMb?' This one came from MusicBrainz because '+SRC_NAME[want==='mb'?'sp':want]+' was not available. Tap Rebuild from '+SRC_NAME[want==='mb'?'sp':want]+' later for its covers and exact tracklists.':forceSrc==='am'?' This one came from Apple Music because Spotify was not available. Tap Rebuild from Spotify later for Spotify\u2019s own tracklists and covers.':'';
   try{
     let groups=null,sp=null;
     if(!art.aka){try{art.aka=mbAkas(await mbGet('artist/'+art.id,{inc:'aliases'}))}catch(e){if(e.code==='cancel')throw e;art.aka=(existing&&existing.aka)||[]}}   /* his other names, so Spotify and your RYM list land on the same artist */
     akaRemember(art);existing=findExisting();
-    if(!forceMb&&spCanImport()){
+    if(pick==='sp'){
       phase='sp';
       try{const c=await spFetchCatalog(art,existing);
         MBX.step='Sorting out duplicates';mbProgress();
@@ -2237,7 +2239,17 @@ async function mbImport(art,where,forceMb){
         if(!groups.length){groups=null;sp=null;hint=' Spotify had no releases for this artist, so this came from MusicBrainz.'}}
       catch(e){if(e.code!=='nomatch')throw e;hint=' Could not find '+art.name+' on Spotify, so this came from MusicBrainz.'}
       phase='mb';
-    }else if(spCid()&&syncOn()&&(SY.wv||0)===3)hint=' Paste the updated sync Worker into Cloudflare to get tracklists straight from Spotify.';
+    }else if(pick==='am'){
+      phase='am';
+      try{const c=await amFetchCatalog(art,existing);
+        MBX.step='Sorting out duplicates';mbProgress();
+        groups=spBuild(c.albums,c.artist.id,MBX.versions);sp=c.artist;
+        if(c.cached)hint+=' '+c.cached+' of '+c.albums.length+' tracklists came from copies saved on this device, so Apple Music was only asked for '+(c.albums.length-c.cached)+'.';
+        if(!groups.length){groups=null;sp=null;hint=' Apple Music had no releases for this artist, so this came from MusicBrainz.'}}
+      catch(e){if(e.code!=='nomatch')throw e;hint=' Could not find '+art.name+' on Apple Music, so this came from MusicBrainz.'}
+      phase='mb';
+      if(spCid()&&syncOn()&&(SY.wv||0)===3&&!(S.cfg&&S.cfg.importSrc))hint+=' Paste the updated sync Worker into Cloudflare to get tracklists straight from Spotify.';
+    }
     if(!groups){
       const rels=await mbFetchCatalog(art.id);
       if(MBX.cancel)throw MBError('cancel');
@@ -2252,8 +2264,8 @@ async function mbImport(art,where,forceMb){
     UI.tab='music';UI.sel.music=r.aid;UI.filter='all';
     try{localStorage.setItem(KEY+'_tab','music')}catch(e){}
     Object.assign(MBX,{report:mbReportText(r)+hint,results:null,pick:null,q:'',errWhere:'sheet',aid:r.aid});
-  }catch(e){MBX.err=phase==='sp'&&e.code!=='cancel'?spImportMessage(e):mbMessage(e,art.name);
-    MBX.spFallback=phase==='sp'&&['quota','limited','busy','network'].includes(e.code)?art:null}   /* offer the other source */
+  }catch(e){MBX.err=phase==='sp'&&e.code!=='cancel'?spImportMessage(e):phase==='am'&&e.code!=='cancel'?amImportMessage(e):mbMessage(e,art.name);
+    MBX.fbFrom=phase;MBX.spFallback=(phase==='sp'||phase==='am')&&['quota','limited','busy','network'].includes(e.code)?art:null}   /* offer the other source */
   finally{MBX.busy=false;MBX.cancel=false;render()}
   /* on a phone the sheet sits below the sidebar: bring the result into view */
   if(MBX.errWhere==='sheet'&&window.innerWidth<=760){const el=document.querySelector('.mbok,.sheet .mberr');if(el)el.scrollIntoView({behavior:'smooth',block:'center'})}
@@ -2268,9 +2280,10 @@ function mbProgHtml(){
 }
 const mbFallbackBtn=()=>{
   if(!MBX.err||!MBX.spFallback||MBX.busy)return '';
-  const a=S.music.find(x=>x.mbid===MBX.spFallback.id),sp=a&&a.src==='sp';
-  return '<div><button class="btn" data-act="mbviamb">'+(sp?'Replace with MusicBrainz (you can undo)':'Use MusicBrainz this time')+'</button></div>'+
-    (sp?'<p class="note">This rebuilds the artist\u2019s releases from MusicBrainz, which groups them differently and has no Spotify covers or deluxe songs. Undo last import puts it back.</p>':'')};
+  const a=S.music.find(x=>x.mbid===MBX.spFallback.id),sp=a&&(a.src==='sp'||a.src==='am');
+  return (MBX.fbFrom==='sp'?'<div><button class="btn" data-act="mbviaam">'+(sp?'Replace with Apple Music (you can undo)':'Use Apple Music this time')+'</button></div>':'')+
+    '<div><button class="btn" data-act="mbviamb">'+(sp?'Replace with MusicBrainz (you can undo)':'Use MusicBrainz this time')+'</button></div>'+
+    (sp?'<p class="note">This rebuilds the artist\u2019s releases from another source, which groups them a little differently and has different covers and deluxe songs. Undo last import puts it back.</p>':'')};
 function mbProgress(){const el=document.getElementById('mbprog');if(el)el.outerHTML=mbProgHtml()}
 function mbSide(){
   if(MBX.busy&&MBX.where==='side')return mbProgHtml();
@@ -2282,7 +2295,7 @@ function mbSide(){
   if(MBX.pick){const x=MBX.pick,have=S.music.find(a=>a.mbid===x.id)||S.music.find(a=>a.id===sid('artist',x.name)&&!a.mbid)||S.music.find(a=>!a.mbid&&nArtist(a.name)===nArtist(x.name));
     h+=`<div class="mbpick"><div><b>${esc(x.name)}</b><span class="mbsub">${esc([x.aka&&x.aka.length&&'also '+x.aka.slice(0,2).join(', '),x.dis,x.country,x.begin&&'since '+x.begin].filter(Boolean).join(' · '))}</span></div>
       <label class="tick"><input type="checkbox" id="mb-ver" ${MBX.versions?'checked':''} ${MBX.busy?'disabled':''}> Include live albums, remixes and alternate versions</label>
-      <p class="note">${have?'You already have '+esc(have.name)+'. Missing releases get added and every checkmark and rating stays where it is.':'Every official release, sorted into albums, EPs, singles and the rest.'}${spCanImport()?' Tracklists come from Spotify, so only songs you can play there are listed.':''}</p>
+      <p class="note">${have?'You already have '+esc(have.name)+'. Missing releases get added and every checkmark and rating stays where it is.':'Every official release, sorted into albums, EPs, singles and the rest.'}${importSource()==='sp'?' Tracklists come from Spotify, so only songs you can play there are listed.':importSource()==='am'?' Tracklists come from Apple Music, so only songs you can play there are listed.':''}</p>
       <div class="tools"><button type="button" class="btn primary" data-act="mbgo" ${MBX.busy?'disabled':''}>${have?'Update '+esc(have.name):'Import'}</button><button type="button" class="btn" data-act="mbback">Back</button></div></div>`}
   else if(MBX.results)h+=`<div class="mbres" role="list">${MBX.results.map((x,k)=>`<button type="button" class="mbhit" role="listitem" data-act="mbpick" data-i="${k}"><b>${esc(x.name)}${k===0?'<span class="tag">Best match</span>':''}</b><span class="mbsub">${esc([x.aka&&x.aka.length&&'also '+x.aka.slice(0,2).join(', '),x.dis,x.type,x.country,x.begin&&'since '+x.begin].filter(Boolean).join(' · ')||'No details on MusicBrainz')}</span></button>`).join('')}</div>`;
   return h;
@@ -3026,7 +3039,7 @@ function spBuild(albums,artistId,versions){
     const live=SP_LIVE.test(nm)||(tr.length>2&&tr.filter(t=>SP_LIVE.test(t.name)).length>tr.length/2);
     const alt=/\b(remix(es|ed)?|instrumentals|karaoke|demos)\b/i.test(nm);
     if((live||alt)&&!versions)continue;
-    const kind=live?'Live':type==='compilation'?'Compilation':alt?'Other':type==='album'?'Studio album':(/\bEP\b/.test(nm)||tr.length>=4)?'EP':'Single';
+    const kind=live?'Live':type==='compilation'?'Compilation':alt?'Other':type==='album'?'Studio album':(/\bEP\b/.test(nm)||al.ep||tr.length>=4)?'EP':'Single';
     const ek=kind+'|'+spEd(nm);
     if(!byEd.has(ek))byEd.set(ek,[]);
     byEd.get(ek).push({al,tr,kind,date:mbDateKey(al.release_date)});
@@ -3042,6 +3055,140 @@ function spBuild(albums,artistId,versions){
       rep:rep.tr.map(T),others:eds.slice(1).flatMap(e=>e.tr.map(T)),eds:eds.slice(1).map(e=>e.tr.map(T)),...spDeluxeLook(eds.slice(1),rep.al.name),items:[]});
   }
   return mbClaim(edFold(entries,true),versions);
+}
+/* ---------- Apple Music catalog (no sign-in, no key, no Worker) ----------
+   Apple's public iTunes Search/Lookup API carries the catalog Apple Music shows, and the browser may call it
+   directly. Apple allows roughly 20 calls a minute per device, so a run waits about 3 s between calls and asks
+   for ten tracklists at a time. Apple's answers are reshaped into the form Spotify's come in, so spBuild() folds
+   editions, drops remixes and live albums and finds deluxe songs exactly the same way for both. */
+const AM_API='https://itunes.apple.com/';
+let amLast=0,amGap=3200;
+const amCountry=()=>{const c=String((S.cfg&&S.cfg.appleCountry)||(navigator.language||'').split('-')[1]||'us').toLowerCase();return /^[a-z]{2}$/.test(c)?c:'us'};
+function AMError(code,status){const e=new Error(code);e.code=code;e.status=status;return e}
+async function amApi(path,params){
+  const u=AM_API+path+'?'+new URLSearchParams({...params,country:amCountry()});
+  for(let tries=0;;tries++){
+    const wait=amLast+amGap-Date.now();if(wait>0)await mbSleep(wait);
+    if(MBX.cancel)throw MBError('cancel');
+    amLast=Date.now();let r;
+    try{r=await fetch(u)}catch(e){throw AMError('network')}
+    if(r.status===403||r.status===429||r.status===503){          /* over the per-minute allowance: wait it out */
+      if(tries>=3)throw AMError('limited',r.status);
+      for(let left=15+tries*15;left>0;left--){
+        if(MBX.cancel)throw MBError('cancel');
+        MBX.note='Apple Music asked for a pause · retrying in '+left+'s';mbProgress();await mbSleep(1000);
+      }
+      MBX.note='';continue;
+    }
+    if(!r.ok)throw AMError('http',r.status);
+    try{const j=await r.json();return j.results||[]}catch(e){throw AMError('http',r.status)}
+  }
+}
+const amRe=s=>String(s).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+const AM_SEP=/\s*(?:,|&|\+|\band\b|\bx\b|×|\bwith\b|\bfeat(?:uring|\.)?|\bft\.?)\s*/i;
+/* "Bruno Mars, Anderson .Paak & Silk Sonic" -> people, with this artist (matched by name, so "Earth, Wind & Fire"
+   survives) given the artist's ID, the way Spotify lists them */
+function amPeople(credit,artistId,selves){
+  let s=' '+String(credit||'')+' ',me=null;
+  for(const n of selves){
+    const re=new RegExp('(^|[^\\p{L}\\p{N}])'+amRe(n)+'(?=$|[^\\p{L}\\p{N}])','iu');
+    if(re.test(s)){s=s.replace(re,'$1 ');me=n;break}
+  }
+  const out=me?[{id:artistId,name:me}]:[];
+  for(const n of s.split(AM_SEP).map(x=>x.trim()).filter(Boolean))out.push({id:'n:'+nrm(n),name:n});
+  return out;
+}
+const AM_FEAT=/\s*[\(\[]\s*(?:feat\.?|ft\.?|featuring)\s+([^\)\]]+)[\)\]]/ig;
+function amTrack(t,artistId,selves){
+  const feats=[],raw=String(t.trackName||'');
+  const name=raw.replace(AM_FEAT,(m,x)=>{x.split(AM_SEP).map(y=>y.trim()).filter(Boolean).forEach(n=>feats.push(n));return ''}).trim()||raw;
+  const ppl=amPeople(t.artistName,artistId,selves);
+  for(const n of feats){
+    if(selves.some(m=>nrm(m)===nrm(n))){if(!ppl.some(p=>p.id===artistId))ppl.push({id:artistId,name:n});continue}
+    if(!ppl.some(p=>nrm(p.name)===nrm(n)))ppl.push({id:'n:'+nrm(n),name:n});
+  }
+  return{name,explicit:t.trackExplicitness==='explicit',is_playable:t.isStreamable!==false,type:'track',artists:ppl};
+}
+/* Apple calls every release an "Album"; singles and EPs are told apart by a " - Single" / " - EP" ending on the title */
+function amAlbum(c,artistId,selves){
+  const raw=String(c.collectionName||''),suf=raw.match(/\s+-\s+(?:Deluxe\s+)?(Single|EP)$/i);
+  const name=(suf?raw.slice(0,suf.index).trim():raw)||raw;
+  const comp=!suf&&/\b(greatest hits|best of|anthology|essentials|the collection|the singles)\b/i.test(name);
+  return{id:'am:'+c.collectionId,name,album_type:suf?'single':comp?'compilation':'album',ep:!!(suf&&/^ep$/i.test(suf[1])),
+    release_date:String(c.releaseDate||'').slice(0,10),total_tracks:c.trackCount||0,artists:amPeople(c.artistName,artistId,selves),
+    img:String(c.artworkUrl100||'').replace(/\/\d+x\d+(?:bb)?\.(?:jpg|png|webp)$/i,'/400x400bb.jpg')};
+}
+async function amFetchCatalog(art,existing){
+  const alias=ARTIST_SHOW[nArtist(art.name)];
+  let id=!alias&&existing&&existing.amid?String(existing.amid):'',name=(existing&&existing.amname)||art.name;
+  amGap=3200;
+  MBX.step='Finding the artist on Apple Music';MBX.n=0;MBX.of=0;mbProgress();
+  const names=[alias||art.name,...((art.aka)||(existing&&existing.aka)||[])].slice(0,4);
+  if(!id){
+    const keys=new Set([nArtist(art.name),...names.map(nArtist)]);let hit=null;
+    for(const q of names){
+      const list=await amApi('search',{term:q,entity:'musicArtist',limit:10});
+      hit=list.find(x=>x&&x.artistId&&keys.has(nArtist(x.artistName)));      /* the first exact name Apple lists */
+      if(hit)break;
+    }
+    if(!hit)throw AMError('nomatch');
+    id=String(hit.artistId);name=hit.artistName;
+  }
+  const selves=[...new Set([name,...names].filter(Boolean))];
+  MBX.step='Reading releases';mbProgress();
+  const res=await amApi('lookup',{id,entity:'album',limit:200});
+  const albums=[],seen=new Set();
+  for(const c of res){
+    if(!c||c.wrapperType!=='collection'||!c.collectionId||seen.has(c.collectionId))continue;seen.add(c.collectionId);
+    const al=amAlbum(c,id,selves);
+    if(!al.artists.some(p=>p.id===id))continue;                               /* songs by someone else that only feature this artist */
+    if(!MBX.versions&&(/\b(remix(es|ed)?|instrumentals?|karaoke|demos)\b/i.test(al.name)||SP_LIVE.test(al.name)))continue;   /* spares calls: spBuild would drop these anyway */
+    albums.push(al);
+  }
+  MBX.step='Reading tracklists';MBX.n=0;MBX.of=albums.length;mbProgress();
+  const C=await spcLoad();let cached=0;const need=[];
+  for(const al of albums){
+    const c=C[al.id+'@'+id];
+    if(spcFresh(c,al)){al.tracks=c.t.map(spcUnpack);al.img=c.img||al.img;cached++;MBX.n++}else need.push(al);
+  }
+  mbProgress();
+  try{
+    for(let i=0;i<need.length;i+=10){
+      const part=need.slice(i,i+10);
+      const rows=await amApi('lookup',{id:part.map(a=>a.id.slice(3)).join(','),entity:'song',limit:200});
+      const by=new Map();
+      for(const r of rows){if(!r||r.wrapperType!=='track'||!r.collectionId)continue;const k='am:'+r.collectionId;if(!by.has(k))by.set(k,[]);by.get(k).push(r)}
+      for(const al of part){
+        const tr=(by.get(al.id)||[]).sort((a,b)=>(a.discNumber||1)-(b.discNumber||1)||(a.trackNumber||0)-(b.trackNumber||0)).map(t=>amTrack(t,id,selves));
+        al.tracks=tr;
+        if(tr.length&&(!al.total_tracks||tr.length>=al.total_tracks)){C[al.id+'@'+id]={n:al.total_tracks||tr.length,at:Date.now(),img:al.img,t:tr.map(spcPack)};SPC.dirty=true}   /* a short answer is not saved, so the next run asks again */
+        MBX.n++;
+      }
+      mbProgress();spcSave();
+    }
+  }finally{spcSave()}
+  return{artist:{id,name,img:'',am:true},albums,cached};
+}
+function amImportMessage(e){
+  if(e.code==='network')return 'Could not reach Apple Music. Check your connection and try again. Nothing in your log was changed.';
+  if(e.code==='limited')return 'Apple Music limits how often Playback can look things up (about 20 a minute). Wait a minute or two and try again. Albums already read are saved on this device, so the next try picks up where this one stopped. Nothing in your log was changed.';
+  if(e.code==='http')return 'Apple Music sent back an error ('+(e.status||'?')+'). Try again in a few minutes. Nothing in your log was changed.';
+  return 'Apple Music import stopped. Nothing in your log was changed.';
+}
+/* which catalog an import reads: Spotify when it is connected, otherwise Apple Music; MusicBrainz is the backup for both */
+const SRC_NAME={sp:'Spotify',am:'Apple Music',mb:'MusicBrainz'};
+function importSource(){
+  const p=(S.cfg&&S.cfg.importSrc)||'';
+  if(p==='mb')return 'mb';
+  if(p==='apple')return 'am';
+  return spCanImport()?'sp':'am';
+}
+function srcSide(){
+  const p=(S.cfg&&S.cfg.importSrc)||'',want=importSource();
+  const b=(v,l)=>`<button type="button" class="btn${p===v?' primary':''}" data-act="impsrc" data-v="${v}" aria-pressed="${p===v}">${l}</button>`;
+  return `<p class="note">Where Playback reads an artist’s albums and tracklists when you import or update one. Automatic uses Spotify when it is connected below and Apple Music when it is not. Apple Music needs no account or setup. MusicBrainz is the backup if the first choice has no answer.</p>
+    <div class="tools">${b('','Automatic')}${b('apple','Apple Music')}${b('mb','MusicBrainz only')}</div>
+    <p class="note">Right now imports read from <b>${SRC_NAME[want]}</b>.</p>`;
 }
 /* artist name -> songs, keyed the same way the MusicBrainz import keys them */
 function spIndex(){
@@ -4230,6 +4377,7 @@ function settingsView(){return `
   <section class="settings" aria-labelledby="set-h">
     <h2 id="set-h">Settings</h2>
     <p class="note">Setup and housekeeping. Everything here syncs with the rest of your log.</p>
+    <div class="setcard"><h3>Import source</h3>${srcSide()}</div>
     <div class="setcard"><h3>Spotify</h3>${spSide()}</div>
     <div class="setcard"><h3>Rate Your Music</h3>${rymSide()}${rtSide()}</div>
     <div class="setcard"><h3>Sync &amp; data</h3>
@@ -4756,8 +4904,8 @@ function mbArtistBar(a){
   const isRH=a.id===sid('artist','radiohead');
   let h='';
   if(MBX.busy&&MBX.where==='sheet'&&MBX.aid===a.id)h+=mbProgHtml();
-  else if(a.mbid)h+=`<div class="mbsrc"><span class="label">From ${a.src==='sp'?'Spotify':'MusicBrainz'} · ${a.mbAt?'updated '+esc(new Date(a.mbAt).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'})):'imported'}${a.mbVersions?' · with other versions':''}</span>
-      <button class="link" data-act="mbrefresh" data-a="${a.id}" ${MBX.busy?'disabled':''}>${a.src!=='sp'&&spCanImport()?'Rebuild from Spotify':'Check for new releases'}</button></div>`;
+  else if(a.mbid)h+=`<div class="mbsrc"><span class="label">From ${SRC_NAME[a.src||'mb']} · ${a.mbAt?'updated '+esc(new Date(a.mbAt).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'})):'imported'}${a.mbVersions?' · with other versions':''}</span>
+      <button class="link" data-act="mbrefresh" data-a="${a.id}" ${MBX.busy?'disabled':''}>${importSource()!=='mb'&&(a.src||'mb')!==importSource()?'Rebuild from '+SRC_NAME[importSource()]:'Check for new releases'}</button></div>`;
   else if(isRH)h+=`<div class="mbsrc warn"><p class="note">The non-album lists here were typed by hand and aren't verified. Replacing them with MusicBrainz's list keeps every checkmark and rating you have.</p>
       <div><button class="btn primary" data-act="mbrefresh" data-a="${a.id}" ${MBX.busy?'disabled':''}>Replace with the verified MusicBrainz list</button></div></div>`;
   else h+=`<div class="mbsrc"><span class="label">Added by hand</span><button class="link" data-act="mbprefill" data-a="${a.id}" ${MBX.busy?'disabled':''}>Find on MusicBrainz</button></div>`;
@@ -4946,6 +5094,8 @@ document.addEventListener('click',ev=>{
   else if(act==='mbcancel'){MBX.cancel=true;MBX.note='cancelling';mbProgress();return}
   else if(act==='mbdismiss'){MBX.report='';MBX.err=''}
   else if(act==='mbundo'){const aid=b.dataset.a;if(UI.undoArm!==aid){UI.undoArm=aid}else{UI.undoArm=null;if(undoApply(aid)){MBX.report='Put back as it was before the last import.';MBX.err='';MBX.aid=aid;MBX.errWhere='sheet'}}}
+  else if(act==='impsrc'){S.cfg=S.cfg||{};const v=b.dataset.v||'';if(v)S.cfg.importSrc=v;else delete S.cfg.importSrc;touch();return}
+  else if(act==='mbviaam'){const art=MBX.spFallback;if(!art||MBX.busy)return;MBX.spFallback=null;mbImport(art,MBX.errWhere==='side'?'side':'sheet',false,'am');return}
   else if(act==='mbviamb'){const art=MBX.spFallback;if(!art||MBX.busy)return;MBX.spFallback=null;mbImport(art,MBX.errWhere==='side'?'side':'sheet',true);return}
   else if(act==='mbrefresh'){const a=S.music.find(x=>x.id===b.dataset.a);if(!a)return;
     const mbid=a.mbid||(a.id===sid('artist','radiohead')?RH_MBID:null);if(!mbid)return;
