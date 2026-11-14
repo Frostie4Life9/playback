@@ -336,8 +336,11 @@ details.gmore[open] summary,details.gmore summary:hover{opacity:1;background:var
 details.gmore .btn{display:block;margin:4px 0 8px auto}
 /* share card */
 .shr{position:fixed;inset:0;z-index:140;display:flex;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));background:rgb(6 9 8 / .72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
-.shr-box{width:min(420px,100%);max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:14px;background:var(--bg);border:1px solid var(--line);border-radius:24px;padding:16px;box-shadow:0 24px 60px rgb(0 0 0 / .45)}
-.shr-box img,.shr-box canvas{display:block;width:100%;height:auto;border-radius:16px;background:var(--sunk);aspect-ratio:4/5}
+.shr-box{width:min(420px,100%);max-height:100%;overflow:hidden;display:flex;flex-direction:column;gap:14px;background:var(--bg);border:1px solid var(--line);border-radius:24px;padding:16px;box-shadow:0 24px 60px rgb(0 0 0 / .45)}
+.shr-prev{flex:1 1 auto;min-height:0;overflow:auto;border-radius:16px;-webkit-overflow-scrolling:touch}
+.shr-box img{display:block;width:100%;height:auto;border-radius:16px;background:var(--sunk)}
+.shr-tog{display:flex;align-items:center;gap:10px;min-height:40px;font-size:14px;font-weight:500;color:var(--ink);cursor:pointer}
+.shr-tog input{width:20px;height:20px;accent-color:var(--accent,#0f7a74)}
 .shr-acts{display:flex;gap:10px}
 .shr-acts .btn{flex:1;min-height:48px}
 .shr-note{margin:0;text-align:center;font-size:13px;color:var(--muted)}
@@ -1299,6 +1302,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.13-t', note:'SONGS ON THE SHARE CARD: the share card now lists every song with its rating, in track order, each on a bar that fills with the score. Switch off Show every song rating under the picture for the short card with just your favorites.'},
   {v:'2026.11.13-s', note:'SHARE YOUR RATING: under each album you have rated there is now a Share button. It makes a picture of your rating with the cover, your album number, your song average and your favorite songs, then opens your phone\u2019s share sheet so you can send it to a friend in Messages (on a computer it saves the picture instead). The three dots at the bottom of an album also moved: they now sit in line with the rating circles above them instead of floating at the edge.'},
   {v:'2026.11.13-r', note:'RATING SLIDES SOONER: the number now starts flying into its circle right after a quick lift, while the slider is still folding away, instead of waiting for it to finish.'},
   {v:'2026.11.13-q', note:'RATING LANDS IN ITS CIRCLE: when you rate a song or album for the first time and close the slider (Done, or tapping another song), the big number now lifts off the slider and flies into its circle instead of popping in. The ring then draws itself around it and the circle gives a small bump. Changing an existing rating still follows your finger live, as before.'},
@@ -4411,11 +4415,11 @@ function shareBtn(g,a){
 function shMix(h,t){const n=parseInt(h.slice(1),16),c=[n>>16&255,n>>8&255,n&255];return c.map(v=>Math.round(t>0?v+(255-v)*t:v*(1+t)))}
 function shRound(x,l,t,w,h,r){x.beginPath();x.moveTo(l+r,t);x.arcTo(l+w,t,l+w,t+h,r);x.arcTo(l+w,t+h,l,t+h,r);x.arcTo(l,t+h,l,t,r);x.arcTo(l,t,l+w,t,r);x.closePath()}
 function shFit(x,txt,max){if(x.measureText(txt).width<=max)return txt;while(txt.length>1&&x.measureText(txt+'…').width>max)txt=txt.slice(0,-1);return txt.trim()+'…'}
-async function shareDraw(a,g){
-  const f=shareInfo(a,g),W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
+async function shareDraw(a,g,withSongs){
+  const f=shareInfo(a,g),W=1080,n=f.its.length,two=n>6,rows=two?Math.ceil(n/2):n,songs=!!withSongs&&n>0,H=songs?1330+rows*66:1350,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
   const sArt=g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-500':''),art=f.dx?(g.dxImg||sArt):sArt;
   const base=(f.dx&&g.dxImg&&g.dxImg!==sArt?ACOL[g.id+'~dx']:ACOL[g.id])||acolFallback(g);
-  try{await Promise.all(['800 40px Archivo','500 40px Archivo','600 40px "JetBrains Mono"'].map(q=>document.fonts.load(q)))}catch(e){}
+  try{await Promise.race([Promise.all(['800 40px Archivo','500 40px Archivo','600 40px "JetBrains Mono"'].map(q=>document.fonts.load(q))),new Promise(r=>setTimeout(r,1200))])}catch(e){}
   const img=await new Promise(res=>{if(!art)return res(null);const im=new Image();im.crossOrigin='anonymous';im.onload=()=>res(im);im.onerror=()=>res(null);im.src=art;setTimeout(()=>res(null),6000)});
   const top=shMix(base,.14),bot=shMix(base,-.32),lum=(.299*top[0]+.587*top[1]+.114*top[2])/255,ink=lum>.62?'#16201b':'#ffffff',inkSoft=lum>.62?'rgb(22 32 27 / .66)':'rgb(255 255 255 / .74)';
   const gr=x.createLinearGradient(0,0,W*.35,H);gr.addColorStop(0,`rgb(${top})`);gr.addColorStop(1,`rgb(${bot})`);x.fillStyle=gr;x.fillRect(0,0,W,H);
@@ -4441,7 +4445,7 @@ async function shareDraw(a,g){
   x.fillStyle=inkSoft;x.font='500 38px Archivo,sans-serif';y+=58;
   x.fillText(shFit(x,a.name+(g.w&&g.w.length?' & '+g.w.join(' & '):''),W-220),110,y);
   /* rating ring + number */
-  const big=f.r||f.avg,ry=H-286,rr=92,rx=110+rr;
+  const big=f.r||f.avg,ry=1064,rr=92,rx=110+rr;
   x.lineWidth=16;x.lineCap='round';x.strokeStyle='rgb(255 255 255 / .22)';if(lum>.62)x.strokeStyle='rgb(0 0 0 / .14)';
   x.beginPath();x.arc(rx,ry,rr,0,7);x.stroke();
   x.strokeStyle=ink;x.beginPath();x.arc(rx,ry,rr,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,big/10));x.stroke();
@@ -4453,27 +4457,45 @@ async function shareDraw(a,g){
   x.fillText(shFit(x,sub,W-tx-110),tx,ry+34);
   /* favorites */
   const fav=f.rs.slice().sort((p,q)=>q.v-p.v).filter(z=>z.v>=8).slice(0,3);
-  if(fav.length){x.fillStyle=inkSoft;x.font='600 24px "JetBrains Mono",monospace';x.fillText('FAVORITES',110,H-104);
+  if(!songs&&fav.length){x.fillStyle=inkSoft;x.font='600 24px "JetBrains Mono",monospace';x.fillText('FAVORITES',110,H-104);
     x.fillStyle=ink;x.font='600 30px Archivo,sans-serif';x.fillText(shFit(x,fav.map(z=>z.t).join('  ·  '),W-220),110,H-62)}
+  /* every song, in order, with its rating and a bar that fills with the score */
+  if(songs){
+    const y0=ry+rr+80,gap=8,rh=58,cw=two?(W-220-40)/2:W-220;
+    x.textAlign='left';x.textBaseline='alphabetic';x.fillStyle=inkSoft;x.font='600 24px "JetBrains Mono",monospace';x.fillText('SONG RATINGS',110,y0);
+    f.its.forEach((it,k)=>{
+      const col2=two&&k>=rows,cx=110+(col2?cw+40:0),cy=y0+24+(col2?k-rows:k)*(rh+gap),v=rating(it.id);
+      x.save();shRound(x,cx,cy,cw,rh,16);x.fillStyle=lum>.62?'rgb(0 0 0 / .07)':'rgb(255 255 255 / .09)';x.fill();x.clip();
+      if(v){x.fillStyle=lum>.62?'rgb(0 0 0 / .14)':'rgb(255 255 255 / .2)';x.fillRect(cx,cy,cw*Math.min(1,v/10),rh)}x.restore();
+      x.textAlign='left';x.fillStyle=inkSoft;x.font='500 22px Archivo,sans-serif';x.fillText(String(k+1),cx+18,cy+rh/2+8);
+      x.fillStyle=ink;x.font='500 27px Archivo,sans-serif';x.fillText(shFit(x,(it.title||'').trim(),cw-160),cx+62,cy+rh/2+9);
+      x.textAlign='right';x.font='700 28px Archivo,sans-serif';x.fillStyle=v?ink:inkSoft;x.fillText(v?fmt(v):'\u2013',cx+cw-18,cy+rh/2+10)})}
   const blob=await new Promise(r=>{try{c.toBlob(r,'image/png')}catch(e){r(null)}});
   return {canvas:c,blob,name:(a.name+' - '+name).replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'-')+'.png',text:'My '+f.what+' rating for '+name+' by '+a.name+': '+(f.r?fmt(f.r)+'/10':f.avg.toFixed(1)+'/10 song average')}}
 function shareClose(){const o=document.getElementById('shr');if(o){if(o._url)URL.revokeObjectURL(o._url);o.remove()}document.removeEventListener('keydown',shareKey)}
 function shareKey(e){if(e.key==='Escape')shareClose()}
 async function shareOpen(a,g){
   shareClose();const o=document.createElement('div');o.id='shr';o.className='shr';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-label','Share your rating');
-  o.innerHTML='<div class="shr-box"><div class="shr-prev" aria-live="polite"><p class="shr-note" style="padding:60px 0">Making your card…</p></div><div class="shr-acts"><button class="btn" data-sh="close">Close</button><button class="btn primary" data-sh="send" disabled>Share</button></div><p class="shr-note" hidden></p></div>';
+  const f=shareInfo(a,g);
+  o.innerHTML='<div class="shr-box"><div class="shr-prev" aria-live="polite"><p class="shr-note" style="padding:60px 0">Making your card\u2026</p></div>'+(f.its.length?'<label class="shr-tog"><input type="checkbox" data-sh="songs" checked>Show every song rating</label>':'')+'<div class="shr-acts"><button class="btn" data-sh="close">Close</button><button class="btn primary" data-sh="send" disabled>Share</button></div><p class="shr-note" hidden></p></div>';
   document.body.appendChild(o);document.addEventListener('keydown',shareKey);
   o.addEventListener('click',e=>{if(e.target===o||e.target.closest('[data-sh="close"]'))shareClose()});
-  let R;try{R=await shareDraw(a,g)}catch(e){R=null}
-  if(!document.getElementById('shr'))return;
-  const prev=o.querySelector('.shr-prev'),send=o.querySelector('[data-sh="send"]'),note=o.querySelector('.shr-box>.shr-note');
-  if(!R||!R.blob){prev.innerHTML='<p class="shr-note" style="padding:40px 0">The card could not be made. Try again in a moment.</p>';return}
-  o._url=URL.createObjectURL(R.blob);prev.innerHTML='<img alt="Your rating card for '+esc(g.title)+'" src="'+o._url+'">';
-  const file=new File([R.blob],R.name,{type:'image/png'}),canFile=!!(navigator.canShare&&navigator.canShare({files:[file]}));
-  send.disabled=false;send.textContent=canFile?'Share':'Save image';
-  send.addEventListener('click',async()=>{
-    if(canFile){try{await navigator.share({files:[file],text:R.text})}catch(e){if(e&&e.name==='AbortError')return;note.hidden=false;note.textContent='Sharing did not open. Press and hold the picture to save it.'}return}
-    const l=document.createElement('a');l.href=o._url;l.download=R.name;document.body.appendChild(l);l.click();l.remove();note.hidden=false;note.textContent='Saved. Attach it to a message to send it.'});
+  const prev=o.querySelector('.shr-prev'),send=o.querySelector('[data-sh="send"]'),note=o.querySelector('.shr-box>.shr-note'),tog=o.querySelector('[data-sh="songs"]');
+  let seq=0;
+  async function make(){
+    const my=++seq;send.disabled=true;note.hidden=true;
+    let R;try{R=await shareDraw(a,g,tog?tog.checked:false)}catch(e){R=null}
+    if(my!==seq||!document.getElementById('shr'))return;
+    if(!R||!R.blob){prev.innerHTML='<p class="shr-note" style="padding:40px 0">The card could not be made. Try again in a moment.</p>';return}
+    if(o._url)URL.revokeObjectURL(o._url);
+    o._url=URL.createObjectURL(R.blob);prev.innerHTML='<img alt="Your rating card for '+esc(g.title)+'" src="'+o._url+'">';
+    const file=new File([R.blob],R.name,{type:'image/png'}),canFile=!!(navigator.canShare&&navigator.canShare({files:[file]}));
+    send.disabled=false;send.textContent=canFile?'Share':'Save image';
+    send.onclick=async()=>{
+      if(canFile){try{await navigator.share({files:[file],text:R.text})}catch(e){if(e&&e.name==='AbortError')return;note.hidden=false;note.textContent='Sharing did not open. Press and hold the picture to save it.'}return}
+      const l=document.createElement('a');l.href=o._url;l.download=R.name;document.body.appendChild(l);l.click();l.remove();note.hidden=false;note.textContent='Saved. Attach it to a message to send it.'}}
+  if(tog)tog.addEventListener('change',make);
+  make();
 }
 function albumBar(g,a,full,n){
   if(!RATEABLE.includes(g.kind))return '';   /* singles and the like have no album rating, so no empty row: their buttons sit in the header */
