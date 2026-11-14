@@ -1302,6 +1302,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.13-v', note:'COPY THE SHARE CARD ON A COMPUTER: the share window now has Copy image, so you can paste the card straight into Discord, Messages or an email with Ctrl+V. Save is still there beside it. Phones keep the normal Share button.'},
   {v:'2026.11.13-u', note:'FAVORITES STAY ON THE FULL CARD: with every song rating shown, your favorite songs now sit in their own line between the album rating and the song list instead of disappearing.'},
   {v:'2026.11.13-t', note:'SONGS ON THE SHARE CARD: the share card now lists every song with its rating, in track order, each on a bar that fills with the score. Switch off Show every song rating under the picture for the short card with just your favorites.'},
   {v:'2026.11.13-s', note:'SHARE YOUR RATING: under each album you have rated there is now a Share button. It makes a picture of your rating with the cover, your album number, your song average and your favorite songs, then opens your phone\u2019s share sheet so you can send it to a friend in Messages (on a computer it saves the picture instead). The three dots at the bottom of an album also moved: they now sit in line with the rating circles above them instead of floating at the edge.'},
@@ -4477,10 +4478,10 @@ function shareKey(e){if(e.key==='Escape')shareClose()}
 async function shareOpen(a,g){
   shareClose();const o=document.createElement('div');o.id='shr';o.className='shr';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-label','Share your rating');
   const f=shareInfo(a,g);
-  o.innerHTML='<div class="shr-box"><div class="shr-prev" aria-live="polite"><p class="shr-note" style="padding:60px 0">Making your card\u2026</p></div>'+(f.its.length?'<label class="shr-tog"><input type="checkbox" data-sh="songs" checked>Show every song rating</label>':'')+'<div class="shr-acts"><button class="btn" data-sh="close">Close</button><button class="btn primary" data-sh="send" disabled>Share</button></div><p class="shr-note" hidden></p></div>';
+  o.innerHTML='<div class="shr-box"><div class="shr-prev" aria-live="polite"><p class="shr-note" style="padding:60px 0">Making your card\u2026</p></div>'+(f.its.length?'<label class="shr-tog"><input type="checkbox" data-sh="songs" checked>Show every song rating</label>':'')+'<div class="shr-acts"><button class="btn" data-sh="close">Close</button><button class="btn" data-sh="save" hidden>Save</button><button class="btn primary" data-sh="send" disabled>Share</button></div><p class="shr-note" hidden></p></div>';
   document.body.appendChild(o);document.addEventListener('keydown',shareKey);
   o.addEventListener('click',e=>{if(e.target===o||e.target.closest('[data-sh="close"]'))shareClose()});
-  const prev=o.querySelector('.shr-prev'),send=o.querySelector('[data-sh="send"]'),note=o.querySelector('.shr-box>.shr-note'),tog=o.querySelector('[data-sh="songs"]');
+  const prev=o.querySelector('.shr-prev'),send=o.querySelector('[data-sh="send"]'),saveB=o.querySelector('[data-sh="save"]'),note=o.querySelector('.shr-box>.shr-note'),tog=o.querySelector('[data-sh="songs"]');
   let seq=0;
   async function make(){
     const my=++seq;send.disabled=true;note.hidden=true;
@@ -4490,10 +4491,15 @@ async function shareOpen(a,g){
     if(o._url)URL.revokeObjectURL(o._url);
     o._url=URL.createObjectURL(R.blob);prev.innerHTML='<img alt="Your rating card for '+esc(g.title)+'" src="'+o._url+'">';
     const file=new File([R.blob],R.name,{type:'image/png'}),canFile=!!(navigator.canShare&&navigator.canShare({files:[file]}));
-    send.disabled=false;send.textContent=canFile?'Share':'Save image';
-    send.onclick=async()=>{
-      if(canFile){try{await navigator.share({files:[file],text:R.text})}catch(e){if(e&&e.name==='AbortError')return;note.hidden=false;note.textContent='Sharing did not open. Press and hold the picture to save it.'}return}
-      const l=document.createElement('a');l.href=o._url;l.download=R.name;document.body.appendChild(l);l.click();l.remove();note.hidden=false;note.textContent='Saved. Attach it to a message to send it.'}}
+    const canCopy=!!(window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write);
+    const say=t=>{note.hidden=false;note.textContent=t};
+    const save=()=>{const l=document.createElement('a');l.href=o._url;l.download=R.name;document.body.appendChild(l);l.click();l.remove();say('Saved. Attach it to a message to send it.')};
+    const share=async()=>{try{await navigator.share({files:[file],text:R.text})}catch(e){if(e&&e.name==='AbortError')return;say('Sharing did not open. Press and hold the picture to save it.')}};
+    const copy=async()=>{try{await navigator.clipboard.write([new ClipboardItem({'image/png':R.blob})]);send.textContent='Copied \u2713';say('Copied. Paste it into a message with Ctrl+V.');setTimeout(()=>{if(send.isConnected)send.textContent='Copy image'},2200)}catch(e){say('Copying was blocked here. Use Save instead.');saveB.hidden=false;saveB.onclick=save}};
+    send.disabled=false;saveB.hidden=true;
+    if(canFile){send.textContent='Share';send.onclick=share}
+    else if(canCopy){send.textContent='Copy image';send.onclick=copy;saveB.hidden=false;saveB.onclick=save}
+    else{send.textContent='Save image';send.onclick=save}}
   if(tog)tog.addEventListener('change',make);
   make();
 }
