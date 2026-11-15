@@ -1404,6 +1404,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.15-g', note:'Rating or clearing an album now updates the artist card colors, glow and record right away, no reopening needed.'},
   {v:'2026.11.15-f', note:'RANDOM VINYL + BRIGHTER GLOW: each time you open an artist the record picks one of five looks at random (soft fade, marble, streak splatter, flung paint, or liquid), all drawn from the colors of the albums you rated. The glow behind the card is stronger now, with three differently placed color layers that drift and cross-fade so the movement is easy to see.'},
   {v:'2026.11.15-e', note:'LIVELIER GLOW: the colors behind the artist card now travel farther and faster, with a third layer and a slow fade in and out, so they swirl and breathe instead of just drifting. The colors are pulled in toward the middle so every album you rated stays on the card as they move.'},
   {v:'2026.11.15-d', note:'BREATHING GLOW: the colors behind the artist card now drift and swell slowly, two layers moving at different speeds, so the card feels alive. They hold still if your phone is set to reduce motion.'},
@@ -4770,7 +4771,7 @@ function rtFlyGo(p){
 function rateCommit(el){const id=el.dataset.rate,v=+el.value;if(!id||!v)return;
   if(v===rating(id))return;
   const isGroup=S.music.some(a=>a.groups.some(g=>g.id===id||dxId(g)===id));
-  S.marks[id]={...(S.marks[id]||{}),r:v,...(isGroup?{rd:todayISO()}:{}),...(isGroup||isDone(id)?{}:{done:true})};touch();
+  S.marks[id]={...(S.marks[id]||{}),r:v,...(isGroup?{rd:todayISO()}:{}),...(isGroup||isDone(id)?{}:{done:true})};touch();heroPaint();
   const n=document.querySelector('.rt-s');if(n)n.focus({preventScroll:true})}
 
 function hasDx(g){return g.items.some(i=>i.dx)&&g.items.some(i=>!i.dx)}
@@ -5253,7 +5254,7 @@ document.addEventListener('click',ev=>{
   else if(act==='splgo'){UI.spLogOpen=true;if(b.dataset.a){UI.view=null;UI.tab='music';UI.sel.music=b.dataset.a;UI.filter='all'}}
   else if(act==='spcopy'){const t=SP_REDIRECT;if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>{SPX.copied=true;render()},()=>{});return}
   else if(act==='rymadd'){const r=rymAddWaiting();RYX.report={total:r.albums,zero:0,filled:0,same:0,kept:[],waiting:[],notFound:[],dups:[],added:r};touch()}
-  else if(act==='rclear'){const m0={...(S.marks[id]||{}),r:0};delete m0.rd;S.marks[id]=m0;touch()}
+  else if(act==='rclear'){const m0={...(S.marks[id]||{}),r:0};delete m0.rd;S.marks[id]=m0;touch();heroPaint()}
   else if(act==='grpall'){const a=S.music.find(x=>x.id===b.dataset.a),g=a.groups.find(x=>x.id===b.dataset.g),its=viewItems(g),full=its.every(i=>isDone(i.id));
     its.forEach(i=>S.marks[i.id]={...(S.marks[i.id]||{}),done:!full});if(!full)slPulseAsk(g.id,0);touch()}
   else if(act==='wedit'){UI.wEdit=UI.wEdit===b.dataset.g?null:b.dataset.g;formUp()}
