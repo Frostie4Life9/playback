@@ -646,22 +646,21 @@ details.addart .add{border-top:1px solid var(--line)}
   border-radius:28px;border:1px solid var(--line);padding:20px;
   background:var(--surface)}
 @supports (color:oklch(from red l c h)){.head.hero{--hi:oklch(from var(--ac) clamp(.14,calc((.6 - l) * 100),.985) 0 h)}}
-.head.hero::before,.head.hero::after,.head.hero .hg{content:"";position:absolute;inset:-22%;z-index:-1;pointer-events:none;will-change:transform,opacity;
-  background:var(--hbg,linear-gradient(170deg,color-mix(in srgb,var(--ac) 40%,transparent),transparent 62%))}
+.head.hero::before,.head.hero::after,.head.hero .hg{content:"";position:absolute;inset:-30%;z-index:-1;pointer-events:none;will-change:transform,opacity}
 .head.hero .hg{display:block}
-.head.hero::before{animation:hGlowA 10s ease-in-out infinite alternate}
-.head.hero::after{animation:hGlowB 14s ease-in-out infinite alternate}
-.head.hero .hg{animation:hGlowC 18s ease-in-out infinite alternate}
-@keyframes hGlowA{0%{transform:translate(-9%,6%) scale(1) rotate(-12deg);opacity:1}50%{transform:translate(8%,-7%) scale(1.16) rotate(9deg);opacity:.8}100%{transform:translate(-4%,-9%) scale(1.06) rotate(-7deg);opacity:1}}
-@keyframes hGlowB{0%{transform:translate(9%,-6%) scale(1.12) rotate(14deg);opacity:.3}100%{transform:translate(-9%,8%) scale(.98) rotate(-18deg);opacity:.75}}
-@keyframes hGlowC{0%{transform:translate(-7%,-8%) scale(1.06) rotate(0);opacity:.55}100%{transform:translate(8%,9%) scale(1.22) rotate(24deg);opacity:.15}}
+.head.hero::before{background:var(--hbg,linear-gradient(170deg,color-mix(in srgb,var(--ac) 40%,transparent),transparent 62%));animation:hGlowA 8s ease-in-out infinite alternate}
+.head.hero::after{background:var(--hbg2,none);animation:hGlowB 11s ease-in-out infinite alternate}
+.head.hero .hg{background:var(--hbg3,none);animation:hGlowC 14s ease-in-out infinite alternate}
+@keyframes hGlowA{0%{transform:translate(-9%,6%) scale(1.02) rotate(-10deg);opacity:1}50%{transform:translate(8%,-7%) scale(1.2) rotate(8deg);opacity:.7}100%{transform:translate(-4%,-9%) scale(1.08) rotate(-6deg);opacity:1}}
+@keyframes hGlowB{0%{transform:translate(9%,-6%) scale(1.14) rotate(10deg);opacity:.1}100%{transform:translate(-9%,8%) scale(1.02) rotate(-10deg);opacity:.9}}
+@keyframes hGlowC{0%{transform:translate(-8%,-8%) scale(1.06) rotate(0);opacity:.8}100%{transform:translate(8%,9%) scale(1.25) rotate(14deg);opacity:.1}}
 @media (prefers-reduced-motion:reduce){.head.hero::before,.head.hero::after,.head.hero .hg{animation:none}}
 .hrec{position:relative;width:220px;height:220px;flex:0 0 auto}
 .hring{width:220px;height:220px;border-radius:50%;display:grid;place-items:center;
   background:conic-gradient(var(--accent) calc(var(--p)*1%),color-mix(in srgb,var(--ink) 16%,transparent) 0)}
 .hdisc{position:relative;width:206px;height:206px;border-radius:50%;display:grid;place-items:center;overflow:hidden;background:#0b0d0c}
 .hspin{position:absolute;inset:0;border-radius:50%;will-change:transform;
-  background:repeating-radial-gradient(circle,rgb(0 0 0 / .5) 0 1.5px,rgb(0 0 0 / 0) 1.5px 3.2px),radial-gradient(circle,rgb(0 0 0 / 0) 26%,rgb(0 0 0 / .34) 100%),var(--hdisc,none),#10140f}
+  background:repeating-radial-gradient(circle,rgb(0 0 0 / .5) 0 1.5px,rgb(0 0 0 / 0) 1.5px 3.2px),radial-gradient(circle,rgb(0 0 0 / 0) 26%,rgb(0 0 0 / .34) 100%),var(--hdisc,none),#10140f;background-size:100% 100%}
 .hdisc::after{content:"";position:absolute;inset:0;border-radius:50%;z-index:1;pointer-events:none;
   background:conic-gradient(from 20deg,rgb(255 255 255 / 0),rgb(255 255 255 / .12) 12%,rgb(255 255 255 / 0) 26%,rgb(255 255 255 / 0) 50%,rgb(255 255 255 / .09) 62%,rgb(255 255 255 / 0) 76%)}
 .hlab{z-index:2;position:relative;width:90px;height:90px;border-radius:50%;background:var(--ac);color:var(--hi);display:flex;flex-direction:column;align-items:center;justify-content:center}
@@ -1405,6 +1404,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.15-f', note:'RANDOM VINYL + BRIGHTER GLOW: each time you open an artist the record picks one of five looks at random (soft fade, marble, streak splatter, flung paint, or liquid), all drawn from the colors of the albums you rated. The glow behind the card is stronger now, with three differently placed color layers that drift and cross-fade so the movement is easy to see.'},
   {v:'2026.11.15-e', note:'LIVELIER GLOW: the colors behind the artist card now travel farther and faster, with a third layer and a slow fade in and out, so they swirl and breathe instead of just drifting. The colors are pulled in toward the middle so every album you rated stays on the card as they move.'},
   {v:'2026.11.15-d', note:'BREATHING GLOW: the colors behind the artist card now drift and swell slowly, two layers moving at different speeds, so the card feels alive. They hold still if your phone is set to reduce motion.'},
   {v:'2026.11.15-c', note:'ARTIST COLORS, SPINNING RECORD, LISTEN LIST BACK: the record now wears the artist\u2019s colors \u2014 every album you rated lends its cover color, and the higher you rated it the bigger its wedge on the vinyl and the bigger its glow behind the card (a 1 still shows a little). The record spins up and the arm swings onto it when you open an artist. The Listen list is back as a bookmark button at the top with a count; it opens as a sheet. The album bookmark buttons are back too.'},
@@ -4527,16 +4527,66 @@ function heroPalette(a){const out=[];
     if(!art)continue;
     out.push({col:acolFor(g.id,art,g),w:.12+.88*Math.pow(Math.min(10,r)/10,3)})}
   out.sort((x,y)=>y.w-x.w);return out.slice(0,24)}
+/* Vinyl looks. Each time an artist opens, one of these is picked at random (1 soft fade, 3 marble,
+   7 streak splatter, 8 flung paint, 9 liquid). Splatter and liquid are drawn as SVG from the same weighted
+   palette, seeded by the artist so a redraw does not change them. */
+const HSTY={aid:null,n:1,list:[1,3,7,8,9]};
+function hrng(s){s>>>=0;return()=>{s=(s+0x6D2B79F5)>>>0;let t=s;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
+function hseed(str){let h=2166136261;for(const c of String(str)){h=Math.imul(h^c.charCodeAt(0),16777619)}return h>>>0}
+function hDark(col,k){const m=/^#([0-9a-f]{6})$/i.exec(col||'');if(!m)return col;const n=parseInt(m[1],16);
+  const f=v=>Math.round(v*k/100).toString(16).padStart(2,'0');return '#'+f(n>>16&255)+f(n>>8&255)+f(n&255)}
+const HC=140,hf=v=>v.toFixed(1);
+function hStreak(cx,cy,th,L,r,col){const dx=Math.cos(th),dy=Math.sin(th),px=-dy,py=dx;
+  const tip=[cx+dx*L,cy+dy*L],l=[cx+px*r,cy+py*r],rt=[cx-px*r,cy-py*r];
+  const cl=[cx+dx*L*.5+px*r*.35,cy+dy*L*.5+py*r*.35],cr=[cx+dx*L*.5-px*r*.35,cy+dy*L*.5-py*r*.35];
+  return '<path d="M'+hf(l[0])+' '+hf(l[1])+' Q'+hf(cl[0])+' '+hf(cl[1])+' '+hf(tip[0])+' '+hf(tip[1])+' Q'+hf(cr[0])+' '+hf(cr[1])+' '+hf(rt[0])+' '+hf(rt[1])+' A'+hf(r)+' '+hf(r)+' 0 0 0 '+hf(l[0])+' '+hf(l[1])+'Z" fill="'+col+'"/>'}
+function hSplat(P,rnd,dense,base){let out='';
+  for(const x of P){const n=Math.max(2,Math.round(x.w*(dense?16:10)))+(dense?4:2);
+    for(let i=0;i<n;i++){const an=rnd()*2*Math.PI,rh=88+rnd()*46,Lmax=rh-58;
+      const L=Math.min(Lmax,(26+rnd()*80)*(.6+x.w*.6)),th=an+Math.PI+(rnd()-.5)*.12;
+      const cx=HC+Math.cos(an)*rh,cy=HC+Math.sin(an)*rh;
+      const r=(1+rnd()*1.5+x.w*(dense?1.5:2.4))*(dense?.85:1);
+      out+=hStreak(cx,cy,th,L,r,x.col);
+      const nd=Math.floor(rnd()*3);
+      for(let k=0;k<nd;k++){const dist=rh+3+rnd()*14;if(dist>136)continue;const j=(rnd()-.5)*8;
+        out+='<circle cx="'+hf(HC+Math.cos(an)*dist-Math.sin(an)*j)+'" cy="'+hf(HC+Math.sin(an)*dist+Math.cos(an)*j)+'" r="'+hf(.6+rnd()*1.4)+'" fill="'+x.col+'"/>'}
+      if(rnd()<.35){const a2=an+(rnd()-.5)*.1,d2=60+rnd()*60;
+        out+='<circle cx="'+hf(HC+Math.cos(a2)*d2)+'" cy="'+hf(HC+Math.sin(a2)*d2)+'" r="'+hf(.8+rnd()*1.6)+'" fill="'+x.col+'"/>'}}}
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 280" width="280" height="280"><defs><clipPath id="c"><circle cx="140" cy="140" r="140"/></clipPath><filter id="f"><feGaussianBlur stdDeviation=".4"/></filter></defs><g clip-path="url(#c)"><rect width="280" height="280" fill="'+base+'"/><g filter="url(#f)" opacity=".96">'+out+'</g></g></svg>'}
+function hLiquid(P,rnd){
+  const defs='<defs><mask id="m"><rect width="280" height="280" fill="black"/><circle cx="140" cy="140" r="132" fill="white"/><circle cx="140" cy="140" r="62" fill="black"/></mask><filter id="b"><feGaussianBlur stdDeviation="1.6"/></filter><filter id="g" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9"/></filter></defs>';
+  let blobs='';
+  for(const x of P){const n=Math.round(x.w*4)+1;
+    for(let k=0;k<n;k++){const an=rnd()*2*Math.PI,rr=66+rnd()*62;
+      blobs+='<circle cx="'+hf(HC+Math.cos(an)*rr)+'" cy="'+hf(HC+Math.sin(an)*rr)+'" r="'+hf(13+x.w*20+rnd()*6)+'" fill="'+x.col+'"/>'}}
+  let bub='';
+  for(let k=0;k<16;k++){const an=rnd()*2*Math.PI,rr=68+rnd()*58,r=[1.6,2.2,3,4,5.5][Math.floor(rnd()*5)];
+    const cx=HC+Math.cos(an)*rr,cy=HC+Math.sin(an)*rr;
+    bub+='<circle cx="'+hf(cx)+'" cy="'+hf(cy)+'" r="'+r+'" fill="rgba(255,255,255,.10)" stroke="rgba(255,255,255,.55)" stroke-width=".7"/><circle cx="'+hf(cx-r*.3)+'" cy="'+hf(cy-r*.35)+'" r="'+hf(r*.28)+'" fill="rgba(255,255,255,.85)"/>'}
+  let glass='';
+  for(const r of [135,136.6,138.2,56,57.6,59.2])glass+='<circle cx="140" cy="140" r="'+r+'" fill="none" stroke="rgba(255,255,255,.10)" stroke-width=".8"/>';
+  glass+='<circle cx="140" cy="140" r="139" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.4"/><circle cx="140" cy="140" r="132" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.2"/><circle cx="140" cy="140" r="62" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.2"/><circle cx="140" cy="140" r="128" fill="none" stroke="rgba(0,0,0,.45)" stroke-width="7" filter="url(#b)" mask="url(#m)"/><path d="M70 52 A100 100 0 0 1 128 36" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="3" stroke-linecap="round" filter="url(#b)"/><path d="M232 190 A100 100 0 0 1 200 226" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2.4" stroke-linecap="round" filter="url(#b)"/>';
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 280" width="280" height="280">'+defs+'<g mask="url(#m)"><rect width="280" height="280" fill="'+hDark(P[0].col,60)+'"/><g filter="url(#g)">'+blobs+'</g></g>'+bub+glass+'</svg>'}
+function hSvgUrl(svg){return 'url("data:image/svg+xml,'+encodeURIComponent(svg)+'")'}
+function hDisc(P,n,aid){
+  const tot=P.reduce((q,x)=>q+x.w,0),dk=(c,k)=>'color-mix(in srgb,'+c+' '+(k||76)+'%,#000)';
+  if(n===7||n===8){const rnd=hrng(hseed(aid+':'+n));return hSvgUrl(hSplat(P,rnd,n===8,n===8?hDark(P[0].col,22):'#0e110f'))}
+  if(n===9)return hSvgUrl(hLiquid(P,hrng(hseed(aid+':9'))));
+  if(n===3){const sp=P.slice(0,8);
+    const bl=sp.map((x,i)=>{const an=(i*137.5+20)*Math.PI/180,rad=8+i*9;
+      return 'radial-gradient(circle at '+Math.round(50+Math.cos(an)*rad)+'% '+Math.round(50+Math.sin(an)*rad)+'%,'+dk(x.col,88)+' 0,transparent '+Math.round(28+x.w*34)+'%)'});
+    const base=dk(sp[0].col,40);return bl.join(',')+',linear-gradient('+base+','+base+')'}
+  let acc=0;const st=P.map(x=>{const m=(acc+x.w/2)/tot*100;acc+=x.w;return dk(x.col)+' '+m.toFixed(2)+'%'});
+  const wrap='color-mix(in oklab,'+dk(P[P.length-1].col)+' 50%,'+dk(P[0].col)+')';
+  return 'conic-gradient(in oklab from -30deg,'+wrap+' 0%,'+st.join(',')+','+wrap+' 100%)'}
+function heroBlobs(P,off,sx,sy,boost){
+  return P.map((x,i)=>{const ang=(i*137.5+off)*Math.PI/180,rad=i?8+Math.min(22,i*3.5):0;
+    const px=Math.round(50+Math.cos(ang)*rad*sx),py=Math.round(46+Math.sin(ang)*rad*sy);
+    return 'radial-gradient(circle at '+px+'% '+py+'%,color-mix(in srgb,'+x.col+' '+Math.min(95,Math.round(boost*(42+x.w*42)))+'%,transparent) 0,transparent '+Math.round(24+x.w*26)+'%)'}).join(',')}
 function heroVars(a){
   const P=heroPalette(a);
-  if(!P.length)return{'--ac':heroColor(a).col,'--hbg':'','--hdisc':''};
-  const tot=P.reduce((q,x)=>q+x.w,0);
-  const blobs=P.map((x,i)=>{const ang=(i*137.5-60)*Math.PI/180,rad=i?10+Math.min(22,i*3.5):0;
-    const px=Math.round(50+Math.cos(ang)*rad*.95),py=Math.round(46+Math.sin(ang)*rad*.6);
-    return 'radial-gradient(circle at '+px+'% '+py+'%,color-mix(in srgb,'+x.col+' '+Math.round(30+x.w*38)+'%,transparent) 0,transparent '+Math.round(36+x.w*38)+'%)'});
-  let acc=0;
-  const stops=P.map(x=>{const s0=acc/tot*100;acc+=x.w;const s1=acc/tot*100;return 'color-mix(in srgb,'+x.col+' 76%,#000) '+s0.toFixed(2)+'% '+s1.toFixed(2)+'%'});
-  return{'--ac':P[0].col,'--hbg':blobs.join(','),'--hdisc':'conic-gradient(from -30deg,'+stops.join(',')+')'}}
+  if(!P.length)return{'--ac':heroColor(a).col,'--hbg':'','--hbg2':'','--hbg3':'','--hdisc':''};
+  return{'--ac':P[0].col,'--hbg':heroBlobs(P,-60,1,.5,1),'--hbg2':heroBlobs(P,120,1,.5,.9),'--hbg3':heroBlobs(P,30,1,.5,.8),'--hdisc':hDisc(P,HSTY.n,a.id)}}
 function heroStyle(a){const v=heroVars(a);return Object.keys(v).filter(k=>v[k]).map(k=>k+':'+v[k]).join(';')}
 function heroPaint(){const el=document.querySelector('.hero[data-aid]');if(!el)return;
   const a=S.music.find(x=>x.id===el.dataset.aid);if(!a)return;
@@ -4546,8 +4596,9 @@ function heroPaint(){const el=document.querySelector('.hero[data-aid]');if(!el)r
 const HERO={aid:null,ang:0,spd:0,raf:0,last:0,begin:0,el:null};
 function heroStart(){
   const el=document.querySelector('.hero[data-aid]');
-  if(!el){HERO.aid=null;HERO.el=null;HERO.spd=0;return}
+  if(!el){HERO.aid=null;HERO.el=null;HERO.spd=0;HSTY.aid=null;return}
   const spin=el.querySelector('.hspin');if(!spin)return;
+  if(HSTY.aid!==el.dataset.aid){HSTY.aid=el.dataset.aid;HSTY.n=HSTY.list[Math.floor(Math.random()*HSTY.list.length)];heroPaint()}
   if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches){el.classList.add('play');return}
   const aid=el.dataset.aid;HERO.el=spin;
   if(HERO.aid===aid){el.classList.add('play','nosw');spin.style.transform='rotate('+HERO.ang+'deg)'}
