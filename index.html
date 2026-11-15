@@ -644,8 +644,15 @@ details.addart .add{border-top:1px solid var(--line)}
 .sheet:has(.hero){background:transparent;border:0;padding:0}
 .head.hero{--ac:#7a3a24;--hi:#fff;position:relative;overflow:hidden;isolation:isolate;flex-direction:column;flex-wrap:nowrap;align-items:center;gap:16px;
   border-radius:28px;border:1px solid var(--line);padding:20px;
-  background:var(--hbg,linear-gradient(170deg,color-mix(in srgb,var(--ac) 40%,transparent),transparent 62%)),var(--surface)}
+  background:var(--surface)}
 @supports (color:oklch(from red l c h)){.head.hero{--hi:oklch(from var(--ac) clamp(.14,calc((.6 - l) * 100),.985) 0 h)}}
+.head.hero::before,.head.hero::after{content:"";position:absolute;inset:-14%;z-index:-1;pointer-events:none;will-change:transform;
+  background:var(--hbg,linear-gradient(170deg,color-mix(in srgb,var(--ac) 40%,transparent),transparent 62%))}
+.head.hero::before{animation:hGlowA 17s ease-in-out infinite alternate}
+.head.hero::after{opacity:.55;animation:hGlowB 23s ease-in-out infinite alternate}
+@keyframes hGlowA{0%{transform:translate(-3%,2%) scale(1) rotate(0)}50%{transform:translate(4%,-3%) scale(1.1) rotate(5deg)}100%{transform:translate(-2%,-4%) scale(1.04) rotate(-4deg)}}
+@keyframes hGlowB{0%{transform:translate(3%,-2%) scale(1.08) rotate(0)}100%{transform:translate(-4%,3%) scale(.98) rotate(-8deg)}}
+@media (prefers-reduced-motion:reduce){.head.hero::before,.head.hero::after{animation:none}}
 .hrec{position:relative;width:220px;height:220px;flex:0 0 auto}
 .hring{width:220px;height:220px;border-radius:50%;display:grid;place-items:center;
   background:conic-gradient(var(--accent) calc(var(--p)*1%),color-mix(in srgb,var(--ink) 16%,transparent) 0)}
@@ -1395,6 +1402,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.15-d', note:'BREATHING GLOW: the colors behind the artist card now drift and swell slowly, two layers moving at different speeds, so the card feels alive. They hold still if your phone is set to reduce motion.'},
   {v:'2026.11.15-c', note:'ARTIST COLORS, SPINNING RECORD, LISTEN LIST BACK: the record now wears the artist\u2019s colors \u2014 every album you rated lends its cover color, and the higher you rated it the bigger its wedge on the vinyl and the bigger its glow behind the card (a 1 still shows a little). The record spins up and the arm swings onto it when you open an artist. The Listen list is back as a bookmark button at the top with a count; it opens as a sheet. The album bookmark buttons are back too.'},
   {v:'2026.11.15-b', note:'NEW FRAME AROUND THE ALBUMS: the artist header is now a record \u2014 your heard percentage runs around the vinyl, with the stats under the name and the Everything | Still to hear switch tucked in the same card, tinted with your best-rated album\u2019s color. On a phone the bottom tab bar is a floating pill (the open tab shows its name), and the artist switch and Add an artist are buttons up top instead of boxes in the page. Up next and the Listen list are gone from the Music page; your saved listen list is kept, just not shown.'},
   {v:'2026.11.15-a', note:'BOLD COLORS WIN BANNERS: a very saturated color on a cover now counts for more, so Blue Slide Park gets a blue banner (from the big blue brushstroke) instead of the tan of its paper and triangles. Covers with one clear color or none look the same as before; covers with a bold accent on a muted background may now take the accent. Every cover reads its color again once.'},
