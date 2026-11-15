@@ -168,6 +168,9 @@ async function briefPut(request, env) {
     if (!x || typeof x.t !== 'string' || !/^\d{4}-\d\d-\d\d$/.test(String(x.d))) continue;
     shows.push({ t: x.t.slice(0, 200), n: Math.max(0, parseInt(x.n, 10) || 0), e: Math.max(0, parseInt(x.e, 10) || 0), d: x.d, behind: !!x.behind });
   }
+  /* the app resends the list every time it opens: only save when it actually changed (a read is free, a write is not) */
+  const prev = await getJSON(env, BRIEF);
+  if (prev && JSON.stringify(prev.shows) === JSON.stringify(shows)) return reply({ ok: true, shows: shows.length, unchanged: true });
   await env.STATE.put(BRIEF, JSON.stringify({ at: Date.now(), shows }));
   return reply({ ok: true, shows: shows.length });
 }
@@ -215,7 +218,10 @@ async function spCatalog(env, url) {
   if (bust) p = p.replace(/([?&])bust=1(&|$)/, (m, a, b) => (b ? a : ''));
   const ckey = CAT_CACHE.test(p) ? 'spcat:' + p : '';
   if (ckey && !bust) {
-    const hit = await env.STATE.get(ckey).catch(() => null);
+    /* saved copies live in D1 (CATALOG); older ones saved in KV before this change are still read until they expire */
+    let hit = null;
+    if (env.CATALOG) hit = await env.CATALOG.prepare('SELECT v FROM catalog WHERE k = ?1 AND exp > ?2').bind(ckey, Date.now()).first('v').catch(() => null);
+    if (!hit) hit = await env.STATE.get(ckey).catch(() => null);
     if (hit) return new Response(hit, { status: 200, headers: Object.assign({ 'x-pb-cache': 'hit' }, JSON_H) });   /* x-pb-cache lets the app count this as free */
   }
   const auth = await getJSON(env, SP_AUTH);
@@ -235,7 +241,10 @@ async function spCatalog(env, url) {
   const h = Object.assign({}, JSON_H);
   const ra = r.headers.get('retry-after'); if (ra) h['retry-after'] = ra;
   const body = await r.text();
-  if (ckey && r.status === 200) { try { await env.STATE.put(ckey, body, { expirationTtl: CAT_TTL }); } catch (e) { /* KV write limit: just skip saving */ } }
+  /* a failed save only means the next request asks Spotify again; never save to KV (1,000 writes a day) */
+  if (ckey && r.status === 200 && env.CATALOG && body.length < 1500000) {
+    try { await env.CATALOG.prepare('INSERT OR REPLACE INTO catalog (k, v, exp) VALUES (?1, ?2, ?3)').bind(ckey, body, Date.now() + CAT_TTL * 1000).run(); } catch (e) { /* skip saving */ }
+  }
   return new Response(body, { status: r.status, headers: h });
 }
 
@@ -399,6 +408,8 @@ async function daySnap(env, st) {
 export default {
   async scheduled(event, env, ctx) {
     if (env.STATE) ctx.waitUntil(spCheck(env, true, true));
+    /* once a day (the 10:00 UTC check), drop saved catalog copies that have expired */
+    if (env.CATALOG && new Date(event.scheduledTime).getUTCHours() === 10) ctx.waitUntil(env.CATALOG.prepare('DELETE FROM catalog WHERE exp < ?1').bind(Date.now()).run().catch(() => {}));
   },
 
   async fetch(request, env) {

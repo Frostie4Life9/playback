@@ -7,6 +7,10 @@
   "kv_namespaces": [
     { "binding": "STATE", "id": "123626e20f3e4780ba3064ff22077e7e" }
   ],
+  // Spotify catalog cache (D1 allows far more daily writes than KV's 1,000)
+  "d1_databases": [
+    { "binding": "CATALOG", "database_name": "playback-catalog", "database_id": "187e781f-fac8-4bf1-b8d2-9470172a6ff2" }
+  ],
   "keep_vars": true,
   // Without this block a Git deploy switches the Worker's logs off.
   "observability": {
