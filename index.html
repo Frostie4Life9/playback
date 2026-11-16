@@ -667,7 +667,7 @@ details.addart .add{border-top:1px solid var(--line)}
 .hero.hclear .hring{background:none;position:relative}
 .hero.hclear .hring::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--p)*1%),color-mix(in srgb,var(--ink) 16%,transparent) 0);-webkit-mask:radial-gradient(circle closest-side,transparent 102px,#000 103px);mask:radial-gradient(circle closest-side,transparent 102px,#000 103px)}
 .hero.hclear .hdisc{background:color-mix(in srgb,var(--ink) 4%,transparent)}
-.hero.hclear .hspin{background:repeating-radial-gradient(circle,color-mix(in srgb,var(--ink) 14%,transparent) 0 1px,transparent 1px 3.2px),var(--hdisc,none)}
+.hero.hclear .hspin{background:repeating-radial-gradient(circle,color-mix(in srgb,var(--ink) 14%,transparent) 0 1px,transparent 1px 3.2px),var(--hdisc,none);background-size:100% 100%;background-position:center;background-repeat:no-repeat}
 .hero.hclear .hdisc::after{background:conic-gradient(from 20deg,rgb(255 255 255 / 0),rgb(255 255 255 / .3) 12%,rgb(255 255 255 / 0) 26%,rgb(255 255 255 / 0) 50%,rgb(255 255 255 / .22) 62%,rgb(255 255 255 / 0) 76%);box-shadow:inset 0 0 0 1.5px rgb(255 255 255 / .45),inset 0 0 0 3px color-mix(in srgb,var(--ink) 10%,transparent)}
 .hlab{z-index:2;position:relative;width:90px;height:90px;border-radius:50%;background:var(--ac);color:var(--hi);display:flex;flex-direction:column;align-items:center;justify-content:center}
 .hlab b{font:800 26px/1 Archivo,var(--display);font-stretch:125%;letter-spacing:-.03em}
@@ -880,6 +880,83 @@ details.addart .add{border-top:1px solid var(--line)}
   .track.sl-t.landed .check{animation:rgRing .6s ease-out}
   .track.sl-t.landed .check svg{animation:rgBump .5s cubic-bezier(.2,.8,.2,1)}
   .track.sl-t.landed .rg-n,.sl-rate.landed .v{display:inline-block;animation:rgNum .45s cubic-bezier(.2,.8,.2,1)}
+}
+
+/* ===== Crate frame (2026.11.16-a): the header, the artist list and its controls take the Sleeve's own parts ===== */
+.top{align-items:center}
+.sync{border:0;background:transparent;padding:6px 4px;min-height:44px;font:500 11px var(--mono);letter-spacing:.09em;text-transform:uppercase}
+.tact{width:48px;height:48px;background:transparent}
+.tact.tmob{display:none}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);box-shadow:none}
+.shell{grid-template-columns:clamp(320px,30vw,900px) minmax(0,1fr);gap:32px}
+.side{gap:14px}
+.lfind{gap:14px}
+.ltitle{display:flex;align-items:baseline;gap:12px}
+.ltitle h2{margin:0;font:800 34px/1 Archivo,var(--display);font-stretch:125%;letter-spacing:-.025em}
+.ltitle .mono{color:var(--muted);letter-spacing:.09em}
+.ltitle .sp{flex:1}
+.ladd{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 4px;border:0;background:none;color:var(--accent);font-weight:700}
+.ladd svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.lqrow{align-items:center;gap:8px;min-height:52px;padding:0 6px 0 16px;border-radius:999px;background:var(--surface);border:1px solid var(--line)}
+.lqrow:focus-within{border-color:var(--accent)}
+.lqrow>svg{flex:0 0 auto;width:18px;height:18px;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round}
+.lqrow .q input{border:0;background:transparent;padding:0 30px 0 0;min-height:44px;border-radius:0}
+.lqrow .q input:focus-visible{outline:none}
+.lsort select{min-height:40px;height:40px;border:0;border-radius:999px;background-color:var(--sunk);font-size:13px}
+.lseg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px;padding:4px;border-radius:999px;background:var(--sunk);border:1px solid var(--line)}
+.lseg button{min-height:40px;padding:0 2px;border:0;border-radius:999px;background:transparent;color:var(--muted);font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden}
+.lseg button .c{font-family:var(--mono);font-size:11px;font-weight:500;opacity:.8;margin-left:5px}
+.lseg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);font-weight:700}
+.llist.wall{border:0;background:transparent;padding:0;border-radius:0}
+.llist.wall .lsec{top:0;padding:10px 2px 8px}
+.lgrid{grid-template-columns:repeat(auto-fill,minmax(clamp(150px,8vw,230px),1fr));gap:24px 18px;padding:6px 2px 14px}
+/* an artist is a sleeve with its record sliding out: the more you have heard, the further out it sits. The record is
+   pressed from the same colors and look as the one that opens (see tdPaint). */
+.tile{gap:8px}
+.tpack{position:relative;display:block;width:100%;aspect-ratio:1.36/1}
+.tile .tpack .tcov{position:absolute;left:0;top:0;width:auto;height:100%;aspect-ratio:1/1;border-radius:10px;z-index:1}
+.tile.add .tcov,.tile.alb .tcov{width:73.5%}
+.tdisc{--tg:rgb(0 0 0 / .5);position:absolute;top:4%;height:92%;aspect-ratio:1/1;left:calc(8.8% + var(--p,0)*.236%);border-radius:50%;overflow:hidden;
+  background-color:#10140f;background-size:100% 100%;background-position:center;background-repeat:no-repeat;box-shadow:0 6px 14px rgb(0 0 0 / .4)}
+.tdisc::before{content:"";position:absolute;inset:0;border-radius:50%;
+  background:repeating-radial-gradient(circle,var(--tg) 0 1.2px,transparent 1.2px 2.8px),conic-gradient(from 20deg,rgb(255 255 255 / 0),rgb(255 255 255 / .14) 12%,rgb(255 255 255 / 0) 26%,rgb(255 255 255 / 0) 50%,rgb(255 255 255 / .1) 62%,rgb(255 255 255 / 0) 76%)}
+.tdisc i{position:absolute;left:35%;top:35%;width:30%;height:30%;border-radius:50%;background:var(--tl,#2D5840)}
+.tm{margin-top:-4px;font:500 11px var(--mono);letter-spacing:.04em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (prefers-reduced-motion:no-preference){
+  .tdisc{transition:left .5s cubic-bezier(.2,.8,.2,1)}
+  .tile:hover .tdisc{left:calc(12% + var(--p,0)*.236%)}
+}
+/* small text on the artist card sits on moving color, so it takes the ink instead of the gray */
+.head.hero .hstats span,.head.hero .hstats b small,.head.hero .note,.head.hero .mbsrc .label{color:color-mix(in srgb,var(--ink) 86%,transparent)}
+.head.hero .hstats>div+div{border-left-color:color-mix(in srgb,var(--ink) 30%,transparent)}
+@media (min-width:761px){
+  .tabs{background:var(--sunk);border:1px solid var(--line)}
+  .tabs button{height:44px;padding:0 20px}
+  .tabs button:not([aria-pressed="true"]) svg{display:none}
+  .tabs button[aria-pressed="true"]{font-weight:700}
+  details.addart{order:-1;border-radius:20px}
+  details.addart:not([open]){display:none}
+}
+@media (max-width:760px){
+  .tact{width:44px;height:44px}
+  .tact.tmob{display:grid}
+  .ltitle{display:none}
+  .lsort select{font-size:16px;min-height:40px}
+}
+/* a groove lights up: when a song is first rated (as its number lands) or ticked heard, the new groove flares,
+   a glint runs once around the record, the count on the label jumps, and the ripple follows. */
+.sl-disc::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;opacity:0;
+  background:conic-gradient(from 0deg,transparent 0 70%,var(--gp) 97%,transparent 100%);
+  -webkit-mask:radial-gradient(circle closest-side,transparent 35%,#000 36%);mask:radial-gradient(circle closest-side,transparent 35%,#000 36%)}
+@keyframes slLit{0%{--j:0%;border-color:rgb(255 255 255 / .09);box-shadow:0 0 0 0 transparent}
+  32%{--j:7%;border-color:#fff;box-shadow:0 0 16px 3px var(--gg),inset 0 0 10px 1px var(--gg)}
+  100%{--j:0%;border-color:var(--gv);box-shadow:0 0 0 0 transparent}}
+@keyframes slSweep{0%{transform:rotate(-40deg);opacity:0}18%{opacity:.85}80%{opacity:.85}100%{transform:rotate(320deg);opacity:0}}
+@keyframes slLab{0%{transform:scale(1)}35%{transform:scale(1.24)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:no-preference){
+  .group.sleeve.lit .sl-disc::after{animation:slSweep .85s cubic-bezier(.4,0,.2,1)}
+  .group.sleeve.lit .sl-lab{animation:slLab .55s cubic-bezier(.2,.8,.2,1)}
+  .group.sleeve.lit .sl-disc i.new{animation:slLit .95s cubic-bezier(.3,.6,.3,1) both}
 }
 </style>
 
@@ -1410,6 +1487,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-a', note:'THE CRATE: the frame now matches the albums. Music, Screen, Collection and Settings are one switch like Everything / Still to hear, the sync status is plain text, and the artist list has a big title, one search bar with the sort inside it, and a single All / Started / New / Done switch. Each artist is a sleeve with its record sliding out: the more you have heard, the further out it sits. That record is pressed from the albums you rated and is the same one that opens, and an artist gets a new look each time you leave it. SPLATTER: the splatter records were drawn off-center and are fixed. Each splatter is now one song you rated, in its album color, and the higher the rating the bigger the splatter. GROOVE LIGHT: when you rate a song for the first time or tick it heard, its groove on the album record flares as the number lands, a glint runs around the record and the count jumps. The small text on the artist card is also easier to read.'},
   {v:'2026.11.15-h', note:'CLEAR SPLATTER VINYL: the two splatter records (streak splatter and flung paint) are now pressed on clear vinyl. The black backing is gone, so the glow behind the card shows through the record, with just the grooves, a glassy rim and the paint on top.'},
   {v:'2026.11.15-g', note:'Rating or clearing an album now updates the artist card colors, glow and record right away, no reopening needed.'},
   {v:'2026.11.15-f', note:'RANDOM VINYL + BRIGHTER GLOW: each time you open an artist the record picks one of five looks at random (soft fade, marble, streak splatter, flung paint, or liquid), all drawn from the colors of the albums you rated. The glow behind the card is stronger now, with three differently placed color layers that drift and cross-fade so the movement is easy to see.'},
@@ -3859,12 +3937,13 @@ function sideFinder(list){
   const music=UI.tab==='music',noun=music?'artists':'shows & films',title=music?'Artists':'Shows & films';
   return `<div class="lhead"><h2>${title}<span>${list.length}</span></h2><button class="lclose" data-act="lib" aria-label="Close ${noun} list">×</button></div>
   <div class="lfind">
-    <span class="label">${title} · ${list.length}</span>
+    <div class="ltitle"><h2>${title}</h2><span class="mono">${list.length}</span><span class="sp"></span>${music?`<button class="ladd" data-act="addart">${ICO.plus}Add artist</button>`:''}</div>
     <div class="lqrow">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg>
       <div class="q"><input id="lq" type="search" autocomplete="off" placeholder="Search ${music?'artists & albums':noun}" value="${esc(UI.lq[UI.tab]||'')}" aria-label="Search ${music?'artists and albums':noun}">${UI.lq[UI.tab]?'<button data-act="lqx" aria-label="Clear search">×</button>':''}</div>
       <label class="lsort"><select id="lsort" aria-label="Sort ${noun}">${Object.entries(LSORTS).map(([k,v])=>`<option value="${k}"${P.sort===k?' selected':''}>${v}</option>`).join('')}</select></label>
     </div>
-    <div class="lrow lshow" role="group" aria-label="Show">${Object.entries(LSHOWS).map(([k,v])=>`<button class="chip" data-act="lshow" data-v="${k}" aria-pressed="${P.show===k}">${v}<span class="c">${c[k]}</span></button>`).join('')}</div>
+    <div class="lseg" role="group" aria-label="Show">${Object.entries(LSHOWS).map(([k,v])=>`<button data-act="lshow" data-v="${k}" aria-pressed="${P.show===k}">${v}<span class="c">${c[k]}</span></button>`).join('')}</div>
   </div>`}
 /* The artist wall. Each artist is a square cover: your best-rated album (else the first with art), with your
    average rating as a badge and how much you have heard as a bar. Your best-rated album sits in the bottom-left
@@ -3877,7 +3956,7 @@ function lCover(x){let best=null,bs=-1;
 function lTile(s,e){const x=s.x,cv=lCover(x),pic=x.simg||(cv&&cv.u)||'',col=(cv&&ACOL[cv.g.id])||acolFallback({title:x.name,id:x.id}),
   ini=([...lName(x)][0]||'#').toUpperCase(),cor=!!(cv&&cv.sc>0),rv=s.r?fmt(Math.round(s.r*10)/10):'',
   lab=x.name+', '+(s.p>=100?'finished':s.p+'% heard')+(rv?', rated '+rv:'');
-  return `<button class="tile${s.p>=100?' done':''}" data-act="sel" data-id="${x.id}" aria-current="${!!(e&&e.id===x.id)}" aria-label="${esc(lab)}"><span class="tcov" style="--ac:${esc(col)}"><span class="tini" aria-hidden="true">${esc(ini)}</span>${pic?`<img src="${esc(pic)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${cor?`<span class="tcorner" title="${esc('Your best-rated album: '+(cv.g.title||''))}"><img src="${esc(cv.u)}" alt="" loading="lazy" decoding="async" onerror="this.parentNode.remove()"></span>`:''}${rv?`<span class="trate" title="Your average rating">${rv}</span>`:''}<i class="tbar" aria-hidden="true"><b style="width:${s.p}%"></b></i></span><span class="tn">${esc(x.name)}${x.example?'<span class="ex">Example</span>':''}</span></button>`}
+  return `<button class="tile${s.p>=100?' done':''}" data-act="sel" data-id="${x.id}" aria-current="${!!(e&&e.id===x.id)}" aria-label="${esc(lab)}"><span class="tpack" style="--p:${s.p};--tl:${esc(col)}"><span class="tdisc" data-td="${esc(x.id)}" aria-hidden="true"><i></i></span><span class="tcov" style="--ac:${esc(col)}"><span class="tini" aria-hidden="true">${esc(ini)}</span>${pic?`<img src="${esc(pic)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${cor?`<span class="tcorner" title="${esc('Your best-rated album: '+(cv.g.title||''))}"><img src="${esc(cv.u)}" alt="" loading="lazy" decoding="async" onerror="this.parentNode.remove()"></span>`:''}${rv?`<span class="trate" title="Your average rating">${rv}</span>`:''}</span></span><span class="tn">${esc(x.name)}${x.example?'<span class="ex">Example</span>':''}</span><span class="tm">${s.p>=100?'Finished':s.p+'% heard'}</span></button>`}
 const L_ADD='<button class="tile add" data-act="addart"><span class="tcov"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="tn">Add an artist</span></button>';
 /* the A-Z rail beside the wall: the letters that have artists, in the order the list shows them */
 let LRAIL=[];
@@ -3945,6 +4024,24 @@ function slRipple(sl,base){
   clearTimeout(sl._rt);sl._rt=setTimeout(()=>sl.classList.remove('rip'),base+1700)}
 /* ask for a ripple on the next draw of this release (checking a song off, switching to Deluxe) */
 function slPulseAsk(gid,base){UI.pulse={g:String(gid),b:base||0}}
+/* which grooves a release has lit right now (the same folding the sleeve is drawn with) */
+function slRings(g){const shown=viewItems(g),R=Math.min(shown.length,22),rings=[];
+  for(let j=0;j<R;j++){const lo=Math.floor(j*shown.length/R),hi=Math.max(lo+1,Math.floor((j+1)*shown.length/R)),seg=shown.slice(lo,hi);
+    rings.push(seg.length&&seg.every(i=>isDone(i.id)))}
+  return rings}
+const slEl=gid=>document.querySelector('.group.sleeve[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(String(gid)):gid)+'"]');
+/* a song was just heard or first rated: note which grooves that newly lights (the page has not redrawn yet, so the
+   record on screen still shows the old state). The next draw holds those grooves dark until slLitNow lights them. */
+function slLitAsk(g,id){const sl=slEl(g.id),is=sl?sl.querySelectorAll('.sl-disc i'):[],idx=[];
+  slRings(g).forEach((on,j)=>{if(on&&is[j]&&!is[j].classList.contains('on'))idx.push(j)});
+  UI.lit={g:String(g.id),idx,id:id||null}}
+function slLitNow(){const L=UI.lit;UI.lit=null;if(!L)return;
+  const sl=slEl(L.g),disc=sl&&sl.querySelector('.sl-disc');if(!disc)return;
+  const is=disc.querySelectorAll('i');L.idx.forEach(j=>{if(is[j])is[j].classList.add('on','new')});
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  sl.classList.remove('lit');void sl.offsetWidth;sl.classList.add('lit');
+  clearTimeout(sl._lt);sl._lt=setTimeout(()=>{sl.classList.remove('lit');disc.querySelectorAll('i.new').forEach(e=>e.classList.remove('new'))},1300);
+  slRipple(sl,520)}
 function slPulseNow(){const p=UI.pulse;UI.pulse=null;if(!p)return;
   const sl=document.querySelector('.group.sleeve[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(p.g):p.g)+'"]');slRipple(sl,p.b)}
 function grpOfItem(id){for(const a of S.music){const g=a.groups.find(g=>g.items.some(i=>i.id===id));if(g)return g}return null}
@@ -3963,6 +4060,8 @@ function slObserve(){
 function render(){
   const ll=document.getElementById('llist'),llTop=ll?ll.scrollTop:0,llTab=UI.llTab;UI.llTab=UI.tab;
   renderMain();slObserve();slPulseNow();UI.rAnim=null;
+  if(UI.lit&&!UI.rLand&&!(UI.lit.id&&UI.lit.id===UI.rOpen))slLitNow();   /* no number is flying in and its slider is closed, so the groove lights with this draw */
+  tdPaint();
   const nl=document.getElementById('llist');
   if(nl){if(ll&&llTab===UI.tab)nl.scrollTop=llTop;
     else{const c=nl.querySelector('[aria-current="true"]');if(c)nl.scrollTop=c.offsetTop-nl.clientHeight/3}}
@@ -4498,16 +4597,15 @@ function renderMain(){
   const list=S[UI.tab];
   document.getElementById('app').innerHTML=`
   <header class="top">
-    <span class="label">Music and screen log</span>
-    <div class="topr">
-      <button class="sync" data-act="opensync" data-s="${SYS.status}"><i></i>${esc(syncLabel())}</button>
-      ${!UI.view?`<div class="topact">${UI.tab==='music'?`<button class="tact" data-act="llopen" aria-label="Listen list, ${llCount()} to hear">${ICO.mark}${llCount()?`<i class="tbadge">${llCount()}</i>`:''}</button>`:''}<button class="tact tmob" data-act="lib" aria-label="${UI.tab==='music'?'Switch artist':'Switch show or film'}">${ICO.grid}</button>${UI.tab==='music'?`<button class="tact tmob" data-act="addart" aria-label="Add an artist">${ICO.plus}</button>`:''}</div>`:''}
       <nav class="tabs" aria-label="Section">
         <button data-act="tab" data-v="music" aria-pressed="${!UI.view&&UI.tab==='music'}">${ICO.music}<span>Music</span></button>
         <button data-act="tab" data-v="screen" aria-pressed="${!UI.view&&UI.tab==='screen'}">${ICO.screen}<span>Screen</span></button>
         <button data-act="view" data-v="collection" aria-pressed="${UI.view==='collection'}">${ICO.collection}<span>Collection</span></button>
         <button data-act="view" data-v="settings" aria-pressed="${UI.view==='settings'}">${ICO.settings}<span>Settings</span></button>
       </nav>
+    <div class="topr">
+      <button class="sync" data-act="opensync" data-s="${SYS.status}"><i></i>${esc(syncLabel())}</button>
+      ${!UI.view?`<div class="topact">${UI.tab==='music'?`<button class="tact" data-act="llopen" aria-label="Listen list, ${llCount()} to hear">${ICO.mark}${llCount()?`<i class="tbadge">${llCount()}</i>`:''}</button>`:''}<button class="tact tmob" data-act="lib" aria-label="${UI.tab==='music'?'Switch artist':'Switch show or film'}">${ICO.grid}</button>${UI.tab==='music'?`<button class="tact tmob" data-act="addart" aria-label="Add an artist">${ICO.plus}</button>`:''}</div>`:''}
     </div>
   </header>
   ${UI.llOpen&&!UI.view&&UI.tab==='music'?`<div class="llover"><button class="llbk" data-act="llclose" aria-label="Close Listen list"></button>${listenSide()}</div>`:''}
@@ -4529,16 +4627,32 @@ function heroColor(a){let best=null,r0=-1;
   return{key:best.g.id,col:acolFor(best.g.id,best.art,best.g)}}
 /* The artist's colors: every album you rated lends its cover color, weighted by the rating (a 10 counts about
    four times a 5, a 1 still shows a little). The glows behind the hero and the wedges on the record both use it. */
-function heroPalette(a){const out=[];
+const gArt=g=>g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-250':'');
+/* a release's cover color. lazy (the artist list): use what is already known and queue the cover to be read a few at a time */
+function gCol(g,art,lazy){if(!lazy)return acolFor(g.id,art,g);const c=ACOL[g.id];if(c)return c;if(c!==''&&art)acolLazy(g.id,art);return acolFallback(g)}
+function heroPalette(a,lazy){const out=[];
   for(const g of a.groups){const r=rating(g.id);if(!(r>0))continue;
-    const art=g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-250':'');
+    const art=gArt(g);
     if(!art)continue;
-    out.push({col:acolFor(g.id,art,g),w:.12+.88*Math.pow(Math.min(10,r)/10,3)})}
+    out.push({col:gCol(g,art,lazy),w:.12+.88*Math.pow(Math.min(10,r)/10,3)})}
   out.sort((x,y)=>y.w-x.w);return out.slice(0,24)}
+/* the songs behind a splatter record: every song you rated, in the color of its release's cover.
+   An artist with album ratings but no song ratings gets one splatter per rated album instead. */
+function heroSongs(a,lazy){const out=[];
+  for(const g of a.groups){let col=null;
+    for(const i of g.items){const r=rating(i.id);if(!(r>0))continue;
+      if(col===null)col=gCol(g,gArt(g),lazy);
+      out.push({id:String(i.id),col,r:Math.min(10,r)})}}
+  if(!out.length)for(const g of a.groups){const r=rating(g.id);if(r>0)out.push({id:String(g.id),col:gCol(g,gArt(g),lazy),r:Math.min(10,r)})}
+  return out}
 /* Vinyl looks. Each time an artist opens, one of these is picked at random (1 soft fade, 3 marble,
    7 streak splatter, 8 flung paint, 9 liquid). Splatter and liquid are drawn as SVG from the same weighted
    palette, seeded by the artist so a redraw does not change them. */
 const HSTY={aid:null,n:1,list:[1,3,7,8,9]};
+/* each artist has a look of its own, so the record on its tile is the record that opens. Looks are dealt at random
+   when the app loads, and an artist's look is dealt again when you leave it. */
+const HLOOK={},HSESS=String(Math.random());
+function hLook(aid){return HLOOK[aid]||(HLOOK[aid]=HSTY.list[hseed(aid+HSESS)%HSTY.list.length])}
 function hrng(s){s>>>=0;return()=>{s=(s+0x6D2B79F5)>>>0;let t=s;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
 function hseed(str){let h=2166136261;for(const c of String(str)){h=Math.imul(h^c.charCodeAt(0),16777619)}return h>>>0}
 function hDark(col,k){const m=/^#([0-9a-f]{6})$/i.exec(col||'');if(!m)return col;const n=parseInt(m[1],16);
@@ -4549,19 +4663,37 @@ function hStreak(cx,cy,th,L,r,col){const dx=Math.cos(th),dy=Math.sin(th),px=-dy,
   const tip=[cx+dx*L,cy+dy*L],l=[cx+px*r,cy+py*r],rt=[cx-px*r,cy-py*r];
   const cl=[cx+dx*L*.5+px*r*.35,cy+dy*L*.5+py*r*.35],cr=[cx+dx*L*.5-px*r*.35,cy+dy*L*.5-py*r*.35];
   return '<path d="M'+hf(l[0])+' '+hf(l[1])+' Q'+hf(cl[0])+' '+hf(cl[1])+' '+hf(tip[0])+' '+hf(tip[1])+' Q'+hf(cr[0])+' '+hf(cr[1])+' '+hf(rt[0])+' '+hf(rt[1])+' A'+hf(r)+' '+hf(r)+' 0 0 0 '+hf(l[0])+' '+hf(l[1])+'Z" fill="'+col+'"/>'}
-function hSplat(P,rnd,dense,base){let out='';
-  for(const x of P){const n=Math.max(2,Math.round(x.w*(dense?16:10)))+(dense?4:2);
-    for(let i=0;i<n;i++){const an=rnd()*2*Math.PI,rh=88+rnd()*46,Lmax=rh-58;
-      const L=Math.min(Lmax,(26+rnd()*80)*(.6+x.w*.6)),th=an+Math.PI+(rnd()-.5)*.12;
-      const cx=HC+Math.cos(an)*rh,cy=HC+Math.sin(an)*rh;
-      const r=(1+rnd()*1.5+x.w*(dense?1.5:2.4))*(dense?.85:1);
-      out+=hStreak(cx,cy,th,L,r,x.col);
+/* Splatter: one splatter per rated song, in its album's color, and the higher the rating the bigger it is
+   (a 10 is roughly seven times the size of a 5). Each song's spot comes from the song itself, so rating another
+   song adds or grows one splatter and leaves the rest where they were. The whole set is scaled so the paint
+   covers about the same share of the record whether there are ten songs or three hundred. blob = flung paint
+   (round splats with drops), otherwise streaks thrown in from the rim. cap keeps only the top-rated songs. */
+function hSplat(songs,aid,blob,cap){
+  let L=songs.slice().sort((x,y)=>y.r-x.r||(x.id<y.id?-1:1));if(cap&&L.length>cap)L=L.slice(0,cap);
+  const sz=r=>Math.pow(r/10,1.7),band=Math.PI*(136*136-62*62),C=(x,y,r,c)=>'<circle cx="'+hf(x)+'" cy="'+hf(y)+'" r="'+hf(r)+'" fill="'+c+'"/>';
+  let out='',area=0;
+  if(blob){
+    for(const s of L){const R=3+17*sz(s.r);area+=Math.PI*R*R*1.6}
+    const k=Math.min(1.3,Math.sqrt(band*.5/Math.max(area,1)));
+    for(const s of L){const rnd=hrng(hseed(aid+':'+s.id)),R=Math.max(1.6,(3+17*sz(s.r))*k);
+      const an=rnd()*2*Math.PI,lo=64+R*.6,hi=Math.max(lo+2,134-R*.6),rr=Math.sqrt(lo*lo+rnd()*(hi*hi-lo*lo));
+      const cx=HC+Math.cos(an)*rr,cy=HC+Math.sin(an)*rr;
+      out+=C(cx,cy,R,s.col);
+      const nl=3+Math.floor(rnd()*3);
+      for(let j=0;j<nl;j++){const t=rnd()*2*Math.PI,d=R*(.55+rnd()*.5);out+=C(cx+Math.cos(t)*d,cy+Math.sin(t)*d,R*(.3+rnd()*.32),s.col)}
+      const fl=rnd()*2*Math.PI,nd=1+Math.floor(rnd()*3);
+      for(let j=0;j<nd;j++){const d=R*(1.55+j*.75+rnd()*.5),x=cx+Math.cos(fl)*d,y=cy+Math.sin(fl)*d;
+        if(Math.hypot(x-HC,y-HC)>137)continue;out+=C(x,y,Math.max(.7,R*(.22-j*.05)+rnd()*.5),s.col)}}}
+  else{
+    for(const s of L){area+=(14+72*sz(s.r))*(1.2+5.5*sz(s.r))*1.2}
+    const k=Math.min(1.25,Math.sqrt(band*.42/Math.max(area,1)));
+    for(const s of L){const rnd=hrng(hseed(aid+':'+s.id)),an=rnd()*2*Math.PI,rh=100+rnd()*34;
+      const len=Math.min(rh-62,(14+72*sz(s.r))*k),w=Math.max(.9,(1.2+5.5*sz(s.r))*k),th=an+Math.PI+(rnd()-.5)*.14;
+      out+=hStreak(HC+Math.cos(an)*rh,HC+Math.sin(an)*rh,th,len,w,s.col);
       const nd=Math.floor(rnd()*3);
-      for(let k=0;k<nd;k++){const dist=rh+3+rnd()*14;if(dist>136)continue;const j=(rnd()-.5)*8;
-        out+='<circle cx="'+hf(HC+Math.cos(an)*dist-Math.sin(an)*j)+'" cy="'+hf(HC+Math.sin(an)*dist+Math.cos(an)*j)+'" r="'+hf(.6+rnd()*1.4)+'" fill="'+x.col+'"/>'}
-      if(rnd()<.35){const a2=an+(rnd()-.5)*.1,d2=60+rnd()*60;
-        out+='<circle cx="'+hf(HC+Math.cos(a2)*d2)+'" cy="'+hf(HC+Math.sin(a2)*d2)+'" r="'+hf(.8+rnd()*1.6)+'" fill="'+x.col+'"/>'}}}
-  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 280" width="280" height="280"><defs><clipPath id="c"><circle cx="140" cy="140" r="140"/></clipPath><filter id="f"><feGaussianBlur stdDeviation=".4"/></filter></defs><g clip-path="url(#c)">'+(base?'<rect width="280" height="280" fill="'+base+'"/>':'')+'<g filter="url(#f)" opacity=".96">'+out+'</g></g></svg>'}
+      for(let j=0;j<nd;j++){const dist=rh+w+2+rnd()*10;if(dist>136)continue;const q=(rnd()-.5)*w*2.4;
+        out+=C(HC+Math.cos(an)*dist-Math.sin(an)*q,HC+Math.sin(an)*dist+Math.cos(an)*q,Math.max(.6,w*(.25+rnd()*.3)),s.col)}}}
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 280" width="280" height="280"><defs><clipPath id="c"><circle cx="140" cy="140" r="140"/></clipPath><filter id="f"><feGaussianBlur stdDeviation=".4"/></filter></defs><g clip-path="url(#c)"><g filter="url(#f)" opacity=".96">'+out+'</g></g></svg>'}
 function hLiquid(P,rnd){
   const defs='<defs><mask id="m"><rect width="280" height="280" fill="black"/><circle cx="140" cy="140" r="132" fill="white"/><circle cx="140" cy="140" r="62" fill="black"/></mask><filter id="b"><feGaussianBlur stdDeviation="1.6"/></filter><filter id="g" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9"/></filter></defs>';
   let blobs='';
@@ -4577,9 +4709,10 @@ function hLiquid(P,rnd){
   glass+='<circle cx="140" cy="140" r="139" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.4"/><circle cx="140" cy="140" r="132" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.2"/><circle cx="140" cy="140" r="62" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.2"/><circle cx="140" cy="140" r="128" fill="none" stroke="rgba(0,0,0,.45)" stroke-width="7" filter="url(#b)" mask="url(#m)"/><path d="M70 52 A100 100 0 0 1 128 36" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="3" stroke-linecap="round" filter="url(#b)"/><path d="M232 190 A100 100 0 0 1 200 226" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2.4" stroke-linecap="round" filter="url(#b)"/>';
   return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 280" width="280" height="280">'+defs+'<g mask="url(#m)"><rect width="280" height="280" fill="'+hDark(P[0].col,60)+'"/><g filter="url(#g)">'+blobs+'</g></g>'+bub+glass+'</svg>'}
 function hSvgUrl(svg){return 'url("data:image/svg+xml,'+encodeURIComponent(svg)+'")'}
-function hDisc(P,n,aid){
+function hDisc(P,n,aid,songs,cap){
   const tot=P.reduce((q,x)=>q+x.w,0),dk=(c,k)=>'color-mix(in srgb,'+c+' '+(k||76)+'%,#000)';
-  if(n===7||n===8){const rnd=hrng(hseed(aid+':'+n));return hSvgUrl(hSplat(P,rnd,n===8,''))   /* no base: the splatter sits on clear vinyl */}
+  if(n===7||n===8)return hSvgUrl(hSplat(songs||[],aid,n===8,cap));   /* no base: the splatter sits on clear vinyl */
+  if(!P.length)return '';
   if(n===9)return hSvgUrl(hLiquid(P,hrng(hseed(aid+':9'))));
   if(n===3){const sp=P.slice(0,8);
     const bl=sp.map((x,i)=>{const an=(i*137.5+20)*Math.PI/180,rad=8+i*9;
@@ -4593,9 +4726,26 @@ function heroBlobs(P,off,sx,sy,boost){
     const px=Math.round(50+Math.cos(ang)*rad*sx),py=Math.round(46+Math.sin(ang)*rad*sy);
     return 'radial-gradient(circle at '+px+'% '+py+'%,color-mix(in srgb,'+x.col+' '+Math.min(95,Math.round(boost*(42+x.w*42)))+'%,transparent) 0,transparent '+Math.round(24+x.w*26)+'%)'}).join(',')}
 function heroVars(a){
-  const P=heroPalette(a);
-  if(!P.length)return{'--ac':heroColor(a).col,'--hbg':'','--hbg2':'','--hbg3':'','--hdisc':''};
-  return{'--ac':P[0].col,'--hbg':heroBlobs(P,-60,1,.5,1),'--hbg2':heroBlobs(P,120,1,.5,.9),'--hbg3':heroBlobs(P,30,1,.5,.8),'--hdisc':hDisc(P,HSTY.n,a.id)}}
+  const P=heroPalette(a),songs=hClear()?heroSongs(a):null;
+  if(!P.length)return{'--ac':heroColor(a).col,'--hbg':'','--hbg2':'','--hbg3':'','--hdisc':songs&&songs.length?hDisc(P,HSTY.n,a.id,songs):''};
+  return{'--ac':P[0].col,'--hbg':heroBlobs(P,-60,1,.5,1),'--hbg2':heroBlobs(P,120,1,.5,.9),'--hbg3':heroBlobs(P,30,1,.5,.8),'--hdisc':hDisc(P,HSTY.n,a.id,songs)}}
+/* The records on the artist tiles. Each artist gets a small style rule of its own holding its record, rebuilt only
+   when that artist's ratings, colors or look change, so a redraw of the list costs nothing. Splatter records keep
+   the 70 top-rated songs at this size. */
+const TD={ver:null,lv:0,sig:{},el:{},t:0};
+function tdSoon(){clearTimeout(TD.t);TD.t=setTimeout(tdPaint,500)}
+function tdPaint(){
+  if(!READY||UI.view||UI.tab!=='music')return;
+  const ver=(S.mtime||0)+':'+ACOLV+':'+TD.lv+':'+S.music.length;if(ver===TD.ver)return;TD.ver=ver;
+  for(const a of S.music){
+    const n=hLook(a.id),clear=n===7||n===8,P=heroPalette(a,true),songs=clear?heroSongs(a,true):null,has=songs?songs.length:P.length;
+    const sig=n+'|'+(songs?songs.map(x=>x.id+':'+x.r+x.col).join(','):P.map(x=>x.col+x.w.toFixed(3)).join(','));
+    if(TD.sig[a.id]===sig)continue;TD.sig[a.id]=sig;
+    let el=TD.el[a.id];if(!el){el=document.createElement('style');el.dataset.td=a.id;document.head.appendChild(el);TD.el[a.id]=el}
+    if(!has){el.textContent='';continue}
+    const sel='.tdisc[data-td="'+String(a.id).replace(/["\\]/g,'\\$&')+'"]';
+    el.textContent=sel+'{--tl:'+(P[0]||songs[0]).col+';background-image:'+hDisc(P,n,a.id,songs,70)
+      +(clear?';--tg:color-mix(in srgb,var(--ink) 16%,transparent);background-color:color-mix(in srgb,var(--ink) 6%,transparent);box-shadow:inset 0 0 0 1.5px rgb(255 255 255 / .4),0 6px 14px rgb(0 0 0 / .25)':'')+'}'}}
 function heroStyle(a){const v=heroVars(a);return Object.keys(v).filter(k=>v[k]).map(k=>k+':'+v[k]).join(';')}
 function heroPaint(){const el=document.querySelector('.hero[data-aid]');if(!el)return;
   const a=S.music.find(x=>x.id===el.dataset.aid);if(!a)return;
@@ -4608,7 +4758,9 @@ function heroStart(){
   const el=document.querySelector('.hero[data-aid]');
   if(!el){HERO.aid=null;HERO.el=null;HERO.spd=0;HSTY.aid=null;return}
   const spin=el.querySelector('.hspin');if(!spin)return;
-  if(HSTY.aid!==el.dataset.aid){HSTY.aid=el.dataset.aid;HSTY.n=HSTY.list[Math.floor(Math.random()*HSTY.list.length)];heroPaint()}
+  if(HSTY.aid!==el.dataset.aid){const prev=HSTY.aid;HSTY.aid=el.dataset.aid;HSTY.n=hLook(HSTY.aid);
+    if(prev){const o=HSTY.list.filter(x=>x!==HLOOK[prev]);HLOOK[prev]=o[Math.floor(Math.random()*o.length)];TD.lv++}   /* the artist you left gets a new look for next time */
+    heroPaint()}
   if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches){el.classList.add('play');return}
   const aid=el.dataset.aid;HERO.el=spin;
   if(HERO.aid===aid){el.classList.add('play','nosw');spin.style.transform='rotate('+HERO.ang+'deg)'}
@@ -4728,15 +4880,18 @@ function acolFromPixels(d,dark){
   const lt=dark?Math.max(.22,Math.min(.36,l)):Math.max(.09,Math.min(.82,l)),st=Math.min(dark?1:.75,c/(1-Math.abs(2*lt-1))),
         q=n=>{const t=(n+h/30)%12,a=st*Math.min(lt,1-lt);return Math.round(255*(lt-a*Math.max(-1,Math.min(t-3,9-t,1))))};
   return dark?acolFix(q(0),q(8),q(4)):'#'+[q(0),q(8),q(4)].map(v=>v.toString(16).padStart(2,'0')).join('')}
-function acolRead(key,url){
+let ACOLV=0;const AQ=[],AQS={};let AQN=0;
+function acolLazy(key,url){if(AQS[key]||ACOL_TRY[key]||!url)return;AQS[key]=1;AQ.push([key,url]);aqPump()}
+function aqPump(){while(AQN<3&&AQ.length){const[k,u]=AQ.shift();if(ACOL_TRY[k])continue;AQN++;acolRead(k,u,()=>{AQN--;aqPump()})}}
+function acolRead(key,url,done){
   if(ACOL_TRY[key]||!url)return;ACOL_TRY[key]=1;
   const im=new Image();im.crossOrigin='anonymous';im.decoding='async';
   im.onload=()=>{try{const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingQuality='high';
       const iw=im.naturalWidth||64,ih=im.naturalHeight||64,sq=Math.min(iw,ih);x.drawImage(im,(iw-sq)/2,(ih-sq)/2,sq,sq,0,0,64,64);   /* the same square the cover is shown in */
-      const col=acolFromPixels(x.getImageData(0,0,64,64).data,/^c_/.test(key));if(!col)return;ACOL[key]=col;acolSave();
+      const col=acolFromPixels(x.getImageData(0,0,64,64).data,/^c_/.test(key));if(!col)return;ACOL[key]=col;acolSave();ACOLV++;tdSoon();
       const dxk=/~dx$/.test(key),base=dxk?key.slice(0,-3):key;heroPaint();
-      document.querySelectorAll('[data-acol="'+base+'"]').forEach(el=>{if(el.classList.contains('sleeve'))el.style.setProperty(dxk?'--acd':'--acs',col);else el.style.setProperty('--ac',col)})}catch(e){ACOL[key]='';acolSave()}};
-  im.onerror=()=>{};
+      document.querySelectorAll('[data-acol="'+base+'"]').forEach(el=>{if(el.classList.contains('sleeve'))el.style.setProperty(dxk?'--acd':'--acs',col);else el.style.setProperty('--ac',col)})}catch(e){ACOL[key]='';acolSave()}finally{if(done)done()}};
+  im.onerror=()=>{if(done)done()};
   im.src=url}
 function acolFor(key,url,g){const c=ACOL[key];if(c)return c;if(c!==''&&url)acolRead(key,url);return acolFallback(g)}
 
@@ -4768,7 +4923,7 @@ function rtFlyPrep(id){
   return{id,el,wind,r,fs:parseFloat(cs.fontSize)||34,col:cs.color}}
 function rtFlyGo(p){
   if(!p)return;
-  const done=()=>{UI.rLand=null;p.el.remove();const h=rtHost(p.id);if(!h)return;h.classList.remove('landing');h.classList.add('landed');setTimeout(()=>h.classList.remove('landed'),800)};
+  const done=()=>{UI.rLand=null;p.el.remove();slLitNow();const h=rtHost(p.id);if(!h)return;h.classList.remove('landing');h.classList.add('landed');setTimeout(()=>h.classList.remove('landed'),800)};
   const find=()=>(h=>h&&(h.querySelector('.rg-n')||h.querySelector('.v')||h.querySelector('.check')))(rtHost(p.id));
   const wait=n=>new Promise(ok=>{const t=()=>find()||n--<=0?ok(find()):requestAnimationFrame(t);t()});   /* an album pill only exists after the redraw, so wait for it (about a second at most) */
   p.wind.finished.then(()=>wait(60)).then(d=>{
@@ -4779,8 +4934,9 @@ function rtFlyGo(p){
   },done)}
 function rateCommit(el){const id=el.dataset.rate,v=+el.value;if(!id||!v)return;
   if(v===rating(id))return;
-  const isGroup=S.music.some(a=>a.groups.some(g=>g.id===id||dxId(g)===id));
-  S.marks[id]={...(S.marks[id]||{}),r:v,...(isGroup?{rd:todayISO()}:{}),...(isGroup||isDone(id)?{}:{done:true})};touch();heroPaint();
+  const isGroup=S.music.some(a=>a.groups.some(g=>g.id===id||dxId(g)===id)),first=!rating(id);
+  S.marks[id]={...(S.marks[id]||{}),r:v,...(isGroup?{rd:todayISO()}:{}),...(isGroup||isDone(id)?{}:{done:true})};touch();heroPaint();tdSoon();
+  if(first&&!isGroup){const g=grpOfItem(id);if(g)slLitAsk(g,id)}
   const n=document.querySelector('.rt-s');if(n)n.focus({preventScroll:true})}
 
 function hasDx(g){return g.items.some(i=>i.dx)&&g.items.some(i=>!i.dx)}
@@ -5056,7 +5212,8 @@ function artistView(a){
     const R=Math.min(shown.length,22),rings=[];
     for(let j=0;j<R;j++){const lo=Math.floor(j*shown.length/R),hi=Math.max(lo+1,Math.floor((j+1)*shown.length/R)),seg=shown.slice(lo,hi);
       rings.push(seg.length&&seg.every(i=>isDone(i.id)))}
-    const ringHtml=rings.map((on,j)=>{const d=96-j*(52/Math.max(R,1));return `<i class="${on?'on':''}" style="--d:${d.toFixed(1)}%;--o:${R-1-j}"></i>`}).join('');
+    const hold=UI.lit&&UI.lit.g===String(g.id)?UI.lit.idx:null;   /* grooves about to light stay dark until the animation lights them */
+    const ringHtml=rings.map((on,j)=>{const d=96-j*(52/Math.max(R,1));return `<i class="${on&&!(hold&&hold.includes(j))?'on':''}" style="--d:${d.toFixed(1)}%;--o:${R-1-j}"></i>`}).join('');
     const trackRows=rows.map(({i,k})=>{const s=songShow(i),r=rating(i.id),dn=isDone(i.id);
       const pc=r?r*10:0,dash=(pc*100.53/100).toFixed(2)+' 100.53';
       return `<div class="track sl-t ${i.dx?'dx':''} ${dn?'done':''} ${r?'rated':''} ${UI.rOpen===i.id?'ropen':''} ${UI.rAnim===i.id?'opening':''} ${UI.rLand===i.id?'landing':''}" data-act="ropen" data-id="${i.id}"${i.dx&&UI.dxAnim===g.id?` style="animation-delay:${Math.min(k,14)*26}ms"`:''}>${r?`<span class="wash" style="width:${pc}%" aria-hidden="true"></span>`:''}<span class="num">${k+1}</span>
@@ -5243,7 +5400,7 @@ document.addEventListener('click',ev=>{
   else if(act==='statgo'){UI.view=null;UI.tab=b.dataset.tab;UI.sel[UI.tab]=id;UI.filter='all';UI.toSheet=true;window.scrollTo({top:0,behavior:'smooth'})}
   else if(act==='filter'){UI.filter=b.dataset.v}
   else if(act==='epx'){UI.epOpen[id]=!UI.epOpen[id]}
-  else if(act==='tog'){const was=isDone(id);S.marks[id]={...(S.marks[id]||{}),done:!was};if(!was){const g=grpOfItem(id);if(g)slPulseAsk(g.id,0)}touch()}
+  else if(act==='tog'){const was=isDone(id);S.marks[id]={...(S.marks[id]||{}),done:!was};if(!was){const g=grpOfItem(id);if(g)slLitAsk(g)}touch()}
   else if(act==='shareopen'){const a=S.music.find(x=>x.id===b.dataset.a),g=a&&a.groups.find(x=>x.id===b.dataset.g);if(g)shareOpen(a,g);return}
   else if(act==='lltog'){const a=S.music.find(x=>x.id===b.dataset.a),g=a&&a.groups.find(x=>x.id===b.dataset.g);if(!g)return;
     if(llOn(a.name,g.title)){const lid=llId(a.name,g.title);S.listen=listenAll().filter(x=>x.id!==lid)}else llAdd(a.name,g.title,g.year);touch()}
