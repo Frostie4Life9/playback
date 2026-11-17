@@ -50,7 +50,7 @@
    Every response carries x-pb-worker: 5 so the app knows what this Worker
    can do (2 = compressed sync, 3 = Spotify plays, 4 = Spotify catalog too,
    5 = the morning-brief list, 6 = Discogs pressing search, 7 = Discogs pressing photos, 8 = your own record photos,
-   11 = Google accounts, friends and friends' ratings, 12 = a capped copy of a friend's log under their Google account, 13 = the owner can sign in with Google instead of pasting the sync key: see the accounts section above the export).
+   11 = Google accounts, friends and friends' ratings, 12 = a capped copy of a friend's log under their Google account, 13 = the owner can sign in with Google instead of pasting the sync key, 14 = profile picture and account color: see the accounts section above the export).
 
    MORNING BRIEF (version 5)
    The app keeps a tiny list of the next episode of each show you follow
@@ -118,7 +118,7 @@ const CORS = {
   'Access-Control-Allow-Headers': 'content-type, x-sync-key, authorization',
   'Access-Control-Expose-Headers': 'x-pb-worker, retry-after, x-pb-cache',
   'Access-Control-Max-Age': '86400',
-  'x-pb-worker': '13'
+  'x-pb-worker': '14'
 };
 const JSON_H = Object.assign({ 'content-type': 'application/json', 'cache-control': 'no-store' }, CORS);
 const GZ_H = Object.assign({ 'content-type': 'application/gzip', 'cache-control': 'no-store' }, CORS);
@@ -452,7 +452,7 @@ async function sugOwner(request, env, url) {
    name are kept; the email address is never stored.
    POST   /acct/google        {credential}  Google ID token -> {token, me}
    GET    /acct/me            -> {me}                       (Authorization: Bearer <token> on every route below)
-   PUT    /acct/me            {name?, share?}
+   PUT    /acct/me            {name?, share?, hue?, pic?}   hue 0-359 or null (automatic); pic a small JPEG data URL (about 192px, under 32 KB) or '' to remove (version 14)
    DELETE /acct/me            removes the account, its ratings and its friendships
    PUT    /acct/ratings       {items:[{kind:'a'|'s', k, t, r, n, a}]}  replaces this person's published ratings
    GET    /acct/friends       -> {friends, incoming, outgoing}
@@ -495,6 +495,8 @@ async function acctInit(env) {
   ]);
   /* the table first shipped without the cover column: add it once (the error just means it is already there) */
   try { await env.CATALOG.prepare('ALTER TABLE acct_ratings ADD COLUMN img TEXT').run(); } catch (e) { /* already there */ }
+  /* profile picture and account color (version 14): hue 0-359 or NULL for the automatic color, pic a small JPEG data URL or empty */
+  for (const col of ['hue INTEGER', 'pic TEXT']) { try { await env.CATALOG.prepare('ALTER TABLE acct_users ADD COLUMN ' + col).run(); } catch (e) { /* already there */ } }
   acctReady = true;
   return true;
 }
@@ -553,9 +555,10 @@ async function acctToken(env, uid) {
 async function acctWho(env, request) {
   const m = /^Bearer pb1\.([0-9a-f]{16})\.(\d{10,14})\.([0-9a-f]{64})$/.exec(request.headers.get('authorization') || '');
   if (!m || !(Number(m[2]) > Date.now()) || !keyMatches(m[3], await acctSig(env, m[1] + '.' + m[2]))) return null;
-  return await env.CATALOG.prepare('SELECT uid, name, code, share, rated FROM acct_users WHERE uid = ?1').bind(m[1]).first();
+  return await env.CATALOG.prepare('SELECT uid, name, code, share, rated, hue FROM acct_users WHERE uid = ?1').bind(m[1]).first();
 }
-const meOut = (u, owner) => ({ name: u.name, code: u.code, share: !!u.share, rated: u.rated || 0, owner: !!owner });
+const meOut = (u, owner) => ({ name: u.name, code: u.code, share: !!u.share, rated: u.rated || 0, owner: !!owner, hue: u.hue == null ? null : u.hue, pic: u.pic || '' });
+const PIC_OK = /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/, PIC_MAX = 32000;
 /* the account that is the owner (claimed once with the sync key), cached for a minute so owner requests don't read KV every time */
 let ownerCache = { v: null, at: 0 };
 async function ownerUid(env) {
@@ -599,7 +602,7 @@ async function acct(request, env, url) {
     const { j, err } = await readBody(request, 8192); if (err) return err;
     let pay; try { pay = await googleVerify(env, j.credential); } catch (e) { return reply({ error: 'could not check Google right now' }, 502); }
     if (!pay) return reply({ error: 'Google sign-in was not accepted' }, 401);
-    let u = await env.CATALOG.prepare('SELECT uid, name, code, share, rated FROM acct_users WHERE sub = ?1').bind(String(pay.sub)).first();
+    let u = await env.CATALOG.prepare('SELECT uid, name, code, share, rated, hue, pic FROM acct_users WHERE sub = ?1').bind(String(pay.sub)).first();
     if (!u) {
       const uid = randUid(), name = cleanName(pay.given_name || pay.name) || 'Friend';
       for (let i = 0; i < 6 && !u; i++) {
@@ -617,13 +620,26 @@ async function acct(request, env, url) {
   if (!me) return reply({ error: 'sign in again' }, 401);
 
   if (path === '/me') {
-    if (M === 'GET') return reply({ me: meOut(me, (await ownerUid(env)) === me.uid), token: await acctToken(env, me.uid) });
+    if (M === 'GET') {
+      const pr = await env.CATALOG.prepare('SELECT pic FROM acct_users WHERE uid = ?1').bind(me.uid).first();
+      return reply({ me: meOut(Object.assign({}, me, { pic: pr && pr.pic }), (await ownerUid(env)) === me.uid), token: await acctToken(env, me.uid) });
+    }
     if (M === 'PUT') {
-      const { j, err } = await readBody(request); if (err) return err;
+      const { j, err } = await readBody(request, 48 * 1024); if (err) return err;
       const name = j.name === undefined ? me.name : cleanName(j.name), share = j.share === undefined ? me.share : (j.share ? 1 : 0);
       if (!name) return reply({ error: 'name is empty' }, 400);
-      await env.CATALOG.prepare('UPDATE acct_users SET name = ?2, share = ?3 WHERE uid = ?1').bind(me.uid, name, share).run();
-      return reply({ me: meOut(Object.assign({}, me, { name, share }), (await ownerUid(env)) === me.uid) });
+      let hue = me.hue == null ? null : me.hue;
+      if (j.hue !== undefined) { hue = j.hue === null ? null : Math.round(Number(j.hue)); if (hue !== null && !(hue >= 0 && hue <= 359)) return reply({ error: 'bad color' }, 400); }
+      let pic = null;   /* null keeps the stored picture, '' removes it */
+      if (j.pic !== undefined) {
+        if (!(await rlHit(env, 'pic:' + me.uid, 30, 3600))) return reply({ error: 'You changed your picture a lot just now. Try again in a while.' }, 429);
+        if (j.pic === '' || j.pic === null) pic = '';
+        else if (typeof j.pic === 'string' && j.pic.length <= PIC_MAX && PIC_OK.test(j.pic)) pic = j.pic;
+        else return reply({ error: 'bad picture' }, 400);
+      }
+      await env.CATALOG.prepare('UPDATE acct_users SET name = ?2, share = ?3, hue = ?4, pic = COALESCE(?5, pic) WHERE uid = ?1').bind(me.uid, name, share, hue, pic).run();
+      const pr = await env.CATALOG.prepare('SELECT pic FROM acct_users WHERE uid = ?1').bind(me.uid).first();
+      return reply({ me: meOut(Object.assign({}, me, { name, share, hue, pic: pr && pr.pic }), (await ownerUid(env)) === me.uid) });
     }
     if (M === 'DELETE') {
       if ((await ownerUid(env)) === me.uid) { await env.STATE.delete('owner-uid'); ownerCache = { v: '', at: Date.now() }; }
@@ -710,11 +726,11 @@ async function acct(request, env, url) {
 
   if (path === '/friends') {
     if (M === 'GET') {
-      const rows = (await env.CATALOG.prepare('SELECT f.a, f.b, f.st, u.uid AS uid, u.name AS name, u.rated AS rated, u.share AS share FROM acct_friends f JOIN acct_users u ON u.uid = (CASE WHEN f.a = ?1 THEN f.b ELSE f.a END) WHERE f.a = ?1 OR f.b = ?1 ORDER BY u.name COLLATE NOCASE').bind(me.uid).all()).results || [];
+      const rows = (await env.CATALOG.prepare('SELECT f.a, f.b, f.st, u.uid AS uid, u.name AS name, u.rated AS rated, u.share AS share, u.hue AS hue, u.pic AS pic FROM acct_friends f JOIN acct_users u ON u.uid = (CASE WHEN f.a = ?1 THEN f.b ELSE f.a END) WHERE f.a = ?1 OR f.b = ?1 ORDER BY u.name COLLATE NOCASE').bind(me.uid).all()).results || [];
       return reply({
-        friends: rows.filter(x => x.st === 'ok').map(x => ({ uid: x.uid, name: x.name, rated: x.rated, share: !!x.share })),
-        incoming: rows.filter(x => x.st === 'pending' && x.b === me.uid).map(x => ({ uid: x.uid, name: x.name })),
-        outgoing: rows.filter(x => x.st === 'pending' && x.a === me.uid).map(x => ({ uid: x.uid, name: x.name }))
+        friends: rows.filter(x => x.st === 'ok').map(x => ({ uid: x.uid, name: x.name, rated: x.rated, share: !!x.share, hue: x.hue == null ? null : x.hue, pic: x.pic || '' })),
+        incoming: rows.filter(x => x.st === 'pending' && x.b === me.uid).map(x => ({ uid: x.uid, name: x.name, hue: x.hue == null ? null : x.hue, pic: x.pic || '' })),
+        outgoing: rows.filter(x => x.st === 'pending' && x.a === me.uid).map(x => ({ uid: x.uid, name: x.name, hue: x.hue == null ? null : x.hue, pic: x.pic || '' }))
       });
     }
     if (M === 'POST') {
@@ -761,12 +777,12 @@ async function acct(request, env, url) {
       const f = await env.CATALOG.prepare("SELECT 1 AS x FROM acct_friends WHERE st = 'ok' AND ((a = ?1 AND b = ?2) OR (a = ?2 AND b = ?1))").bind(me.uid, uid).first();
       if (!f) return reply({ error: 'You are not friends with this person.' }, 404);
     }
-    const u = await env.CATALOG.prepare('SELECT uid, name, share, made FROM acct_users WHERE uid = ?1').bind(uid).first();
+    const u = await env.CATALOG.prepare('SELECT uid, name, share, made, hue, pic FROM acct_users WHERE uid = ?1').bind(uid).first();
     if (!u) return reply({ error: 'That account is gone.' }, 404);
     if (uid !== me.uid && !u.share) return reply({ error: u.name + ' is not sharing their ratings right now.' }, 403);
     const items = (await env.CATALOG.prepare('SELECT kind, k, t, r, ttl AS n, art AS a, img AS i FROM acct_ratings WHERE uid = ?1 ORDER BY r DESC, ttl COLLATE NOCASE LIMIT 4000').bind(uid).all()).results || [];
     const fc = await env.CATALOG.prepare("SELECT COUNT(*) AS c FROM acct_friends WHERE st = 'ok' AND (a = ?1 OR b = ?1)").bind(uid).first('c');
-    return reply({ profile: { uid, name: u.name, since: u.made, friends: fc || 0, items } });
+    return reply({ profile: { uid, name: u.name, since: u.made, friends: fc || 0, hue: u.hue == null ? null : u.hue, pic: u.pic || '', items } });
   }
 
   if (path === '/friends/ratings' && M === 'POST') {
@@ -776,7 +792,7 @@ async function acct(request, env, url) {
     const ts = (Array.isArray(j.ts) ? j.ts : []).filter(x => typeof x === 'string' && x).slice(0, 400).map(x => x.slice(0, 200));
     if (!ks.length && !ts.length) return reply({ rows: [] });
     const rows = (await env.CATALOG.prepare(
-      "SELECT r.uid AS uid, u.name AS name, r.k AS k, r.t AS t, r.r AS r FROM acct_ratings r JOIN acct_users u ON u.uid = r.uid " +
+      "SELECT r.uid AS uid, u.name AS name, u.hue AS hue, r.k AS k, r.t AS t, r.r AS r FROM acct_ratings r JOIN acct_users u ON u.uid = r.uid " +
       "WHERE r.kind = ?1 AND u.share = 1 AND r.uid IN (SELECT b FROM acct_friends WHERE a = ?2 AND st = 'ok' UNION SELECT a FROM acct_friends WHERE b = ?2 AND st = 'ok') " +
       "AND (r.k IN (SELECT value FROM json_each(?3)) OR r.t IN (SELECT value FROM json_each(?4))) LIMIT 1500"
     ).bind(kind, me.uid, JSON.stringify(ks), JSON.stringify(ts)).all()).results || [];

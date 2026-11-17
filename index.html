@@ -843,6 +843,29 @@ details.addart .add{border-top:1px solid var(--line)}
 }
 @media (max-width:560px){.pf-hero{padding:16px;gap:12px}.pf-av{width:56px;height:56px;font-size:26px}.pf-who h2{font-size:23px}.pf-match{width:72px;height:72px}.pf-match b{font-size:17px}}
 /* accounts and friends' ratings (Settings > Account, and the Friends strip under an album or title) */
+/* profile picture and account color */
+.tacc.pic,.fav.pic,.pf-av.pic{overflow:hidden;padding:0}
+.tacc.pic{box-shadow:0 0 0 2px hsl(var(--h,180) 42% 38%)}
+.tacc img,.fav img,.pf-av img{display:block;width:100%;height:100%;object-fit:cover;border-radius:50%;-webkit-user-drag:none}
+.pf-av.pic{border-color:rgba(255,255,255,.7)}
+.acc-look{display:grid;gap:10px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.al-top{display:flex;align-items:center;gap:14px}
+.al-av{width:72px;height:72px;font:800 32px Archivo,var(--display);overflow:hidden}
+.al-btns{display:flex;flex-wrap:wrap;gap:8px}
+.al-sw{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.al-dot{width:30px;height:30px;border-radius:50%;border:2px solid transparent;background:hsl(var(--h) 42% 38%);padding:0;cursor:pointer;box-shadow:inset 0 0 0 2px var(--surface)}
+.al-dot.on{border-color:var(--ink);transform:scale(1.12)}
+.al-auto{padding:5px 12px;font-size:13px}
+.al-auto[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.al-range{width:100%;height:22px;-webkit-appearance:none;appearance:none;border-radius:99px;background:linear-gradient(90deg,hsl(0 42% 38%),hsl(60 42% 38%),hsl(120 42% 38%),hsl(180 42% 38%),hsl(240 42% 38%),hsl(300 42% 38%),hsl(359 42% 38%));accent-color:var(--accent)}
+.al-range::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;border:3px solid var(--ink);cursor:pointer}
+.al-range::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--ink);cursor:pointer}
+@keyframes accpop{0%{transform:scale(.7);opacity:.4}60%{transform:scale(1.1)}100%{transform:none;opacity:1}}
+@media (prefers-reduced-motion:no-preference){
+  .al-av.pop,.pf-av.pop{animation:accpop .5s cubic-bezier(.3,1.35,.5,1) both}
+  .al-dot{transition:transform .2s cubic-bezier(.3,1.35,.5,1),border-color .2s}.al-dot:active{transform:scale(.88)}
+  .al-sw .al-dot{animation:pfup .4s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*25ms)}
+}
 .acc .gbtn{min-height:44px;display:flex;align-items:center}
 .acc-id{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
 .acc-code{display:block;font:800 26px var(--mono);letter-spacing:.16em;margin-top:2px}
@@ -1842,6 +1865,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-z', note:'PROFILE PHOTO AND ACCOUNT COLOR: on your Account page, under Your account, you can add a photo (it is cropped square and shrunk to a small size), remove it, and pick your account color from a row of swatches, drag a slider for any shade, or tap Auto to go back to the color made from your name. Your photo and color show on the account icon at the top right, on your page, and for friends on your page, in their friends list and next to your ratings under an album. The picture and color are kept on Playback\u2019s server, so your Worker needs the new playback-sync.js (it takes it from GitHub on its own); until it does, saving shows a short \u201cgive it a minute\u201d note.'},
   {v:'2026.11.17-y', note:'COVERS ON ACCOUNT PAGES: albums on your page and on friends\u2019 pages showed a letter instead of the cover whenever the album did not come from MusicBrainz (Spotify and Apple Music imports). The cover link you already have is now shared with your ratings, so those albums show their art. Only Spotify, Apple, MusicBrainz and TMDB picture links are accepted. Your page and your friends\u2019 pages fill in as each person next opens Playback.'},
   {v:'2026.11.17-x', note:'OWNER LOGIN: Account has a new Owner login section. On a device that already syncs with your sync key, tap Make this my owner login once (it takes the key one time). After that, on any new phone or computer you just open Playback, sign in with Google, and the whole app unlocks: your log, photos, Spotify plays, Discogs and suggestions, with no Worker address or key to paste. A device can also switch to Google sign-in with Use Google sign-in on this device. Your sync key keeps working as a fallback, and Give up owner login undoes it. Friends are unaffected: only the one account you claimed gets this, and claiming needs your sync key. Your Worker needs the new playback-sync.js (it takes it from GitHub on its own).'},
   {v:'2026.11.17-w', note:'ACCOUNT SYNC: after signing in, Account has a Keep my log on all my devices switch. Turn it on and your whole log (ratings, listens, collection, shows and films, not photos) is saved under your Google account on Playback’s server, so it shows up on any phone or computer you sign in on, with no setup of your own. Saves are batched about every 20 seconds and sent when you leave the app, and a device that is behind never overwrites a newer copy. If a device already has its own log when you first turn it on and a saved copy exists, you choose which one wins. Only you can see the saved copy (friends still see just the ratings you publish), the size is capped at about 1 MB compressed, and you can delete the copy or your whole account any time. Your own Worker sync is unchanged and is used instead if you have it. The Worker needs the new playback-sync.js (it takes it from GitHub on its own).'},
@@ -5561,7 +5585,7 @@ function accStrip(rows,id){
   if(!rows.length)return '';
   const fresh=!ACX.seen.has(id);ACX.seen.add(id);
   const avg=rows.reduce((x,y)=>x+y.r,0)/rows.length;
-  return `<div class="frs${fresh?' fresh':''}" role="group" aria-label="Friends’ ratings"><div class="frs-h"><span>Friends</span>${rows.length>1?`<b>avg ${avg.toFixed(1)}</b>`:''}</div><div class="frs-l">${rows.map((x,i)=>`<div class="frp" style="--i:${i};--p:${x.r*10}%"><i class="fav" style="--h:${accHue(x.name)}" aria-hidden="true">${esc(String(x.name||'?').charAt(0).toUpperCase())}</i><span class="fn">${esc(x.name)}</span><span class="fbar" aria-hidden="true"><i></i></span><b class="fr">${fmt(x.r)}</b></div>`).join('')}</div></div>`;
+  return `<div class="frs${fresh?' fresh':''}" role="group" aria-label="Friends’ ratings"><div class="frs-h"><span>Friends</span>${rows.length>1?`<b>avg ${avg.toFixed(1)}</b>`:''}</div><div class="frs-l">${rows.map((x,i)=>`<div class="frp" style="--i:${i};--p:${x.r*10}%"><i class="fav${accPicOf(accWho(x))?' pic':''}" style="--h:${accHueOf(accWho(x))}" aria-hidden="true">${accFace(accWho(x))}</i><span class="fn">${esc(x.name)}</span><span class="fbar" aria-hidden="true"><i></i></span><b class="fr">${fmt(x.r)}</b></div>`).join('')}</div></div>`;
 }
 function friendStrip(g,a,dx){
   if(!accOn()||!RATEABLE.includes(g.kind))return '';
@@ -5609,6 +5633,42 @@ async function accDo(fn){if(ACX.busy)return;ACX.busy='x';ACX.msg='';try{await fn
 const accSetName=d=>accDo(async()=>{const n=String(d.name||'').trim();if(!n){ACX.ok=false;ACX.msg='A name is needed.';return}
   const{status,j}=await accApi('PUT','/me',{name:n});if(status===200){ACC.me=j.me;saveAcc();ACX.ok=true;ACX.msg='Name saved.'}else{ACX.ok=false;ACX.msg='That did not save. Try again.'}});
 const accSetShare=on=>accDo(async()=>{const{status,j}=await accApi('PUT','/me',{share:on});if(status===200){ACC.me=j.me;saveAcc();ACX.ok=true;ACX.msg=on?'Friends can see your ratings.':'Your ratings are hidden from friends.'}else{ACX.ok=false;ACX.msg='That did not save. Try again.'}});
+/* picture and color: the server answers with the whole profile, so an older Worker (which leaves hue out) is noticed instead of looking like it saved */
+const ACC_HUES=[0,24,45,90,150,175,200,225,260,290,320,345];
+async function accSaveLook(body,okMsg){
+  const{status,j}=await accApi('PUT','/me',body);
+  if(status===200&&j.me&&'hue' in j.me){ACC.me=Object.assign({},ACC.me,j.me);saveAcc();ACX.popAv=true;ACX.ok=true;ACX.msg=okMsg}
+  else{ACX.ok=false;ACX.msg=status===200?'Playback’s server has not picked up this update yet. Give it a minute and try again.':status===429?(j.error||'Too many changes. Try again in a while.'):status===400?'That picture could not be used. Try a different one.':'That did not save. Try again.'}
+}
+const accSetHue=h=>accDo(()=>accSaveLook({hue:h},h==null?'Back to the automatic color.':'Color saved.'));
+const accSetPic=d=>accDo(()=>accSaveLook({pic:d},d?'Photo saved.':'Photo removed.'));
+/* square-crop the middle of the picture and shrink it to about 192px so it stays a few KB */
+async function accPicMake(file){
+  let bmp;
+  try{bmp=await createImageBitmap(file)}catch(e){bmp=await new Promise((res,rej)=>{const im=new Image(),u=URL.createObjectURL(file);im.onload=()=>{URL.revokeObjectURL(u);res(im)};im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('img'))};im.src=u})}
+  const w=bmp.width||bmp.naturalWidth,h=bmp.height||bmp.naturalHeight,s=Math.min(w,h);if(!s)return '';
+  for(const[px,q]of[[192,.82],[160,.7],[128,.6]]){
+    const c=document.createElement('canvas');c.width=c.height=px;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,px,px);x.imageSmoothingQuality='high';
+    x.drawImage(bmp,(w-s)/2,(h-s)/2,s,s,0,0,px,px);
+    const d=c.toDataURL('image/jpeg',q);if(d.length<=30000)return d}
+  return '';
+}
+function accPicPick(inp){
+  const f=inp.files&&inp.files[0];inp.value='';if(!f)return;
+  accDo(async()=>{let d='';try{d=await accPicMake(f)}catch(e){}
+    if(!d){ACX.ok=false;ACX.msg='That picture could not be read. Try a JPEG or PNG.';return}
+    await accSaveLook({pic:d},'Photo saved.')});
+}
+/* the picture and color controls on the Account page */
+function accLookHtml(b){
+  const me=ACC.me,auto=me.hue==null,cur=accHueOf(me),has=!!accPicOf(me);
+  return `<div class="acc-look"><div class="al-top"><span class="fav al-av${has?' pic':''}${ACX.popAv?' pop':''}" style="--h:${cur}" aria-hidden="true">${accFace(me)}</span>
+    <div class="al-btns"><label class="btn" for="acc-pic" style="cursor:pointer">${has?'Change photo':'Add photo'}</label><input type="file" id="acc-pic" accept="image/*" hidden${b}>${has?`<button class="btn" data-act="accpicdel"${b}>Remove photo</button>`:''}</div></div>
+    <span class="label" id="acc-col-l">Account color</span>
+    <div class="al-sw" role="group" aria-labelledby="acc-col-l">${ACC_HUES.map((h,i)=>`<button type="button" class="al-dot${!auto&&me.hue===h?' on':''}" data-act="acchue" data-h="${h}" style="--h:${h};--i:${i}" aria-label="Color ${i+1}" aria-pressed="${!auto&&me.hue===h}"${b}></button>`).join('')}<button type="button" class="btn al-auto" data-act="acchue" data-h="auto" aria-pressed="${auto}"${b}>Auto</button></div>
+    <label class="label" for="acc-hue">Or pick any shade</label><input type="range" id="acc-hue" class="al-range" min="0" max="359" value="${cur}"${b}>
+    <p class="note">Friends see your photo and color on your page and next to your ratings. The photo is shrunk to a small square before it is saved.</p></div>`;
+}
 const accAdd=d=>accDo(async()=>{const{status,j}=await accApi('POST','/friends',{code:String(d.code||'')});
   if(status===200){ACX.ok=true;ACX.msg=j.accepted?'You and '+j.name+' are friends.':'Request sent to '+j.name+'.';ACX.want={};await accFriends(true)}else{ACX.ok=false;ACX.msg=j.error||'That did not work. Try again.'}});
 const accAccept=u=>accDo(async()=>{const{status,j}=await accApi('POST','/friends/accept',{uid:u});if(status===200){ACX.ok=true;ACX.msg='Friend added.';ACX.want={};await accFriends(true)}else{ACX.ok=false;ACX.msg=j.error||'That did not work. Try again.'}});
@@ -5623,6 +5683,12 @@ async function accDelete(){
 /* ---------- the Account page and friends' pages ---------- */
 const accHue=n=>{let h=0;for(const c of String(n||'?'))h=(h*31+c.charCodeAt(0))%360;return h};
 const accIni=n=>esc(String(n||'?').trim().charAt(0).toUpperCase()||'?');
+/* profile picture and account color: kept on Playback's server so friends see them too. No chosen color means the one made from the name. */
+const accHueOf=x=>x&&x.hue!=null?x.hue:accHue(x&&x.name);
+const accPicOf=x=>{const p=x&&x.pic;return typeof p==='string'&&/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(p)?p:''};
+const accFace=x=>{const p=accPicOf(x);return p?`<img src="${p}" alt="" decoding="async" draggable="false">`:accIni(x&&x.name)};
+/* a rating row only knows who rated, so borrow the picture (and color) from the friends list */
+const accWho=x=>{const f=ACX.fr&&x&&x.uid&&ACX.fr.friends.find(y=>y.uid===x.uid);return f?Object.assign({},x,{pic:f.pic,hue:x.hue!=null?x.hue:f.hue}):x};
 function accProfile(uid,force){
   const c=ACX.prof[uid];
   if(c&&(c.loading||(!force&&Date.now()-c.at<60000)))return;
@@ -5648,9 +5714,9 @@ function accMatch(theirs,mine){
   return{n,pct:n?Math.round(100*(1-d/n/9)):0,mine:(x)=>(x.k&&mk.get(x.kind+x.k))??mt.get(x.kind+x.t)};
 }
 function accHeroHtml(P,stats,match,extra){
-  const h=accHue(P.name),anim=UI.pAnim?' pf-in':'';
+  const h=accHueOf(P),anim=UI.pAnim?' pf-in':'';
   const ring=match&&match.n>=3?`<div class="pf-match" title="How alike your ratings are, from ${match.n} things you both rated"><svg viewBox="0 0 80 80" aria-hidden="true"><circle class="mt" cx="40" cy="40" r="34"/><circle class="mv" cx="40" cy="40" r="34" style="--d:${(match.pct*2.136).toFixed(1)}"/></svg><b>${match.pct}%</b><span>taste match</span></div>`:'';
-  return `<div class="pf-hero${anim}" style="--h:${h}"><div class="pf-av" aria-hidden="true">${accIni(P.name)}</div>
+  return `<div class="pf-hero${anim}" style="--h:${h}"><div class="pf-av${accPicOf(P)?' pic':''}${P.pop?' pop':''}" aria-hidden="true">${accFace(P)}</div>
     <div class="pf-who"><h2>${esc(P.name)}</h2><span class="pf-sub">${P.n} rating${P.n===1?'':'s'} shared · ${P.friends} friend${P.friends===1?'':'s'}${match&&match.n&&match.n<3?` · ${match.n} in common`:''}</span>${extra||''}</div>${ring}</div>`;
 }
 function accStatsHtml(st){
@@ -5681,7 +5747,8 @@ function profileHtml(P,mine){
 function accBtn(){
   if(!GCID)return '';
   const on=accOn(),cur=UI.view==='account'||UI.view==='friend';
-  return `<button class="tact tacc${on?' on':''}" data-act="view" data-v="account" aria-pressed="${cur}" aria-label="${on?'Account: '+esc(ACC.me.name):'Sign in or make an account'}"${on?` style="--h:${accHue(ACC.me.name)}"`:''}>${on?`<b aria-hidden="true">${accIni(ACC.me.name)}</b>`:ICO.user}</button>`;
+  const pic=on&&accPicOf(ACC.me);
+  return `<button class="tact tacc${on?' on':''}${pic?' pic':''}" data-act="view" data-v="account" aria-pressed="${cur}" aria-label="${on?'Account: '+esc(ACC.me.name):'Sign in or make an account'}"${on?` style="--h:${accHueOf(ACC.me)}"`:''}>${on?(pic?accFace(ACC.me):`<b aria-hidden="true">${accIni(ACC.me.name)}</b>`):ICO.user}</button>`;
 }
 /* the owner login: this Google account unlocks your own Worker (log, photos, Spotify, Discogs) instead of the sync key */
 function accOwnerHtml(b){
@@ -5749,7 +5816,7 @@ async function accSyncDel(){
 }
 function accManageHtml(){
   const me=ACC.me,F=ACX.fr,b=ACX.busy?' disabled':'',ani=ACX.anim?' acc-in':'';ACX.anim=false;
-  const row=(x,btns,open)=>`<div class="acc-row${ani}"><i class="fav" style="--h:${accHue(x.name)}" aria-hidden="true">${accIni(x.name)}</i>${open?`<button class="fn linkish" data-act="friendopen" data-u="${esc(x.uid)}">${esc(x.name)}</button>`:`<span class="fn">${esc(x.name)}</span>`}<span class="sp"></span>${btns}</div>`;
+  const row=(x,btns,open)=>`<div class="acc-row${ani}"><i class="fav${accPicOf(x)?' pic':''}" style="--h:${accHueOf(x)}" aria-hidden="true">${accFace(x)}</i>${open?`<button class="fn linkish" data-act="friendopen" data-u="${esc(x.uid)}">${esc(x.name)}</button>`:`<span class="fn">${esc(x.name)}</span>`}<span class="sp"></span>${btns}</div>`;
   const msg=ACX.msg?`<span class="msg ${ACX.ok?'ok':'err'}" role="status">${esc(ACX.msg)}</span>`:'';
   return `<div class="setcard acc">
     <h3>Friends</h3>
@@ -5761,6 +5828,7 @@ function accManageHtml(){
     ${F?`<div class="label">Friends${F.friends.length?' ('+F.friends.length+')':''}</div>${F.friends.length?F.friends.map(x=>row(x,`<span class="note">${x.share===false?'not sharing':x.rated+' rated'}</span><button class="btn" data-act="accremove" data-u="${esc(x.uid)}"${b}>Remove</button>`,x.share!==false)).join(''):'<p class="note">No friends yet.</p>'}`:'<p class="note">Loading friends…</p>'}
     ${msg}</div>
     <div class="setcard acc"><h3>Your account</h3>
+    ${accLookHtml(b)}
     <form class="panel" data-form="accname"><label class="label" for="acc-name">Name friends see</label><input id="acc-name" name="name" maxlength="40" autocomplete="off" value="${esc(me.name)}"><div class="tools"><button class="btn"${b}>Save name</button></div></form>
     <label class="acc-share"><input type="checkbox" id="acc-share" ${me.share?'checked':''}${b}><span>Friends can open my page and see my ratings</span></label>
     ${accOwnerHtml(b)}
@@ -5777,10 +5845,10 @@ function accountView(){
       <div id="g-btn" class="gbtn" aria-label="Sign in with Google"></div>${ACX.busy==='in'?'<span class="note">Signing in…</span>':''}${ACX.msg?`<span class="msg ${ACX.ok?'ok':'err'}" role="status">${esc(ACX.msg)}</span>`:''}
       <p class="note">Playback keeps your Google name and a private id, never your email address. <a href="privacy.html" target="_blank" rel="noopener">Privacy policy</a></p></div></section>`;
   }else{
-    const items=accItems(),F=ACX.fr,P={self:true,name:ACC.me.name,friends:F?F.friends.length:0,items,extra:`<span class="pf-code">Code <b>${esc(ACC.me.code)}</b></span>`};
+    const items=accItems(),F=ACX.fr,P={self:true,name:ACC.me.name,hue:ACC.me.hue,pic:ACC.me.pic,pop:ACX.popAv,friends:F?F.friends.length:0,items,extra:`<span class="pf-code">Code <b>${esc(ACC.me.code)}</b></span>`};
     h=`<section class="settings pf" aria-labelledby="ac-h"><h2 id="ac-h" class="sr">Your page</h2>${profileHtml(P,null)}${accManageHtml()}</section>`;
   }
-  UI.pAnim=false;return h;
+  UI.pAnim=false;ACX.popAv=false;return h;
 }
 function friendView(){
   const uid=UI.fid,c=ACX.prof[uid]||{},F=ACX.fr,known=F&&[].concat(F.friends,F.incoming,F.outgoing).find(x=>x.uid===uid);
@@ -5788,10 +5856,10 @@ function friendView(){
   let h;
   if(!accOn())h=`<section class="settings pf">${back}<p class="note">Sign in to see friends’ pages.</p></section>`;
   else if(c.data){
-    const d=c.data,P={self:false,name:d.name,friends:d.friends,items:d.items};
+    const d=c.data,P={self:false,name:d.name,hue:d.hue,pic:d.pic,friends:d.friends,items:d.items};
     h=`<section class="settings pf" aria-label="${esc(d.name)}’s page">${back}${profileHtml(P,accItems())}</section>`;
   }else if(c.err)h=`<section class="settings pf">${back}<div class="setcard"><h3>${esc(known?known.name:'Friend')}</h3><p class="note">${esc(c.err)}</p></div></section>`;
-  else h=`<section class="settings pf">${back}<div class="pf-hero" style="--h:${accHue(known&&known.name)}"><div class="pf-av" aria-hidden="true">${accIni(known&&known.name)}</div><div class="pf-who"><h2>${esc(known?known.name:'Friend')}</h2><span class="pf-sub">Loading…</span></div></div></section>`;
+  else h=`<section class="settings pf">${back}<div class="pf-hero" style="--h:${accHueOf(known||{})}"><div class="pf-av${accPicOf(known)?' pic':''}" aria-hidden="true">${accFace(known||{})}</div><div class="pf-who"><h2>${esc(known?known.name:'Friend')}</h2><span class="pf-sub">Loading…</span></div></div></section>`;
   UI.pAnim=false;return h;
 }
 /* a small card in Settings that points at the Account page */
@@ -6859,6 +6927,8 @@ document.addEventListener('click',ev=>{
   else if(act==='pmore'){UI.pLim=(UI.pLim||60)+60}
   else if(act==='accout'){accOut('Signed out.');ACX.ok=true;render();return}
   else if(act==='accdel'){accDelete();return}
+  else if(act==='acchue'){accSetHue(b.dataset.h==='auto'?null:+b.dataset.h);return}
+  else if(act==='accpicdel'){accSetPic('');return}
   else if(act==='accsyncdel'){accSyncDel();return}
   else if(act==='accownerclaim'){accOwnerClaim();return}
   else if(act==='accowneruse'){accOwnerUse(false);return}
@@ -7023,6 +7093,7 @@ document.addEventListener('click',ev=>{
 });
 
 document.addEventListener('input',ev=>{
+  if(ev.target.id==='acc-hue'){const h=ev.target.value;document.querySelectorAll('.al-av,.pf-hero,.tacc.on').forEach(el=>el.style.setProperty('--h',h));return}   /* the preview follows the slider; it is saved when you let go */
   const rt=ev.target.dataset&&ev.target.dataset.rate;
   if(rt){const el=ev.target,box=el.closest('.rater'),v=+el.value;el.classList.remove('unset');
     if(box){box.style.setProperty('--p',((v-1)/9*100)+'%');const o=box.querySelector('.rt-v');if(o)o.textContent=fmt(v)}
@@ -7058,6 +7129,8 @@ document.addEventListener('keydown',ev=>{
 document.addEventListener('change',ev=>{
   if(ev.target.dataset&&ev.target.dataset.rate){rateCommit(ev.target);return}
   if(ev.target.id==='acc-share'){accSetShare(!!ev.target.checked);return}
+  if(ev.target.id==='acc-pic'){accPicPick(ev.target);return}
+  if(ev.target.id==='acc-hue'){accSetHue(+ev.target.value);return}
   if(ev.target.id==='acc-sync'){accSyncSet(!!ev.target.checked);return}
   if(ev.target.id==='new-type'){UI.addType=ev.target.value;render();return}
   if(ev.target.id==='col-sort'){UI.colS=ev.target.value;render();return}
