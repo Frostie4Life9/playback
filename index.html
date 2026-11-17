@@ -297,7 +297,7 @@ code.uri{font:500 12px var(--mono);background:var(--sunk);border-radius:4px;padd
 /* motion: only on the tap that switches editions (the page marks that group .dxanim for one draw),
    so ticking a song or rating never replays it */
 @media (prefers-reduced-motion:no-preference){
-  @keyframes dxRise{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+  @keyframes dxRise{from{opacity:0;transform:translateY(7px);max-height:0;padding-top:0;padding-bottom:0;overflow:hidden}to{opacity:1;transform:none;max-height:160px}}
   @keyframes dxFade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
   @keyframes dxCover{from{opacity:0;transform:scale(.82) rotate(-4deg)}to{opacity:1;transform:none}}
   @keyframes dxToR{from{transform:translateX(0)}to{transform:translateX(calc(100% + 4px))}}
@@ -307,7 +307,10 @@ code.uri{font:500 12px var(--mono);background:var(--sunk);border-radius:4px;padd
   .group.dxanim .ghead .art{animation:dxCover .45s cubic-bezier(.2,.8,.2,1)}
   .group.dxanim .ghead h3,.group.dxanim .ghead .dxbadge,.group.dxanim .arate{animation:dxFade .32s ease-out both}
   .group.dxanim .track{animation:dxFade .26s ease-out both}
-  .group.dxanim .track.dx{animation:dxRise .38s cubic-bezier(.2,.8,.2,1) both}
+  .group.dxanim .track.dx{animation:dxRise .42s cubic-bezier(.2,.8,.2,1) backwards}
+  /* the sleeve's own header: the cover pops in, the title, badge, count and rating fade up */
+  .group.dxanim .sl-cover{animation:dxCover .5s cubic-bezier(.2,.8,.2,1)}
+  .group.dxanim .sl-meta>*,.group.dxanim .arate{animation:dxFade .34s ease-out both}
   .track{transition:background-color .15s}
   .check,.chip,.dxseg button{transition:transform .12s,color .2s,background-color .15s,border-color .15s}
   .check:active,.chip:active,.dxseg button:active{transform:scale(.93)}
@@ -1672,6 +1675,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-i', note:'DELUXE SWITCH TRANSITION: going between Standard and Deluxe now plays as a real transition instead of a snap. The old edition fades out (cover, title, rating), switching back folds the deluxe-only songs shut one after another, and going to Deluxe opens them up row by row while the new cover pops in and the title and rating fade up. The sliding switch thumb is unchanged. Reduced-motion settings skip all of it.'},
   {v:'2026.11.17-h', note:'NO MORE COVER FLASH: opening a song or album rating (or anything else that redraws the page) made the album cover blink, because every redraw rebuilt each cover as a new picture. Covers that are already on screen are now kept through a redraw and put straight back in place, so they no longer blink, flicker or reload.'},
   {v:'2026.11.17-g', note:'COVERS NO LONGER VANISH ON A HICCUP: if an album cover or poster failed to load once (weak signal, a slow image server), it was thrown away until the next redraw, which is why covers kept disappearing and flashing back. It now asks for the picture again up to two more times before giving up.'},
   {v:'2026.11.17-f', note:'MOBILE: THE RECORD COMES OUT SOONER: on a phone, an album\u2019s vinyl now slides out of its sleeve (and starts its animation) as soon as the album is a little way onto the screen from the bottom, and stays out until it is nearly off the top, so it is out for much more of your scrolling. Before, it only came out while the album sat in a narrow band in the middle of the screen. Computers are unchanged.'},
@@ -6243,7 +6247,16 @@ document.addEventListener('click',ev=>{
     its.forEach(i=>lsOwn(i.id));its.forEach(i=>S.marks[i.id]={...(S.marks[i.id]||{}),done:!full});if(!full){slLitAsk(g);slPulseAsk(g.id,0)}touch()}
   else if(act==='wedit'){UI.wEdit=UI.wEdit===b.dataset.g?null:b.dataset.g;formUp()}
   else if(act==='dedit'){UI.dEdit=UI.dEdit===b.dataset.g?null:b.dataset.g;formUp()}
-  else if(act==='dxsel'){UI.dxOpen[b.dataset.g]=b.dataset.v==='1';UI.dxAnim=b.dataset.g;slPulseAsk(b.dataset.g,140)}
+  else if(act==='dxsel'){const gid=b.dataset.g,to=b.dataset.v==='1',go=()=>{UI.dxOpen[gid]=to;UI.dxAnim=gid;slPulseAsk(gid,140)};
+    const sl=document.querySelector('.group.sleeve[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(gid):gid)+'"]');
+    if(sl&&!noMotion()&&sl.animate&&!!UI.dxOpen[gid]!==to&&!UI.dxBusy){   /* the old edition leaves first: header fades, deluxe-only songs fold shut, then the new one rises in */
+      UI.dxBusy=true;const E='cubic-bezier(.4,0,.2,1)',as=[];
+      sl.querySelectorAll('.sl-cover,.sl-meta>*,.arate').forEach(e=>as.push(e.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateY(-3px)'}],{duration:170,easing:E,fill:'forwards'})));
+      if(!to){const r=[...sl.querySelectorAll('.track.dx')];r.forEach((e,k)=>{const h=e.getBoundingClientRect().height;e.style.overflow='hidden';
+        as.push(e.animate([{opacity:1,maxHeight:h+'px',transform:'none'},{opacity:0,maxHeight:'0px',paddingTop:'0px',paddingBottom:'0px',transform:'translateY(-6px)'}],{duration:230,delay:Math.min(r.length-1-k,6)*14,easing:E,fill:'forwards'}))})}
+      Promise.all(as.map(a=>a.finished.catch(()=>{}))).then(()=>{UI.dxBusy=false;go();render()});
+      return}
+    go()}
   else if(act==='seasonall'){const s=S.screen.find(x=>x.id===b.dataset.s),n=+b.dataset.n,se=s.seasons.find(x=>x.n===n);
     const ids=Array.from({length:se.eps},(_,k)=>sid(s.id,'s',n,'e',k+1)),full=ids.every(isDone);
     ids.forEach(i=>S.marks[i]={...(S.marks[i]||{}),done:!full});touch()}
