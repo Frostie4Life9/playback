@@ -1583,6 +1583,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-u', note:'RECORD STAYS UNDER ITS OWN TILE: when an artist\'s record leaves its sleeve for the turntable (and when it comes back), it can cross other albums on the way, but the part that is over its own tile is now always hidden behind that tile instead of flying across the cover.'},
   {v:'2026.11.16-t', note:'EDGE FIXES: the green ring around the open artist on the wall is no longer clipped on the left edge, and a record sliding out on hover now stops at the end of its sleeve instead of poking past it (it overshot by a few percent, worst on well-heard artists).'},
   {v:'2026.11.16-s', note:'RATING ANIMATION NO LONGER CUTS OUT: the page redraws itself about a second and a half after you rate (your sync starting and finishing), and that rebuilt the record in the middle of the effect. A redraw now picks the effect up exactly where it was, so it plays through every time.'},
   {v:'2026.11.16-r', note:'SOFTER ENDING: the rating animation no longer cuts off. The ripple, glint, shockwave and flare run a little longer and fade out gradually, and nothing is removed until it has finished.'},
@@ -5113,7 +5114,7 @@ const fEase=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,fOut=t=>1-Math.pow(1-t,3),fIn
 function tileGeo(T){const pk=T&&T.querySelector('.tpack'),cv=T&&T.querySelector('.tpack .tcov');if(!pk||!cv)return null;
   const p=pk.getBoundingClientRect(),c=cv.getBoundingClientRect();if(!p.width||!c.width)return null;
   const pv=parseFloat(pk.style.getPropertyValue('--p'))||0;
-  return{x:p.left+p.width*(.088+pv*.00236),xc:c.right,top:p.top+p.height*.04,d:p.height*.92,cx:c.left+c.width/2,cy:c.top+c.height/2}}
+  return{x:p.left+p.width*(.088+pv*.00236),xc:c.right,top:p.top+p.height*.04,d:p.height*.92,cx:c.left+c.width/2,cy:c.top+c.height/2,R:{l:c.left,t:c.top,r:c.right,b:c.bottom}}}
 function tileSeen(T,g){const e=document.elementFromPoint(g.cx,g.cy);return !!(e&&T.contains(e))}
 function discSnap(hero){const d=hero.querySelector('.hdisc'),sp=hero.querySelector('.hspin'),l=hero.querySelector('.hlab');if(!d||!sp||!l)return null;
   const cs=getComputedStyle(sp),w=d.getBoundingClientRect().width;if(!w)return null;
@@ -5128,6 +5129,13 @@ function discEl(sn,ang){const w=document.createElement('div');w.className='flyw'
 /* put the flying record at x,y with diameter d; xc = the sleeve's open edge, and whatever is left of it is inside the sleeve (clipped) */
 function flyPut(w,x,y,d,xc){w.style.transform='translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px) scale('+(d/w._w).toFixed(4)+')';
   const a=xc==null?0:Math.max(0,Math.min(d,xc-x));w.firstChild.style.clipPath=a>0?'inset(0 0 0 '+(a/d*100).toFixed(1)+'%)':''}
+/* the flying record may cross other albums, but never its own tile: hide the part of it that is over that tile's cover */
+function flyClip(w,x,y,d,R){const f=w.firstChild;
+  if(!R){f.style.clipPath='';return}
+  const W=w._w,s=d/W,l=(R.l-x)/s,t=(R.t-y)/s,r=(R.r-x)/s,b=(R.b-y)/s;
+  if(r<=0||l>=W||b<=0||t>=W){f.style.clipPath='';return}
+  const B=W*3;f.style.clipPath="path(evenodd,'M"+(-B)+' '+(-B)+'H'+B+'V'+B+'H'+(-B)+'ZM'+l.toFixed(1)+' '+t.toFixed(1)+'H'+r.toFixed(1)+'V'+b.toFixed(1)+'H'+l.toFixed(1)+"Z')"}
+const coverR=aid=>{const T=document.querySelector('.tile[data-act="sel"][data-id="'+String(aid).replace(/["\\]/g,'\\$&')+'"]'),c=T&&T.querySelector('.tpack .tcov');if(!c)return null;const r=c.getBoundingClientRect();return r.width?{l:r.left,t:r.top,r:r.right,b:r.bottom}:null};
 function flyAsk(b,id){UI.fly=null;if(noMotion())return;
   const cur=document.querySelector('.hero[data-aid]');if(cur&&cur.dataset.aid===id)return;
   const g=tileGeo(b);if(!g)return;
@@ -5145,8 +5153,8 @@ function flyOut(F){
     if(!dc||FLY.aid!==F.to){w.remove();if(FLY.aid===F.to)FLY.active=false;return}
     const r=dc.getBoundingClientRect(),hd=r.width*1.07,hx=r.left-(hd-r.width)/2,hy=r.top-(hd-r.width)/2-10;
     if(t<=A){const q=fOut(Math.max(0,t)/A);flyPut(w,g.x+(g.xc-g.x)*q,g.top,g.d,g.xc)}
-    else if(t<=A+B){const q=fEase((t-A)/B);flyPut(w,g.xc+(hx-g.xc)*q,g.top+(hy-g.top)*q-26*Math.sin(Math.PI*q),g.d+(hd-g.d)*q,null)}
-    else if(t<A+B+C){const u=(t-A-B)/C,q=fIn(u),dd=r.width*(1.07-.07*q);flyPut(w,r.left-(dd-r.width)/2,r.top-(dd-r.width)/2-10*(1-q),dd,null);
+    else if(t<=A+B){const q=fEase((t-A)/B),fx=g.xc+(hx-g.xc)*q,fy=g.top+(hy-g.top)*q-26*Math.sin(Math.PI*q),fd=g.d+(hd-g.d)*q;flyPut(w,fx,fy,fd,null);flyClip(w,fx,fy,fd,coverR(F.to))}
+    else if(t<A+B+C){const u=(t-A-B)/C,q=fIn(u),dd=r.width*(1.07-.07*q);w.firstChild.style.clipPath='';flyPut(w,r.left-(dd-r.width)/2,r.top-(dd-r.width)/2-10*(1-q),dd,null);
       /* set down without a pop: the shadow shrinks as the record touches, the real record appears underneath, and the flying copy fades out over it */
       const f=w.firstChild,k=1-q;f.style.boxShadow=(f.classList.contains('clear')?'inset 0 0 0 1.5px rgb(255 255 255 / .45),':'')+'0 '+(10*k).toFixed(1)+'px '+(14*k).toFixed(1)+'px rgb(0 0 0 / '+(.45*k).toFixed(3)+')';
       if(u>.4&&h.classList.contains('drop'))h.classList.remove('drop');
@@ -5163,7 +5171,7 @@ function flyBack(O){
     if(t<=A){const q=fOut(Math.max(0,t)/A),d=r.width*(1+.07*q);flyPut(w,r.left-(d-r.width)/2,r.top-(d-r.width)/2-10*q,d,null)}
     else if(!ok){const q=Math.min(1,(t-A)/360),d=sd*(1-.28*q);flyPut(w,r.left-(d-r.width)/2,sy-34*q,d,null);w.style.opacity=String(1-q);if(q>=1){w.remove();return}}
     else if(!g){w.remove();return}
-    else if(t<=A+B){const q=fEase((t-A)/B);flyPut(w,sx+(g.xc-sx)*q,sy+(g.top-sy)*q-26*Math.sin(Math.PI*q),sd+(g.d-sd)*q,null)}
+    else if(t<=A+B){const q=fEase((t-A)/B),fx=sx+(g.xc-sx)*q,fy=sy+(g.top-sy)*q-26*Math.sin(Math.PI*q),fd=sd+(g.d-sd)*q;flyPut(w,fx,fy,fd,null);flyClip(w,fx,fy,fd,g.R)}
     else if(t<A+B+C){const q=fEase((t-A-B)/C);flyPut(w,g.xc-g.d*q,g.top,g.d,g.xc)}
     else{w.remove();const dc=T.querySelector('.tdisc');void dc.offsetWidth;dc.classList.remove('tuck');return}
     requestAnimationFrame(step)};
