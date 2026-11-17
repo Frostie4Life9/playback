@@ -968,11 +968,14 @@ details.addart .add{border-top:1px solid var(--line)}
 .hlab{transition:none}
 .head.hero.drop .hspin,.head.hero.drop .hlab,.head.hero.drop .hdisc::after{opacity:0}
 .head.hero.drop:not(.hclear) .hdisc{background:#161b19}
-.flyw{position:fixed;left:0;top:0;z-index:70;pointer-events:none;transform-origin:0 0;will-change:transform;filter:drop-shadow(0 10px 14px rgb(0 0 0 / .45))}
-.fly{position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden}
-.fly.clear{box-shadow:inset 0 0 0 1.5px rgb(255 255 255 / .45)}
+.flyw{position:fixed;left:0;top:0;z-index:70;pointer-events:none;transform-origin:0 0}
+.fly{position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden;box-shadow:0 10px 14px rgb(0 0 0 / .45)}
+/* the glassy sheen of the landed record, so nothing is gained or lost when it is set down */
+.fly::after{content:"";position:absolute;inset:0;border-radius:50%;z-index:1;pointer-events:none;background:conic-gradient(from 20deg,rgb(255 255 255 / 0),rgb(255 255 255 / .12) 12%,rgb(255 255 255 / 0) 26%,rgb(255 255 255 / 0) 50%,rgb(255 255 255 / .09) 62%,rgb(255 255 255 / 0) 76%)}
+.fly.clear::after{background:conic-gradient(from 20deg,rgb(255 255 255 / 0),rgb(255 255 255 / .3) 12%,rgb(255 255 255 / 0) 26%,rgb(255 255 255 / 0) 50%,rgb(255 255 255 / .22) 62%,rgb(255 255 255 / 0) 76%)}
+.fly.clear{box-shadow:inset 0 0 0 1.5px rgb(255 255 255 / .45),0 10px 14px rgb(0 0 0 / .45)}
 .fly-s{position:absolute;inset:0;border-radius:50%}
-.fly i{position:absolute;left:28.2%;top:28.2%;width:43.6%;height:43.6%;border-radius:50%}
+.fly i{position:absolute;left:28.2%;top:28.2%;width:43.6%;height:43.6%;border-radius:50%;z-index:2}
 
 /* ===== 2026.11.16-c ===== */
 /* liquid record on the turntable: the paint is real shapes inside the record, moved every frame (see liqTick) */
@@ -1522,6 +1525,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-f', note:'SPLATTER: the second splatter is back on a dark tint of your highest-rated album\'s color (like the original), and the first stays on clear vinyl. LIQUID: the record that flies to the turntable is now finished exactly like the landed one (it was missing the glassy sheen, so detail seemed to appear when it landed), it is no longer scaled up from a small cached picture while it moves, and the paint now drifts much less while it spins up so the record keeps its shape.'},
   {v:'2026.11.16-e', note:'SPLATTER: redrawn from your photo. Real splatter pressings are hundreds of fine radial streaks, soft at the edges and patchy along their length, with the vinyl showing between them, so that is what both splatter records are now: every rated song owns streaks in its album color (a higher rating means more and wider streaks) and overlapping streaks mix like wet paint. The second splatter is the same paint on white vinyl. LIQUID: the record no longer changes when set down. The label no longer fades in over a black hole as it lands, and the pools now keep their place (they only slip a little while it spins up, then settle) instead of drifting into a different picture. TEXT: banner text is now clearly white or clearly dark, never a gray in between (bright reds like My Beautiful Dark Twisted Fantasy had gray text), and a banner that gets white text is held to a shade where white reads well. COVER COLORS: the ground now anchors a picture. A big earthy area (brown, tan, olive, grass) in the lower part of a cover can win over a vivid sky above it, so 3D Country takes its brown instead of the sky blue; covers without a big lower earthy area pick as before. Every cover is read again with the new rule.'},
   {v:'2026.11.16-d', note:'LIQUID: the liquid record is now one record everywhere. The paint layout is the same in the sleeve, in the air and on the turntable, so it no longer changes when it is set down; it is two rings of pools so there is never a hole, and very dark colors are lifted slightly so a black album reads as dark liquid. SORTING: changing the release sort no longer breaks the record and colors on the artist card (the record was being cut off inside the page). SCROLLING: the artist wall headings and tiles no longer clip through each other. SPLATTER: both splatter records now look like a real splatter pressing, paint thrown out along spokes from the label to the rim in streaks and dashes, one each; the flung paint look is now the same splatter on white vinyl. RATING SORT: when two releases have the same rating, the one with the higher song average comes first (and last when sorting low to high).'},
   {v:'2026.11.16-c', note:'RELEASES: under the artist card you can now show just Albums, EPs, Singles or Other, and sort the discography: newest or oldest first, by how you rated it (high or low), most or least heard, or by title. The sort is remembered; the kind resets when you open another artist. SPLATTER: no more neat rings. Each song is thrown at a random spot again, at loose angles with stray drops, but every one looks for room first, so they rarely land on each other. LIQUID: the liquid record now behaves like liquid in a spinning dish. When the record starts the paint is left behind and smears into arcs, catches up, is pushed outward as the speed builds, and keeps slipping slowly round; bubbles drift toward the middle. DARK ALBUMS: a black or very dark album keeps its dark banner, but its song rows now wash in a lighter tone of the same color so the rating gradient shows.'},
@@ -4697,7 +4701,8 @@ function hseed(str){let h=2166136261;for(const c of String(str)){h=Math.imul(h^c
 function hDark(col,k){const m=/^#([0-9a-f]{6})$/i.exec(col||'');if(!m)return col;const n=parseInt(m[1],16);
   const f=v=>Math.round(v*k/100).toString(16).padStart(2,'0');return '#'+f(n>>16&255)+f(n>>8&255)+f(n&255)}
 const HC=140,hf=v=>v.toFixed(1);
-const hClear=()=>HSTY.n===7||HSTY.n===8;   /* the two splatter looks are pressed on clear vinyl */
+const hClear=()=>HSTY.n===7;   /* the first splatter look is pressed on clear vinyl; the second on a dark tint of the top album's color */
+const hSplatty=n=>n===7||n===8;
 /* Splatter: pressed the way a real splatter record looks. On a real one the paint is flung out from the middle and
    dragged into hundreds of fine radial streaks, soft at the edges and patchy along their length (pale in one place,
    deep in the next), with the vinyl showing between them. So the record is drawn "unrolled": every streak is a thin
@@ -4705,12 +4710,12 @@ const hClear=()=>HSTY.n===7||HSTY.n===8;   /* the two splatter looks are pressed
    the label, then that canvas is wrapped round into a disc. Every rated song owns streaks in its album's color (a
    higher rating means more and wider streaks), and where streaks overlap the colors mix like wet paint. An artist
    with few rated songs gets several streaks per song so the record is still covered.
-   white = the same paint on opaque white vinyl instead of clear. cap = a small record (the tiles): fewer, coarser streaks.
+   tint = a color for opaque vinyl under the paint (the second look: a dark tint of the highest-rated album's color); empty = clear vinyl. cap = a small record (the tiles): fewer, coarser streaks.
    The result is a picture (data URL), kept per artist. */
 const HSP={};
-function hSplat(songs,aid,white,cap){
+function hSplat(songs,aid,tint,cap){
   let L=songs.slice().sort((x,y)=>y.r-x.r||(x.id<y.id?-1:1));if(cap&&L.length>cap)L=L.slice(0,cap);
-  const key=aid+'|'+(white?1:0)+'|'+(cap?1:0),sig=L.map(x=>x.id+':'+x.r+x.col).join(','),hit=HSP[key];if(hit&&hit.sig===sig)return hit.svg;
+  const key=aid+'|'+(tint||'')+'|'+(cap?1:0),sig=L.map(x=>x.id+':'+x.r+x.col).join(','),hit=HSP[key];if(hit&&hit.sig===sig)return hit.svg;
   const N=L.length;if(!N)return '';
   const OUT=cap?128:440,W=cap?640:1800,H=cap?56:170,M=cap?80:190,rnd=hrng(hseed(aid+':s')),sz=r=>.35+.65*Math.pow(r/10,1.4);
   let tot=0;for(const x of L)tot+=sz(x.r);
@@ -4727,7 +4732,7 @@ function hSplat(songs,aid,white,cap){
       const t=(y-y0)/ln,env=Math.min(1,t/.14,(1-t)/.2),nz=.5+.28*Math.sin(y*f1+p1)+.22*Math.sin(y*f2+p2),a=base*Math.max(0,env)*(.2+.8*nz);
       if(a<.03)continue;rect(x,y,wd,sl+.6,col,a*.5);rect(x,y,wd*.62,sl+.6,col,a*.55)}});
   const pd=g.getImageData(0,0,W,H).data,oc=document.createElement('canvas');oc.width=oc.height=OUT;const og=oc.getContext('2d'),od=og.createImageData(OUT,OUT),o=od.data;
-  const c=OUT/2,rIn=(cap?43:60)/140*c,rOut=c*.99,bw=white?[244,240,233]:null;
+  const c=OUT/2,rIn=(cap?43:60)/140*c,rOut=c*.99,bw=tint?hRgb(tint):null;
   for(let yy=0;yy<OUT;yy++)for(let xx=0;xx<OUT;xx++){
     const dx=xx+.5-c,dy=yy+.5-c,r=Math.sqrt(dx*dx+dy*dy),e=Math.max(0,Math.min(1,c-r)),k4=(yy*OUT+xx)*4;if(e<=0)continue;
     let R=0,G=0,B=0,A=0;
@@ -4771,7 +4776,7 @@ function hLiquid(P,aid){return liqSvg(liqParts(P,aid),'<svg xmlns="http://www.w3
 function hSvgUrl(svg){return 'url("data:image/svg+xml,'+encodeURIComponent(svg)+'")'}
 function hDisc(P,n,aid,songs,cap,anim){
   const tot=P.reduce((q,x)=>q+x.w,0),dk=(c,k)=>'color-mix(in srgb,'+c+' '+(k||76)+'%,#000)';
-  if(n===7||n===8)return hSplat(songs||[],aid,n===8,cap);   /* no base: the splatter sits on clear vinyl */
+  if(n===7||n===8){const top=P[0]?P[0].col:songs&&songs.length?songs.slice().sort((x,y)=>y.r-x.r)[0].col:'';return hSplat(songs||[],aid,n===8&&top?hDark(top,22):'',cap)}   /* no base: the splatter sits on clear vinyl */
   if(!P.length)return '';
   if(n===9)return hSvgUrl(hLiquid(P,aid));
   if(n===3){const sp=P.slice(0,8);
@@ -4786,7 +4791,7 @@ function heroBlobs(P,off,sx,sy,boost){
     const px=Math.round(50+Math.cos(ang)*rad*sx),py=Math.round(46+Math.sin(ang)*rad*sy);
     return 'radial-gradient(circle at '+px+'% '+py+'%,color-mix(in srgb,'+x.col+' '+Math.min(95,Math.round(boost*(42+x.w*42)))+'%,transparent) 0,transparent '+Math.round(24+x.w*26)+'%)'}).join(',')}
 function heroVars(a){
-  const P=heroPalette(a),songs=hClear()?heroSongs(a):null;
+  const P=heroPalette(a),songs=hSplatty(HSTY.n)?heroSongs(a):null;
   if(!P.length)return{'--ac':heroColor(a).col,'--hbg':'','--hbg2':'','--hbg3':'','--hdisc':songs&&songs.length?hDisc(P,HSTY.n,a.id,songs):''};
   const live=HSTY.n===9&&!noMotion();   /* the liquid record is drawn live inside the record (liqMount), not as a picture */
   return{'--ac':P[0].col,'--hbg':heroBlobs(P,-60,1,.5,1),'--hbg2':heroBlobs(P,120,1,.5,.9),'--hbg3':heroBlobs(P,30,1,.5,.8),'--hdisc':live?'none':hDisc(P,HSTY.n,a.id,songs)}}
@@ -4799,7 +4804,7 @@ function tdPaint(){
   if(!READY||UI.view||UI.tab!=='music')return;
   const ver=(S.mtime||0)+':'+ACOLV+':'+TD.lv+':'+S.music.length;if(ver===TD.ver)return;TD.ver=ver;
   for(const a of S.music){
-    const n=hLook(a.id),clear=n===7||n===8,P=heroPalette(a,true),songs=clear?heroSongs(a,true):null,has=songs?songs.length:P.length;
+    const n=hLook(a.id),clear=n===7,P=heroPalette(a,true),songs=hSplatty(n)?heroSongs(a,true):null,has=songs?songs.length:P.length;
     const sig=n+'|'+(songs?songs.map(x=>x.id+':'+x.r+x.col).join(','):P.map(x=>x.col+x.w.toFixed(3)).join(','));
     if(TD.sig[a.id]===sig)continue;TD.sig[a.id]=sig;
     let el=TD.el[a.id];if(!el){el=document.createElement('style');el.dataset.td=a.id;document.head.appendChild(el);TD.el[a.id]=el}
@@ -4833,8 +4838,8 @@ function liqMount(hero,a){const spin=hero.querySelector('.hspin');if(!spin)retur
 function liqTick(dt,spd,t){if(!LIQ.svg||!LIQ.svg.isConnected)return;
   const h=dt/1000,D=Math.PI/180;LIQ.c+=(Math.pow(spd/200,2)-LIQ.c)*Math.min(1,h*.8);
   LIQ.b.forEach((b,i)=>{const n=LIQ.bn[i];if(!n)return;
-    b.om+=(spd*(1-b.eps)-b.om)*Math.min(1,h*b.k);b.lag=Math.max(-34,Math.min(34,b.lag+((b.om-spd)-b.lag*.9)*h));
-    const st=1+Math.min(.22,Math.abs(spd-b.om)/260),an=b.an0+b.lag*D,rr=b.r0+(b.r1-b.r0)*LIQ.c*.5+Math.sin(t/1000*b.f+b.ph)*1.1*LIQ.c;
+    b.om+=(spd*(1-b.eps)-b.om)*Math.min(1,h*b.k);b.lag=Math.max(-16,Math.min(16,b.lag+((b.om-spd)-b.lag*1.2)*h));
+    const st=1+Math.min(.1,Math.abs(spd-b.om)/520),an=b.an0+b.lag*D,rr=b.r0+(b.r1-b.r0)*LIQ.c*.3+Math.sin(t/1000*b.f+b.ph)*.8*LIQ.c;
     const cx=HC+Math.cos(an)*rr,cy=HC+Math.sin(an)*rr;
     n.setAttribute('cx',cx.toFixed(1));n.setAttribute('cy',cy.toFixed(1));n.setAttribute('rx',(b.rad*st).toFixed(1));n.setAttribute('ry',(b.rad/Math.sqrt(st)).toFixed(1));
     n.setAttribute('transform','rotate('+(an/D+90).toFixed(1)+' '+cx.toFixed(1)+' '+cy.toFixed(1)+')')});
