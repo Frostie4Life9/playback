@@ -1525,6 +1525,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-k', note:'GREEN COVERS STAY GREEN: ii (Kenny Beats) had a brown banner because the small orange hand at the bottom of the cover won over the big teal field. The bonus that lets a brown or green ground beat a bright sky now only applies when that earthy area is a real share (at least 40%) of the biggest color on the cover. Every cover is read again.'},
   {v:'2026.11.16-j', note:'SET-DOWN POP: when a record lands on the turntable it no longer pops. The flying record used to vanish in one frame (its shadow, a slightly different sheen and the percent label all changed at once). Now the shadow shrinks as it touches, its sheen matches the landed record, and it fades out over the real record. Every look.'},
   {v:'2026.11.16-i', note:'PINK BANNERS: a cover with a big soft pastel backdrop and a white frame (The Divine Feminine) was being read as white paper, so its banner came out gray. A pastel field that covers over a third of the art now counts as the cover\'s color, and gets a little extra color so it reads as pink instead of beige. Busy covers like Don\'t Be Dumb and bold ones like Blue Slide Park are unchanged. Every cover is read again.'},
   {v:'2026.11.16-h', note:'COVER COLORS: a middle ground for busy covers. The white-paper banner now only applies when the cover is mostly white and no single color covers more than about a seventh of it. Don\'t Be Dumb (its biggest color is only about a tenth) stays on the paper, and Blue Slide Park (one blue triangle family is about a fifth) keeps its blue, both with room to spare instead of sitting on the edge. Covers right between the two could still go either way. Every cover is read again.'},
@@ -4986,7 +4987,7 @@ function delBtn(id,label){const armed=UI.armed===id;return `<button class="btn d
    the title instead. Near-gray covers stay a quiet charcoal rather than being tinted up.
    Colors are kept on this device so each cover is read once (the key's number goes up whenever
    the picking changes, so every cover is read again with the new rule). */
-const ACOL_KEY=KEY+'_acol12';
+const ACOL_KEY=KEY+'_acol13';
 let ACOL=(()=>{try{return JSON.parse(localStorage.getItem(ACOL_KEY))||{}}catch(e){return{}}})();
 const ACOL_TRY={};
 function acolSave(){try{localStorage.setItem(ACOL_KEY,JSON.stringify(ACOL))}catch(e){ACOL={}}}
@@ -5042,12 +5043,12 @@ function acolFromPixels(d,dark){
     if(!F){F={h:x.h,p:0,rgb:[0,0,0],m:[]};fam.push(F)}
     const w=x.p,w2=x.p*x.c*x.c;F.rgb=F.rgb.map((v,i)=>v+cen[x.j][i]*w2);F.w2=(F.w2||0)+w2;F.p+=w;F.cw=(F.cw||0)+x.c*w;F.m.push(x);F.gb=(F.gb||0)+gb[x.j];
     /* hue of the family follows its biggest member */}
-  let best=null,back=null;
+  let best=null,back=null;const mp=fam.reduce((m,F)=>Math.max(m,F.p),0);   /* the ground bonus is only for an earthy family that is a real share of the cover next to its biggest color (a small brown hand does not beat a big teal field) */
   for(const F of fam){const c0=F.rgb.map(v=>v/F.w2),c=F.cw/F.p;
     if(c<.1||F.p<(c>=.25?.02:c>=.18?.05:.08))continue;   /* a small patch only counts if it is strongly colorful */
     /* The ground anchors a picture: a big earthy family (brown, tan, olive, grass) that sits mostly in the lower part of the art
        gets a lift, so it can win over a vivid sky above it. Only large, lower, earthy families qualify, so other covers score as before. */
-    const bs=F.gb/(F.p*N),gnd=F.h>=12&&F.h<=110&&c<.5&&F.p>=.14?3.4*Math.max(0,Math.min(1,(bs-.5)/.3))*Math.min(1,F.p/.22):0;
+    const bs=F.gb/(F.p*N),gnd=F.h>=12&&F.h<=110&&c<.5&&F.p>=.14&&F.p>=.4*mp?3.4*Math.max(0,Math.min(1,(bs-.5)/.3))*Math.min(1,F.p/.22):0;
     const sc=4*Math.min(1,(c-.06)/.45)+5*Math.sqrt(F.p)+gnd;   /* vividness keeps counting up to very saturated colors, so a bold stripe can beat a big muted field */if(!best||sc>best.sc)best={sc,c:c0,gnd}}
   for(const x of info){const bs=x.f+x.p*.01;if(!back||bs>back.bs)back={bs,c:cen[x.j]}}
   if(!best&&back)best=back;          /* no clear color: follow the backdrop */
