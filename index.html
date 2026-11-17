@@ -661,8 +661,8 @@ details.addart .add{border-top:1px solid var(--line)}
 .hdisc{position:relative;width:206px;height:206px;border-radius:50%;display:grid;place-items:center;overflow:hidden;background:#0b0d0c}
 .hspin{position:absolute;inset:0;border-radius:50%;will-change:transform;
   background:repeating-radial-gradient(circle,rgb(0 0 0 / .5) 0 1.5px,rgb(0 0 0 / 0) 1.5px 3.2px),radial-gradient(circle,rgb(0 0 0 / 0) 26%,rgb(0 0 0 / .34) 100%),var(--hdisc,none),#10140f;background-size:100% 100%}
-.hdisc::after{content:"";position:absolute;inset:0;border-radius:50%;z-index:1;pointer-events:none;
-  background:conic-gradient(from 20deg,rgb(255 255 255 / 0),rgb(255 255 255 / .12) 12%,rgb(255 255 255 / 0) 26%,rgb(255 255 255 / 0) 50%,rgb(255 255 255 / .09) 62%,rgb(255 255 255 / 0) 76%)}
+.hdisc::after{content:"";position:absolute;inset:0;border-radius:50%;z-index:1;pointer-events:none;box-shadow:inset 0 0 0 1.5px rgb(255 255 255 / .2);
+  background:conic-gradient(from 20deg,rgb(255 255 255 / 0),rgb(255 255 255 / .18) 12%,rgb(255 255 255 / 0) 26%,rgb(255 255 255 / 0) 50%,rgb(255 255 255 / .13) 62%,rgb(255 255 255 / 0) 76%)}
 /* clear vinyl (the two splatter looks): no black backing, so the glow behind the card shows through the record; only the grooves, a glassy rim and the paint remain */
 .hero.hclear .hring{background:none;position:relative}
 .hero.hclear .hring::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--p)*1%),color-mix(in srgb,var(--ink) 16%,transparent) 0);-webkit-mask:radial-gradient(circle closest-side,transparent 102px,#000 103px);mask:radial-gradient(circle closest-side,transparent 102px,#000 103px)}
@@ -1525,6 +1525,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-g', note:'DARK RECORDS: a black or very dark album no longer gives a record you can barely see. On the record only (the banner stays black), a dark color is lifted to a visible charcoal in every look, the soft fade and marble are no longer darkened further for a dark artist, and every record has a faint light rim so its edge reads on the dark card. BUSY COVERS: when a cover is mostly white paper and no single color covers more than about a fifth of it (like Don\'t Be Dumb), the banner follows the paper instead of picking one of many colors; a big earthy ground area still counts as a color. Every cover is read again with the new rule.'},
   {v:'2026.11.16-f', note:'SPLATTER: the second splatter is back on a dark tint of your highest-rated album\'s color (like the original), and the first stays on clear vinyl. LIQUID: the record that flies to the turntable is now finished exactly like the landed one (it was missing the glassy sheen, so detail seemed to appear when it landed), it is no longer scaled up from a small cached picture while it moves, and the paint now drifts much less while it spins up so the record keeps its shape.'},
   {v:'2026.11.16-e', note:'SPLATTER: redrawn from your photo. Real splatter pressings are hundreds of fine radial streaks, soft at the edges and patchy along their length, with the vinyl showing between them, so that is what both splatter records are now: every rated song owns streaks in its album color (a higher rating means more and wider streaks) and overlapping streaks mix like wet paint. The second splatter is the same paint on white vinyl. LIQUID: the record no longer changes when set down. The label no longer fades in over a black hole as it lands, and the pools now keep their place (they only slip a little while it spins up, then settle) instead of drifting into a different picture. TEXT: banner text is now clearly white or clearly dark, never a gray in between (bright reds like My Beautiful Dark Twisted Fantasy had gray text), and a banner that gets white text is held to a shade where white reads well. COVER COLORS: the ground now anchors a picture. A big earthy area (brown, tan, olive, grass) in the lower part of a cover can win over a vivid sky above it, so 3D Country takes its brown instead of the sky blue; covers without a big lower earthy area pick as before. Every cover is read again with the new rule.'},
   {v:'2026.11.16-d', note:'LIQUID: the liquid record is now one record everywhere. The paint layout is the same in the sleeve, in the air and on the turntable, so it no longer changes when it is set down; it is two rings of pools so there is never a hole, and very dark colors are lifted slightly so a black album reads as dark liquid. SORTING: changing the release sort no longer breaks the record and colors on the artist card (the record was being cut off inside the page). SCROLLING: the artist wall headings and tiles no longer clip through each other. SPLATTER: both splatter records now look like a real splatter pressing, paint thrown out along spokes from the label to the rim in streaks and dashes, one each; the flung paint look is now the same splatter on white vinyl. RATING SORT: when two releases have the same rating, the one with the higher song average comes first (and last when sorting low to high).'},
@@ -4719,7 +4720,7 @@ function hSplat(songs,aid,tint,cap){
   const N=L.length;if(!N)return '';
   const OUT=cap?128:440,W=cap?640:1800,H=cap?56:170,M=cap?80:190,rnd=hrng(hseed(aid+':s')),sz=r=>.35+.65*Math.pow(r/10,1.4);
   let tot=0;for(const x of L)tot+=sz(x.r);
-  const S=[];for(const x of L){const f=sz(x.r),k=N>=M?1:Math.max(1,Math.round(M*f/tot));for(let j=0;j<k;j++)S.push({col:x.col,rgb:hRgb(x.col)||[128,128,128],f})}
+  const S=[];for(const x of L){const f=sz(x.r),k=N>=M?1:Math.max(1,Math.round(M*f/tot));for(let j=0;j<k;j++)S.push({col:hLift(x.col),rgb:hRgb(hLift(x.col))||[128,128,128],f})}
   for(let i=S.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1)),t=S[i];S[i]=S[j];S[j]=t}
   const pc=document.createElement('canvas');pc.width=W;pc.height=H;const g=pc.getContext('2d'),sl=cap?2:2,K=S.length;
   const rect=(x,y,w,h,col,a)=>{g.fillStyle='rgba('+col[0]+','+col[1]+','+col[2]+','+a.toFixed(3)+')';
@@ -4750,7 +4751,9 @@ function hSplat(songs,aid,tint,cap){
    colors. Very dark colors are lifted a little so a black album reads as dark liquid, not as a hole. */
 function hRgb(c){const m=/^#([0-9a-f]{6})$/i.exec(c||'');if(!m)return null;const n=parseInt(m[1],16);return[n>>16&255,n>>8&255,n&255]}
 const hHex=v=>'#'+v.map(q=>Math.max(0,Math.min(255,Math.round(q))).toString(16).padStart(2,'0')).join('');
-function liqCol(c){const v=hRgb(c);if(!v)return c;const m=Math.max(v[0],v[1],v[2]);if(m>=84)return c;const k=(84-m)/84*.34;return hHex(v.map((q,i)=>q+([122,128,138][i]-q)*k))}
+/* A black or very dark album would give a black record on a dark card, so for the record (never the banner) a dark color is lifted to a visible charcoal; brighter colors are left alone. */
+function hLift(c){const v=hRgb(c);if(!v)return c;const m=Math.max(v[0],v[1],v[2]);if(m>=120)return c;const k=(120-m)/120*.62;return hHex(v.map((q,i)=>q+([150,156,168][i]-q)*k))}
+function liqCol(c){return hLift(c)}
 function liqBase(P){let r=0,g=0,b=0,t=0;for(const x of P){const v=hRgb(liqCol(x.col));if(!v)continue;r+=v[0]*x.w;g+=v[1]*x.w;b+=v[2]*x.w;t+=x.w}
   return t?hHex([r/t*.56,g/t*.56,b/t*.56]):hDark(P[0].col,56)}
 function liqParts(P,aid){const rnd=hrng(hseed(aid+':9')),NB=22,Q=P.slice(0,NB);let tot=0;for(const x of Q)tot+=x.w;
@@ -4775,14 +4778,16 @@ function liqSvg(Lq,head){const D=180/Math.PI;
 function hLiquid(P,aid){return liqSvg(liqParts(P,aid),'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 280" width="280" height="280">')}
 function hSvgUrl(svg){return 'url("data:image/svg+xml,'+encodeURIComponent(svg)+'")'}
 function hDisc(P,n,aid,songs,cap,anim){
-  const tot=P.reduce((q,x)=>q+x.w,0),dk=(c,k)=>'color-mix(in srgb,'+c+' '+(k||76)+'%,#000)';
+  const dark=!!(P[0]&&(hRgb(P[0].col)||[255]).reduce((a,b)=>Math.max(a,b))<120);   /* a dark artist: its colors are lifted and not darkened further */
+  P=P.map(x=>({...x,col:hLift(x.col)}));
+  const tot=P.reduce((q,x)=>q+x.w,0),dk=(c,k)=>dark?c:'color-mix(in srgb,'+c+' '+(k||76)+'%,#000)';
   if(n===7||n===8){const top=P[0]?P[0].col:songs&&songs.length?songs.slice().sort((x,y)=>y.r-x.r)[0].col:'';return hSplat(songs||[],aid,n===8&&top?hDark(top,22):'',cap)}   /* no base: the splatter sits on clear vinyl */
   if(!P.length)return '';
   if(n===9)return hSvgUrl(hLiquid(P,aid));
   if(n===3){const sp=P.slice(0,8);
     const bl=sp.map((x,i)=>{const an=(i*137.5+20)*Math.PI/180,rad=8+i*9;
       return 'radial-gradient(circle at '+Math.round(50+Math.cos(an)*rad)+'% '+Math.round(50+Math.sin(an)*rad)+'%,'+dk(x.col,88)+' 0,transparent '+Math.round(28+x.w*34)+'%)'});
-    const base=dk(sp[0].col,40);return bl.join(',')+',linear-gradient('+base+','+base+')'}
+    const base=dark?sp[0].col:dk(sp[0].col,40);return bl.join(',')+',linear-gradient('+base+','+base+')'}
   let acc=0;const st=P.map(x=>{const m=(acc+x.w/2)/tot*100;acc+=x.w;return dk(x.col)+' '+m.toFixed(2)+'%'});
   const wrap='color-mix(in oklab,'+dk(P[P.length-1].col)+' 50%,'+dk(P[0].col)+')';
   return 'conic-gradient(in oklab from -30deg,'+wrap+' 0%,'+st.join(',')+','+wrap+' 100%)'}
@@ -4974,7 +4979,7 @@ function delBtn(id,label){const armed=UI.armed===id;return `<button class="btn d
    the title instead. Near-gray covers stay a quiet charcoal rather than being tinted up.
    Colors are kept on this device so each cover is read once (the key's number goes up whenever
    the picking changes, so every cover is read again with the new rule). */
-const ACOL_KEY=KEY+'_acol9';
+const ACOL_KEY=KEY+'_acol10';
 let ACOL=(()=>{try{return JSON.parse(localStorage.getItem(ACOL_KEY))||{}}catch(e){return{}}})();
 const ACOL_TRY={};
 function acolSave(){try{localStorage.setItem(ACOL_KEY,JSON.stringify(ACOL))}catch(e){ACOL={}}}
@@ -4999,8 +5004,8 @@ function acolFix(r,gr,b){r/=255;gr/=255;b/=255;const mx=Math.max(r,gr,b),mn=Math
    near-black one) and the sleeve's CSS picks dark or light ink to suit. With dark=true (the vinyl collection,
    which always uses white text) it is darkened to a fixed banner range and run through acolFix. */
 function acolFromPixels(d,dark){
-  const pts=[],pos=[];let R=0,G=0,B=0,W=0,sr=0,sg=0,sb=0;
-  for(let i=0;i<d.length;i+=4){if(d[i+3]<128)continue;const r=d[i],g=d[i+1],b=d[i+2];pts.push([r,g,b]);pos.push(i>>2);sr+=r;sg+=g;sb+=b;
+  const pts=[],pos=[];let R=0,G=0,B=0,W=0,sr=0,sg=0,sb=0,wh=0;
+  for(let i=0;i<d.length;i+=4){if(d[i+3]<128)continue;const r=d[i],g=d[i+1],b=d[i+2];pts.push([r,g,b]);pos.push(i>>2);if(Math.min(r,g,b)>205&&Math.max(r,g,b)-Math.min(r,g,b)<36)wh++;sr+=r;sg+=g;sb+=b;
     const w=(Math.max(r,g,b)-Math.min(r,g,b))/255+.04;R+=r*w;G+=g*w;B+=b*w;W+=w}
   const N=pts.length;if(!N)return '';
   const dist=(p,c)=>(p[0]-c[0])**2+(p[1]-c[1])**2+(p[2]-c[2])**2,K=7;
@@ -5036,9 +5041,12 @@ function acolFromPixels(d,dark){
     /* The ground anchors a picture: a big earthy family (brown, tan, olive, grass) that sits mostly in the lower part of the art
        gets a lift, so it can win over a vivid sky above it. Only large, lower, earthy families qualify, so other covers score as before. */
     const bs=F.gb/(F.p*N),gnd=F.h>=12&&F.h<=110&&c<.5&&F.p>=.14?3.4*Math.max(0,Math.min(1,(bs-.5)/.3))*Math.min(1,F.p/.22):0;
-    const sc=4*Math.min(1,(c-.06)/.45)+5*Math.sqrt(F.p)+gnd;   /* vividness keeps counting up to very saturated colors, so a bold stripe can beat a big muted field */if(!best||sc>best.sc)best={sc,c:c0}}
+    const sc=4*Math.min(1,(c-.06)/.45)+5*Math.sqrt(F.p)+gnd;   /* vividness keeps counting up to very saturated colors, so a bold stripe can beat a big muted field */if(!best||sc>best.sc)best={sc,c:c0,gnd}}
   for(const x of info){const bs=x.f+x.p*.01;if(!back||bs>back.bs)back={bs,c:cen[x.j]}}
   if(!best&&back)best=back;          /* no clear color: follow the backdrop */
+  /* A busy cover (mostly white paper, and no one color on more than about a fifth of it) has no color to pick, so the banner follows the paper. A big earthy ground area still counts as a color. */
+  {let top=0;for(const F of fam){if(F.cw/F.p>=.25&&F.p>top)top=F.p}
+   if(!dark&&best&&!(best.gnd>0)&&wh/N>=.18&&top<.2)return '#eeece6'}
   if(!best)return acolFix(R/W,G/W,B/W);
   const r=best.c[0]/255,g=best.c[1]/255,b=best.c[2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),c=mx-mn,l=(mx+mn)/2,h=hue(r,g,b,mx,c);
   const lt=dark?Math.max(.22,Math.min(.36,l)):Math.max(.09,Math.min(.82,l)),st=Math.min(dark?1:.75,c/(1-Math.abs(2*lt-1))),
