@@ -1734,6 +1734,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-q', note:'PRIVATE RATING DATES + SAFER STORAGE: your list of rating days no longer sits in the public GitHub repo; it is kept on your sync Worker and the Import rating dates button reads it from there (only you see that card now). Also, Playback now asks the browser to keep its saved log from being cleared when the device runs low on space, which protects friends who are not syncing.'},
   {v:'2026.11.17-q', note:'MUSIC MENU AND HISTORY SORT: History is no longer its own button in the bar. While you are on Music, tap Music again and a small menu drops open with Artists and History (it opens upward on your phone, closes when you tap anywhere else, and Music shows a little arrow when you can open it). History also has a new No date sort that puts the albums with no day first, so you can fill them in one after another; the rest follow newest first.'},
   {v:'2026.11.17-p', note:'IMPORT SOURCE BUTTONS: tapping Automatic, Apple Music or MusicBrainz only in Settings saved the choice but the buttons and the Right now imports read from line did not change until you left the page and came back. They now switch the moment you tap.'},
   {v:'2026.11.17-o', note:'CLEAN START: a brand-new Playback no longer comes with Radiohead and the Severance example already in it, so a friend opening it for the first time starts with an empty log, and the empty screen now tells them how to add their first artist. Anything already in your log, Radiohead and Severance included, stays exactly as it is.'},
@@ -3093,7 +3094,7 @@ function rymSide(){
 const cnt0=n=>n+' rating'+(n===1?'':'s');
 
 /* ---------- the day you rated each album ----------
-   rating-dates.json (in this repo) lists the day you rated each album, read off your rating
+   The list (kept privately on your sync Worker under /rating-dates, no longer in this repo) gives the day you rated each album, read off your rating
    history: [{"d":"2024-08-03","t":"IGOR","s":5}, ...] where d is the day, t the album title as
    the history shows it and s its stars out of 5. Oldest first. Each album found here that you
    have rated gets that day (rd on its rating, the same day the banner shows). A day you already
@@ -3145,7 +3146,8 @@ async function rdRun(){
   if(RDX.busy)return;
   RDX.busy=true;RDX.err='';RDX.report=null;render();
   try{
-    const r=await fetch('rating-dates.json?v='+Date.now(),{cache:'no-store'});
+    if(!syncOn()){RDX.busy=false;RDX.err='Connect your sync Worker first (Settings, Sync). Your rating days are kept on it, not in the public app. Nothing was changed.';render();return}
+    const r=await fetch(SY.url.replace(/\/+$/,'')+'/rating-dates',{cache:'no-store',headers:{'x-sync-key':SY.key}});
     if(!r.ok)throw new Error('http');
     const list=await r.json();
     if(!Array.isArray(list))throw new Error('shape');
@@ -4307,6 +4309,7 @@ function boot(){
   seedAll();READY=true;
   if(!S.flags.r10){for(const k in S.marks){if(S.marks[k].r)S.marks[k].r=S.marks[k].r*2}S.flags.r10=true;save()}
   setTimeout(akaBackfill,3000);
+  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}   /* ask the browser not to clear this log when space runs low */
 }
 if(READY)boot();
 
@@ -5279,7 +5282,7 @@ function settingsView(){return `
     <div class="setcard"><h3>Import source</h3>${srcSide()}</div>
     <div class="setcard"><h3>Spotify</h3>${spSide()}</div>
     <div class="setcard"><h3>Rate Your Music</h3>${rymSide()}${rtSide()}</div>
-    <div class="setcard"><h3>Rating dates</h3>${rdSide()}</div>
+    ${window.PB_OWNER?`<div class="setcard"><h3>Rating dates</h3>${rdSide()}</div>`:''}
     ${sugCard()}
     <div class="setcard"><h3>Sync &amp; data</h3>
     <details id="syncpanel" ${UI.syncOpen?'open':''}>

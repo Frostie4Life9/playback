@@ -462,6 +462,10 @@ export default {
     const given = (request.headers.get('x-sync-key') || '').trim();
     if (!keyMatches(given, String(env.SECRET).trim())) return reply({ error: 'unauthorized' }, 401);
     if (url.pathname === '/suggest') return sugOwner(request, env, url);
+    if (url.pathname === '/rating-dates') {   /* the owner's private list of rating days (kept in KV, not in the public repo) */
+      if (request.method === 'GET') return new Response((await env.STATE.get('rating-dates')) || '[]', { headers: JSON_H });
+      return reply({ error: 'method not allowed' }, 405);
+    }
     if (url.pathname === '/spotify/api') return request.method === 'GET' ? spCatalog(env, url) : reply({ error: 'method not allowed' }, 405);
     if (url.pathname === '/photo') {
       if (request.method === 'PUT') return photoPut(request, env, url);
