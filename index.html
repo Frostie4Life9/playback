@@ -811,7 +811,7 @@ details.addart .add{border-top:1px solid var(--line)}
   0%{--j:0%;border-color:var(--gv);box-shadow:0 0 0 0 transparent}
   35%{--j:4.2%;border-color:var(--gp);box-shadow:0 0 8px 1.5px var(--gg)}
   100%{--j:0%;border-color:var(--gv);box-shadow:0 0 0 0 transparent}}
-@media (prefers-reduced-motion:no-preference){.group.sleeve.rip .sl-disc i.on{animation:slPulse .62s cubic-bezier(.3,.6,.3,1) calc(var(--rb,0ms) + var(--o,0)*38ms) backwards}}
+@media (prefers-reduced-motion:no-preference){.group.sleeve.rip .sl-disc i.on:not(.nr){animation:slPulse .62s cubic-bezier(.3,.6,.3,1) calc(var(--rb,0ms) + var(--o,0)*38ms) backwards}}
 .sl-lab{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:var(--acb);display:grid;place-items:center;font:800 12px Archivo,var(--display);color:var(--hi);font-variant-numeric:tabular-nums}
 @media (prefers-reduced-motion:no-preference){.sl-disc{transition:transform .7s cubic-bezier(.2,.8,.2,1)}}
 .group.sleeve.in .sl-disc{transform:translate3d(16px,0,0)}
@@ -1001,7 +1001,7 @@ details.addart .add{border-top:1px solid var(--line)}
    a glint runs once around the record, the count on the label jumps, and the ripple follows. */
 .sl-disc::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;opacity:0;
   background:conic-gradient(from 0deg,transparent 0 70%,var(--gp) 97%,transparent 100%);
-  -webkit-mask:radial-gradient(circle closest-side,transparent 35%,#000 36%);mask:radial-gradient(circle closest-side,transparent 35%,#000 36%)}
+  -webkit-mask:radial-gradient(circle closest-side,transparent 35%,#000 36%,#000 var(--ld,100%),transparent calc(var(--ld,100%) + 1%));mask:radial-gradient(circle closest-side,transparent 35%,#000 36%,#000 var(--ld,100%),transparent calc(var(--ld,100%) + 1%))}
 @keyframes slLit{0%{--j:0%;border-color:rgb(255 255 255 / .09);box-shadow:0 0 0 0 transparent}
   32%{--j:7%;border-color:#fff;box-shadow:0 0 16px 3px var(--gg),inset 0 0 10px 1px var(--gg)}
   100%{--j:0%;border-color:var(--gv);box-shadow:0 0 0 0 transparent}}
@@ -1578,6 +1578,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-o', note:'RATING ANIMATION: when you rate a song, the glint that circles the record and the ripple through the grooves now go out only as far as that song\'s band instead of the whole record. Inner grooves still light up, anything outside the band stays still.'},
   {v:'2026.11.16-n', note:'RATING HISTORY: a new History tab lists every album, EP and deluxe you have rated as a dated list: the day on the left (31 Aug), the cover, the title and artist, and your stars with the number. Newest first with a heading for each month, or oldest first, or highest first. Search by album or artist, and show just Albums, EPs or Other. Tap the cover or title to open the album; tap the day to change it, and albums with no day yet sit at the bottom with a + Date button so you can fill them in right there.'},
   {v:'2026.11.16-m', note:'RATING DATES: Settings has a new Rating dates card. Tap Import rating dates and every album you rated gets the day you rated it, read from your rating history (it then shows as Rated Aug 3, 2024 on the banner and the share card). Albums are matched by title, a Deluxe listing lands on the deluxe rating when the album has one, and a day you already have is never replaced. The summary lists albums with no rating here, albums that are not in Playback yet, and any whose rating here differs from the history. Run it again after adding artists or a new batch.'},
   {v:'2026.11.16-l', note:'LIST SCROLL: on a wide screen the artist list could not scroll far enough to show your last artists. It was a tall box that started low on the page, so its bottom ran off the window, and its scrolling would not pass to the page. The artist column now stays on screen as you scroll and the list fills the rest of the window, so its end is always visible.'},
@@ -4283,10 +4284,11 @@ function lRedraw(){const el=document.getElementById('llist');if(el)el.innerHTML=
    remembered across redraws, so a tap never replays or resets the motion. */
 const SLIN=new Set();let slIO=null;
 /* run the groove ripple on one sleeve. base = ms to wait before it starts (the slide-out needs ~220) */
-function slRipple(sl,base){
+function slRipple(sl,base,minJ){
   if(!sl||!sl.querySelector('.sl-disc i.on'))return;
+  const is=sl.querySelectorAll('.sl-disc i');is.forEach((e,j)=>e.classList.toggle('nr',minJ!=null&&j<minJ));   /* grooves outside the rated song's band sit the ripple out */
   sl.style.setProperty('--rb',base+'ms');sl.classList.remove('rip');void sl.offsetWidth;sl.classList.add('rip');
-  clearTimeout(sl._rt);sl._rt=setTimeout(()=>sl.classList.remove('rip'),base+1700)}
+  clearTimeout(sl._rt);sl._rt=setTimeout(()=>{sl.classList.remove('rip');sl.querySelectorAll('.sl-disc i.nr').forEach(e=>e.classList.remove('nr'))},base+1700)}
 /* ask for a ripple on the next draw of this release (checking a song off, switching to Deluxe) */
 function slPulseAsk(gid,base){UI.pulse={g:String(gid),b:base||0}}
 /* which grooves a release has lit right now (the same folding the sleeve is drawn with) */
@@ -4299,14 +4301,19 @@ const slEl=gid=>document.querySelector('.group.sleeve[data-acol="'+(window.CSS&&
    record on screen still shows the old state). The next draw holds those grooves dark until slLitNow lights them. */
 function slLitAsk(g,id){const sl=slEl(g.id),is=sl?sl.querySelectorAll('.sl-disc i'):[],idx=[];
   slRings(g).forEach((on,j)=>{if(on&&is[j]&&!is[j].classList.contains('on'))idx.push(j)});
-  UI.lit={g:String(g.id),idx,id:id||null}}
+  let band=null;if(id){const shown=viewItems(g),pos=shown.findIndex(i=>i.id===id),n=shown.length,R=Math.min(n,22);
+    if(pos>=0)for(let j=0;j<R;j++){if(pos>=Math.floor(j*n/R)&&pos<Math.max(Math.floor(j*n/R)+1,Math.floor((j+1)*n/R))){band=j;break}}}
+  if(band==null&&idx.length)band=Math.min(...idx);
+  UI.lit={g:String(g.id),idx,id:id||null,band}}
 function slLitNow(){const L=UI.lit;UI.lit=null;if(!L)return;
   const sl=slEl(L.g),disc=sl&&sl.querySelector('.sl-disc');if(!disc)return;
   const is=disc.querySelectorAll('i');L.idx.forEach(j=>{if(is[j])is[j].classList.add('on','new')});
   if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  const nR=is.length,bj=L.band;   /* the glint and ripple go out only as far as the rated song's band */
+  if(bj!=null&&nR)sl.style.setProperty('--ld',(96-bj*(52/nR)+2).toFixed(1)+'%');else sl.style.removeProperty('--ld');
   sl.classList.remove('lit');void sl.offsetWidth;sl.classList.add('lit');
   clearTimeout(sl._lt);sl._lt=setTimeout(()=>{sl.classList.remove('lit');disc.querySelectorAll('i.new').forEach(e=>e.classList.remove('new'))},1300);
-  slRipple(sl,520)}
+  slRipple(sl,520,bj)}
 function slPulseNow(){const p=UI.pulse;UI.pulse=null;if(!p)return;
   const sl=document.querySelector('.group.sleeve[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(p.g):p.g)+'"]');slRipple(sl,p.b)}
 function grpOfItem(id){for(const a of S.music){const g=a.groups.find(g=>g.items.some(i=>i.id===id));if(g)return g}return null}
