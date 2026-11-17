@@ -197,6 +197,10 @@ a.link{text-decoration:none}
 .rymrep{display:flex;flex-direction:column;gap:6px}
 .rymrep ul{margin:4px 0 0;padding-left:18px;font-size:13px;line-height:1.5}
 .rymrep summary{cursor:pointer;font-weight:600;font-size:13px}
+@keyframes rdin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes rdspin{to{transform:rotate(360deg)}}
+.rdgo .rdspin{display:inline-block;width:12px;height:12px;margin-right:8px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;vertical-align:-1px}
+@media (prefers-reduced-motion:no-preference){.rdrep>*{animation:rdin .45s cubic-bezier(.2,.8,.2,1) both}.rdrep>:nth-child(2){animation-delay:.07s}.rdrep>:nth-child(3){animation-delay:.14s}.rdrep>:nth-child(4){animation-delay:.21s}.rdrep>:nth-child(n+5){animation-delay:.28s}.rdgo .rdspin{animation:rdspin .8s linear infinite}}
 .ghead .art{width:44px;height:44px;border-radius:5px;object-fit:cover;background:var(--sunk);flex:0 0 auto;align-self:center;box-shadow:0 0 0 1px var(--line)}
 
 /* MusicBrainz import */
@@ -1531,6 +1535,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-m', note:'RATING DATES: Settings has a new Rating dates card. Tap Import rating dates and every album you rated gets the day you rated it, read from your rating history (it then shows as Rated Aug 3, 2024 on the banner and the share card). Albums are matched by title, a Deluxe listing lands on the deluxe rating when the album has one, and a day you already have is never replaced. The summary lists albums with no rating here, albums that are not in Playback yet, and any whose rating here differs from the history. Run it again after adding artists or a new batch.'},
   {v:'2026.11.16-l', note:'LIST SCROLL: on a wide screen the artist list could not scroll far enough to show your last artists. It was a tall box that started low on the page, so its bottom ran off the window, and its scrolling would not pass to the page. The artist column now stays on screen as you scroll and the list fills the rest of the window, so its end is always visible.'},
   {v:'2026.11.16-k', note:'GREEN COVERS STAY GREEN: ii (Kenny Beats) had a brown banner because the small orange hand at the bottom of the cover won over the big teal field. The bonus that lets a brown or green ground beat a bright sky now only applies when that earthy area is a real share (at least 40%) of the biggest color on the cover. Every cover is read again.'},
   {v:'2026.11.16-j', note:'SET-DOWN POP: when a record lands on the turntable it no longer pops. The flying record used to vanish in one frame (its shadow, a slightly different sheen and the percent label all changed at once). Now the shadow shrinks as it touches, its sheen matches the landed record, and it fades out over the real record. Every look.'},
@@ -2702,6 +2707,83 @@ function rymSide(){
   return h+'</div>';
 }
 const cnt0=n=>n+' rating'+(n===1?'':'s');
+
+/* ---------- the day you rated each album ----------
+   rating-dates.json (in this repo) lists the day you rated each album, read off your rating
+   history: [{"d":"2024-08-03","t":"IGOR","s":5}, ...] where d is the day, t the album title as
+   the history shows it and s its stars out of 5. Oldest first. Each album found here that you
+   have rated gets that day (rd on its rating, the same day the banner shows). A day you already
+   have is never replaced. The history has no artist names, so matching is by title; when two
+   artists have an album with that title, the one rated the same as the history's stars x2 wins.
+   A Deluxe listing lands on the deluxe rating when the album has one. */
+const RDX={err:'',report:null,busy:false};
+const rdDx=t=>/[\(\[][^)\]]*(deluxe|bonus|expanded)[^)\]]*[\)\]]/i.test(String(t));
+function rdTargets(e){   /* every album with this title, as the mark that holds its rating (twins count once) */
+  const key=nTitle(e.t),dx=rdDx(e.t),seen=new Set(),out=[];
+  for(const a of S.music)for(const g of a.groups){
+    if(!RATEABLE.includes(g.kind)||nTitle(g.title)!==key)continue;
+    const ids=dx&&hasDx(g)?[dxId(g),g.id]:[g.id],id=ids.find(i=>rating(i))||'',ck=canonK(id||ids[0]);
+    if(seen.has(ck))continue;seen.add(ck);
+    out.push({a,g,id,r:id?rating(id):0});
+  }
+  return out;
+}
+function rdImport(list){
+  RDX.err='';RDX.report=null;
+  const today=todayISO(),rp={total:0,set:0,same:0,kept:[],differ:[],noRating:[],notFound:[],unsure:[],bad:0},run=new Map();
+  for(const e of list){
+    if(!e||!e.t||!/^\d{4}-\d\d-\d\d$/.test(e.d||'')||e.d>today){rp.bad++;continue}
+    rp.total++;
+    const c=rdTargets(e),rated=c.filter(x=>x.id),stars=(+e.s||0)*2;
+    if(!c.length){rp.notFound.push(e.t);continue}
+    if(!rated.length){rp.noRating.push(e.t);continue}
+    let pick=null;
+    if(rated.length===1)pick=rated[0];
+    else{const m=rated.filter(x=>x.r===stars);if(m.length===1)pick=m[0]}
+    if(!pick){rp.unsure.push(e.t+' ('+rated.map(x=>x.a.name).join(' / ')+')');continue}
+    const ck=canonK(pick.id),cur=ratedDate(pick.id);
+    if(run.has(ck)){S.marks[pick.id]={...S.marks[pick.id],rd:e.d};run.set(ck,e.d);continue}   /* rated again later in the history: the later day wins, like rating again here */
+    if(!cur){S.marks[pick.id]={...S.marks[pick.id],rd:e.d};run.set(ck,e.d);rp.set++}
+    else if(cur===e.d)rp.same++;
+    else rp.kept.push(e.t+': you have '+fmtRd(cur)+', the history says '+fmtRd(e.d));
+    if(stars&&pick.r!==stars)rp.differ.push(e.t+': '+fmt(pick.r)+' here, '+fmt(stars)+' in the history');
+  }
+  if(!rp.total&&rp.bad){RDX.err='Nothing in the list could be read. Nothing was changed.';render();return}
+  RDX.report=rp;if(rp.set)touch();
+  render();
+}
+async function rdRun(){
+  if(RDX.busy)return;
+  RDX.busy=true;RDX.err='';RDX.report=null;render();
+  try{
+    const r=await fetch('rating-dates.json?v='+Date.now(),{cache:'no-store'});
+    if(!r.ok)throw new Error('http');
+    const list=await r.json();
+    if(!Array.isArray(list))throw new Error('shape');
+    RDX.busy=false;rdImport(list);
+  }catch(err){
+    RDX.busy=false;RDX.err='Could not load the rating dates list. Check your connection and try again. Nothing was changed.';render();
+  }
+}
+function rdReport(){
+  const r=RDX.report,cnt=(n,w)=>n+' '+w+(n===1?'':'s'),li=l=>'<ul>'+l.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>';
+  let h=`<div class="mbok rymrep rdrep" role="status"><span><b>${cnt(r.total,'album')}</b> in your history. <b>${r.set}</b> got a day now${r.same?', '+r.same+' already had it':''}.</span>`;
+  if(r.kept.length)h+=`<span>${cnt(r.kept.length,'album')} already had a different day, so I kept yours.</span><details><summary>Which</summary>${li(r.kept)}</details>`;
+  if(r.differ.length)h+=`<span>${cnt(r.differ.length,'album')} got a day, but your rating here is not the one in the history.</span><details><summary>Which</summary>${li(r.differ)}<p class="note">Worth a glance in case the wrong album matched.</p></details>`;
+  if(r.noRating.length)h+=`<span>${cnt(r.noRating.length,'album')} ${r.noRating.length===1?'has':'have'} no rating here yet, so there was nothing to date.</span><details><summary>Which</summary>${li(r.noRating)}</details>`;
+  if(r.notFound.length)h+=`<span>${cnt(r.notFound.length,'album')} ${r.notFound.length===1?'is':'are'} not in Playback yet.</span><details><summary>Which</summary>${li(r.notFound)}<p class="note">Import that artist, then tap Import rating dates again.</p></details>`;
+  if(r.unsure.length)h+=`<span>${cnt(r.unsure.length,'album')} matched more than one artist, so I left ${r.unsure.length===1?'it':'them'} alone.</span><details><summary>Which</summary>${li(r.unsure)}<p class="note">Set the day by hand from the ⋯ menu under the album.</p></details>`;
+  if(r.bad)h+=`<span class="note">${cnt(r.bad,'row')} in the list could not be read and ${r.bad===1?'was':'were'} skipped.</span>`;
+  return h+'</div>';
+}
+function rdSide(){
+  let h=`<div class="add"><span class="label">Add the days you rated your albums</span>
+    <p class="note">Playback keeps the day you rated each album (Rated Nov 14, 2026 on its banner). This adds that day to the albums you rated earlier, from your rating history. A day you already have is never replaced and no rating changes. Tap it again after adding artists or when a new batch is added.</p>
+    <div><button class="btn primary rdgo" data-act="rdimp"${RDX.busy?' disabled':''}>${RDX.busy?'<i class="rdspin" aria-hidden="true"></i>Reading…':'Import rating dates'}</button></div>`;
+  if(RDX.err)h+=`<p class="mberr" role="alert">${esc(RDX.err)}</p>`;
+  if(RDX.report)h+=rdReport();
+  return h+'</div>';
+}
 
 /* ---------- Rate Your Music song ratings ----------
    RYM's CSV export has no song ratings, so a small Tampermonkey script
@@ -4622,6 +4704,7 @@ function settingsView(){return `
     <div class="setcard"><h3>Import source</h3>${srcSide()}</div>
     <div class="setcard"><h3>Spotify</h3>${spSide()}</div>
     <div class="setcard"><h3>Rate Your Music</h3>${rymSide()}${rtSide()}</div>
+    <div class="setcard"><h3>Rating dates</h3>${rdSide()}</div>
     <div class="setcard"><h3>Sync &amp; data</h3>
     <details id="syncpanel" ${UI.syncOpen?'open':''}>
       <summary class="label" style="cursor:pointer">Sync</summary>
@@ -5633,6 +5716,7 @@ document.addEventListener('click',ev=>{
   else if(act==='spundo'){UI.spLogOpen=true;S.marks[id]={...(S.marks[id]||{}),done:false};touch()}
   else if(act==='splgo'){UI.spLogOpen=true;if(b.dataset.a){UI.view=null;UI.tab='music';UI.sel.music=b.dataset.a;UI.filter='all'}}
   else if(act==='spcopy'){const t=SP_REDIRECT;if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>{SPX.copied=true;render()},()=>{});return}
+  else if(act==='rdimp'){rdRun();return}
   else if(act==='rymadd'){const r=rymAddWaiting();RYX.report={total:r.albums,zero:0,filled:0,same:0,kept:[],waiting:[],notFound:[],dups:[],added:r};touch()}
   else if(act==='rclear'){const m0={...(S.marks[id]||{}),r:0};delete m0.rd;S.marks[id]=m0;touch();heroPaint()}
   else if(act==='grpall'){const a=S.music.find(x=>x.id===b.dataset.a),g=a.groups.find(x=>x.id===b.dataset.g),its=viewItems(g),full=its.every(i=>isDone(i.id));
