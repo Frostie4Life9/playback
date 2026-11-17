@@ -1667,6 +1667,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-aq', note:'IMPORT: EPs now claim songs before singles, so a single\u2019s song lands on the EP that carries it. A hand-made album with the same title as an imported release (Astroworld vs ASTROWORLD) is folded into that release instead of staying as a separate card. Picking a different artist now scrolls to the top.'},
   {v:'2026.11.16-ap', note:'LISTEN AGAIN: the record\u2019s ripple on scrolling into view now runs through every band on a second listen, strongly through the ones you have lit on this listen and softly through the faded carried ones. CLEAR ANIMATION: clearing a song now shrinks its colour bar away (down to last listen\u2019s rating on a later listen), pops its check, and fades its band on the record from lit to what it is now.'},
   {v:'2026.11.16-ao', note:'LISTEN AGAIN, ANIMATIONS: on a second listen the record now glows and ripples when you rate a carried-over song, and tapping a faded check confirms the song for this listen (it lights up) instead of unchecking it. Mark all heard confirms every carried song the same way.'},
   {v:'2026.11.16-an', note:'LISTEN AGAIN: each listen has its own day. A new listen is dated the day you start it, and the album card shows it as Listen 2 \u00b7 that day (tap to change it). The record\u2019s ripple, when it scrolls back into view, now runs only through the bands you have lit on the current listen, not the faded carried-over ones.'},
@@ -2546,7 +2547,8 @@ function mbDeluxeOrder(E){
    lands on the release that first carried it and singles don't repeat the album. */
 function mbClaim(entries,versions){
   const albums=entries.filter(e=>e.kind==='Studio album').sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
-  const rest=entries.filter(e=>e.kind!=='Studio album').sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:MB_KIND_ORDER.indexOf(a.kind)-MB_KIND_ORDER.indexOf(b.kind));
+  /* EPs claim before singles (then compilations), whatever the dates: a single's song belongs on the EP that carries it */
+  const rest=entries.filter(e=>e.kind!=='Studio album').sort((a,b)=>(MB_KIND_ORDER.indexOf(a.kind)-MB_KIND_ORDER.indexOf(b.kind))||(a.date<b.date?-1:a.date>b.date?1:0));
   const order=[...albums,...rest],claimed=new Map(),alts=[];
   /* dx: a song that is only on the deluxe / bonus edition of a studio album. It stays in the
      album's list, flagged, so the page can tuck it into the album's dropdown. */
@@ -2662,7 +2664,10 @@ function mbMerge(art,incoming,versions,tidy,sp){
       if(placed.has(k)){const t0=incomingByKey.get(k);if(t0){const G=itemGroup.get(t0.id);land.set(G,(land.get(G)||0)+1)}continue}
       placed.add(k);if(looseFold(i,k)||fuzzyFold(k))continue;items.push(Object.assign({},i,{id:idFor(k)}))}
     const moved=land,moves=nFold;land=null;
-    if(items.length)manual.push(Object.assign({},g,{items}));
+    /* a hand-made album with the same title as a new release is that release: its leftover songs go onto it, not into a card of their own */
+    const same=items.length&&nTitle(g.title)?(groups.find(G=>nTitle(G.title)===nTitle(g.title)&&G.kind===g.kind)||groups.find(G=>nTitle(G.title)===nTitle(g.title))):null;
+    if(same){for(const i of items)if(!same.items.some(x=>x.id===i.id))same.items.push(i)}
+    else if(items.length)manual.push(Object.assign({},g,{items}));
     else if(rating(g.id)&&!incoming.some(G=>nTitle(G.title)===nTitle(g.title))){
       /* every song moved onto one new album under a different album title ("… (Original Soundtrack)"): the album
          rating goes with them, unless that album already has a different one, then this stays as it is */
@@ -4611,6 +4616,7 @@ function render(){
       ohg=g}}
   const swK=!UI.view?UI.tab+':'+(UI.sel[UI.tab]||''):null,swGo=!!(swK&&UI.swKey&&UI.swKey!==swK);if(swK)UI.swKey=swK;
   renderMain();slObserve();slPulseNow();UI.rAnim=null;
+  if(swGo&&!UI.toAlb&&!UI.toSheet)window.scrollTo(0,0);   /* a different artist or title: start at the top, not wherever the last one was scrolled */
   if(swGo&&ohg&&!noMotion()){const nh=document.querySelector('.hero[data-aid]');
     if(nh&&nh.dataset.aid!==ohg.dataset.aid){nh.insertBefore(ohg,nh.firstChild);ohg.addEventListener('animationend',e=>{if(e.target===ohg)ohg.remove()})}}
   if(swGo&&!noMotion()){const sh=document.querySelector('.sheet');   /* a different artist or title is open: its text and cards ease in, one after another */
