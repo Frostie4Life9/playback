@@ -11,6 +11,8 @@
   "d1_databases": [
     { "binding": "CATALOG", "database_name": "playback-catalog", "database_id": "187e781f-fac8-4bf1-b8d2-9470172a6ff2" }
   ],
+  // Public Google OAuth client ID for accounts (not a secret); must match GCID in index.html
+  "vars": { "GOOGLE_CLIENT_ID": "961476018828-tkjmdic1fnrtr7jtfmb7ta9alrupn8km.apps.googleusercontent.com" },
   "keep_vars": true,
   // Without this block a Git deploy switches the Worker's logs off.
   "observability": {

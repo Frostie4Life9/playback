@@ -1771,6 +1771,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-u', note:'ACCOUNTS ARE ON: Sign in with Google now shows in Settings under Account. Sign in, share your friend code, and add friends to see how they rated the same albums, shows and films.'},
   {v:'2026.11.17-t', note:'BLANK PAGE FIX: on a browser that already holds a copy of your log in its regular storage, Playback stopped on start-up with a blank page (the backup reminder tried to run before it was ready). It now waits a moment, so those browsers open normally. Nothing in your log changed.'},
   {v:'2026.11.17-s', note:'ACCOUNTS AND FRIENDS (built, switched on once Playback has a Google client ID, see SETUP.md Part 8): Settings has an Account card where you sign in with Google, get an 8-letter friend code, add friends by code and accept requests. Once you are friends, a Friends strip under each album (and show or film) lists what they rated it, with a bar and the group average, matched by MusicBrainz or TMDB id and by artist and title, so a friend on Apple Music lines up with you on Spotify. Only accepted friends see your ratings, a switch hides them, and Delete my account erases everything. Your log stays on your device; only title, artist and rating are shared. Your Worker needs the updated playback-sync.js (it takes it from GitHub on its own).'},
   {v:'2026.11.17-r', note:'BACKUPS AND SYNC GUIDE: Settings now has Download backup file and Restore from file (it asks before replacing your log). If sync is off and your last backup is more than three weeks old, a small banner offers to download one, and Later hides it for a week. Under Sync there is a step-by-step guide to setting it up with your own copy of the app and your own Cloudflare account, with a button that makes a secret key for you. Nothing changes if you already use sync.'},
@@ -5380,7 +5381,7 @@ async function sugChange(qs){
    see it. The Worker (accounts section of worker/playback-sync.js) keeps a Google id and a display name, never
    an email address. GCID is Google's public OAuth client ID for this app (not a secret); while it is empty the
    whole feature stays hidden from friends and the owner is pointed at SETUP.md. */
-const GCID='';
+const GCID='961476018828-tkjmdic1fnrtr7jtfmb7ta9alrupn8km.apps.googleusercontent.com';
 const ACC_KEY=KEY+'_acct';
 let ACC=(()=>{const d={token:'',tokAt:0,me:null,pubSig:'',pubAt:0};try{return Object.assign(d,JSON.parse(localStorage.getItem(ACC_KEY)||'{}'))}catch(e){return d}})();
 const saveAcc=()=>{try{localStorage.setItem(ACC_KEY,JSON.stringify(ACC))}catch(e){}};
