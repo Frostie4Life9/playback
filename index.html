@@ -830,6 +830,31 @@ details.addart .add{border-top:1px solid var(--line)}
 @keyframes pfup{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @keyframes pfgrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
 @keyframes pfring{from{stroke-dasharray:0 213.6}}
+/* the rated-albums record on an account page: every rated album is a cover on one spiral groove, best at the outer edge */
+.vl{display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px 14px 14px;border:1px solid var(--line);background:var(--surface);border-radius:20px}
+.vl-wrap{position:relative;width:100%;max-width:560px;aspect-ratio:1;border-radius:50%;box-shadow:0 26px 50px -26px hsl(var(--h,200) 60% 40% / .6),0 0 0 1px rgb(255 255 255 / .06)}
+.vl-wrap::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;mix-blend-mode:screen;background:conic-gradient(from 20deg,rgb(255 255 255 / 0),rgb(255 255 255 / .16) 12%,rgb(255 255 255 / 0) 26%,rgb(255 255 255 / 0) 50%,rgb(255 255 255 / .12) 62%,rgb(255 255 255 / 0) 76%)}
+.vl-svg{display:block;width:100%;height:100%;overflow:visible}
+.vl-b{cursor:pointer;outline:none}
+.vl-b .vl-ring{fill:none;stroke:var(--accent);transition:stroke-width .15s,stroke .15s}
+.vl-b:hover .vl-ring,.vl-b:focus-visible .vl-ring,.vl-b.sel .vl-ring{stroke:#fff;stroke-width:3.2}
+.vl-b.sel{filter:drop-shadow(0 0 5px rgb(255 255 255 / .65))}
+.vl-lab text{font-family:var(--mono);fill:#fff;text-anchor:middle;pointer-events:none}
+.vl-lab .t1{font-size:10px;letter-spacing:.08em;text-transform:uppercase;opacity:.82}
+.vl-lab .t2{font:800 13px Archivo,var(--display)}
+.vl-lab .t3{font:800 30px var(--mono)}
+.vl-lab .t4{font-size:9px;letter-spacing:.1em;text-transform:uppercase;opacity:.82}
+.vl-cap{margin:0;max-width:520px;text-align:center}
+.vl-more{display:block;text-align:center}
+@keyframes vlpop{from{opacity:0;transform:scale(.15)}to{opacity:1;transform:none}}
+@keyframes vlspin{to{transform:rotate(360deg)}}
+@keyframes vlin{from{opacity:0;transform:scale(.82) rotate(-24deg)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:no-preference){
+  .vl-spin{animation:vlspin 240s linear infinite;transform-origin:300px 300px}
+  .vl:hover .vl-spin,.vl.hold .vl-spin,.vl:focus-within .vl-spin{animation-play-state:paused}
+  .vl.pf-in .vl-wrap{animation:vlin .8s .1s cubic-bezier(.2,.8,.2,1) both}
+  .vl.pf-in .vl-b{animation:vlpop .45s cubic-bezier(.3,1.35,.5,1) both;animation-delay:calc(var(--i)*16ms + 450ms);transform-box:fill-box;transform-origin:center}
+}
 @media (prefers-reduced-motion:no-preference){
   .pf-hero.pf-in{animation:pfup .55s cubic-bezier(.2,.8,.2,1) both}
   .pf-hero.pf-in .pf-av{animation:pfup .6s .12s cubic-bezier(.3,1.35,.5,1) both}
@@ -1894,6 +1919,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-ag', note:'THE RATED-ALBUMS RECORD: your Account page (and a friend\u2019s page) now has a big vinyl under the stats with every album rated, each one a cover on a single spiral groove: the highest rated sit on the outer edge and it winds in to the lowest at the label. Hover a cover (or tap it on a phone) to read its title, artist and rating on the label, and tap again to keep it there. The record turns slowly, stops when you point at it, and pops in cover by cover when the page opens. A brighter ring means a higher rating. Deluxe editions rated on their own are not drawn, matching the albums count.'},
   {v:'2026.11.17-af', note:'FIX: DELUXE EDITIONS WITH A ROMAN NUMERAL TITLE NOW FOLD IN: Skate Story: Vol. I and its Deluxe Edition (titled Vol. 1) stayed as two separate albums because Playback read I and 1 as different words. Vol., Part, Chapter, Book, Act and Episode followed by a Roman numeral now count as the number when titles are compared. The tracklist check is unchanged: the deluxe still has to carry nearly all of the standard album\u2019s songs and add more, so a different album with a similar name stays separate. Tap Check for new releases on the artist to apply it; the rating on the stand-alone deluxe moves to your deluxe rating and its song checks move onto the album.'},
   {v:'2026.11.17-ae', note:'FRIENDS AS A SHEET: the Friends button now slides a sheet up over whatever you are on (music, screen, collection) instead of replacing the page. Close it with the X, by tapping outside it, or with Escape, and you are exactly where you were, so your artists and the tab bar stay put. Opening a friend from it still works, and its back button reopens the sheet.'},
   {v:'2026.11.17-ad', note:'OWNER: PEOPLE USING PLAYBACK. In your Settings, a new People using Playback card lists everyone who has made an account: name, when they joined, when they last opened Playback, how many things they rated, how many friends they have, and whether their log is synced or their page is private. Load users reads it from your Worker (it takes the new playback-sync.js from GitHub on its own), and only you can see it. It never shows anyone\u2019s ratings. FRIENDS PAGE FIX: the Friends page could come out wider than a phone screen, pushing the account icon and tab bar off the right edge; pages are now held to the screen width and rows wrap instead.'},
@@ -5849,9 +5875,70 @@ function accListHtml(P,match){
       return `<div class="pf-row" style="--i:${Math.min(i,12)}"><span class="pcv"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span><span class="pt"><b>${esc(x.n||'Untitled')}</b><small>${esc(x.a||(x.kind==='s'?'':''))}</small></span><span class="pr">${m!=null?`<span class="pme" title="Your rating">you ${fmt(m)}</span>`:''}<b class="pn">${fmt(x.r)}</b></span></div>`}).join(''):`<p class="note">${base.length?'Nothing here with that filter.':'Nothing rated here yet.'}</p>`}
     ${list.length>lim?`<div class="tools"><button class="btn" data-act="pmore">Show ${Math.min(60,list.length-lim)} more</button></div>`:''}</div>`;
 }
+/* the big record: every album this person rated, one cover per spot on a single spiral groove, highest rated at the outer edge and lowest at the label.
+   Hover (or tap) a cover to read it on the label; tap again to keep it there. */
+const VL={items:[],def:'',pin:-1};
+const vlWrap=(s,n)=>{const w=String(s||'').split(/\s+/),out=[''];for(const x of w){const l=out[out.length-1];if(!l||(l+' '+x).length<=n)out[out.length-1]=l?l+' '+x:x;else if(out.length<2)out.push(x);else{out[1]=(out[1]+' '+x);break}}
+  return out.map(l=>l.length>n+1?l.slice(0,n)+'…':l).slice(0,2)};
+function vlLabel(it,P){
+  if(!it)return `<text class="t1" x="300" y="242">${esc(vlWrap(P.name,18)[0])}</text><text class="t2" x="300" y="264">Rated albums</text><text class="t3" x="300" y="338">${VL.items.length}</text><text class="t4" x="300" y="355">tap a cover</text>`;
+  const L=vlWrap(it.n||'Untitled',17);
+  return `<text class="t1" x="300" y="236">${esc((it.a||'').slice(0,22))}</text>`+L.map((l,i)=>`<text class="t2" x="300" y="${254+i*15}">${esc(l)}</text>`).join('')+`<text class="t3" x="300" y="338">${fmt(it.r)}</text><text class="t4" x="300" y="355">out of 10</text>`;
+}
+function vlLayout(n){
+  const R1=284,R0=100,cx=300,cy=300,at=(r,th)=>[cx+r*Math.cos(th-Math.PI/2),cy+r*Math.sin(th-Math.PI/2)];
+  let d=Math.min(58,Math.sqrt(Math.PI*(R1*R1-R0*R0)/(n*1.45)));
+  for(let t=0;t<40;t++){
+    /* few albums: step down the groove evenly, as many turns as the cover size allows, so they wind all the way in */
+    const rs=R1-d/2-3,re=R0+d/2+4,span=rs-re,T=Math.max(.6,Math.min(3,span/(d*1.15)));
+    if(n>1&&span>0){
+      const pts=[];let ok=true;
+      for(let i=0;i<n;i++){const f=i/(n-1),r=rs-span*f,th=2*Math.PI*T*f;pts.push(at(r,th))}
+      for(let i=1;i<n;i++){if(Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1])<d*1.08){ok=false;break}}
+      if(ok)return{d,pts}}
+    /* many albums: pack them along the groove at a steady arc spacing */
+    const gap=d*1.1,pts=[];let r=rs,th=0;
+    for(let i=0;i<n;i++){pts.push(at(r,th));th+=gap/r;r-=gap*(gap/r)/(2*Math.PI)}
+    if(n===1)return{d,pts:[at(rs,0)]};
+    if(r-d/2>=R0-2||d<9)return{d,pts};
+    d*=.95;
+  }
+  return{d:9,pts:[]};
+}
+function accVinylHtml(P){
+  const all=accBase(P.items).filter(x=>x.kind==='a').slice().sort((a,b)=>b.r-a.r||String(a.n).localeCompare(String(b.n)));
+  if(!all.length){VL.items=[];return ''}
+  const items=all.slice(0,600),{d,pts}=vlLayout(items.length);
+  VL.items=items;VL.pin=-1;VL.def=vlLabel(null,P);
+  const anim=UI.pAnim?' pf-in':'',h=accHueOf(P),big=d>=22;
+  let grooves='';for(let r=104;r<=288;r+=3.6)grooves+=`<circle cx="300" cy="300" r="${r.toFixed(1)}"/>`;
+  const beads=items.map((x,i)=>{
+    const[px,py]=pts[i]||[300,300],u=accCover(x),ring=(1+x.r*.22).toFixed(2),op=(.3+x.r*.07).toFixed(2);
+    return `<g transform="translate(${px.toFixed(1)} ${py.toFixed(1)})"><g class="vl-b" data-i="${i}" style="--i:${Math.min(i,70)}" tabindex="0" role="button" aria-label="${esc(x.n||'Untitled')}${x.a?' by '+esc(x.a):''}, rated ${fmt(x.r)}"><circle r="${(d/2).toFixed(1)}" fill="hsl(${accHue(x.n)} 45% 32%)"/>${big?`<text y="${(d*.16).toFixed(1)}" text-anchor="middle" style="font:800 ${(d*.45).toFixed(0)}px Archivo,var(--display);fill:rgb(255 255 255 / .8);pointer-events:none">${accIni(x.n)}</text>`:''}${u?`<image href="${esc(u)}" x="${(-d/2).toFixed(1)}" y="${(-d/2).toFixed(1)}" width="${d.toFixed(1)}" height="${d.toFixed(1)}" preserveAspectRatio="xMidYMid slice" clip-path="url(#vlc)"/>`:''}<circle class="vl-ring" r="${(d/2).toFixed(1)}" stroke-width="${ring}" stroke-opacity="${op}"/></g></g>`}).join('');
+  return `<div class="vl${anim}" style="--h:${h}"><div class="vl-wrap"><svg class="vl-svg" viewBox="0 0 600 600" role="group" aria-label="Every album ${esc(P.name)} rated, best at the outer edge">
+    <defs><clipPath id="vlc" clipPathUnits="objectBoundingBox"><circle cx=".5" cy=".5" r=".5"/></clipPath></defs>
+    <circle cx="300" cy="300" r="296" fill="#0c0c0f"/><circle cx="300" cy="300" r="296" fill="none" stroke="rgb(255 255 255 / .14)" stroke-width="1.5"/>
+    <g fill="none" stroke="rgb(255 255 255 / .05)" stroke-width="1.2">${grooves}</g>
+    <g class="vl-spin">${beads}</g>
+    <circle cx="300" cy="300" r="94" fill="hsl(${h} 55% 36%)"/><circle cx="300" cy="300" r="94" fill="none" stroke="rgb(0 0 0 / .35)" stroke-width="3"/><circle cx="300" cy="300" r="82" fill="none" stroke="rgb(255 255 255 / .16)" stroke-width="1"/>
+    <g class="vl-lab" aria-live="polite">${VL.def}</g><circle cx="300" cy="300" r="5.5" fill="#0c0c0f" stroke="rgb(255 255 255 / .3)" stroke-width="1"/>
+  </svg></div>
+  <p class="note vl-cap">Every album ${P.self?'you have':esc(P.name)+' has'} rated, best at the outer edge spiralling in to the lowest.${all.length>items.length?` Showing the top ${items.length} of ${all.length}.`:''}</p></div>`;
+}
+function vlShow(i){
+  const g=document.querySelector('.vl .vl-lab');if(!g)return;
+  document.querySelectorAll('.vl .vl-b.sel').forEach(e=>e.classList.remove('sel'));
+  const it=i>=0?VL.items[i]:null;
+  if(it){const b=document.querySelector('.vl .vl-b[data-i="'+i+'"]');if(b)b.classList.add('sel')}
+  g.innerHTML=it?vlLabel(it,null):VL.def;
+}
+document.addEventListener('pointerover',ev=>{if(ev.pointerType==='touch')return;const b=ev.target.closest&&ev.target.closest('.vl-b');if(b)vlShow(+b.dataset.i)});
+document.addEventListener('pointerout',ev=>{if(ev.pointerType==='touch')return;const v=ev.target.closest&&ev.target.closest('.vl');if(v&&!(ev.relatedTarget&&ev.relatedTarget.closest&&ev.relatedTarget.closest('.vl-b')))vlShow(VL.pin)});
+document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('.vl-b');if(!b)return;const i=+b.dataset.i;VL.pin=VL.pin===i?-1:i;const v=b.closest('.vl');if(v)v.classList.toggle('hold',VL.pin>=0);vlShow(VL.pin)});
+document.addEventListener('keydown',ev=>{if((ev.key==='Enter'||ev.key===' ')&&ev.target.classList&&ev.target.classList.contains('vl-b')){ev.preventDefault();ev.target.dispatchEvent(new MouseEvent('click',{bubbles:true}))}});
 function profileHtml(P,mine){
   const st=accStats(P.items),match=P.self?null:accMatch(P.items,mine);
-  return accHeroHtml(Object.assign({},P,{n:accBase(P.items).length}),st,match,P.extra)+accStatsHtml(st)+accListHtml(P,match);
+  return accHeroHtml(Object.assign({},P,{n:accBase(P.items).length}),st,match,P.extra)+accStatsHtml(st)+accVinylHtml(P)+accListHtml(P,match);
 }
 /* the Friends shortcut in the top bar: one tap to the friends list, with a count of requests waiting for you */
 function friendsBtn(){
