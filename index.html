@@ -843,6 +843,13 @@ details.addart .add{border-top:1px solid var(--line)}
 }
 @media (max-width:560px){.pf-hero{padding:16px;gap:12px}.pf-av{width:56px;height:56px;font-size:26px}.pf-who h2{font-size:23px}.pf-match{width:72px;height:72px}.pf-match b{font-size:17px}}
 /* Friends shortcut in the top bar and the Friends page */
+.settings,.frwrap,.setcard.acc{min-width:0;max-width:100%;box-sizing:border-box}
+.setcard.acc input:not([type="checkbox"]),.setcard.acc .panel{min-width:0;max-width:100%;box-sizing:border-box}
+.acc-row{min-width:0;flex-wrap:wrap}.acc-id{flex-wrap:wrap}
+.acc-row .fn{flex:0 1 auto;min-width:80px}
+.usr-w{display:flex;flex-direction:column;min-width:0}.usr-w b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.usr-w small{color:var(--muted);font-size:12px}
+.usr-n{font-size:12px;text-align:right}
+body{overflow-x:clip}
 .tfr.cur{outline:2px solid var(--accent);outline-offset:2px}
 .tfr .tbadge{animation:none}
 @keyframes tfrpop{0%{transform:scale(.4)}60%{transform:scale(1.25)}100%{transform:scale(1)}}
@@ -1878,6 +1885,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-ad', note:'OWNER: PEOPLE USING PLAYBACK. In your Settings, a new People using Playback card lists everyone who has made an account: name, when they joined, when they last opened Playback, how many things they rated, how many friends they have, and whether their log is synced or their page is private. Load users reads it from your Worker (it takes the new playback-sync.js from GitHub on its own), and only you can see it. It never shows anyone\u2019s ratings. FRIENDS PAGE FIX: the Friends page could come out wider than a phone screen, pushing the account icon and tab bar off the right edge; pages are now held to the screen width and rows wrap instead.'},
   {v:'2026.11.17-ac', note:'FRIENDS ONE TAP AWAY: once you are signed in, a Friends button (two people) sits in the top bar next to your account icon. It opens a Friends page with just the list: requests waiting for you first, then your friends (tap a name to open their page, and the back button returns to the list), then your friend code and the add-by-code box. A small number on the button shows how many requests are waiting. The list also lives on your Account page as before.'},
   {v:'2026.11.17-ab', note:'PROBLEM REPORTS: if Playback crashes on a friend\u2019s phone, a small card slides in offering to send the error details to Skyler through the Suggest box (one tap, only after they press Send report). Network hiccups are not reported, and each error shows once. The owner does not see it. They read in Settings, Friend suggestions, starting with [auto].'},
   {v:'2026.11.17-aa', note:'MATCH FIX: friends could not open another person\u2019s page (\u201cCould not reach Playback\u2019s server\u201d) when that page had albums without a MusicBrainz id, which is most Spotify and Apple Music imports. The page now opens, taste match counts only things you both rated, and a drawing error is no longer reported as a connection problem.'},
@@ -5537,6 +5545,29 @@ function sugCard(){
       ${SUGX.msg?`<span class="msg ${SUGX.ok?'ok':'err'}">${esc(SUGX.msg)}</span>`:''}
     </form></div>`;
 }
+/* ---------- owner: everyone with an account ----------
+   Names, join and last-seen dates and counts, read from the Worker's /users with the sync key or the owner login. Never ratings. */
+const USX={busy:false,msg:'',list:null,anim:false};
+const usAgo=t=>{if(!t)return 'never';const m=Math.max(0,Math.round((Date.now()-t)/60000));if(m<2)return 'just now';if(m<60)return m+' min ago';const h=Math.round(m/60);if(h<36)return h+' h ago';return Math.round(h/24)+' days ago'};
+function usersCard(){
+  if(!window.PB_OWNER||!ownSync()||!GCID)return '';
+  const l=USX.list,ani=USX.anim?' acc-in':'';USX.anim=false;
+  return `<div class="setcard usr"><h3>People using Playback${l?' ('+l.length+')':''}</h3>
+    <p class="note">Everyone who made an account: name, when they joined, when they last opened it, and counts. Their ratings stay private to them and their friends.</p>
+    <div class="tools"><button class="btn primary" data-act="usload"${USX.busy?' disabled':''}>${USX.busy?'Loading\u2026':l?'Refresh':'Load users'}</button></div>
+    ${USX.msg?`<span class="msg err" role="status">${esc(USX.msg)}</span>`:''}
+    ${l?(l.length?l.map((x,i)=>`<div class="acc-row usr-row${ani}" style="animation-delay:${Math.min(i,12)*35}ms"><i class="fav" style="--h:${accHueOf(x)}" aria-hidden="true">${accIni(x.name)}</i><span class="usr-w"><b>${esc(x.name)}${x.owner?' (you)':''}</b><small>Joined ${esc(new Date(x.made).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}))} \u00b7 seen ${esc(usAgo(x.seen))}</small></span><span class="sp"></span><span class="note usr-n">${x.rated} rated \u00b7 ${x.friends} friend${x.friends===1?'':'s'}${x.synced?' \u00b7 synced':''}${x.share?'':' \u00b7 private'}</span></div>`).join(''):'<p class="note">Nobody has signed in yet.</p>'):''}
+  </div>`;
+}
+async function usLoad(){
+  if(USX.busy)return;USX.busy=true;USX.msg='';render();
+  try{
+    const r=await fetch(SY.url.replace(/\/+$/,'')+'/users',{cache:'no-store',headers:{...syH()}});
+    if(!r.ok)throw new Error(r.status===401?'Your sync key was not accepted.':r.status===404?'Your Worker does not have this yet. It updates itself from GitHub; try again in a minute.':r.status===409?'Accounts are not set up on your Worker.':'Could not reach your Worker.');
+    const j=await r.json();USX.list=Array.isArray(j.users)?j.users:[];USX.anim=true;
+  }catch(e){USX.msg=e.message==='Failed to fetch'?'Could not reach your Worker.':e.message}
+  USX.busy=false;render();
+}
 async function sugSend(d){
   const text=String(d.text||'').trim();if(!text||SUGX.busy)return;
   SUGX.busy=true;SUGX.msg='';render();
@@ -5959,7 +5990,7 @@ function settingsView(){return `
     <div class="setcard"><h3>Rate Your Music</h3>${rymSide()}${rtSide()}</div>
     ${window.PB_OWNER?`<div class="setcard"><h3>Rating dates</h3>${rdSide()}</div>`:''}
     ${accCard()}
-    ${sugCard()}
+    ${sugCard()}${usersCard()}
     <div class="setcard"><h3>Sync &amp; data</h3>
     <details id="syncpanel" ${UI.syncOpen?'open':''}>
       <summary class="label" style="cursor:pointer">Sync</summary>
@@ -7003,6 +7034,7 @@ document.addEventListener('click',ev=>{
     const i=VSTEPS.findIndex(v=>v[0]===UI.vStep),nv=document.querySelectorAll('.vw-nav');
     if(nv[0]){nv[0].dataset.v=VSTEPS[Math.max(0,i-1)][0];nv[0].disabled=i<=0}if(nv[1]){nv[1].dataset.v=VSTEPS[Math.min(4,i+1)][0];nv[1].disabled=i>=4}}return}
   else if(act==='sugload'){sugLoad();return}
+  else if(act==='usload'){usLoad();return}
   else if(act==='sugdel'){sugChange('?id='+encodeURIComponent(id));return}
   else if(act==='friendopen'){UI.fFrom=UI.view==='friends'?'friends':'account';UI.view='friend';UI.fid=b.dataset.u;UI.pKind='a';UI.pFilter='all';UI.pLim=60;UI.pAnim=true;UI.rOpen=null;window.scrollTo({top:0});if(ACX.prof[UI.fid])ACX.prof[UI.fid].at=0}
   else if(act==='pkind'){UI.pKind=b.dataset.v;UI.pLim=60}

@@ -50,7 +50,7 @@
    Every response carries x-pb-worker: 5 so the app knows what this Worker
    can do (2 = compressed sync, 3 = Spotify plays, 4 = Spotify catalog too,
    5 = the morning-brief list, 6 = Discogs pressing search, 7 = Discogs pressing photos, 8 = your own record photos,
-   11 = Google accounts, friends and friends' ratings, 12 = a capped copy of a friend's log under their Google account, 13 = the owner can sign in with Google instead of pasting the sync key, 14 = profile picture and account color: see the accounts section above the export).
+   11 = Google accounts, friends and friends' ratings, 12 = a capped copy of a friend's log under their Google account, 13 = the owner can sign in with Google instead of pasting the sync key, 14 = profile picture and account color, 15 = the owner can list every account: GET /users, see the accounts section above the export).
 
    MORNING BRIEF (version 5)
    The app keeps a tiny list of the next episode of each show you follow
@@ -118,7 +118,7 @@ const CORS = {
   'Access-Control-Allow-Headers': 'content-type, x-sync-key, authorization',
   'Access-Control-Expose-Headers': 'x-pb-worker, retry-after, x-pb-cache',
   'Access-Control-Max-Age': '86400',
-  'x-pb-worker': '14'
+  'x-pb-worker': '15'
 };
 const JSON_H = Object.assign({ 'content-type': 'application/json', 'cache-control': 'no-store' }, CORS);
 const GZ_H = Object.assign({ 'content-type': 'application/gzip', 'cache-control': 'no-store' }, CORS);
@@ -574,6 +574,17 @@ async function ownerViaToken(env, request) {
   const o = await ownerUid(env);
   return !!o && o === m[1];
 }
+/* Owner only (the sync key or the owner's token, checked before this runs): who has an account. Names, dates and counts only: no ratings,
+   no photos, no email (Playback never stores one). */
+async function usersList(env) {
+  if (!(await acctInit(env))) return reply({ error: 'accounts are not set up on this Worker' }, 409);
+  const rows = (await env.CATALOG.prepare(
+    'SELECT u.uid, u.name, u.code, u.share, u.made, u.seen, u.rated, ' +
+    "(SELECT COUNT(*) FROM acct_friends f WHERE f.st = 'ok' AND (f.a = u.uid OR f.b = u.uid)) AS friends, " +
+    'l.bytes AS logbytes, l.at AS logat FROM acct_users u LEFT JOIN acct_logs l ON l.uid = u.uid ORDER BY u.seen DESC LIMIT 500').all()).results || [];
+  const owner = await ownerUid(env);
+  return reply({ total: rows.length, users: rows.map(u => ({ name: u.name, code: u.code, share: !!u.share, made: u.made, seen: u.seen, rated: u.rated || 0, friends: u.friends || 0, synced: u.logbytes != null, logAt: u.logat || 0, owner: !!owner && owner === u.uid })) });
+}
 /* a published cover link must be https and on a known cover host, so nobody can plant a tracking address that opens in a friend's browser */
 const IMG_HOSTS = /(^|\.)(scdn\.co|mzstatic\.com|coverartarchive\.org|archive\.org|image\.tmdb\.org)$/;
 function cleanImg(u) {
@@ -824,6 +835,7 @@ export default {
     /* the sync key, or (version 13) the signed-in owner account's token */
     if (!keyMatches(given, String(env.SECRET).trim()) && !(await ownerViaToken(env, request))) return reply({ error: 'unauthorized' }, 401);
     if (url.pathname === '/suggest') return sugOwner(request, env, url);
+    if (url.pathname === '/users') return request.method === 'GET' ? usersList(env) : reply({ error: 'method not allowed' }, 405);   /* owner only: every Google account (version 15) */
     if (url.pathname === '/rating-dates') {   /* the owner's private list of rating days (kept in KV, not in the public repo) */
       if (request.method === 'GET') return new Response((await env.STATE.get('rating-dates')) || '[]', { headers: JSON_H });
       return reply({ error: 'method not allowed' }, 405);
