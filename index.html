@@ -842,6 +842,15 @@ details.addart .add{border-top:1px solid var(--line)}
   .tacc{transition:transform .2s cubic-bezier(.3,1.35,.5,1)}.tacc:active{transform:scale(.92)}
 }
 @media (max-width:560px){.pf-hero{padding:16px;gap:12px}.pf-av{width:56px;height:56px;font-size:26px}.pf-who h2{font-size:23px}.pf-match{width:72px;height:72px}.pf-match b{font-size:17px}}
+/* Friends sheet (over the current page) */
+.frover{z-index:95}
+.frsheet .setcard{border:0;padding:0;background:none;box-shadow:none;margin:0}
+@media (prefers-reduced-motion:no-preference){
+  .frover .llbk{animation:frfade .25s ease both}
+  .frover .llsheet{animation:frup .38s cubic-bezier(.2,.9,.25,1) both}
+}
+@keyframes frfade{from{opacity:0}to{opacity:1}}
+@keyframes frup{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
 /* Friends shortcut in the top bar and the Friends page */
 .settings,.frwrap,.setcard.acc{min-width:0;max-width:100%;box-sizing:border-box}
 .setcard.acc input:not([type="checkbox"]),.setcard.acc .panel{min-width:0;max-width:100%;box-sizing:border-box}
@@ -1885,6 +1894,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-ae', note:'FRIENDS AS A SHEET: the Friends button now slides a sheet up over whatever you are on (music, screen, collection) instead of replacing the page. Close it with the X, by tapping outside it, or with Escape, and you are exactly where you were, so your artists and the tab bar stay put. Opening a friend from it still works, and its back button reopens the sheet.'},
   {v:'2026.11.17-ad', note:'OWNER: PEOPLE USING PLAYBACK. In your Settings, a new People using Playback card lists everyone who has made an account: name, when they joined, when they last opened Playback, how many things they rated, how many friends they have, and whether their log is synced or their page is private. Load users reads it from your Worker (it takes the new playback-sync.js from GitHub on its own), and only you can see it. It never shows anyone\u2019s ratings. FRIENDS PAGE FIX: the Friends page could come out wider than a phone screen, pushing the account icon and tab bar off the right edge; pages are now held to the screen width and rows wrap instead.'},
   {v:'2026.11.17-ac', note:'FRIENDS ONE TAP AWAY: once you are signed in, a Friends button (two people) sits in the top bar next to your account icon. It opens a Friends page with just the list: requests waiting for you first, then your friends (tap a name to open their page, and the back button returns to the list), then your friend code and the add-by-code box. A small number on the button shows how many requests are waiting. The list also lives on your Account page as before.'},
   {v:'2026.11.17-ab', note:'PROBLEM REPORTS: if Playback crashes on a friend\u2019s phone, a small card slides in offering to send the error details to Skyler through the Suggest box (one tap, only after they press Send report). Network hiccups are not reported, and each error shows once. The owner does not see it. They read in Settings, Friend suggestions, starting with [auto].'},
@@ -4674,7 +4684,7 @@ async function push(force){
 }
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pull();else if(accSync()&&!ownSync()&&pushTimer&&SYS.status!=='conflict'){clearTimeout(pushTimer);pushTimer=null;push(false)}});   /* leaving the app sends a waiting account save right away */
 window.addEventListener('online',()=>pull());
-document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&UI.llOpen){UI.llOpen=false;render()}else if(ev.key==='Escape'&&UI.mm){UI.mm=false;UI.mmAnim=false;render()}});
+document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&UI.frOpen){UI.frOpen=false;render()}else if(ev.key==='Escape'&&UI.llOpen){UI.llOpen=false;render()}else if(ev.key==='Escape'&&UI.mm){UI.mm=false;UI.mmAnim=false;render()}});
 document.addEventListener('toggle',ev=>{if(ev.target.id==='syncpanel')UI.syncOpen=ev.target.open;else if(ev.target.id==='syncguide')UI.guideOpen=ev.target.open;else if(ev.target.id==='backup')UI.bkOpen=ev.target.open;else if(ev.target.id==='addart')UI.addOpen=ev.target.open;else if(ev.target.id==='listenpanel')UI.llOpen=ev.target.open;else if(ev.target.id==='coladd')UI.colAdd=ev.target.open;else if(ev.target.id==='colhand')UI.colHand=ev.target.open;else if(ev.target.id==='coltok')UI.colTok=ev.target.open;else if(ev.target.classList&&ev.target.classList.contains('splog'))UI.spLogOpen=ev.target.open},true);
 const UI={view:null,libOpen:false,addOpen:false,rOpen:null,lq:{music:'',screen:''},tab:'music',sel:{music:null,screen:null},filter:'all',armed:null,addType:'show',copied:false,epOpen:{},dxOpen:{},wEdit:null,dEdit:null};
 
@@ -5715,6 +5725,7 @@ async function accGoogle(resp){
 function accAfter(){
   try{
     if(!GCID)return;
+    if(UI.frOpen&&accOn())accFriends(false);
     if(UI.view==='friends'){if(accOn())accFriends(false)}
     else if(UI.view==='account'){if(accOn())accFriends(false);else accMount()}
     else if(UI.view==='friend'){if(accOn()&&UI.fid){accFriends(false);accProfile(UI.fid,false)}}
@@ -5840,10 +5851,16 @@ function profileHtml(P,mine){
 /* the Friends shortcut in the top bar: one tap to the friends list, with a count of requests waiting for you */
 function friendsBtn(){
   if(!GCID||!accOn())return '';
-  const n=ACX.fr?ACX.fr.incoming.length:0,cur=UI.view==='friends'||UI.view==='friend';
-  return `<button class="tact tfr${cur?' cur':''}" data-act="view" data-v="friends" aria-pressed="${cur}" aria-label="Friends${n?', '+n+' request'+(n===1?'':'s')+' waiting':''}">${ICO.friends}${n?`<i class="tbadge" aria-hidden="true">${n}</i>`:''}</button>`;
+  const n=ACX.fr?ACX.fr.incoming.length:0,cur=!!UI.frOpen;
+  return `<button class="tact tfr${cur?' cur':''}" data-act="fropen" aria-haspopup="dialog" aria-expanded="${cur}" aria-label="Friends${n?', '+n+' request'+(n===1?'':'s')+' waiting':''}">${ICO.friends}${n?`<i class="tbadge" aria-hidden="true">${n}</i>`:''}</button>`;
 }
-/* the Friends page: just the friends list (requests, friends, add by code), no scrolling past your own stats */
+/* the Friends sheet: slides up over whatever you are on (music, screen, collection...) so closing it puts you right back */
+function friendsSheet(){
+  const body=accOn()?accFriendsCardHtml(true,true):`<p class="note">Sign in to add friends and open their pages.</p><div class="tools"><button class="btn primary" data-act="frgo">Sign in</button></div>`;
+  ACX.anim=false;
+  return `<div class="llover frover"><button class="llbk" data-act="frclose" aria-label="Close friends"></button><section class="llsheet frsheet" role="dialog" aria-modal="true" aria-labelledby="fr-h"><div class="llhead"><h2 id="fr-h">Friends</h2><button class="tact" data-act="frclose" aria-label="Close friends">${ICO.close}</button></div>${body}</section></div>`;
+}
+/* (old full-page version, no longer reachable) the Friends page: just the friends list (requests, friends, add by code), no scrolling past your own stats */
 function friendsView(){
   const ani=UI.pAnim?' pf-in':'';UI.pAnim=false;
   if(!accOn())return `<section class="settings pf" aria-labelledby="fr-h"><h2 id="fr-h">Friends</h2><div class="setcard acc"><p class="note">Sign in to add friends and open their pages.</p><div class="tools"><button class="btn primary" data-act="view" data-v="account">Sign in</button></div></div></section>`;
@@ -5921,7 +5938,7 @@ async function accSyncDel(){
   catch(e){ACX.syncOk=false;ACX.syncMsg='Could not reach Playback’s server. Check your connection.'}
   render();
 }
-function accFriendsCardHtml(listFirst){
+function accFriendsCardHtml(listFirst,noHead){
   const me=ACC.me,F=ACX.fr,b=ACX.busy?' disabled':'',ani=ACX.anim?' acc-in':'';
   const msg=ACX.msg?`<span class="msg ${ACX.ok?'ok':'err'}" role="status">${esc(ACX.msg)}</span>`:'';
   const row=(x,btns,open)=>`<div class="acc-row${ani}"><i class="fav${accPicOf(x)?' pic':''}" style="--h:${accHueOf(x)}" aria-hidden="true">${accFace(x)}</i>${open?`<button class="fn linkish" data-act="friendopen" data-u="${esc(x.uid)}">${esc(x.name)}</button>`:`<span class="fn">${esc(x.name)}</span>`}<span class="sp"></span>${btns}</div>`;
@@ -5932,7 +5949,7 @@ function accFriendsCardHtml(listFirst){
     ${F&&F.outgoing.length?`<div class="label">Waiting for them</div>${F.outgoing.map(x=>row(x,`<button class="btn" data-act="accremove" data-u="${esc(x.uid)}"${b}>Cancel</button>`)).join('')}`:''}
     ${F?`<div class="label">Friends${F.friends.length?' ('+F.friends.length+')':''}</div>${F.friends.length?F.friends.map(x=>row(x,`<span class="note">${x.share===false?'not sharing':x.rated+' rated'}</span><button class="btn" data-act="accremove" data-u="${esc(x.uid)}"${b}>Remove</button>`,x.share!==false)).join(''):'<p class="note">No friends yet.</p>'}`:'<p class="note">Loading friends…</p>'}`;
   return `<div class="setcard acc${listFirst?' frpage':''}">
-    <h3>Friends</h3>
+    ${noHead?'':'<h3>Friends</h3>'}
     ${listFirst?list+add:add+list}
     ${msg}</div>`;
 }
@@ -5965,7 +5982,7 @@ function accountView(){
 }
 function friendView(){
   const uid=UI.fid,c=ACX.prof[uid]||{},F=ACX.fr,known=F&&[].concat(F.friends,F.incoming,F.outgoing).find(x=>x.uid===uid);
-  const back=UI.fFrom==='friends'?`<button class="btn pf-back" data-act="view" data-v="friends">← Friends</button>`:`<button class="btn pf-back" data-act="view" data-v="account">← Account</button>`;
+  const back=UI.fFrom==='sheet'?`<button class="btn pf-back" data-act="frback">← Friends</button>`:`<button class="btn pf-back" data-act="view" data-v="account">← Account</button>`;
   let h;
   if(!accOn())h=`<section class="settings pf">${back}<p class="note">Sign in to see friends’ pages.</p></section>`;
   else if(c.data){
@@ -6051,6 +6068,7 @@ function renderMain(){
       ${friendsBtn()}${accBtn()}
     </div>
   </header>
+  ${UI.frOpen&&GCID?friendsSheet():''}
   ${UI.llOpen&&!UI.view&&UI.tab==='music'?`<div class="llover"><button class="llbk" data-act="llclose" aria-label="Close Listen list"></button>${listenSide()}</div>`:''}
   ${SV.err?`<div class="banner" role="alert"><p>This browser would not save your last change. It is still on screen, but it will be gone if you close the app. ${syncOn()?'Tap Upload now in Sync at the bottom so it is safe on your Worker, or copy a backup.':'Copy a backup at the bottom to keep it safe.'}</p></div>`:''}
   ${SYS.status==='conflict'?conflictBanner():''}
@@ -7016,6 +7034,10 @@ document.addEventListener('click',ev=>{
       setTimeout(()=>{UI.rClosing=false;UI.rOpen=null;if(fly)UI.rLand=cid;render()},230);rtFlyGo(fly);return}}
   if(act==='view'){UI.view=b.dataset.v;UI.rOpen=null;if(UI.view==='account'){UI.pAnim=true;UI.pKind='a';UI.pLim=60}if(UI.view==='friends'){UI.pAnim=true;ACX.anim=true}if(UI.view==='history'){UI.hAnim=true;UI.hEdit=null}window.scrollTo({top:0})}
   else if(act==='lib'){UI.libOpen=!UI.libOpen;UI.libAnim=UI.libOpen}
+  else if(act==='fropen'){UI.frOpen=true;UI.llOpen=false;ACX.anim=true;if(accOn())accFriends(true)}
+  else if(act==='frclose'){UI.frOpen=false}
+  else if(act==='frgo'){UI.frOpen=false;UI.view='account';UI.pAnim=true;UI.pKind='a';UI.pLim=60;window.scrollTo({top:0})}
+  else if(act==='frback'){UI.view=UI.fPrev||null;UI.frOpen=true;ACX.anim=true}
   else if(act==='llopen'){UI.llOpen=true}
   else if(act==='llclose'){UI.llOpen=false}
   else if(act==='addart'){UI.libOpen=false;UI.addOpen=true;UI.toAdd=true}
@@ -7036,7 +7058,7 @@ document.addEventListener('click',ev=>{
   else if(act==='sugload'){sugLoad();return}
   else if(act==='usload'){usLoad();return}
   else if(act==='sugdel'){sugChange('?id='+encodeURIComponent(id));return}
-  else if(act==='friendopen'){UI.fFrom=UI.view==='friends'?'friends':'account';UI.view='friend';UI.fid=b.dataset.u;UI.pKind='a';UI.pFilter='all';UI.pLim=60;UI.pAnim=true;UI.rOpen=null;window.scrollTo({top:0});if(ACX.prof[UI.fid])ACX.prof[UI.fid].at=0}
+  else if(act==='friendopen'){if(UI.frOpen){UI.fFrom='sheet';UI.fPrev=UI.view==='friend'?null:UI.view;UI.frOpen=false}else UI.fFrom='account';UI.view='friend';UI.fid=b.dataset.u;UI.pKind='a';UI.pFilter='all';UI.pLim=60;UI.pAnim=true;UI.rOpen=null;window.scrollTo({top:0});if(ACX.prof[UI.fid])ACX.prof[UI.fid].at=0}
   else if(act==='pkind'){UI.pKind=b.dataset.v;UI.pLim=60}
   else if(act==='pfilter'){UI.pFilter=b.dataset.v;UI.pLim=60}
   else if(act==='pmore'){UI.pLim=(UI.pLim||60)+60}
