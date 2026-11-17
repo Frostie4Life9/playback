@@ -1665,6 +1665,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-am', note:'LISTEN AGAIN: your first listen of an album can never be removed. Remove only appears on later listens.'},
   {v:'2026.11.16-al', note:'LISTEN AGAIN: on a new listen the record\u2019s bands start faded (they are last listen\u2019s songs carried over) and each band fills back in fully, with the usual glow, as you mark its songs off on this listen. The green and red change gradient in a song bar now slides with the bar while you drag the rating slider.'},
   {v:'2026.11.16-ak', note:'LISTEN AGAIN: Clear on a song or the album in your newest listen now puts last listen\u2019s rating back (dimmed, carried over, with its gradient) instead of leaving it blank. If last listen had no rating there, Clear still leaves it blank.'},
   {v:'2026.11.16-aj', note:'LISTEN AGAIN: the green and red change gradient in a song bar now fades in from the color before it too, so it has no hard edge on either side.'},
@@ -2128,6 +2129,7 @@ function lsGo(g,k){
   UI.rOpen=null;UI.dEdit=null;lsFlip(id,k>cur?1:-1)}
 function lsRemove(g){
   const id=g.id,l=lsRaw(id);if(l.length<2)return;const last=l.length-1,k=UI.lsView[id]!==undefined?Math.min(UI.lsView[id],last):last;
+  if(k<1)return;   /* the first listen can never be removed */
   l.splice(k,1);
   if(k===last)lsLoad(g,l.length-1);else S.marks[id]={...S.marks[id],ls:l};
   delete UI.lsView[id];UI.rOpen=null;lsFlip(id,-1);touch()}
@@ -2195,7 +2197,7 @@ function lsPager(g){
     <button type="button" class="ls-ar" data-act="lsgo" data-g="${esc(id)}" data-k="${k-1}" aria-label="Earlier listen"${k<1?' disabled':''}>‹</button>
     <span class="ls-nm" aria-live="polite"><b>Listen ${k+1}</b> of ${n}</span>
     <button type="button" class="ls-ar" data-act="lsgo" data-g="${esc(id)}" data-k="${k+1}" aria-label="Later listen"${k>=n-1?' disabled':''}>›</button>
-    <button type="button" class="ls-rm${armed?' armed':''}" data-act="lsrm" data-g="${esc(id)}">${armed?'Tap again to remove':'Remove'}</button>
+    ${k>0?`<button type="button" class="ls-rm${armed?' armed':''}" data-act="lsrm" data-g="${esc(id)}">${armed?'Tap again to remove':'Remove'}</button>`:''}
     ${old?`<p class="ls-ro">An earlier listen, view only. Your latest listen sets your scores. <button type="button" class="link" data-act="lsgo" data-g="${esc(id)}" data-k="${n-1}">Back to latest</button></p>`:''}
     ${!old&&(l[k].c||[]).length?`<p class="ls-ro">Dimmed ratings carry over from listen ${k}. Rate a song or the album to set it for this listen.</p>`:''}
     ${df&&parts.length?`<p class="ls-df">vs listen ${df.k}: ${parts.join(' · ')}</p>`:''}</div>`}
