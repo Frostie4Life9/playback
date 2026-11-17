@@ -442,6 +442,49 @@ footer textarea{font:12px var(--mono);margin-top:8px}
 .colfacts .v.dim{color:var(--muted);font-weight:500}
 .sw{display:inline-block;width:.8em;height:.8em;border-radius:50%;margin-right:6px;border:1px solid var(--line);vertical-align:-1px}
 
+/* ===== Rating history (2026.11.16-n) ===== */
+.histv{max-width:880px;--star:#F4B000;--staroff:color-mix(in srgb,var(--muted) 34%,transparent);--starmask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2.8l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.7l-5.9 3.1 1.2-6.5L2.5 9.7l6.6-.9z'/%3E%3C/svg%3E")}
+.hh-hero{align-items:flex-end}
+.hbar{display:flex;flex-direction:column;gap:10px}
+.hbar input{width:100%}
+.hrow2{display:flex;gap:8px 18px;flex-wrap:wrap}
+.hchips{display:flex;gap:6px;flex-wrap:wrap}
+.hm{margin:10px 0 0;font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.09em;color:var(--muted)}
+.hm span{font-weight:500}
+.hl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.hr{display:flex;align-items:center;gap:10px}
+.hd{flex:0 0 54px;height:54px;padding:0;border:1px solid var(--line);border-radius:12px;background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;color:var(--muted);transition:border-color .15s,transform .15s}
+.hd b{font:700 17px var(--mono);color:var(--ink);font-variant-numeric:tabular-nums}
+.hd i{font:600 12px var(--body);font-style:normal}
+.hd.none{border-style:dashed}
+.hd.none b{color:var(--muted)}
+.hd:hover{border-color:var(--accent)}
+.hd:active{transform:scale(.96)}
+.hmain{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:12px;padding:6px 14px 6px 6px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:inherit;text-align:left;transition:border-color .15s,transform .15s,background-color .15s}
+.hmain:hover{border-color:var(--accent)}
+.hmain:active{transform:scale(.995)}
+.hcov{position:relative;flex:0 0 auto;width:50px;height:50px;border-radius:9px;overflow:hidden;background:var(--sunk);box-shadow:0 0 0 1px var(--line);display:grid;place-items:center;font:800 18px Archivo,var(--display);color:var(--muted)}
+.hcov img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hn{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
+.hn b{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hn span{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hrt{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.hss{display:flex;gap:1px}
+.hs{display:block;width:15px;height:15px;background:linear-gradient(90deg,var(--star) var(--f),var(--staroff) var(--f));-webkit-mask:var(--starmask) center/contain no-repeat;mask:var(--starmask) center/contain no-repeat}
+.hsc{font:600 12px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.hr.edit form{flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:10px 12px;border:1px solid var(--accent);border-radius:14px;background:var(--surface)}
+.hr.edit .hn{flex:1 1 160px}
+.hr.edit input{width:auto;flex:0 1 160px}
+@media (max-width:420px){.hs{width:13px;height:13px}.hd{flex-basis:48px;height:48px}.hcov{width:44px;height:44px}.hmain{gap:10px;padding-right:10px}}
+@keyframes hrin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes hspop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.18);opacity:1}100%{transform:none}}
+@media (prefers-reduced-motion:no-preference){
+  .hanim .hr{animation:hrin .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*28ms)}
+  .hanim .hs{animation:hspop .45s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*28ms + 160ms)}
+  .hanim .hm{animation:hrin .5s cubic-bezier(.2,.8,.2,1) both}
+  .hr.edit form{animation:hrin .25s cubic-bezier(.2,.8,.2,1) both}
+}
+
 /* ===== Collection: the crate (2026.11.11-g) ===== */
 .colv{max-width:none}
 .col-hero{position:relative;overflow:hidden;border-radius:20px;background:#1a1512;color:#f4ece4;padding:22px 20px;display:flex;flex-wrap:wrap;align-items:flex-end;gap:18px 28px;border:1px solid var(--line);
@@ -1535,6 +1578,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-n', note:'RATING HISTORY: a new History tab lists every album, EP and deluxe you have rated as a dated list: the day on the left (31 Aug), the cover, the title and artist, and your stars with the number. Newest first with a heading for each month, or oldest first, or highest first. Search by album or artist, and show just Albums, EPs or Other. Tap the cover or title to open the album; tap the day to change it, and albums with no day yet sit at the bottom with a + Date button so you can fill them in right there.'},
   {v:'2026.11.16-m', note:'RATING DATES: Settings has a new Rating dates card. Tap Import rating dates and every album you rated gets the day you rated it, read from your rating history (it then shows as Rated Aug 3, 2024 on the banner and the share card). Albums are matched by title, a Deluxe listing lands on the deluxe rating when the album has one, and a day you already have is never replaced. The summary lists albums with no rating here, albums that are not in Playback yet, and any whose rating here differs from the history. Run it again after adding artists or a new batch.'},
   {v:'2026.11.16-l', note:'LIST SCROLL: on a wide screen the artist list could not scroll far enough to show your last artists. It was a tall box that started low on the page, so its bottom ran off the window, and its scrolling would not pass to the page. The artist column now stays on screen as you scroll and the list fills the rest of the window, so its end is always visible.'},
   {v:'2026.11.16-k', note:'GREEN COVERS STAY GREEN: ii (Kenny Beats) had a brown banner because the small orange hand at the bottom of the cover won over the big teal field. The bonus that lets a brown or green ground beat a bright sky now only applies when that earthy area is a real share (at least 40%) of the biggest color on the cover. Every cover is read again.'},
@@ -4036,6 +4080,90 @@ window.addEventListener('online',()=>pull());
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&UI.llOpen){UI.llOpen=false;render()}});
 document.addEventListener('toggle',ev=>{if(ev.target.id==='syncpanel')UI.syncOpen=ev.target.open;else if(ev.target.id==='addart')UI.addOpen=ev.target.open;else if(ev.target.id==='listenpanel')UI.llOpen=ev.target.open;else if(ev.target.id==='coladd')UI.colAdd=ev.target.open;else if(ev.target.id==='colhand')UI.colHand=ev.target.open;else if(ev.target.id==='coltok')UI.colTok=ev.target.open;else if(ev.target.classList&&ev.target.classList.contains('splog'))UI.spLogOpen=ev.target.open},true);
 const UI={view:null,libOpen:false,addOpen:false,rOpen:null,lq:{music:'',screen:''},tab:'music',sel:{music:null,screen:null},filter:'all',armed:null,addType:'show',copied:false,epOpen:{},dxOpen:{},wEdit:null,dEdit:null};
+
+/* ---------- rating history ----------
+   Every album, EP and deluxe you have rated, as a dated list (the day is rd on the rating). Newest or
+   oldest first with a heading per month, or highest first. Albums with no day yet sit at the bottom
+   with a + Date button. Linked collab copies (same shared rating) are listed once. */
+Object.assign(UI,{hq:'',hs:'new',hk:'all',hEdit:null,hAnim:false});
+function rhAll(){
+  const out=[],seen=new Set();
+  for(const a of S.music)for(const g of a.groups){
+    if(!RATEABLE.includes(g.kind))continue;
+    for(const [id,dx] of [[g.id,false],[dxId(g),true]]){
+      if(dx&&!hasDx(g))continue;
+      const r=rating(id);if(!r)continue;
+      const ck=canonK(id);if(seen.has(ck))continue;seen.add(ck);
+      out.push({id,a,g,dx,r,d:ratedDate(id),title:dx?dxName(g):g.title,art:dx?(g.dxImg||gArt(g)):gArt(g)});
+    }
+  }
+  return out;
+}
+const rhMonth=d=>{const m=/^(\d{4})-(\d\d)/.exec(d);return m?new Date(+m[1],+m[2]-1,1).toLocaleDateString([],{month:'long',year:'numeric'}):''};
+function rhRow(e,i,anim){
+  const st=anim&&i<18?` style="--i:${i}"`:'',eid=esc(e.id);
+  if(UI.hEdit===e.id)return `<li class="hr edit"><form data-form="hrd" data-id="${eid}"><span class="hn"><b>${esc(e.title)}</b><span>Day you rated it</span></span><input name="rd" type="date" value="${esc(e.d||todayISO())}" max="${todayISO()}" aria-label="Date rated for ${esc(e.title)}"><button class="btn primary">Save</button>${e.d?`<button type="button" class="btn" data-act="hclear" data-id="${eid}">Remove day</button>`:''}<button type="button" class="btn" data-act="hcancel">Cancel</button></form></li>`;
+  const m=/^(\d{4})-(\d\d)-(\d\d)$/.exec(e.d),dd=m?new Date(+m[1],+m[2]-1,+m[3]):null;
+  const badge=dd
+    ?`<button type="button" class="hd" data-act="hedit" data-id="${eid}" aria-label="Rated ${esc(fmtRd(e.d))}. Change the day"><b>${String(dd.getDate()).padStart(2,'0')}</b><i>${esc(dd.toLocaleDateString([],{month:'short'}))}</i></button>`
+    :`<button type="button" class="hd none" data-act="hedit" data-id="${eid}" aria-label="No day yet. Add the day you rated it"><b>+</b><i>Date</i></button>`;
+  const yr=/^\d{4}/.test(e.g.year||'')?String(e.g.year).slice(0,4):'',kind=e.g.kind==='Studio album'?'':e.g.kind;
+  const sub=[e.a.name,yr,kind].filter(Boolean).join(' · ');
+  const stars=[1,2,3,4,5].map(k=>`<i class="hs" style="--f:${e.r>=2*k?100:e.r>=2*k-1?50:0}%"></i>`).join('');
+  return `<li class="hr"${st}>${badge}<button type="button" class="hmain" data-act="hgo" data-a="${esc(e.a.id)}" data-g="${esc(e.g.id)}" data-dx="${e.dx?1:''}" aria-label="Open ${esc(e.title)} by ${esc(e.a.name)}, rated ${fmt(e.r)} out of 10">
+    <span class="hcov" aria-hidden="true"><span>${esc((e.title.match(/[\p{L}\p{N}]/u)||['?'])[0].toUpperCase())}</span>${e.art?`<img src="${esc(e.art)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span>
+    <span class="hn"><b>${esc(e.title)}</b><span>${esc(sub)}</span></span>
+    <span class="hrt" aria-hidden="true"><span class="hss">${stars}</span><span class="hsc">${fmt(e.r)}</span></span></button></li>`;
+}
+function historyList(anim){
+  const all=rhAll(),q=nrm(UI.hq||'').trim(),K=e=>e.g.kind==='Studio album'?'album':e.g.kind==='EP'?'ep':'other';
+  const L=all.filter(e=>(UI.hk==='all'||K(e)===UI.hk)&&(!q||nrm(e.title+' '+e.a.name).includes(q)));
+  if(!L.length)return `<p class="lempty">${all.length?'Nothing matches'+(q?' “'+esc(UI.hq)+'”':'')+'.':'Nothing rated yet. Rate an album and it lands here.'}</p>`;
+  const cmp=(x,y)=>x.title.localeCompare(y.title),dc=(x,y)=>x.d>y.d?1:x.d<y.d?-1:0;
+  let h='',n=0;
+  if(UI.hs==='high'){
+    L.sort((x,y)=>y.r-x.r||dc(y,x)||cmp(x,y));
+    return `<ol class="hl">${L.map(e=>rhRow(e,n++,anim)).join('')}</ol>`;
+  }
+  const dated=L.filter(e=>e.d).sort(UI.hs==='old'?(x,y)=>dc(x,y)||cmp(x,y):(x,y)=>dc(y,x)||cmp(x,y)),und=L.filter(e=>!e.d).sort(cmp);
+  const per={};dated.forEach(e=>{const k=e.d.slice(0,7);per[k]=(per[k]||0)+1});
+  let cur='';
+  for(const e of dated){const k=e.d.slice(0,7);
+    if(k!==cur){if(cur)h+='</ol>';cur=k;h+=`<h3 class="hm">${esc(rhMonth(e.d))} <span>· ${per[k]}</span></h3><ol class="hl">`}
+    h+=rhRow(e,n++,anim)}
+  if(cur)h+='</ol>';
+  if(und.length)h+=`<h3 class="hm">No day yet <span>· ${und.length}</span></h3><ol class="hl">${und.map(e=>rhRow(e,n++,anim)).join('')}</ol>`;
+  return h;
+}
+function historyView(){
+  const anim=UI.hAnim;UI.hAnim=false;
+  const all=rhAll(),und=all.filter(e=>!e.d).length,avg=all.length?all.reduce((t,e)=>t+e.r,0)/all.length:0;
+  const chip=(act,v,t,cur)=>`<button class="chip" data-act="${act}" data-v="${v}" aria-pressed="${cur===v}">${t}</button>`;
+  if(anim)setTimeout(rhCount,30);
+  return `<section class="colv histv" aria-labelledby="hist-h">
+    <div class="col-hero hh-hero">
+      <div class="col-hero-t"><span class="sl-kind">Albums you rated</span><h2 id="hist-h">History</h2></div>
+      <div class="col-hero-n"><div><b data-n="${all.length}">${all.length}</b><span>Rated</span></div>${all.length?`<div><b data-n="${avg.toFixed(1)}" data-d="1">${avg.toFixed(1)}</b><span>Average</span></div>`:''}${und?`<div><b data-n="${und}">${und}</b><span>No day yet</span></div>`:''}</div>
+    </div>
+    <div class="hbar">
+      <input id="hq" type="search" autocomplete="off" placeholder="Search albums &amp; artists" value="${esc(UI.hq||'')}" aria-label="Search rated albums">
+      <div class="hrow2">
+        <div class="hchips" role="group" aria-label="Show">${chip('hkind','all','All',UI.hk)}${chip('hkind','album','Albums',UI.hk)}${chip('hkind','ep','EPs',UI.hk)}${chip('hkind','other','Other',UI.hk)}</div>
+        <div class="hchips" role="group" aria-label="Sort">${chip('hsort','new','Newest',UI.hs)}${chip('hsort','old','Oldest',UI.hs)}${chip('hsort','high','Highest',UI.hs)}</div>
+      </div>
+    </div>
+    <div id="hlist" class="${anim?'hanim':''}">${historyList(anim)}</div>
+  </section>`;
+}
+/* the stats in the header count up when the tab opens */
+function rhCount(){
+  if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  document.querySelectorAll('.hh-hero b[data-n]').forEach(el=>{
+    const to=parseFloat(el.dataset.n)||0,dp=+(el.dataset.d||0),t0=performance.now(),D=700;
+    const step=t=>{const k=Math.min(1,(t-t0)/D),e=1-Math.pow(1-k,3);el.textContent=(to*e).toFixed(dp);if(k<1&&el.isConnected)requestAnimationFrame(step);else el.textContent=to.toFixed(dp)};
+    requestAnimationFrame(step)});
+}
+function hRedraw(){const el=document.getElementById('hlist');if(el){el.classList.remove('hanim');el.innerHTML=historyList(false)}}
 try{const t=localStorage.getItem(KEY+'_tab');if(t==='screen')UI.tab='screen'}catch(e){}
 try{for(const k of ['music','screen']){const v=localStorage.getItem(KEY+'_sel_'+k);if(v)UI.sel[k]=v}}catch(e){}   /* reopen the last artist / title instead of the first in the list */
 
@@ -4738,6 +4866,7 @@ function renderMain(){
       <nav class="tabs" aria-label="Section">
         <button data-act="tab" data-v="music" aria-pressed="${!UI.view&&UI.tab==='music'}">${ICO.music}<span>Music</span></button>
         <button data-act="tab" data-v="screen" aria-pressed="${!UI.view&&UI.tab==='screen'}">${ICO.screen}<span>Screen</span></button>
+        <button data-act="view" data-v="history" aria-pressed="${UI.view==='history'}">${ICO.history}<span>History</span></button>
         <button data-act="view" data-v="collection" aria-pressed="${UI.view==='collection'}">${ICO.collection}<span>Collection</span></button>
         <button data-act="view" data-v="settings" aria-pressed="${UI.view==='settings'}">${ICO.settings}<span>Settings</span></button>
       </nav>
@@ -4750,7 +4879,7 @@ function renderMain(){
   ${SV.err?`<div class="banner" role="alert"><p>This browser would not save your last change. It is still on screen, but it will be gone if you close the app. ${syncOn()?'Tap Upload now in Sync at the bottom so it is safe on your Worker, or copy a backup.':'Copy a backup at the bottom to keep it safe.'}</p></div>`:''}
   ${SYS.status==='conflict'?conflictBanner():''}
 
-${UI.view==='settings'?settingsView():UI.view==='collection'?collectionView():mainView(e,list)}
+${UI.view==='settings'?settingsView():UI.view==='collection'?collectionView():UI.view==='history'?historyView():mainView(e,list)}
   <footer>
     <p class="buildid">Build ${esc(BUILD)}</p>
   </footer>`;
@@ -5046,6 +5175,7 @@ const ICO={
   music:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5" opacity=".45"/><circle cx="12" cy="12" r="1.6"/></svg>',
   screen:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v12H3zM8 21h8M12 17v4"/></svg>',
   collection:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16v11H4zM6 5.5h12M8 2.5h8M8.5 14.5h7"/></svg>',
+  history:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.7-6.2M3.5 4v4.6h4.6M12 7.6V12l3 2"/></svg>',
   settings:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M14 4v4M8 10v4M16 16v4"/></svg>',
   list:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>',
   listOn:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z" fill="currentColor"/></svg>',
@@ -5654,7 +5784,7 @@ document.addEventListener('click',ev=>{
     const rt=document.querySelector('.rater');
     if(rt&&!matchMedia('(prefers-reduced-motion:reduce)').matches){UI.rClosing=true;const cid=UI.rOpen,fly=rtFlyPrep(cid);rt.classList.remove('rt-in');rt.classList.add('rt-out');
       setTimeout(()=>{UI.rClosing=false;UI.rOpen=null;if(fly)UI.rLand=cid;render()},230);rtFlyGo(fly);return}}
-  if(act==='view'){UI.view=b.dataset.v;UI.rOpen=null;window.scrollTo({top:0})}
+  if(act==='view'){UI.view=b.dataset.v;UI.rOpen=null;if(UI.view==='history'){UI.hAnim=true;UI.hEdit=null}window.scrollTo({top:0})}
   else if(act==='lib'){UI.libOpen=!UI.libOpen}
   else if(act==='llopen'){UI.llOpen=true}
   else if(act==='llclose'){UI.llOpen=false}
@@ -5717,6 +5847,14 @@ document.addEventListener('click',ev=>{
   else if(act==='splgo'){UI.spLogOpen=true;if(b.dataset.a){UI.view=null;UI.tab='music';UI.sel.music=b.dataset.a;UI.filter='all'}}
   else if(act==='spcopy'){const t=SP_REDIRECT;if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>{SPX.copied=true;render()},()=>{});return}
   else if(act==='rdimp'){rdRun();return}
+  else if(act==='hsort'){UI.hs=b.dataset.v;UI.hAnim=true}
+  else if(act==='hkind'){UI.hk=b.dataset.v;UI.hAnim=true}
+  else if(act==='hedit'){UI.hEdit=b.dataset.id;setTimeout(()=>{const i=document.querySelector('.hr.edit input');if(i)i.focus({preventScroll:true})},40)}
+  else if(act==='hcancel'){UI.hEdit=null}
+  else if(act==='hclear'){const m0={...(S.marks[id]||{})};delete m0.rd;S.marks[id]=m0;UI.hEdit=null;touch()}
+  else if(act==='hgo'){const a=S.music.find(x=>x.id===b.dataset.a),g=a&&a.groups.find(x=>x.id===b.dataset.g);
+    UI.view=null;UI.rel=null;UI.tab='music';UI.sel.music=b.dataset.a;UI.libOpen=false;UI.rOpen=null;UI.filter='all';UI.toAlb=b.dataset.g;
+    if(g){if(b.dataset.dx)UI.dxOpen[g.id]=true;else delete UI.dxOpen[g.id]}}
   else if(act==='rymadd'){const r=rymAddWaiting();RYX.report={total:r.albums,zero:0,filled:0,same:0,kept:[],waiting:[],notFound:[],dups:[],added:r};touch()}
   else if(act==='rclear'){const m0={...(S.marks[id]||{}),r:0};delete m0.rd;S.marks[id]=m0;touch();heroPaint()}
   else if(act==='grpall'){const a=S.music.find(x=>x.id===b.dataset.a),g=a.groups.find(x=>x.id===b.dataset.g),its=viewItems(g),full=its.every(i=>isDone(i.id));
@@ -5811,6 +5949,7 @@ document.addEventListener('input',ev=>{
   if(ev.target.id==='rsort'){try{localStorage.setItem(KEY+'_relsort',ev.target.value)}catch(e){}render();return}
   if(ev.target.id==='lsort'){const P=lPrefs();P.sort=ev.target.value;lSave(P);UI.llTab=null;render();return}
   if(ev.target.id==='lq'){UI.lq[UI.tab]=ev.target.value;lRedraw()}
+  if(ev.target.id==='hq'){UI.hq=ev.target.value;hRedraw()}
   if(ev.target.id==='col-q'){UI.colQ=ev.target.value;const l=document.getElementById('col-list');if(l)l.innerHTML=colListHTML()}
 });
 document.addEventListener('pointerup',ev=>{const el=ev.target;if(el&&el.classList&&el.classList.contains('rt-s')&&!rating(el.dataset.rate))setTimeout(()=>{if(+el.value)rateCommit(el)},0)});
@@ -5867,6 +6006,10 @@ document.addEventListener('submit',ev=>{
       else if(rating(id)&&!v){const m0={...S.marks[id]};delete m0.rd;S.marks[id]=m0}
       touch()}
     UI.dEdit=null;render();return}
+  if(kind==='hrd'){const id=f.dataset.id,v=String(d.rd||'').trim();
+    if(rating(id)&&/^\d{4}-\d\d-\d\d$/.test(v)&&v<=todayISO())S.marks[id]={...S.marks[id],rd:v};
+    else if(rating(id)&&!v){const m0={...S.marks[id]};delete m0.rd;S.marks[id]=m0}
+    UI.hEdit=null;touch();render();return}
   if(kind==='listen'){if(llAdd(d.artist,d.title))touch();UI.llOpen=true;render();const el=document.getElementById('wl-artist');if(el)el.focus();return}
   if(kind==='spcid'){const c=(d.cid||'').trim();
     if(!/^[0-9a-f]{32}$/i.test(c)){SPX.err='That does not look like a Client ID. It is 32 letters and numbers, under Settings on your Spotify app\u2019s page.';render();return}
