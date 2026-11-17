@@ -237,3 +237,7 @@ If sign-in says "not accepted", the Client ID in `index.html` and in `wrangler.j
 | Spotify says the Client ID or redirect is wrong | The Redirect URI on the Spotify dashboard must match the address shown in Playback's Spotify card exactly, including the final slash. |
 | Spotify says it is out of quota | Wait, or use **Use Apple Music this time** for imports. Spotify's limit is shared across all of your developer apps. |
 | My ratings are gone | Check **Settings**, **Backup & restore** for a saved backup. If sync was on, open **Sync** and tap **Check for newer**. |
+
+### Syncing a log under the Google account (no setup for friends)
+
+Once accounts are on, anyone who signs in can switch on **Keep my log on all my devices** (Account page). The Worker stores one compressed copy of their log per person in the same D1 database (table `acct_logs`, created the first time it is used). It never opens the file, which keeps CPU use tiny, and it protects your free plan with these caps (constants near the top of the accounts section of `worker/playback-sync.js`): about 1 MB compressed per person, 120 saves per person per hour, and at most `ACCT_LOG_USERS` (200) people holding a saved copy at once. Photos are never included, because uploading them needs your sync key. Your own sync (your Worker and key) is untouched and takes priority on your devices.

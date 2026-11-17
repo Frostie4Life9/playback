@@ -848,6 +848,12 @@ details.addart .add{border-top:1px solid var(--line)}
 .acc-code{display:block;font:800 26px var(--mono);letter-spacing:.16em;margin-top:2px}
 .acc-share{display:flex;align-items:center;gap:10px;font-weight:600;cursor:pointer}
 .acc-share input{width:20px;height:20px;accent-color:var(--accent)}
+.acc-sync{display:grid;gap:8px;margin:14px 0 4px;padding-top:12px;border-top:1px solid var(--line)}
+.acc-sync-st{display:flex;align-items:center;gap:8px;font-size:.92em}
+.acc-sync-st i{width:9px;height:9px;border-radius:50%;background:currentColor;opacity:.4;flex:none}
+.acc-sync-st.ok i{background:var(--accent);opacity:1}
+.acc-sync-st.err{color:var(--warn)}.acc-sync-st.err i{background:var(--warn);opacity:1}
+@media (prefers-reduced-motion:no-preference){.acc-sync-st.busy i{animation:accsyncpulse 1s ease-in-out infinite}.acc-sync-st.pop{animation:rdin .45s cubic-bezier(.2,.8,.2,1) both}@keyframes accsyncpulse{50%{transform:scale(1.8);opacity:.3}}}
 .acc-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
 .acc-row .sp{flex:1}
 .acc-row .fn{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1836,6 +1842,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-w', note:'ACCOUNT SYNC: after signing in, Account has a Keep my log on all my devices switch. Turn it on and your whole log (ratings, listens, collection, shows and films, not photos) is saved under your Google account on Playback’s server, so it shows up on any phone or computer you sign in on, with no setup of your own. Saves are batched about every 20 seconds and sent when you leave the app, and a device that is behind never overwrites a newer copy. If a device already has its own log when you first turn it on and a saved copy exists, you choose which one wins. Only you can see the saved copy (friends still see just the ratings you publish), the size is capped at about 1 MB compressed, and you can delete the copy or your whole account any time. Your own Worker sync is unchanged and is used instead if you have it. The Worker needs the new playback-sync.js (it takes it from GitHub on its own).'},
   {v:'2026.11.17-v', note:'ACCOUNT ICON AND FRIEND PAGES: a round account icon sits at the top right (a person outline until you sign in, then your initial). It opens your Account page: your own page (rating counts and averages, how often you give each score, and your albums and shows) with Google sign-in, your friend code, friend requests and sharing underneath. Tap a friend to open their page, which shows the same plus a taste match with you, and lets you list what you both rated, or only what they rated that you have not (a quick way to find something to hear). Settings keeps a small card that points to it.'},
   {v:'2026.11.17-u', note:'ACCOUNTS ARE ON: Sign in with Google now shows in Settings under Account. Sign in, share your friend code, and add friends to see how they rated the same albums, shows and films.'},
   {v:'2026.11.17-t', note:'BLANK PAGE FIX: on a browser that already holds a copy of your log in its regular storage, Playback stopped on start-up with a blank page (the backup reminder tried to run before it was ready). It now waits a moment, so those browsers open normally. Nothing in your log changed.'},
@@ -2972,7 +2979,7 @@ async function mbImport(art,where,forceMb,forceSrc){
         if(!groups.length){groups=null;sp=null;hint=' Apple Music had no releases for this artist, so this came from MusicBrainz.'}}
       catch(e){if(e.code!=='nomatch')throw e;hint=' Could not find '+art.name+' on Apple Music, so this came from MusicBrainz.'}
       phase='mb';
-      if(spCid()&&syncOn()&&(SY.wv||0)===3&&!(S.cfg&&S.cfg.importSrc))hint+=' Paste the updated sync Worker into Cloudflare to get tracklists straight from Spotify.';
+      if(spCid()&&ownSync()&&(SY.wv||0)===3&&!(S.cfg&&S.cfg.importSrc))hint+=' Paste the updated sync Worker into Cloudflare to get tracklists straight from Spotify.';
     }
     if(!groups){
       const rels=await mbFetchCatalog(art.id);
@@ -3254,7 +3261,7 @@ async function rdRun(){
   if(RDX.busy)return;
   RDX.busy=true;RDX.err='';RDX.report=null;render();
   try{
-    if(!syncOn()){RDX.busy=false;RDX.err='Connect your sync Worker first (Settings, Sync). Your rating days are kept on it, not in the public app. Nothing was changed.';render();return}
+    if(!ownSync()){RDX.busy=false;RDX.err='Connect your sync Worker first (Settings, Sync). Your rating days are kept on it, not in the public app. Nothing was changed.';render();return}
     const r=await fetch(SY.url.replace(/\/+$/,'')+'/rating-dates',{cache:'no-store',headers:{'x-sync-key':SY.key}});
     if(!r.ok)throw new Error('http');
     const list=await r.json();
@@ -3560,7 +3567,7 @@ let SPL=(()=>{try{return JSON.parse(localStorage.getItem(SPL_KEY))||{}}catch(e){
 const splSave=()=>{try{localStorage.setItem(SPL_KEY,JSON.stringify(SPL))}catch(e){}};
 const SPX={busy:false,err:'',wk:null,last:0,cidOpen:false,checked:0,copied:false,started:false};
 const spCid=()=>(S.cfg&&S.cfg.spotify)||'';
-const spViaWorker=()=>syncOn()&&(SY.wv||0)>=3;
+const spViaWorker=()=>ownSync()&&(SY.wv||0)>=3;
 /* the sign-in coming back from Spotify: read it and clean the address bar right away */
 const SP_CB=(()=>{try{const q=new URLSearchParams(location.search);if(!q.has('state')||!(q.has('code')||q.has('error')))return null;
   const o={code:q.get('code'),error:q.get('error'),state:q.get('state')};history.replaceState(null,'',SP_REDIRECT+location.hash);return o}catch(e){return null}})();
@@ -4104,7 +4111,7 @@ function spSide(){
     if(viaW&&(SY.wv||0)<4)h+=`<p class="note">Paste the updated sync Worker (worker/playback-sync.js) into Cloudflare so discography imports can use Spotify’s own tracklists.</p>`;
     if(err)h+=`<p class="mberr" role="alert">${esc(err==='reconnect'?spMessage({code:'reconnect'}):'Your Worker could not reach Spotify last time ('+err+'). It will try again on its next check.')}</p>`;
     if(viaW&&w&&(!w.cronAt||Date.now()-w.cronAt>3*3600e3))h+=`<div class="mbsrc warn"><p class="note">Your Worker's hourly check is not on yet, so plays are only picked up when you open the app. In Cloudflare open <b>playback-sync</b> › <b>Settings</b> › <b>Trigger events</b> › <b>Add</b> › <b>Cron trigger</b>, choose every hour (<code class="uri">0 * * * *</code>) and save.</p></div>`;
-    if(!viaW&&syncOn())h+=`<p class="note">Paste the new worker/playback-sync.js into your Worker and it will take over and check every hour, even with the app closed.</p>`;
+    if(!viaW&&ownSync())h+=`<p class="note">Paste the new worker/playback-sync.js into your Worker and it will take over and check every hour, even with the app closed.</p>`;
     h+=`<div class="tools"><button class="btn" data-act="spnow" ${SPX.busy?'disabled':''}>${SPX.busy?'Checking…':'Check now'}</button><button class="btn danger" data-act="spoff" ${SPX.busy?'disabled':''}>Disconnect</button></div>`;
   }
   if(SPX.err)h+=`<p class="mberr" role="alert">${esc(SPX.err)}</p>`;
@@ -4431,7 +4438,9 @@ let SY=(()=>{try{return Object.assign({url:'',key:'',last:0,at:0},JSON.parse(loc
 const saveSync=()=>{try{localStorage.setItem(SYNC_KEY,JSON.stringify(SY))}catch(e){}};
 const SYS={status:SY.url?'idle':'off',msg:'',remote:null};
 let pushTimer=null,inflight=false;
-const syncOn=()=>!!(SY.url&&SY.key);
+const ownSync=()=>!!(SY.url&&SY.key);   /* your own Worker and sync key: everything that needs the Worker (Spotify, photos, Discogs, brief) uses this */
+const accSync=()=>{try{return !!(SY.acct&&accOn())}catch(e){return false}};   /* the log kept under a Google account on Playback's Worker (accOn is defined further down the page) */
+const syncOn=()=>ownSync()||accSync();
 function syncLabel(){
   if(!syncOn())return 'Sync off';
   if(SYS.status==='busy')return 'Syncing…';
@@ -4440,14 +4449,28 @@ function syncLabel(){
   if(SY.at)return 'Synced '+new Date(SY.at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
   return 'Sync ready';
 }
-function touch(){S.mtime=Date.now();save();try{accSoon()}catch(e){}if(syncOn()&&SYS.status!=='conflict'){clearTimeout(pushTimer);pushTimer=setTimeout(()=>push(false),1500)}}
+function touch(){S.mtime=Date.now();save();try{accSoon()}catch(e){}if(syncOn()&&SYS.status!=='conflict'){clearTimeout(pushTimer);pushTimer=setTimeout(()=>push(false),ownSync()?1500:20000)}   /* account sync waits longer so a burst of ratings is one save */}
 /* Compressed sync: a Worker from 2026.11.03 on answers with x-pb-worker: 2 and
    takes the log gzipped (about 5x smaller, up to 20 MB after compression).
    Until the Worker is updated, plain JSON still works under its old 1 MB cap. */
 const GZ_OK=typeof CompressionStream==='function'&&typeof DecompressionStream==='function';
 const gzip=txt=>new Response(new Blob([txt]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();
 const gunzip=buf=>new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+/* the log kept under your Google account: the Worker stores the gzipped log as base64 text and never opens it */
+const b64enc=buf=>{const u=new Uint8Array(buf);let o='';for(let i=0;i<u.length;i+=0x8000)o+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(o)};
+const b64dec=t=>Uint8Array.from(atob(t),c=>c.charCodeAt(0));
+async function apiAcct(method,body,force){
+  const q=[];if(force)q.push('force=1');
+  if(body&&!force)q.push('base='+(SY.last||0));
+  const payload=body?JSON.stringify({mtime:body.mtime||0,b64:b64enc(await gzip(JSON.stringify(body)))}):undefined;
+  const r=await fetch(SUG_URL+'/acct/sync'+(q.length?'?'+q.join('&'):''),{method,cache:'no-store',headers:Object.assign({authorization:'Bearer '+ACC.token},body?{'content-type':'application/json'}:{}),body:payload});
+  if(r.status===401){accOut('You were signed out. Sign in again to keep syncing.');return{status:401,j:null}}
+  let j=null;try{j=await r.json()}catch(e){}
+  if(j&&typeof j.b64==='string'){try{j=JSON.parse(await gunzip(b64dec(j.b64)))}catch(e){j=null;if(r.ok)return{status:500,j:null}}}
+  return{status:r.status,j};
+}
 async function api(method,body,force){
+  if(!ownSync()&&accSync())return apiAcct(method,body,force);
   const q=[];if(force)q.push('force=1');if(GZ_OK)q.push('gz=1');
   if(body&&!force)q.push('base='+(SY.last||0));   /* the saved version this device last saw: the Worker refuses the upload if the log has moved on since */
   const headers={'x-sync-key':SY.key};let payload;
@@ -4466,6 +4489,14 @@ async function api(method,body,force){
 }
 function fail(status,j){
   SYS.status='error';
+  if(!ownSync()&&SY.acct){
+    SYS.msg=status===401?'You were signed out. Sign in again to keep syncing.'
+      :status===413?'Your log ('+mb(SV.bytes)+') is too big to keep under your account. Use Download backup file in Settings to move it between devices.'
+      :status===429?'Too many saves just now. It will try again in a bit.'
+      :status===507?'Account sync is full right now, so this log is only on this device. Download a backup file to be safe.'
+      :'Sync failed ('+status+'). Your changes are saved here and will upload next time.';
+    return;
+  }
   SYS.msg=status===401?'The sync key does not match the SECRET on your Worker. Re-enter it and save.'
     :status===500&&j&&j.error?'The Worker is not set up yet: '+j.error+'.'
     :status===413?'Your log ('+mb(SV.bytes)+') is too big for this version of the sync Worker. Paste the new worker/playback-sync.js from GitHub into your Worker and deploy; the newer one takes the log compressed, so it fits logs many times larger.'
@@ -4497,12 +4528,14 @@ async function pull(){
     if(status!==200){fail(status,j);return}
     if(j&&j.v===1&&Array.isArray(j.music)){
       const remote=j.mtime||0,local=S.mtime||0;
-      if(!SY.last&&remote){adopt(j);return}            /* first sync on this device: take the saved log */
+      if(!SY.last&&remote){                            /* first sync on this device: take the saved log... */
+        if(accSync()&&(L0=>L0.s>0||L0.r>0||S.screen.some(x=>!x.example))(logSum(S))){SYS.status='conflict';SYS.remote=j;return}   /* ...unless this device already has its own log: then you choose */
+        adopt(j);return}
       if(remote>local){ if(local>SY.last){SYS.status='conflict';SYS.remote=j;return} adopt(j);return }
       if(local>remote){inflight=false;await push(false);return}
       SY.last=local;ok();briefPush();
     }else{inflight=false;await push(false);return}       /* nothing saved yet: upload this device */
-  }catch(e){SYS.status='error';SYS.msg='Could not reach your Worker. Check the URL and your connection.'}
+  }catch(e){SYS.status='error';SYS.msg=ownSync()?'Could not reach your Worker. Check the URL and your connection.':'Could not reach Playback’s server. Check your connection.'}
   finally{inflight=false;render()}
 }
 /* ---------- list for your morning brief ----------
@@ -4524,7 +4557,7 @@ function briefData(){
   return{v:1,shows:shows.slice(0,100)};
 }
 async function briefPush(){
-  if(!syncOn()||(SY.wv||0)<5)return;
+  if(!ownSync()||(SY.wv||0)<5)return;
   try{
     const txt=JSON.stringify(briefData());if(txt===briefSig)return;
     const r=await fetch(SY.url.replace(/\/+$/,'')+'/brief',{method:'PUT',cache:'no-store',headers:{'x-sync-key':SY.key,'content-type':'application/json'},body:txt});
@@ -4538,10 +4571,10 @@ async function push(force){
     if(status===200){SY.last=S.mtime||0;ok();briefPush()}
     else if(status===409&&j){ if((S.mtime||0)>SY.last){SYS.status='conflict';SYS.remote=j} else adopt(j) }
     else fail(status,j);
-  }catch(e){SYS.status='error';SYS.msg='Could not reach your Worker. Your changes are saved here and will upload next time.'}
+  }catch(e){SYS.status='error';SYS.msg=ownSync()?'Could not reach your Worker. Your changes are saved here and will upload next time.':'Could not reach Playback’s server. Your changes are saved here and will upload next time.'}
   finally{inflight=false;render()}
 }
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pull()});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pull();else if(accSync()&&!ownSync()&&pushTimer&&SYS.status!=='conflict'){clearTimeout(pushTimer);pushTimer=null;push(false)}});   /* leaving the app sends a waiting account save right away */
 window.addEventListener('online',()=>pull());
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&UI.llOpen){UI.llOpen=false;render()}else if(ev.key==='Escape'&&UI.mm){UI.mm=false;UI.mmAnim=false;render()}});
 document.addEventListener('toggle',ev=>{if(ev.target.id==='syncpanel')UI.syncOpen=ev.target.open;else if(ev.target.id==='syncguide')UI.guideOpen=ev.target.open;else if(ev.target.id==='backup')UI.bkOpen=ev.target.open;else if(ev.target.id==='addart')UI.addOpen=ev.target.open;else if(ev.target.id==='listenpanel')UI.llOpen=ev.target.open;else if(ev.target.id==='coladd')UI.colAdd=ev.target.open;else if(ev.target.id==='colhand')UI.colHand=ev.target.open;else if(ev.target.id==='coltok')UI.colTok=ev.target.open;else if(ev.target.classList&&ev.target.classList.contains('splog'))UI.spLogOpen=ev.target.open},true);
@@ -4953,7 +4986,7 @@ async function dcSearch(d){
   COL.q={artist:(d.artist||'').trim(),title:(d.title||'').trim(),code:(d.code||'').trim()};
   if(!COL.q.artist&&!COL.q.title&&!COL.q.code){COL.err='Type an artist, an album, or a barcode or catalog number.';render();return}
   const tok=dcToken();
-  if(!tok&&!syncOn()){COL.err='Save a Discogs token on this device (under Discogs token below), or connect your sync Worker in Settings, to look up pressings. You can also add the record by hand.';render();return}
+  if(!tok&&!ownSync()){COL.err='Save a Discogs token on this device (under Discogs token below), or connect your sync Worker in Settings, to look up pressings. You can also add the record by hand.';render();return}
   const p={artist:COL.q.artist,title:COL.q.title,barcode:'',catno:''};
   if(COL.q.code){/^[\d\s-]{8,}$/.test(COL.q.code)?p.barcode=COL.q.code.replace(/[\s-]/g,''):p.catno=COL.q.code}
   if(tok){
@@ -4966,7 +4999,7 @@ async function dcSearch(d){
       else{COL.res=dcSort((j.results||[]).map(dcParse).filter(x=>x.title));COL.busy=false;render();return}
       COL.busy=false;render();return;
     }catch(e){
-      if(!syncOn()){COL.err='Could not reach Discogs from this browser. Check your connection and try again.';COL.busy=false;render();return}
+      if(!ownSync()){COL.err='Could not reach Discogs from this browser. Check your connection and try again.';COL.busy=false;render();return}
       /* the browser could not reach Discogs: fall through to the Worker */
     }
   }
@@ -5081,9 +5114,9 @@ async function colLoadImgs(id){
       const r=await fetch('https://api.discogs.com/releases/'+(+id)+'?token='+encodeURIComponent(tok),{cache:'no-store'});
       if(r.ok){done(pick(await r.json()));return}
       if(r.status===401){done({err:'Discogs did not accept the token saved on this device, so the photos could not load.'});return}
-      if(!syncOn()){done({err:'Discogs could not send the photos right now ('+r.status+'). Close and reopen the record to try again.'});return}
+      if(!ownSync()){done({err:'Discogs could not send the photos right now ('+r.status+'). Close and reopen the record to try again.'});return}
     }
-    if(!syncOn()){done({err:'Save a Discogs token on this device (under Find a pressing) to see this pressing’s back cover, inner sleeves and labels.'});return}
+    if(!ownSync()){done({err:'Save a Discogs token on this device (under Find a pressing) to see this pressing’s back cover, inner sleeves and labels.'});return}
     const r=await fetch(SY.url.replace(/\/+$/,'')+'/discogs/release?id='+(+id),{cache:'no-store',headers:{'x-sync-key':SY.key}});
     let j={};try{j=await r.json()}catch(e){}
     if(r.status===404)done({err:'Your sync Worker does not have the photo lookup yet. It updates itself from GitHub within a few minutes; or save a Discogs token on this device.'});
@@ -5214,7 +5247,7 @@ function ringColor(c){
 }
 function photoPick(input){
   const f=input.files&&input.files[0];input.value='';if(!f)return;
-  if(!syncOn()){CROP.err='Connect your sync Worker in Settings first; that is where your photos are kept.';viewRedraw();return}
+  if(!ownSync()){CROP.err='Connect your sync Worker in Settings first; that is where your photos are kept.';viewRedraw();return}
   const im=new Image(),u=URL.createObjectURL(f);
   im.onload=()=>{Object.assign(CROP,{on:true,img:im,url:u,id:input.dataset.photo,k:input.dataset.slot,z:1,r:0,dx:0,dy:0,err:''});
     const h=document.getElementById('crophost');if(h){h.innerHTML=cropHTML();cropRedraw();cropWire()}};
@@ -5394,7 +5427,7 @@ const SUG_URL='https://playback-sync.skyfro04.workers.dev';
 const SUGX={busy:false,msg:'',ok:false,list:null,copied:false};
 function sugCard(){
   if(window.PB_OWNER){
-    if(!syncOn())return `<div class="setcard sug"><h3>Friend suggestions</h3><p class="note">Connect your sync Worker (Sync, below) to read what friends send.</p></div>`;
+    if(!ownSync())return `<div class="setcard sug"><h3>Friend suggestions</h3><p class="note">Connect your sync Worker (Sync, below) to read what friends send.</p></div>`;
     const l=SUGX.list;
     return `<div class="setcard sug"><h3>Friend suggestions</h3>
       <p class="note">What friends send from the Suggest box in their Settings.</p>
@@ -5442,7 +5475,7 @@ async function sugChange(qs){
 }
 
 /* ---------- accounts: Google sign-in, friend codes, friends' ratings ----------
-   Optional. Your log never leaves this device because of this: signing in only publishes a short list of your
+   Optional. Your log never leaves this device just because you sign in (unless you turn on account sync, see accSyncHtml): signing in only publishes a short list of your
    album and show ratings (title, artist, rating) to the Playback Worker, and only friends you have accepted can
    see it. The Worker (accounts section of worker/playback-sync.js) keeps a Google id and a display name, never
    an email address. GCID is Google's public OAuth client ID for this app (not a secret); while it is empty the
@@ -5641,6 +5674,34 @@ function accBtn(){
   const on=accOn(),cur=UI.view==='account'||UI.view==='friend';
   return `<button class="tact tacc${on?' on':''}" data-act="view" data-v="account" aria-pressed="${cur}" aria-label="${on?'Account: '+esc(ACC.me.name):'Sign in or make an account'}"${on?` style="--h:${accHue(ACC.me.name)}"`:''}>${on?`<b aria-hidden="true">${accIni(ACC.me.name)}</b>`:ICO.user}</button>`;
 }
+/* keep the whole log under the account so it follows you to any device you sign in on */
+function accSyncHtml(b){
+  const own=ownSync(),on=!!SY.acct&&!own,pop=ACX.syncPop?' pop':'';ACX.syncPop=false;
+  const st=SYS.status==='busy'?'busy':SYS.status==='error'||SYS.status==='conflict'?'err':'ok';
+  return `<div class="acc-sync"><label class="acc-share"><input type="checkbox" id="acc-sync" ${on?'checked':''}${own||!GZ_OK?' disabled':''}${b}><span>Keep my log on all my devices</span></label>
+    <p class="note">${own?'You already sync with your own Worker (Sync, in Settings), so this is off. Turn that off first to use your account instead.'
+      :!GZ_OK?'This browser cannot compress the log, so account sync is not available here.'
+      :'Saves a copy of your log under your Google account on Playback’s server, so it appears on any device you sign in on. It is not shared with friends (they only see the ratings you publish), and your photos are not included. Turning it off keeps your log on every device and leaves the saved copy where it is until you delete it.'}</p>
+    ${on?`<div class="acc-sync-st ${st}${pop}" role="status"><i aria-hidden="true"></i><span>${esc(syncLabel())}${SYS.msg?' · '+esc(SYS.msg):''}</span></div>
+      <div class="tools"><button class="btn" data-act="pullnow"${b}>Check for newer</button><button class="btn" data-act="pushnow"${b}>Save now</button></div>`
+     :!own&&GZ_OK?`<div class="tools"><button class="btn danger" data-act="accsyncdel"${b}>${ACX.armSync?'Tap again to delete':'Delete my saved copy'}</button></div>${ACX.syncMsg?`<span class="msg ${ACX.syncOk?'ok':'err'}" role="status">${esc(ACX.syncMsg)}</span>`:''}`:''}
+  </div>`;
+}
+function accSyncSet(on){
+  if(on){
+    if(ownSync()||!accOn())return;
+    SY.acct=true;SY.last=0;SY.at=0;saveSync();SYS.status='idle';SYS.msg='';ACX.syncPop=true;ACX.syncMsg='';ACX.armSync=false;render();pull();
+  }else{
+    clearTimeout(pushTimer);SY.acct=false;saveSync();SYS.status='off';SYS.msg='';SYS.remote=null;render();
+  }
+}
+async function accSyncDel(){
+  if(!ACX.armSync){ACX.armSync=true;ACX.syncOk=false;ACX.syncMsg='Tap Delete my saved copy again to erase it from Playback’s server. Your log on your devices is not touched.';render();return}
+  ACX.armSync=false;
+  try{const{status}=await accApi('DELETE','/sync');ACX.syncOk=status===200;ACX.syncMsg=status===200?'Saved copy deleted.':'That did not work. Try again.';if(status===200){SY.last=0;SY.at=0;saveSync()}}
+  catch(e){ACX.syncOk=false;ACX.syncMsg='Could not reach Playback’s server. Check your connection.'}
+  render();
+}
 function accManageHtml(){
   const me=ACC.me,F=ACX.fr,b=ACX.busy?' disabled':'',ani=ACX.anim?' acc-in':'';ACX.anim=false;
   const row=(x,btns,open)=>`<div class="acc-row${ani}"><i class="fav" style="--h:${accHue(x.name)}" aria-hidden="true">${accIni(x.name)}</i>${open?`<button class="fn linkish" data-act="friendopen" data-u="${esc(x.uid)}">${esc(x.name)}</button>`:`<span class="fn">${esc(x.name)}</span>`}<span class="sp"></span>${btns}</div>`;
@@ -5657,6 +5718,7 @@ function accManageHtml(){
     <div class="setcard acc"><h3>Your account</h3>
     <form class="panel" data-form="accname"><label class="label" for="acc-name">Name friends see</label><input id="acc-name" name="name" maxlength="40" autocomplete="off" value="${esc(me.name)}"><div class="tools"><button class="btn"${b}>Save name</button></div></form>
     <label class="acc-share"><input type="checkbox" id="acc-share" ${me.share?'checked':''}${b}><span>Friends can open my page and see my ratings</span></label>
+    ${accSyncHtml(b)}
     <div class="tools"><button class="btn" data-act="accout"${b}>Sign out</button><button class="btn danger" data-act="accdel"${b}>${ACX.arm?'Tap again to delete':'Delete my account'}</button></div></div>`;
 }
 function accountView(){
@@ -5665,7 +5727,7 @@ function accountView(){
   if(!accOn()){
     h=`<section class="settings pf" aria-labelledby="ac-h"><h2 id="ac-h">Account</h2>
       <div class="setcard acc"><h3>Sign in</h3>
-      <p class="note">Make an account with Google to get a page of your own, add friends, and open their pages to see what they rated and how alike your tastes are. Your ratings are shared only with friends you accept, and you can switch that off any time. Your log stays on this device.</p>
+      <p class="note">Make an account with Google to get a page of your own, add friends, and open their pages to see what they rated and how alike your tastes are. Your ratings are shared only with friends you accept, and you can switch that off any time. Your log stays on this device unless you turn on Keep my log on all my devices after signing in.</p>
       <div id="g-btn" class="gbtn" aria-label="Sign in with Google"></div>${ACX.busy==='in'?'<span class="note">Signing in…</span>':''}${ACX.msg?`<span class="msg ${ACX.ok?'ok':'err'}" role="status">${esc(ACX.msg)}</span>`:''}
       <p class="note">Playback keeps your Google name and a private id, never your email address. <a href="privacy.html" target="_blank" rel="noopener">Privacy policy</a></p></div></section>`;
   }else{
@@ -5720,7 +5782,7 @@ function settingsView(){return `
     ${expSide()}
     <details id="backup" ${UI.bkOpen?'open':''}>
       <summary class="label" style="cursor:pointer">Backup &amp; restore</summary>
-      <p class="note">Your log${SV.bytes?' ('+mb(SV.bytes)+')':''} is saved in this browser${SV.idb?'\u2019s database':''}${syncOn()?' and on your Worker':' only'}. ${syncOn()?'':'Download a backup file now and then and keep it somewhere safe, like your email or a cloud drive. '}Paste or load a backup to restore it.${bkGet().last?' Last backup from this device: '+esc(new Date(bkGet().last).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}))+'.':''}</p>
+      <p class="note">Your log${SV.bytes?' ('+mb(SV.bytes)+')':''} is saved in this browser${SV.idb?'\u2019s database':''}${ownSync()?' and on your Worker':accSync()?' and under your account':' only'}. ${syncOn()?'':'Download a backup file now and then and keep it somewhere safe, like your email or a cloud drive. '}Paste or load a backup to restore it.${bkGet().last?' Last backup from this device: '+esc(new Date(bkGet().last).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}))+'.':''}</p>
       <div class="tools"><button class="btn primary" data-act="bkfile">Download backup file</button><label class="btn" for="bk-file" style="cursor:pointer">Restore from file</label><input type="file" id="bk-file" accept=".json,application/json" hidden></div>
       ${BKX.msg?`<p class="msg ${BKX.ok?'':'err'}" role="status">${esc(BKX.msg)}</p>`:''}
       ${BKX.pending?`<div class="tools"><button class="btn primary" data-act="bkgo">Replace my log with this backup</button><button class="btn" data-act="bkno">Cancel</button></div>`:''}
@@ -6715,6 +6777,7 @@ document.addEventListener('click',ev=>{
   if(act!=='mbundo')UI.undoArm=null;
   if(act!=='sugclear')UI.sugArm=false;
   if(act!=='accdel'&&ACX.arm){ACX.arm=false}
+  if(act!=='accsyncdel'&&ACX.armSync){ACX.armSync=false;ACX.syncMsg=''}
   if(act!=='copy')UI.copied=false;
   if(act!=='coldel')UI.colDel=null;
   /* closing a rater: let it fold away first, then redraw */
@@ -6749,6 +6812,7 @@ document.addEventListener('click',ev=>{
   else if(act==='pmore'){UI.pLim=(UI.pLim||60)+60}
   else if(act==='accout'){accOut('Signed out.');ACX.ok=true;render();return}
   else if(act==='accdel'){accDelete();return}
+  else if(act==='accsyncdel'){accSyncDel();return}
   else if(act==='accaccept'){accAccept(b.dataset.u);return}
   else if(act==='accremove'){accRemove(b.dataset.u);return}
   else if(act==='acccopy'){const t=ACC.me&&ACC.me.code||'';(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{ACX.copied=true;render();setTimeout(()=>{ACX.copied=false;render()},1600)}).catch(()=>{ACX.ok=false;ACX.msg='This browser would not copy it. Select the code and copy it by hand.';render()});return}
@@ -6944,6 +7008,7 @@ document.addEventListener('keydown',ev=>{
 document.addEventListener('change',ev=>{
   if(ev.target.dataset&&ev.target.dataset.rate){rateCommit(ev.target);return}
   if(ev.target.id==='acc-share'){accSetShare(!!ev.target.checked);return}
+  if(ev.target.id==='acc-sync'){accSyncSet(!!ev.target.checked);return}
   if(ev.target.id==='new-type'){UI.addType=ev.target.value;render();return}
   if(ev.target.id==='col-sort'){UI.colS=ev.target.value;render();return}
   if(ev.target.dataset&&ev.target.dataset.photo){photoPick(ev.target);return}
@@ -7009,7 +7074,7 @@ document.addEventListener('submit',ev=>{
   else if(kind==='sync'){
     const url=(d.url||'').trim(),key=(d.key||'').trim();
     if(!/^https:\/\//.test(url)||!key){SYS.status='error';SYS.msg='Enter your Worker URL (starting with https://) and the sync key.';render();return}
-    const changed=url!==SY.url;SY.url=url;SY.key=key;if(changed){SY.last=0;SY.at=0}saveSync();SYS.status='idle';SYS.msg='';render();pull();return}
+    const changed=url!==SY.url||SY.acct;SY.url=url;SY.key=key;SY.acct=false;if(changed){SY.last=0;SY.at=0}saveSync();SYS.status='idle';SYS.msg='';render();pull();return}
   else if(kind==='season'){const s=S.screen.find(x=>x.id===f.dataset.s),n=+d.eps;if(!s||!(n>0))return;s.seasons.push({n:s.seasons.length+1,eps:n})}
   touch();render();
 });

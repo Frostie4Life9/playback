@@ -1,5 +1,5 @@
 /* =========================================================
-   Playback — sync  (worker version 11, 2026.11.17)
+   Playback — sync  (worker version 12, 2026.11.17)
    Cloudflare Worker + KV. Same setup pattern as protocol-sync
    and gamelog-sync.
 
@@ -50,7 +50,7 @@
    Every response carries x-pb-worker: 5 so the app knows what this Worker
    can do (2 = compressed sync, 3 = Spotify plays, 4 = Spotify catalog too,
    5 = the morning-brief list, 6 = Discogs pressing search, 7 = Discogs pressing photos, 8 = your own record photos,
-   11 = Google accounts, friends and friends' ratings: see the accounts section above the export).
+   11 = Google accounts, friends and friends' ratings, 12 = a capped copy of a friend's log under their Google account: see the accounts section above the export).
 
    MORNING BRIEF (version 5)
    The app keeps a tiny list of the next episode of each show you follow
@@ -118,7 +118,7 @@ const CORS = {
   'Access-Control-Allow-Headers': 'content-type, x-sync-key, authorization',
   'Access-Control-Expose-Headers': 'x-pb-worker, retry-after, x-pb-cache',
   'Access-Control-Max-Age': '86400',
-  'x-pb-worker': '11'
+  'x-pb-worker': '12'
 };
 const JSON_H = Object.assign({ 'content-type': 'application/json', 'cache-control': 'no-store' }, CORS);
 const GZ_H = Object.assign({ 'content-type': 'application/gzip', 'cache-control': 'no-store' }, CORS);
@@ -460,9 +460,18 @@ async function sugOwner(request, env, url) {
    POST   /acct/friends/accept {uid}
    DELETE /acct/friends?uid=  removes a friend, declines a request or cancels one
    GET    /acct/profile?uid=  -> {profile:{name, friends, items}}  your own page, or a friend's who is sharing
-   POST   /acct/friends/ratings {kind, ks:[], ts:[]} -> {rows:[{uid,name,k,t,r}]}  accepted friends only */
+   POST   /acct/friends/ratings {kind, ks:[], ts:[]} -> {rows:[{uid,name,k,t,r}]}  accepted friends only
+   GET    /acct/sync          -> {mtime, b64} (a person's own gzipped log, base64) or null   (version 12)
+   PUT    /acct/sync?base=&force=  {mtime, b64}  saves it. Same stale-device rules as the owner's PUT /: 409 and the stored copy
+                              if it changed since ?base= or is newer than this upload; ?force=1 overrides.
+   DELETE /acct/sync          removes the saved copy
+   Why this is cheap on the free plan: one row per person in D1 (D1 allows 100,000 writes a day, KV only 1,000), the log
+   is stored exactly as the app sent it (base64 text; this Worker never unpacks it, so it costs almost no CPU), photos are
+   never part of it (they need the owner's sync key), a log over about 1 MB compressed is refused (413), a person can save at
+   most 120 times an hour (429), and only ACCT_LOG_USERS people can hold a saved copy at once (507). */
 const GOOGLE_ISS = ['https://accounts.google.com', 'accounts.google.com'];
 const ACCT_MAX_BODY = 400 * 1024, ACCT_MAX_ROWS = 4000;
+const ACCT_LOG_MAX = 1400000, ACCT_LOG_USERS = 200, ACCT_LOG_PER_HOUR = 120;   /* base64 text (about 1 MB gzipped), people with a saved copy, saves per person per hour */
 let acctReady = false, gKeys = null, gKeysAt = 0;
 
 async function acctInit(env) {
@@ -475,7 +484,8 @@ async function acctInit(env) {
     env.CATALOG.prepare('CREATE INDEX IF NOT EXISTS acct_ratings_t ON acct_ratings (kind, t)'),
     env.CATALOG.prepare('CREATE TABLE IF NOT EXISTS acct_friends (a TEXT NOT NULL, b TEXT NOT NULL, st TEXT NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (a, b))'),
     env.CATALOG.prepare('CREATE INDEX IF NOT EXISTS acct_friends_b ON acct_friends (b)'),
-    env.CATALOG.prepare('CREATE TABLE IF NOT EXISTS acct_rl (k TEXT PRIMARY KEY, n INTEGER NOT NULL, exp INTEGER NOT NULL)')
+    env.CATALOG.prepare('CREATE TABLE IF NOT EXISTS acct_rl (k TEXT PRIMARY KEY, n INTEGER NOT NULL, exp INTEGER NOT NULL)'),
+    env.CATALOG.prepare('CREATE TABLE IF NOT EXISTS acct_logs (uid TEXT PRIMARY KEY, mtime INTEGER NOT NULL, bytes INTEGER NOT NULL, data TEXT NOT NULL, at INTEGER NOT NULL)')
   ]);
   acctReady = true;
   return true;
@@ -589,10 +599,43 @@ async function acct(request, env, url) {
     if (M === 'DELETE') {
       await env.CATALOG.batch([
         env.CATALOG.prepare('DELETE FROM acct_ratings WHERE uid = ?1').bind(me.uid),
+        env.CATALOG.prepare('DELETE FROM acct_logs WHERE uid = ?1').bind(me.uid),
         env.CATALOG.prepare('DELETE FROM acct_friends WHERE a = ?1 OR b = ?1').bind(me.uid),
         env.CATALOG.prepare('DELETE FROM acct_users WHERE uid = ?1').bind(me.uid)
       ]);
       return reply({ ok: true });
+    }
+    return reply({ error: 'method not allowed' }, 405);
+  }
+
+  /* a person's own log, kept so it follows them to every device they sign in on (version 12) */
+  if (path === '/sync') {
+    if (M === 'GET') {
+      const row = await env.CATALOG.prepare('SELECT mtime, data FROM acct_logs WHERE uid = ?1').bind(me.uid).first();
+      return reply(row ? { mtime: row.mtime, b64: row.data } : null);
+    }
+    if (M === 'DELETE') {
+      await env.CATALOG.prepare('DELETE FROM acct_logs WHERE uid = ?1').bind(me.uid).run();
+      return reply({ ok: true });
+    }
+    if (M === 'PUT') {
+      if (!(await rlHit(env, 'sync:' + me.uid, ACCT_LOG_PER_HOUR, 3600))) return reply({ error: 'too many saves, wait a bit' }, 429);
+      const { j, err } = await readBody(request, ACCT_LOG_MAX + 200); if (err) return err;
+      const b64 = j && j.b64, mtime = Number(j && j.mtime);
+      if (typeof b64 !== 'string' || !b64.startsWith('H4sI') || !/^[A-Za-z0-9+\/=]{16}/.test(b64) || !Number.isFinite(mtime) || mtime < 0) return reply({ error: 'not a Playback log' }, 400);
+      if (b64.length > ACCT_LOG_MAX) return reply({ error: 'log too large' }, 413);
+      const st = await env.CATALOG.prepare('SELECT mtime, data FROM acct_logs WHERE uid = ?1').bind(me.uid).first();
+      if (st) {
+        const force = url.searchParams.get('force') === '1', baseQ = url.searchParams.get('base'), base = Number(baseQ);
+        const newer = { mtime: st.mtime, b64: st.data };
+        if (!force && baseQ !== null && Number.isFinite(base) && st.mtime > base) return reply(newer, 409);
+        if (!force && st.mtime > mtime) return reply(newer, 409);
+      } else {
+        const n = await env.CATALOG.prepare('SELECT COUNT(*) AS c FROM acct_logs').first('c');
+        if ((n || 0) >= ACCT_LOG_USERS) return reply({ error: 'account sync is full right now' }, 507);
+      }
+      await env.CATALOG.prepare('INSERT OR REPLACE INTO acct_logs (uid, mtime, bytes, data, at) VALUES (?1, ?2, ?3, ?4, ?5)').bind(me.uid, Math.round(mtime), b64.length, b64, now).run();
+      return reply({ ok: true, bytes: b64.length, mtime });
     }
     return reply({ error: 'method not allowed' }, 405);
   }
