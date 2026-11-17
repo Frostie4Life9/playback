@@ -693,14 +693,16 @@ details.addart .add{border-top:1px solid var(--line)}
   border-radius:28px;border:1px solid var(--line);padding:20px;
   background:var(--surface)}
 @supports (color:oklch(from red l c h)){.head.hero{--hi:oklch(from var(--ac) clamp(.14,calc((.66 - l) * 1000),.985) 0 h);--acb:oklch(from var(--ac) calc(min(l,.57) + clamp(0,calc((l - .66) * 1000),1) * (l - min(l,.57))) c h)}}
-.head.hero::before,.head.hero::after,.head.hero .hg{content:"";position:absolute;inset:-30%;z-index:-1;pointer-events:none;will-change:transform,opacity}
+.head.hero::before,.head.hero::after,.head.hero .hg{content:"";position:absolute;inset:-30%;z-index:-2;pointer-events:none;will-change:transform,opacity}
 .head.hero .hg{display:block}
 .head.hero::before{background:var(--hbg,linear-gradient(170deg,color-mix(in srgb,var(--ac) 40%,transparent),transparent 62%));animation:hGlowA 8s ease-in-out infinite alternate}
 .head.hero::after{background:var(--hbg2,none);animation:hGlowB 11s ease-in-out infinite alternate}
 .head.hero .hg{background:var(--hbg3,none);animation:hGlowC 14s ease-in-out infinite alternate}
-@keyframes hGlowA{0%{transform:translate(-9%,6%) scale(1.02) rotate(-10deg);opacity:1}50%{transform:translate(8%,-7%) scale(1.2) rotate(8deg);opacity:.7}100%{transform:translate(-4%,-9%) scale(1.08) rotate(-6deg);opacity:1}}
-@keyframes hGlowB{0%{transform:translate(9%,-6%) scale(1.14) rotate(10deg);opacity:.1}100%{transform:translate(-9%,8%) scale(1.02) rotate(-10deg);opacity:.9}}
-@keyframes hGlowC{0%{transform:translate(-8%,-8%) scale(1.06) rotate(0);opacity:.8}100%{transform:translate(8%,9%) scale(1.25) rotate(14deg);opacity:.1}}
+@keyframes hGlowA{0%{transform:translate(-4%,3%) scale(1.04) rotate(-4deg);opacity:1}50%{transform:translate(4%,-3%) scale(1.12) rotate(3deg);opacity:.86}100%{transform:translate(-2%,-4%) scale(1.06) rotate(-2deg);opacity:1}}
+@keyframes hGlowB{0%{transform:translate(5%,-3%) scale(1.1) rotate(5deg);opacity:.55}100%{transform:translate(-5%,4%) scale(1.02) rotate(-5deg);opacity:1}}
+@keyframes hGlowC{0%{transform:scale(.96);opacity:.7}100%{transform:scale(1.08);opacity:1}}
+.head.hero .hghost{position:absolute;inset:-30%;z-index:-1;pointer-events:none;animation:hGhost 1s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes hGhost{to{opacity:0}}
 @media (prefers-reduced-motion:reduce){.head.hero::before,.head.hero::after,.head.hero .hg{animation:none}}
 .hrec{position:relative;width:220px;height:220px;flex:0 0 auto}
 .hring{width:220px;height:220px;border-radius:50%;display:grid;place-items:center;
@@ -1593,6 +1595,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-y', note:'ARTIST BACKGROUND: the colored background behind the artist name now fades from the last artist\'s colors into the new ones instead of snapping. It is also redrawn: instead of up to 24 scattered blobs it is a few big soft fields of the artist\'s colors (similar colors are merged, the most-rated album gets the most room) with a glow behind the record, and the slow drift is gentler so it no longer flickers.'},
   {v:'2026.11.16-x', note:'ARTIST SWITCH: when you open another artist, its name, stats, filters and album cards now rise in one after another instead of popping onto the page. Same for shows and films. Redraws on the same artist (rating, syncing) do not replay it.'},
   {v:'2026.11.16-w', note:'FAST CLICKS: if you pick another artist while a record is still on its way to the turntable, that record now turns around from wherever it is and goes back into its own sleeve (or slides back in if it was still coming out) instead of vanishing.'},
   {v:'2026.11.16-v', note:'RECORD COMES OUT FROM BEHIND THE RING TOO: the selected tile\'s green ring was being drawn under the record as it slid out. The record now stays hidden behind the ring as well as the cover until it is fully out.'},
@@ -4365,8 +4368,13 @@ function slObserve(){
 /* ---------- render ---------- */
 function render(){
   const ll=document.getElementById('llist'),llTop=ll?ll.scrollTop:0,llTab=UI.llTab;UI.llTab=UI.tab;
+  const oh=document.querySelector('.hero[data-aid]'),ohv=oh?{aid:oh.dataset.aid,ac:oh.style.getPropertyValue('--ac'),bg:['--hbg','--hbg2','--hbg3'].map(k=>oh.style.getPropertyValue(k)).filter(Boolean)}:null;   /* the old artist's colors, to fade out from */
   const swK=!UI.view?UI.tab+':'+(UI.sel[UI.tab]||''):null,swGo=!!(swK&&UI.swKey&&UI.swKey!==swK);if(swK)UI.swKey=swK;
   renderMain();slObserve();slPulseNow();UI.rAnim=null;
+  if(swGo&&ohv&&!noMotion()){const nh=document.querySelector('.hero[data-aid]');
+    if(nh&&nh.dataset.aid!==ohv.aid){const gh=document.createElement('i');gh.className='hghost';gh.setAttribute('aria-hidden','true');
+      gh.style.background=ohv.bg.length?ohv.bg.join(','):'linear-gradient(170deg,color-mix(in srgb,'+(ohv.ac||'#7a3a24')+' 40%,transparent),transparent 62%)';
+      nh.insertBefore(gh,nh.firstChild);gh.addEventListener('animationend',()=>gh.remove())}}
   if(swGo&&!noMotion()){const sh=document.querySelector('.sheet');   /* a different artist or title is open: its text and cards ease in, one after another */
     if(sh){[...sh.children].forEach((c,i)=>c.style.setProperty('--sw',Math.min(i,6)*70+'ms'));sh.classList.add('swin');clearTimeout(UI.swT);UI.swT=setTimeout(()=>sh.classList.remove('swin'),1500)}}
   if(UI.lit&&!UI.rLand&&!(UI.lit.id&&UI.lit.id===UI.rOpen))slLitNow();   /* no number is flying in and its slider is closed, so the groove lights with this draw */
@@ -5063,11 +5071,25 @@ function heroBlobs(P,off,sx,sy,boost){
   return P.map((x,i)=>{const ang=(i*137.5+off)*Math.PI/180,rad=i?8+Math.min(22,i*3.5):0;
     const px=Math.round(50+Math.cos(ang)*rad*sx),py=Math.round(46+Math.sin(ang)*rad*sy);
     return 'radial-gradient(circle at '+px+'% '+py+'%,color-mix(in srgb,'+x.col+' '+Math.min(95,Math.round(boost*(42+x.w*42)))+'%,transparent) 0,transparent '+Math.round(24+x.w*26)+'%)'}).join(',')}
+/* The hero background: a few big soft fields of the artist's colors in fixed places, not a scatter of blobs.
+   Colors that are close together are merged (their weights add), the top five stay, the heaviest gets the most room. */
+function heroTones(P){const out=[];
+  for(const x of P){const r=hRgb(x.col),hit=r&&out.find(o=>o.rgb&&Math.hypot(o.rgb[0]-r[0],o.rgb[1]-r[1],o.rgb[2]-r[2])<70);
+    if(hit)hit.w+=x.w;else out.push({col:x.col,rgb:r,w:x.w})}
+  out.sort((p,q)=>q.w-p.w);return out.slice(0,5)}
+const HMESH=[[16,14,80],[88,24,66],[74,94,72],[6,88,62],[52,60,54]];   /* x%, y%, size% of the field */
+function heroMesh(P){
+  const T=heroTones(P),top=T[0].w,mix=(c,k)=>'color-mix(in srgb,'+c+' '+k+'%,transparent)',rel=t=>.55+.45*Math.sqrt(t.w/top);
+  const blob=(t,m,k,sc)=>'radial-gradient(ellipse '+Math.round(m[2]*sc)+'% '+Math.round(m[2]*sc*.8)+'% at '+m[0]+'% '+m[1]+'%,'+mix(t.col,k)+' 0,transparent 100%)';
+  return{a:T.map((t,i)=>blob(t,HMESH[i],Math.round(58*rel(t)),1)).join(',')+',linear-gradient(180deg,'+mix(T[0].col,20)+',transparent 75%)',
+    b:T.map((t,i)=>blob(t,HMESH[(i+2)%5],Math.round(38*rel(t)),.8)).join(','),
+    c:'radial-gradient(circle at 50% 30%,'+mix(T[0].col,42)+' 0,transparent 55%)'}}
 function heroVars(a){
   const P=heroPalette(a),songs=hSplatty(HSTY.n)?heroSongs(a):null;
   if(!P.length)return{'--ac':heroColor(a).col,'--hbg':'','--hbg2':'','--hbg3':'','--hdisc':songs&&songs.length?hDisc(P,HSTY.n,a.id,songs):''};
   const live=HSTY.n===9&&!noMotion();   /* the liquid record is drawn live inside the record (liqMount), not as a picture */
-  return{'--ac':P[0].col,'--hbg':heroBlobs(P,-60,1,.5,1),'--hbg2':heroBlobs(P,120,1,.5,.9),'--hbg3':heroBlobs(P,30,1,.5,.8),'--hdisc':live?'none':hDisc(P,HSTY.n,a.id,songs)}}
+  const M=heroMesh(P);
+  return{'--ac':P[0].col,'--hbg':M.a,'--hbg2':M.b,'--hbg3':M.c,'--hdisc':live?'none':hDisc(P,HSTY.n,a.id,songs)}}
 /* The records on the artist tiles. Each artist gets a small style rule of its own holding its record, rebuilt only
    when that artist's ratings, colors or look change, so a redraw of the list costs nothing. Splatter records keep
    the 70 top-rated songs at this size. */
