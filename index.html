@@ -809,9 +809,10 @@ details.addart .add{border-top:1px solid var(--line)}
    --rb is the start delay: the slide-out waits for the record to emerge. */
 @keyframes slPulse{
   0%{transform:scale(1);border-color:var(--gv)}
-  35%{transform:scale(1.075);border-color:#fff}
+  30%{transform:scale(1.075);border-color:#fff}
+  65%{transform:scale(1.025);border-color:color-mix(in srgb,var(--gp) 60%,var(--gv))}
   100%{transform:scale(1);border-color:var(--gv)}}
-@media (prefers-reduced-motion:no-preference){.group.sleeve.rip .sl-disc i.on:not(.nr){animation:slPulse .62s cubic-bezier(.3,.6,.3,1) calc(var(--rb,0ms) + var(--o,0)*38ms) backwards}}
+@media (prefers-reduced-motion:no-preference){.group.sleeve.rip .sl-disc i.on:not(.nr){animation:slPulse .9s cubic-bezier(.4,0,.25,1) calc(var(--rb,0ms) + var(--o,0)*42ms) backwards}}
 .sl-lab{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:var(--acb);display:grid;place-items:center;font:800 12px Archivo,var(--display);color:var(--hi);font-variant-numeric:tabular-nums}
 @media (prefers-reduced-motion:no-preference){.sl-disc{transition:transform .7s cubic-bezier(.2,.8,.2,1)}}
 .group.sleeve.in .sl-disc{transform:translate3d(16px,0,0)}
@@ -1004,16 +1005,17 @@ details.addart .add{border-top:1px solid var(--line)}
   -webkit-mask:radial-gradient(circle closest-side,transparent 35%,#000 36%,#000 var(--ld,100%),transparent calc(var(--ld,100%) + 1%));mask:radial-gradient(circle closest-side,transparent 35%,#000 36%,#000 var(--ld,100%),transparent calc(var(--ld,100%) + 1%))}
 @keyframes slLit{0%{transform:scale(1);border-color:rgb(255 255 255 / .09);box-shadow:0 0 0 0 transparent}
   30%{transform:scale(1.13);border-color:#fff;box-shadow:0 0 14px 4px var(--gg)}
+  60%{transform:scale(1.04);border-color:var(--gp);box-shadow:0 0 8px 2px var(--gg)}
   100%{transform:scale(1);border-color:var(--gv);box-shadow:0 0 0 0 transparent}}
-@keyframes slSweep{0%{transform:rotate(-40deg);opacity:0}15%{opacity:1}75%{opacity:1}100%{transform:rotate(500deg);opacity:0}}
-@keyframes slWave{0%{transform:scale(.3);opacity:0}12%{opacity:.95}100%{transform:scale(var(--ls,1));opacity:0}}
+@keyframes slSweep{0%{transform:rotate(-40deg);opacity:0}15%{opacity:1}50%{opacity:.8}100%{transform:rotate(500deg);opacity:0}}
+@keyframes slWave{0%{transform:scale(.3);opacity:0}12%{opacity:.95}55%{opacity:.5}100%{transform:scale(var(--ls,1));opacity:0}}
 .sl-disc::before{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;opacity:0;will-change:transform,opacity;border:3px solid #fff;box-shadow:0 0 12px 3px var(--gg)}
 @keyframes slLab{0%{transform:scale(1)}30%{transform:scale(1.55)}60%{transform:scale(.95)}100%{transform:scale(1)}}
 @media (prefers-reduced-motion:no-preference){
-  .group.sleeve.lit .sl-disc::after{animation:slSweep 1.25s cubic-bezier(.4,0,.2,1)}
-  .group.sleeve.lit .sl-disc::before{animation:slWave .9s cubic-bezier(.2,.7,.3,1)}
-  .group.sleeve.lit .sl-lab{animation:slLab .7s cubic-bezier(.2,.8,.2,1)}
-  .group.sleeve.lit .sl-disc i.new{animation:slLit 1.15s cubic-bezier(.3,.6,.3,1) both}
+  .group.sleeve.lit .sl-disc::after{animation:slSweep 1.7s cubic-bezier(.3,.1,.3,1)}
+  .group.sleeve.lit .sl-disc::before{animation:slWave 1.3s cubic-bezier(.15,.6,.3,1)}
+  .group.sleeve.lit .sl-lab{animation:slLab .95s cubic-bezier(.2,.8,.2,1)}
+  .group.sleeve.lit .sl-disc i.new{animation:slLit 1.5s cubic-bezier(.3,.6,.3,1) both}
 }
 
 /* ===== The record leaves its sleeve (2026.11.16-b) ===== */
@@ -1581,6 +1583,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-r', note:'SOFTER ENDING: the rating animation no longer cuts off. The ripple, glint, shockwave and flare run a little longer and fade out gradually, and nothing is removed until it has finished.'},
   {v:'2026.11.16-q', note:'SMOOTHER RATING ANIMATION: the grooves now swell with a GPU transform instead of resizing every frame, the glows are lighter, and the glint and shockwave sit on their own layers, so the effect should no longer lag.'},
   {v:'2026.11.16-p', note:'BIGGER RATING ANIMATION: rating a song now sends a bright shockwave ring out from the label to that song\'s band, the glint trails a longer glow and spins further, the new groove flares much harder, the ripple through the grooves swells and shines more, and the label count gives a bigger bounce.'},
   {v:'2026.11.16-o', note:'RATING ANIMATION: when you rate a song, the glint that circles the record and the ripple through the grooves now go out only as far as that song\'s band instead of the whole record. Inner grooves still light up, anything outside the band stays still.'},
@@ -4293,7 +4296,7 @@ function slRipple(sl,base,minJ){
   if(!sl||!sl.querySelector('.sl-disc i.on'))return;
   const is=sl.querySelectorAll('.sl-disc i');is.forEach((e,j)=>e.classList.toggle('nr',minJ!=null&&j<minJ));   /* grooves outside the rated song's band sit the ripple out */
   sl.style.setProperty('--rb',base+'ms');sl.classList.remove('rip');void sl.offsetWidth;sl.classList.add('rip');
-  clearTimeout(sl._rt);sl._rt=setTimeout(()=>{sl.classList.remove('rip');sl.querySelectorAll('.sl-disc i.nr').forEach(e=>e.classList.remove('nr'))},base+1700)}
+  clearTimeout(sl._rt);sl._rt=setTimeout(()=>{sl.classList.remove('rip');sl.querySelectorAll('.sl-disc i.nr').forEach(e=>e.classList.remove('nr'))},base+2600)}
 /* ask for a ripple on the next draw of this release (checking a song off, switching to Deluxe) */
 function slPulseAsk(gid,base){UI.pulse={g:String(gid),b:base||0}}
 /* which grooves a release has lit right now (the same folding the sleeve is drawn with) */
@@ -4317,7 +4320,7 @@ function slLitNow(){const L=UI.lit;UI.lit=null;if(!L)return;
   const nR=is.length,bj=L.band;   /* the glint and ripple go out only as far as the rated song's band */
   if(bj!=null&&nR){const ld=96-bj*(52/nR)+2;sl.style.setProperty('--ld',ld.toFixed(1)+'%');sl.style.setProperty('--ls',(ld/100).toFixed(3))}else{sl.style.removeProperty('--ld');sl.style.removeProperty('--ls')}
   sl.classList.remove('lit');void sl.offsetWidth;sl.classList.add('lit');
-  clearTimeout(sl._lt);sl._lt=setTimeout(()=>{sl.classList.remove('lit');disc.querySelectorAll('i.new').forEach(e=>e.classList.remove('new'))},1500);
+  clearTimeout(sl._lt);sl._lt=setTimeout(()=>{sl.classList.remove('lit');disc.querySelectorAll('i.new').forEach(e=>e.classList.remove('new'))},2100);
   slRipple(sl,520,bj)}
 function slPulseNow(){const p=UI.pulse;UI.pulse=null;if(!p)return;
   const sl=document.querySelector('.group.sleeve[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(p.g):p.g)+'"]');slRipple(sl,p.b)}
