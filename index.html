@@ -1608,6 +1608,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-ad', note:'RATING DATES: the history list now runs through Nov 5, 2026 (59 more ratings, from Jan 29, 2026 on). An album that is in the history more than once takes its latest day, and a Deluxe listing only falls back to the plain album\'s rating when the plain album is not also in the history, so the two never share one day. The summary now counts ratings. Tap Import rating dates again to apply. Also restores the offline cache file (sw.js), which the previous update accidentally emptied.'},
   {v:'2026.11.16-ac', note:'FLUID COLORS: the strips are gone. The background behind the artist name is now a liquid: a soft base of all your album colors with big pools of each color on top. A pool is as large as its albums are rated high, and every pool circles the tile at its own speed and wobbles, so the colors flow into each other and the tile always stays covered.'},
   {v:'2026.11.16-ab', note:'FULL-COVER COLORS: the background behind the artist name is full again, no blobs. Each color is a wide band as big as its albums are rated high (a 10 takes far more room than a 5), three layers of bands at different angles rotate and slide slowly so the colors keep trading places across the whole tile, and a light fade at the bottom keeps the text readable over white.'},
   {v:'2026.11.16-aa', note:'ALBUM COLOR: a cover whose biggest color is a gradient (blue fading into violet, like HYPERYOUTH) is no longer outvoted by a small hot patch (the red at the bottom). Blue and violet now count as one cool field, and a field covering over 40% of the cover wins over a patch less than half its size. About one cover in twenty changes color; every cover is read again once.'},
@@ -2807,11 +2808,13 @@ const cnt0=n=>n+' rating'+(n===1?'':'s');
    A Deluxe listing lands on the deluxe rating when the album has one. */
 const RDX={err:'',report:null,busy:false};
 const rdDx=t=>/[\(\[][^)\]]*(deluxe|bonus|expanded)[^)\]]*[\)\]]/i.test(String(t));
-function rdTargets(e){   /* every album with this title, as the mark that holds its rating (twins count once) */
-  const key=nTitle(e.t),dx=rdDx(e.t),seen=new Set(),out=[];
+function rdTargets(e,plain){   /* every album with this title, as the mark that holds its rating (twins count once) */
+  const key=nTitle(e.t),dx=rdDx(e.t),stdOk=!dx||!plain.has(key),seen=new Set(),out=[];
   for(const a of S.music)for(const g of a.groups){
     if(!RATEABLE.includes(g.kind)||nTitle(g.title)!==key)continue;
-    const ids=dx&&hasDx(g)?[dxId(g),g.id]:[g.id],id=ids.find(i=>rating(i))||'',ck=canonK(id||ids[0]);
+    /* a Deluxe listing lands on the deluxe rating; it may fall back to the plain rating only when the history has no plain entry for this album, so the two never share a day */
+    const ids=dx?(hasDx(g)?(stdOk?[dxId(g),g.id]:[dxId(g)]):(stdOk?[g.id]:[])):[g.id],
+      id=ids.find(i=>rating(i))||'',ck=canonK(id||ids[0]||g.id);
     if(seen.has(ck))continue;seen.add(ck);
     out.push({a,g,id,r:id?rating(id):0});
   }
@@ -2819,20 +2822,23 @@ function rdTargets(e){   /* every album with this title, as the mark that holds 
 }
 function rdImport(list){
   RDX.err='';RDX.report=null;
-  const today=todayISO(),rp={total:0,set:0,same:0,kept:[],differ:[],noRating:[],notFound:[],unsure:[],bad:0},run=new Map();
+  const today=todayISO(),rp={total:0,set:0,same:0,kept:[],differ:[],noRating:[],notFound:[],unsure:[],bad:0},picked=new Map();
+  const plain=new Set(list.filter(x=>x&&x.t&&!rdDx(x.t)).map(x=>nTitle(x.t)));
   for(const e of list){
     if(!e||!e.t||!/^\d{4}-\d\d-\d\d$/.test(e.d||'')||e.d>today){rp.bad++;continue}
     rp.total++;
-    const c=rdTargets(e),rated=c.filter(x=>x.id),stars=(+e.s||0)*2;
+    const c=rdTargets(e,plain),rated=c.filter(x=>x.id),stars=(+e.s||0)*2;
     if(!c.length){rp.notFound.push(e.t);continue}
     if(!rated.length){rp.noRating.push(e.t);continue}
     let pick=null;
     if(rated.length===1)pick=rated[0];
     else{const m=rated.filter(x=>x.r===stars);if(m.length===1)pick=m[0]}
     if(!pick){rp.unsure.push(e.t+' ('+rated.map(x=>x.a.name).join(' / ')+')');continue}
-    const ck=canonK(pick.id),cur=ratedDate(pick.id);
-    if(run.has(ck)){S.marks[pick.id]={...S.marks[pick.id],rd:e.d};run.set(ck,e.d);continue}   /* rated again later in the history: the later day wins, like rating again here */
-    if(!cur){S.marks[pick.id]={...S.marks[pick.id],rd:e.d};run.set(ck,e.d);rp.set++}
+    picked.set(canonK(pick.id),{pick,e});   /* rated again later in the history: the later entry wins, like rating again here */
+  }
+  for(const {pick,e} of picked.values()){
+    const cur=ratedDate(pick.id),stars=(+e.s||0)*2;
+    if(!cur){S.marks[pick.id]={...S.marks[pick.id],rd:e.d};rp.set++}
     else if(cur===e.d)rp.same++;
     else rp.kept.push(e.t+': you have '+fmtRd(cur)+', the history says '+fmtRd(e.d));
     if(stars&&pick.r!==stars)rp.differ.push(e.t+': '+fmt(pick.r)+' here, '+fmt(stars)+' in the history');
@@ -2856,7 +2862,7 @@ async function rdRun(){
 }
 function rdReport(){
   const r=RDX.report,cnt=(n,w)=>n+' '+w+(n===1?'':'s'),li=l=>'<ul>'+l.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>';
-  let h=`<div class="mbok rymrep rdrep" role="status"><span><b>${cnt(r.total,'album')}</b> in your history. <b>${r.set}</b> got a day now${r.same?', '+r.same+' already had it':''}.</span>`;
+  let h=`<div class="mbok rymrep rdrep" role="status"><span><b>${cnt(r.total,'rating')}</b> in your history. <b>${r.set}</b> got a day now${r.same?', '+r.same+' already had it':''}.</span>`;
   if(r.kept.length)h+=`<span>${cnt(r.kept.length,'album')} already had a different day, so I kept yours.</span><details><summary>Which</summary>${li(r.kept)}</details>`;
   if(r.differ.length)h+=`<span>${cnt(r.differ.length,'album')} got a day, but your rating here is not the one in the history.</span><details><summary>Which</summary>${li(r.differ)}<p class="note">Worth a glance in case the wrong album matched.</p></details>`;
   if(r.noRating.length)h+=`<span>${cnt(r.noRating.length,'album')} ${r.noRating.length===1?'has':'have'} no rating here yet, so there was nothing to date.</span><details><summary>Which</summary>${li(r.noRating)}</details>`;
