@@ -137,6 +137,18 @@ button{cursor:pointer}
   .lrail button{border:0;background:none;padding:0;width:22px;min-height:12px;flex:1 1 0;max-height:22px;font:600 11px var(--mono);color:var(--muted)}
   .lrail button:active{color:var(--accent)}
 }
+/* opening the artist menu on a phone: the sheet slides up from the bar, its title and search settle in, and the artists rise in one after another */
+@media (max-width:760px) and (prefers-reduced-motion:no-preference){
+  @keyframes libUp{from{opacity:0;transform:translateY(38px) scale(.985)}to{opacity:1;transform:none}}
+  @keyframes libTile{from{opacity:0;transform:translateY(16px) scale(.94)}to{opacity:1;transform:none}}
+  @keyframes libHead{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+  .side.libin .libbody{animation:libUp .38s cubic-bezier(.2,.8,.2,1)}
+  .side.libin .lhead,.side.libin .lfind{animation:libHead .34s cubic-bezier(.2,.8,.2,1) .06s backwards}
+  .side.libin .llist .tile,.side.libin .llist .entry,.side.libin .llist .lsec{animation:libTile .42s cubic-bezier(.2,.8,.2,1) 540ms backwards}
+  .side.libin .lrail{animation:libHead .4s ease-out .3s backwards}
+  .side.libin .llist .lsec{animation-delay:120ms}
+    .side.libin .llist .lgrid>:nth-child(1),.side.libin .llist>:nth-child(1){animation-delay:150ms}.side.libin .llist .lgrid>:nth-child(2),.side.libin .llist>:nth-child(2){animation-delay:180ms}.side.libin .llist .lgrid>:nth-child(3),.side.libin .llist>:nth-child(3){animation-delay:210ms}.side.libin .llist .lgrid>:nth-child(4),.side.libin .llist>:nth-child(4){animation-delay:240ms}.side.libin .llist .lgrid>:nth-child(5),.side.libin .llist>:nth-child(5){animation-delay:270ms}.side.libin .llist .lgrid>:nth-child(6),.side.libin .llist>:nth-child(6){animation-delay:300ms}.side.libin .llist .lgrid>:nth-child(7),.side.libin .llist>:nth-child(7){animation-delay:330ms}.side.libin .llist .lgrid>:nth-child(8),.side.libin .llist>:nth-child(8){animation-delay:360ms}.side.libin .llist .lgrid>:nth-child(9),.side.libin .llist>:nth-child(9){animation-delay:390ms}.side.libin .llist .lgrid>:nth-child(10),.side.libin .llist>:nth-child(10){animation-delay:420ms}.side.libin .llist .lgrid>:nth-child(11),.side.libin .llist>:nth-child(11){animation-delay:450ms}.side.libin .llist .lgrid>:nth-child(12),.side.libin .llist>:nth-child(12){animation-delay:480ms}.side.libin .llist .lgrid>:nth-child(13),.side.libin .llist>:nth-child(13){animation-delay:510ms}.side.libin .llist .lgrid>:nth-child(14),.side.libin .llist>:nth-child(14){animation-delay:540ms}
+}
 .ex{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--warn);border:1px solid currentColor;border-radius:4px;padding:0 4px;margin-left:6px}
 
 form.add{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:12px}
@@ -1675,6 +1687,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-j', note:'ARTIST MENU OPENS WITH MOTION (PHONE): tapping the artist bar now slides the full-screen menu up from the bottom, the title and search settle in from the top, and the artists rise into the grid one after another, with the A-Z strip fading in last. It plays only on the tap that opens it, so a sync redraw while the menu is open never replays it. Reduced-motion settings skip it.'},
   {v:'2026.11.17-i', note:'DELUXE SWITCH TRANSITION: going between Standard and Deluxe now plays as a real transition instead of a snap. The old edition fades out (cover, title, rating), switching back folds the deluxe-only songs shut one after another, and going to Deluxe opens them up row by row while the new cover pops in and the title and rating fade up. The sliding switch thumb is unchanged. Reduced-motion settings skip all of it.'},
   {v:'2026.11.17-h', note:'NO MORE COVER FLASH: opening a song or album rating (or anything else that redraws the page) made the album cover blink, because every redraw rebuilt each cover as a new picture. Covers that are already on screen are now kept through a redraw and put straight back in place, so they no longer blink, flicker or reload.'},
   {v:'2026.11.17-g', note:'COVERS NO LONGER VANISH ON A HICCUP: if an album cover or poster failed to load once (weak signal, a slow image server), it was thrown away until the next redraw, which is why covers kept disappearing and flashing back. It now asks for the picture again up to two more times before giving up.'},
@@ -4668,7 +4681,7 @@ function render(){
 function mainView(e,list){return `
 
   <div class="shell">
-    <aside class="side ${UI.libOpen||!e?'libopen':''}${UI.libOpen&&e?' libfull':''}">
+    <aside class="side ${UI.libOpen||!e?'libopen':''}${UI.libOpen&&e?' libfull':''}${libIn&&UI.libOpen&&e?' libin':''}">
       ${e?`<button class="libbtn" data-act="lib" aria-expanded="${!!UI.libOpen}"><span class="label">${UI.tab==='music'?'Artists':'Shows & films'} \u00b7 ${list.length}</span><b>${esc(e.name||e.title)}</b><span class="libsw">${UI.libOpen?'Close':'Switch'}</span></button>`:''}
       <div class="libbody">
       ${sideFinder(list)}
@@ -5200,6 +5213,7 @@ function keepImgs(fn){
 function renderMain(){
   if(!READY){document.getElementById('app').innerHTML='<p class="empty">Loading your log\u2026</p>';return}
   const e=current();
+  const libIn=UI.libAnim;UI.libAnim=false;   /* the menu's opening animation plays on the one draw that opens it */
   const list=S[UI.tab];
   document.getElementById('app').innerHTML=`
   <header class="top">
@@ -6167,7 +6181,7 @@ document.addEventListener('click',ev=>{
     if(rt&&!matchMedia('(prefers-reduced-motion:reduce)').matches){UI.rClosing=true;const cid=UI.rOpen,fly=rtFlyPrep(cid);rt.classList.remove('rt-in');rt.classList.add('rt-out');
       setTimeout(()=>{UI.rClosing=false;UI.rOpen=null;if(fly)UI.rLand=cid;render()},230);rtFlyGo(fly);return}}
   if(act==='view'){UI.view=b.dataset.v;UI.rOpen=null;if(UI.view==='history'){UI.hAnim=true;UI.hEdit=null}window.scrollTo({top:0})}
-  else if(act==='lib'){UI.libOpen=!UI.libOpen}
+  else if(act==='lib'){UI.libOpen=!UI.libOpen;UI.libAnim=UI.libOpen}
   else if(act==='llopen'){UI.llOpen=true}
   else if(act==='llclose'){UI.llOpen=false}
   else if(act==='addart'){UI.libOpen=false;UI.addOpen=true;UI.toAdd=true}
