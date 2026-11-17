@@ -1919,6 +1919,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-ah', note:'RATED DATES ON ACCOUNT PAGES: every album, show and film on your Account page (and on a friend\u2019s page) now says the day it was rated, under the title (Rated Nov 14, 2026). The dates come from the days already on your ratings and are published with them, so a friend only sees them if you accept each other and sharing is on. Nobody can change them: only your own signed-in account can save your published ratings, and the private rating-dates list itself stays on your Worker, readable only with your sync key or owner login, with no way for anyone to write to it. The Worker needs the new playback-sync.js (it takes it from GitHub on its own).'},
   {v:'2026.11.17-ag', note:'THE RATED-ALBUMS RECORD: your Account page (and a friend\u2019s page) now has a big vinyl under the stats with every album rated, each one a cover on a single spiral groove: the highest rated sit on the outer edge and it winds in to the lowest at the label. Hover a cover (or tap it on a phone) to read its title, artist and rating on the label, and tap again to keep it there. The record turns slowly, stops when you point at it, and pops in cover by cover when the page opens. A brighter ring means a higher rating. Deluxe editions rated on their own are not drawn, matching the albums count.'},
   {v:'2026.11.17-af', note:'FIX: DELUXE EDITIONS WITH A ROMAN NUMERAL TITLE NOW FOLD IN: Skate Story: Vol. I and its Deluxe Edition (titled Vol. 1) stayed as two separate albums because Playback read I and 1 as different words. Vol., Part, Chapter, Book, Act and Episode followed by a Roman numeral now count as the number when titles are compared. The tracklist check is unchanged: the deluxe still has to carry nearly all of the standard album\u2019s songs and add more, so a different album with a similar name stays separate. Tap Check for new releases on the artist to apply it; the rating on the stand-alone deluxe moves to your deluxe rating and its song checks move onto the album.'},
   {v:'2026.11.17-ae', note:'FRIENDS AS A SHEET: the Friends button now slides a sheet up over whatever you are on (music, screen, collection) instead of replacing the page. Close it with the X, by tapping outside it, or with Escape, and you are exactly where you were, so your artists and the tab bar stay put. Opening a friend from it still works, and its back button reopens the sheet.'},
@@ -5662,13 +5663,15 @@ function accOut(msg){ACC.token='';ACC.me=null;ACC.pubSig='';ACX.fr=null;ACX.frAt
 const accImg=g=>{const u=g.img||'';return typeof u==='string'&&/^https:\/\//.test(u)?u.slice(0,300):''};
 const accKeys=(a,g)=>({k:g.mbid&&!/^sp:/.test(g.mbid)?'mb:'+g.mbid:'',t:'ta:'+nArtist(a.name)+'|'+nTitle(g.title)});
 const accScreenKeys=s=>({k:s.tmdb?'tm:'+s.type+':'+s.tmdb:'',t:'ts:'+nTitle(s.title)+'|'+(s.year||'')});
+/* the day an item was rated, published with the rating so account pages can show it (nothing when there is none) */
+const accDay=id=>{const d=ratedDate(id);return /^\d{4}-\d\d-\d\d$/.test(d)?{d}:{}};
 function accItems(){
   const out=[];
   for(const a of S.music){if(a.example)continue;
     for(const g of a.groups||[]){if(!RATEABLE.includes(g.kind))continue;const{k,t}=accKeys(a,g);
-      const r=rating(g.id);if(r)out.push({kind:'a',k,t,r,n:g.title,a:a.name,i:accImg(g)});
-      const d=rating(dxId(g));if(d)out.push({kind:'a',k:k?k+'~dx':'',t:t+'~dx',r:d,n:dxName(g),a:a.name})}}
-  for(const s of S.screen){if(s.example)continue;const r=rating(s.id);if(r){const{k,t}=accScreenKeys(s);out.push({kind:'s',k,t,r,n:s.title,a:''})}}
+      const r=rating(g.id);if(r)out.push({kind:'a',k,t,r,n:g.title,a:a.name,i:accImg(g),...accDay(g.id)});
+      const d=rating(dxId(g));if(d)out.push({kind:'a',k:k?k+'~dx':'',t:t+'~dx',r:d,n:dxName(g),a:a.name,...accDay(dxId(g))})}}
+  for(const s of S.screen){if(s.example)continue;const r=rating(s.id);if(r){const{k,t}=accScreenKeys(s);out.push({kind:'s',k,t,r,n:s.title,a:'',...accDay(s.id)})}}
   return out.slice(0,2000);
 }
 const accHash=s=>{let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return String(h)};
@@ -5872,7 +5875,7 @@ function accListHtml(P,match){
     <div class="pf-tabs" role="group" aria-label="What to list"><button data-act="pkind" data-v="a" aria-pressed="${kind==='a'}">Albums<span class="c">${nA}</span></button><button data-act="pkind" data-v="s" aria-pressed="${kind==='s'}">Shows &amp; films<span class="c">${nS}</span></button></div>
     ${self?'':`<div class="pf-tabs sm" role="group" aria-label="Filter"><button data-act="pfilter" data-v="all" aria-pressed="${fl==='all'}">All<span class="c">${base.length}</span></button><button data-act="pfilter" data-v="shared" aria-pressed="${fl==='shared'}">You both rated<span class="c">${sh}</span></button><button data-act="pfilter" data-v="only" aria-pressed="${fl==='only'}">Not rated by you<span class="c">${only}</span></button></div>`}
     ${rows.length?rows.map((x,i)=>{const m=self?null:mine(x),u=accCover(x);
-      return `<div class="pf-row" style="--i:${Math.min(i,12)}"><span class="pcv"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span><span class="pt"><b>${esc(x.n||'Untitled')}</b><small>${esc(x.a||(x.kind==='s'?'':''))}</small></span><span class="pr">${m!=null?`<span class="pme" title="Your rating">you ${fmt(m)}</span>`:''}<b class="pn">${fmt(x.r)}</b></span></div>`}).join(''):`<p class="note">${base.length?'Nothing here with that filter.':'Nothing rated here yet.'}</p>`}
+      return `<div class="pf-row" style="--i:${Math.min(i,12)}"><span class="pcv"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span><span class="pt"><b>${esc(x.n||'Untitled')}</b><small>${esc([x.a,x.d&&fmtRd(x.d)?'Rated '+fmtRd(x.d):''].filter(Boolean).join(' \u00b7 '))}</small></span><span class="pr">${m!=null?`<span class="pme" title="Your rating">you ${fmt(m)}</span>`:''}<b class="pn">${fmt(x.r)}</b></span></div>`}).join(''):`<p class="note">${base.length?'Nothing here with that filter.':'Nothing rated here yet.'}</p>`}
     ${list.length>lim?`<div class="tools"><button class="btn" data-act="pmore">Show ${Math.min(60,list.length-lim)} more</button></div>`:''}</div>`;
 }
 /* the big record: every album this person rated, one cover per spot on a single spiral groove, highest rated at the outer edge and lowest at the label.

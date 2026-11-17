@@ -475,6 +475,8 @@ async function sugOwner(request, env, url) {
    is stored exactly as the app sent it (base64 text; this Worker never unpacks it, so it costs almost no CPU), photos are
    never part of it (they need the owner's sync key), a log over about 1 MB compressed is refused (413), a person can save at
    most 120 times an hour (429), and only ACCT_LOG_USERS people can hold a saved copy at once (507). */
+/* a rated-on day: exactly YYYY-MM-DD, a real date, not in the future; anything else is dropped */
+const cleanDay = v => { if (typeof v !== 'string' || !/^\d{4}-\d\d-\d\d$/.test(v)) return null; const t = Date.parse(v + 'T00:00:00Z'); return Number.isFinite(t) && new Date(t).toISOString().slice(0, 10) === v && t <= Date.now() + 86400000 ? v : null; };
 const GOOGLE_ISS = ['https://accounts.google.com', 'accounts.google.com'];
 const ACCT_MAX_BODY = 400 * 1024, ACCT_MAX_ROWS = 4000;
 const ACCT_LOG_MAX = 1400000, ACCT_LOG_USERS = 200, ACCT_LOG_PER_HOUR = 120;   /* base64 text (about 1 MB gzipped), people with a saved copy, saves per person per hour */
@@ -495,6 +497,7 @@ async function acctInit(env) {
   ]);
   /* the table first shipped without the cover column: add it once (the error just means it is already there) */
   try { await env.CATALOG.prepare('ALTER TABLE acct_ratings ADD COLUMN img TEXT').run(); } catch (e) { /* already there */ }
+  try { await env.CATALOG.prepare('ALTER TABLE acct_ratings ADD COLUMN day TEXT').run(); } catch (e) { /* already there */ }   /* the day it was rated, YYYY-MM-DD (version 16) */
   /* profile picture and account color (version 14): hue 0-359 or NULL for the automatic color, pic a small JPEG data URL or empty */
   for (const col of ['hue INTEGER', 'pic TEXT']) { try { await env.CATALOG.prepare('ALTER TABLE acct_users ADD COLUMN ' + col).run(); } catch (e) { /* already there */ } }
   acctReady = true;
@@ -725,11 +728,11 @@ async function acct(request, env, url) {
       if (!x || (x.kind !== 'a' && x.kind !== 's') || typeof x.t !== 'string' || !x.t) continue;
       const r = Number(x.r); if (!(r > 0 && r <= 10)) continue;
       const t = x.t.slice(0, 200), id = x.kind + '|' + t; if (seen.has(id)) continue; seen.add(id);
-      items.push({ kind: x.kind, k: typeof x.k === 'string' ? x.k.slice(0, 80) : '', t, r: Math.round(r * 2) / 2, n: String(x.n || '').slice(0, 120), a: String(x.a || '').slice(0, 80), i: cleanImg(x.i) });
+      items.push({ kind: x.kind, k: typeof x.k === 'string' ? x.k.slice(0, 80) : '', t, r: Math.round(r * 2) / 2, n: String(x.n || '').slice(0, 120), a: String(x.a || '').slice(0, 80), i: cleanImg(x.i), d: cleanDay(x.d) });
     }
     await env.CATALOG.batch([
       env.CATALOG.prepare('DELETE FROM acct_ratings WHERE uid = ?1').bind(me.uid),
-      env.CATALOG.prepare("INSERT OR REPLACE INTO acct_ratings (uid, kind, k, t, r, ttl, art, img) SELECT ?1, json_extract(value,'$.kind'), json_extract(value,'$.k'), json_extract(value,'$.t'), json_extract(value,'$.r'), json_extract(value,'$.n'), json_extract(value,'$.a'), json_extract(value,'$.i') FROM json_each(?2)").bind(me.uid, JSON.stringify(items)),
+      env.CATALOG.prepare("INSERT OR REPLACE INTO acct_ratings (uid, kind, k, t, r, ttl, art, img, day) SELECT ?1, json_extract(value,'$.kind'), json_extract(value,'$.k'), json_extract(value,'$.t'), json_extract(value,'$.r'), json_extract(value,'$.n'), json_extract(value,'$.a'), json_extract(value,'$.i'), json_extract(value,'$.d') FROM json_each(?2)").bind(me.uid, JSON.stringify(items)),
       env.CATALOG.prepare('UPDATE acct_users SET rated = ?2, seen = ?3 WHERE uid = ?1').bind(me.uid, items.length, now)
     ]);
     return reply({ ok: true, rows: items.length });
@@ -791,7 +794,7 @@ async function acct(request, env, url) {
     const u = await env.CATALOG.prepare('SELECT uid, name, share, made, hue, pic FROM acct_users WHERE uid = ?1').bind(uid).first();
     if (!u) return reply({ error: 'That account is gone.' }, 404);
     if (uid !== me.uid && !u.share) return reply({ error: u.name + ' is not sharing their ratings right now.' }, 403);
-    const items = (await env.CATALOG.prepare('SELECT kind, k, t, r, ttl AS n, art AS a, img AS i FROM acct_ratings WHERE uid = ?1 ORDER BY r DESC, ttl COLLATE NOCASE LIMIT 4000').bind(uid).all()).results || [];
+    const items = (await env.CATALOG.prepare('SELECT kind, k, t, r, ttl AS n, art AS a, img AS i, day AS d FROM acct_ratings WHERE uid = ?1 ORDER BY r DESC, ttl COLLATE NOCASE LIMIT 4000').bind(uid).all()).results || [];
     const fc = await env.CATALOG.prepare("SELECT COUNT(*) AS c FROM acct_friends WHERE st = 'ok' AND (a = ?1 OR b = ?1)").bind(uid).first('c');
     return reply({ profile: { uid, name: u.name, since: u.made, friends: fc || 0, hue: u.hue == null ? null : u.hue, pic: u.pic || '', items } });
   }
