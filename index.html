@@ -1672,6 +1672,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-h', note:'NO MORE COVER FLASH: opening a song or album rating (or anything else that redraws the page) made the album cover blink, because every redraw rebuilt each cover as a new picture. Covers that are already on screen are now kept through a redraw and put straight back in place, so they no longer blink, flicker or reload.'},
   {v:'2026.11.17-g', note:'COVERS NO LONGER VANISH ON A HICCUP: if an album cover or poster failed to load once (weak signal, a slow image server), it was thrown away until the next redraw, which is why covers kept disappearing and flashing back. It now asks for the picture again up to two more times before giving up.'},
   {v:'2026.11.17-f', note:'MOBILE: THE RECORD COMES OUT SOONER: on a phone, an album\u2019s vinyl now slides out of its sleeve (and starts its animation) as soon as the album is a little way onto the screen from the bottom, and stays out until it is nearly off the top, so it is out for much more of your scrolling. Before, it only came out while the album sat in a narrow band in the middle of the screen. Computers are unchanged.'},
   {v:'2026.11.17-e', note:'FIX: A DELUXE RATING YOU CLEARED NO LONGER COMES BACK: every time the app started (and on every import), an album with a deluxe edition and no deluxe rating copied its own standard rating onto the deluxe, because the two titles look the same once \u201c(Deluxe)\u201d is dropped. Short n\u2019 Sweet (Deluxe) got Short n\u2019 Sweet\u2019s rating back each time you removed it. The deluxe now only takes a rating from a separate old deluxe album it is absorbing, never from the standard album itself.'},
@@ -4639,8 +4640,8 @@ function render(){
   const swK=!UI.view?UI.tab+':'+(UI.sel[UI.tab]||''):null,swGo=!!(swK&&UI.swKey&&UI.swKey!==swK);if(swK)UI.swKey=swK;
   /* a filter or sort change: tiles and release cards that stay glide to their new spots, new ones rise in one after another */
   const flipOn=UI.flip&&!noMotion()&&window.SX&&typeof SX.flip==='function';UI.flip=false;
-  if(flipOn)SX.flip(document.body,'#llist .tile,.sheet .group.sleeve',renderMain,{dur:420,key:el=>el.dataset.acol?'g'+el.dataset.acol:el.dataset.g?'a'+el.dataset.g:el.dataset.id?'t'+el.dataset.id:null});
-  else renderMain();
+  if(flipOn)SX.flip(document.body,'#llist .tile,.sheet .group.sleeve',()=>keepImgs(renderMain),{dur:420,key:el=>el.dataset.acol?'g'+el.dataset.acol:el.dataset.g?'a'+el.dataset.g:el.dataset.id?'t'+el.dataset.id:null});
+  else keepImgs(renderMain);
   slObserve();slPulseNow();UI.rAnim=null;
   if(swGo&&!UI.toAlb&&!UI.toSheet)window.scrollTo({top:0,behavior:noMotion()?'auto':'smooth'});   /* a different artist or title: start at the top, not wherever the last one was scrolled */
   if(swGo&&ohg&&!noMotion()){const nh=document.querySelector('.hero[data-aid]');
@@ -5181,6 +5182,17 @@ function settingsView(){return `
     </div>
   </section>
 `}
+/* Every redraw rebuilds the page, which makes each cover a brand new picture that paints blank for a moment (the flash when you open a rating).
+   So before a redraw, the covers already on screen are kept, and any new cover with the same picture and place in the markup is swapped for the kept one. */
+function keepImgs(fn){
+  const m=new Map(),old=new Set();
+  document.querySelectorAll('img[src]').forEach(im=>{if(!(im.complete&&im.naturalWidth))return;old.add(im);const k=im.getAttribute('src');if(!m.has(k))m.set(k,[]);m.get(k).push(im)});
+  fn();
+  if(!m.size)return;
+  for(const l of m.values()){for(let q=l.length-1;q>=0;q--)if(l[q].isConnected)l.splice(q,1)}   /* only covers the redraw threw away */
+  document.querySelectorAll('img[src]').forEach(im=>{if(old.has(im))return;
+    const l=m.get(im.getAttribute('src')),k=l&&l.findIndex(o=>o.className===im.className);
+    if(l&&k>=0)im.replaceWith(l.splice(k,1)[0])})}
 function renderMain(){
   if(!READY){document.getElementById('app').innerHTML='<p class="empty">Loading your log\u2026</p>';return}
   const e=current();
