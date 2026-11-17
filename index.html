@@ -908,7 +908,7 @@ details.addart .add{border-top:1px solid var(--line)}
 .lseg button .c{font-family:var(--mono);font-size:11px;font-weight:500;opacity:.8;margin-left:5px}
 .lseg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);font-weight:700}
 .llist.wall{border:0;background:transparent;padding:0;border-radius:0}
-.llist.wall .lsec{top:0;padding:10px 2px 8px}
+.llist.wall .lsec{top:0;padding:10px 2px 8px;z-index:4}
 .lgrid{grid-template-columns:repeat(auto-fill,minmax(clamp(150px,8vw,230px),1fr));gap:24px 18px;padding:6px 2px 14px}
 /* an artist is a sleeve with its record sliding out: the more you have heard, the further out it sits. The record is
    pressed from the same colors and look as the one that opens (see tdPaint). */
@@ -976,7 +976,7 @@ details.addart .add{border-top:1px solid var(--line)}
 /* ===== 2026.11.16-c ===== */
 /* liquid record on the turntable: the paint is real shapes inside the record, moved every frame (see liqTick) */
 .hspin .hliq{position:absolute;inset:0;width:100%;height:100%;display:block}
-.hspin.liq::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;background:repeating-radial-gradient(circle,rgb(0 0 0 / .26) 0 1px,transparent 1px 3.2px)}
+.hspin.liq::after,.fly-s.liq::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;background:repeating-radial-gradient(circle,rgb(0 0 0 / .26) 0 1px,transparent 1px 3.2px)}
 .fly-s .hliq{position:absolute;inset:0;width:100%;height:100%;display:block}
 /* a dark album keeps its dark banner, but on the dark theme its song rows would wash black on black.
    The row wash is lifted to a mid tone of the same hue (a black album washes smoke gray), so the gradient shows. */
@@ -1521,6 +1521,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-d', note:'LIQUID: the liquid record is now one record everywhere. The paint layout is the same in the sleeve, in the air and on the turntable, so it no longer changes when it is set down; it is two rings of pools so there is never a hole, and very dark colors are lifted slightly so a black album reads as dark liquid. SORTING: changing the release sort no longer breaks the record and colors on the artist card (the record was being cut off inside the page). SCROLLING: the artist wall headings and tiles no longer clip through each other. SPLATTER: both splatter records now look like a real splatter pressing, paint thrown out along spokes from the label to the rim in streaks and dashes, one each; the flung paint look is now the same splatter on white vinyl. RATING SORT: when two releases have the same rating, the one with the higher song average comes first (and last when sorting low to high).'},
   {v:'2026.11.16-c', note:'RELEASES: under the artist card you can now show just Albums, EPs, Singles or Other, and sort the discography: newest or oldest first, by how you rated it (high or low), most or least heard, or by title. The sort is remembered; the kind resets when you open another artist. SPLATTER: no more neat rings. Each song is thrown at a random spot again, at loose angles with stray drops, but every one looks for room first, so they rarely land on each other. LIQUID: the liquid record now behaves like liquid in a spinning dish. When the record starts the paint is left behind and smears into arcs, catches up, is pushed outward as the speed builds, and keeps slipping slowly round; bubbles drift toward the middle. DARK ALBUMS: a black or very dark album keeps its dark banner, but its song rows now wash in a lighter tone of the same color so the rating gradient shows.'},
   {v:'2026.11.16-b', note:'RECORD ON THE TURNTABLE: pick an artist on the wall and its record slides out of the sleeve, is carried over and set down on the turntable, then the arm comes across and it spins up. The open artist\'s sleeve stays empty while its record is playing. SLEEVED BACK: the record you were on is lifted off and slid back into its own sleeve, and its next look slides out from inside instead of snapping to a new design. SPLATTER: every rated song now has a spot of its own, so splatters no longer cover each other and all of them can be seen; higher ratings are still bigger. LIQUID: the liquid records move, the paint drifts and swells and the bubbles wander.'},
   {v:'2026.11.16-a', note:'THE CRATE: the frame now matches the albums. Music, Screen, Collection and Settings are one switch like Everything / Still to hear, the sync status is plain text, and the artist list has a big title, one search bar with the sort inside it, and a single All / Started / New / Done switch. Each artist is a sleeve with its record sliding out: the more you have heard, the further out it sits. That record is pressed from the albums you rated and is the same one that opens, and an artist gets a new look each time you leave it. SPLATTER: the splatter records were drawn off-center and are fixed. Each splatter is now one song you rated, in its album color, and the higher the rating the bigger the splatter. GROOVE LIGHT: when you rate a song for the first time or tick it heard, its groove on the album record flares as the number lands, a glint runs around the record and the count jumps. The small text on the artist card is also easier to read.'},
@@ -4695,74 +4696,78 @@ function hDark(col,k){const m=/^#([0-9a-f]{6})$/i.exec(col||'');if(!m)return col
   const f=v=>Math.round(v*k/100).toString(16).padStart(2,'0');return '#'+f(n>>16&255)+f(n>>8&255)+f(n&255)}
 const HC=140,hf=v=>v.toFixed(1);
 const hClear=()=>HSTY.n===7||HSTY.n===8;   /* the two splatter looks are pressed on clear vinyl */
-function hStreak(cx,cy,th,L,r,col){const dx=Math.cos(th),dy=Math.sin(th),px=-dy,py=dx;
-  const tip=[cx+dx*L,cy+dy*L],l=[cx+px*r,cy+py*r],rt=[cx-px*r,cy-py*r];
-  const cl=[cx+dx*L*.5+px*r*.35,cy+dy*L*.5+py*r*.35],cr=[cx+dx*L*.5-px*r*.35,cy+dy*L*.5-py*r*.35];
-  return '<path d="M'+hf(l[0])+' '+hf(l[1])+' Q'+hf(cl[0])+' '+hf(cl[1])+' '+hf(tip[0])+' '+hf(tip[1])+' Q'+hf(cr[0])+' '+hf(cr[1])+' '+hf(rt[0])+' '+hf(rt[1])+' A'+hf(r)+' '+hf(r)+' 0 0 0 '+hf(l[0])+' '+hf(l[1])+'Z" fill="'+col+'"/>'}
-/* Splatter: one splatter per rated song, in its album's color, and the higher the rating the bigger it is.
-   It is thrown, not laid out: each song tries a handful of random spots and takes the one that crowds the
-   others least, biggest songs first, so the record still reads as a splatter but paint rarely lands on paint.
-   Sizes are scaled so the paint covers about the same share of the record however many songs there are.
-   blob = flung paint (round splats with drops), otherwise streaks thrown in from the rim at loose angles.
-   cap keeps only the top-rated songs. The last result per artist is kept, since the search is not free. */
+/* Splatter: pressed the way a real splatter record looks. Paint is thrown out from the label, so every mark is a
+   streak pointing along a spoke, some running all the way to the rim, some short, some broken into dashes.
+   Each streak has a slice of the circle to itself, so paint never lands on paint. One streak per rated song, in
+   its album's color; a higher rating makes it wider and longer. An artist with few rated songs gets several
+   streaks per song (more for a higher rating) so the record is still covered. white = the same paint on
+   opaque white vinyl instead of clear. cap keeps only the top-rated songs (the small records on the tiles).
+   The last result per artist is kept. */
 const HSP={};
-function hSplat(songs,aid,blob,cap){
+function hDash(th,ra,rb,hw,open,rnd){const n=5,A=[],B=[];
+  for(let i=0;i<=n;i++){const t=i/n,r=ra+(rb-ra)*t,e=open&&t>.45?1:Math.pow(Math.sin(Math.PI*Math.pow(t,1.35)),.6);
+    const c=th+(rnd()-.5)*hw*.5,wl=hw*e*(.55+rnd()*.75),wr=hw*e*(.55+rnd()*.75);
+    A.push(hf(HC+Math.cos(c-wl)*r)+' '+hf(HC+Math.sin(c-wl)*r));B.push(hf(HC+Math.cos(c+wr)*r)+' '+hf(HC+Math.sin(c+wr)*r))}
+  return 'M'+A.join('L')+'L'+B.reverse().join('L')+'Z'}
+function hSplat(songs,aid,white,cap){
   let L=songs.slice().sort((x,y)=>y.r-x.r||(x.id<y.id?-1:1));if(cap&&L.length>cap)L=L.slice(0,cap);
-  const key=aid+'|'+(blob?1:0)+'|'+(cap||0),sig=L.map(x=>x.id+':'+x.r+x.col).join(','),hit=HSP[key];if(hit&&hit.sig===sig)return hit.svg;
-  const N=L.length,sz=r=>.3+.7*Math.pow(r/10,1.7),C=(x,y,r,c)=>'<circle cx="'+hf(x)+'" cy="'+hf(y)+'" r="'+hf(r)+'" fill="'+c+'"/>';
-  const R0=64,R1=136,band=Math.PI*(R1*R1-R0*R0),rnd=hrng(hseed(aid+':s')),put=[];
-  const gap=(x,y,r)=>{let m=1e9;for(const q of put){const d=Math.hypot(x-q[0],y-q[1])-q[2]-r;if(d<m)m=d}return m};
-  let out='',f2=0;for(const x of L)f2+=sz(x.r)*sz(x.r);
-  if(blob){const k=Math.min(21,Math.sqrt(band*.4/(1.35*Math.PI*Math.max(f2,.01))));
-    for(const x of L){const R=Math.max(1.4,k*sz(x.r)),lo=R0+R+1,hi=Math.max(lo+1,R1-R-1);let best=null,bs=-1e9;
-      for(let t=0;t<16;t++){const an=rnd()*2*Math.PI,rr=Math.sqrt(lo*lo+rnd()*(hi*hi-lo*lo)),px=HC+Math.cos(an)*rr,py=HC+Math.sin(an)*rr,g=gap(px,py,R*1.08);
-        if(g>bs){bs=g;best=[px,py]}if(g>1.5)break}
-      const cx=best[0],cy=best[1];put.push([cx,cy,R*1.08]);
-      out+=C(cx,cy,R*.78,x.col);
-      const nl=3+Math.floor(rnd()*3);for(let j=0;j<nl;j++){const t=rnd()*2*Math.PI,d=R*(.4+rnd()*.32);out+=C(cx+Math.cos(t)*d,cy+Math.sin(t)*d,R*(.3+rnd()*.26),x.col)}
-      const fl=rnd()*2*Math.PI,nd=1+Math.floor(rnd()*2);
-      for(let j=0;j<nd;j++){const d=R*(1.25+j*.4+rnd()*.25),px=cx+Math.cos(fl)*d,py=cy+Math.sin(fl)*d,dd=Math.hypot(px-HC,py-HC);
-        if(dd>R1||dd<R0)continue;out+=C(px,py,Math.max(.6,R*(.13-j*.04)+rnd()*.3),x.col)}}}
-  else{const k=Math.min(5.5,Math.sqrt(band*.3/(11*Math.max(f2,.01))));
-    for(const x of L){const f=sz(x.r),hw=Math.max(.7,k*f),len=Math.min(R1-R0-hw-4,Math.max(4,k*f*9)),lo=R0+len+2,hi=Math.max(lo+1,R1-hw-1);let best=null,bs=-1e9;
-      for(let t=0;t<16;t++){const an=rnd()*2*Math.PI,rh=Math.sqrt(lo*lo+rnd()*(hi*hi-lo*lo)),th=an+Math.PI+(rnd()-.5)*.7;
-        const hx=HC+Math.cos(an)*rh,hy=HC+Math.sin(an)*rh,dx=Math.cos(th),dy=Math.sin(th);
-        const g=Math.min(gap(hx,hy,hw),gap(hx+dx*len*.36,hy+dy*len*.36,hw*.72),gap(hx+dx*len*.72,hy+dy*len*.72,hw*.4));
-        if(g>bs){bs=g;best=[hx,hy,th,an,rh]}if(g>1.2)break}
-      const hx=best[0],hy=best[1],th=best[2],dx=Math.cos(th),dy=Math.sin(th);
-      put.push([hx,hy,hw],[hx+dx*len*.36,hy+dy*len*.36,hw*.72],[hx+dx*len*.72,hy+dy*len*.72,hw*.4]);
-      out+=hStreak(hx,hy,th,len,hw,x.col);
-      const nd=Math.floor(rnd()*3);   /* a drop or two thrown past the head */
-      for(let j=0;j<nd;j++){const d=hw*(1.5+rnd()*1.3),q=(rnd()-.5)*1.6,px=hx-Math.cos(th+q)*d,py=hy-Math.sin(th+q)*d;
-        if(Math.hypot(px-HC,py-HC)>R1)continue;out+=C(px,py,Math.max(.5,hw*(.2+rnd()*.22)),x.col)}}}
-  const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 280" width="280" height="280"><defs><clipPath id="c"><circle cx="140" cy="140" r="140"/></clipPath><filter id="f"><feGaussianBlur stdDeviation=".35"/></filter></defs><g clip-path="url(#c)"><g filter="url(#f)" opacity=".96">'+out+'</g></g></svg>';
+  const key=aid+'|'+(white?1:0)+'|'+(cap||0),sig=L.map(x=>x.id+':'+x.r+x.col).join(','),hit=HSP[key];if(hit&&hit.sig===sig)return hit.svg;
+  const N=L.length,sz=r=>.3+.7*Math.pow(r/10,1.7),rnd=hrng(hseed(aid+':s')),R0=cap?44:59,R1=143,T=cap?26:44;
+  let S=[],tot=0;for(const x of L)tot+=sz(x.r);
+  for(const x of L){const f=sz(x.r),k=N>=T?1:Math.max(1,Math.round(T*f/Math.max(tot,.01)));for(let j=0;j<k;j++)S.push({col:x.col,f})}
+  for(let i=S.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1)),t=S[i];S[i]=S[j];S[j]=t}
+  let wt=0;for(const x of S){x.w=x.f*(.7+rnd()*.6);wt+=x.w}
+  const by={},add=(c,d)=>{(by[c]||(by[c]=[])).push(d)},dots=[],fill=white?.9:.8;
+  let a=rnd()*2*Math.PI;
+  for(const x of S){const slot=2*Math.PI*x.w/wt,th=a+slot/2,hw=Math.min(.24,slot/2*fill);a+=slot;
+    const lf=Math.max(.28,Math.min(1,.3+.7*x.f+(rnd()-.5)*.3)),span=(R1-R0)*lf,st=R0+(R1-R0-span)*(1-rnd()*rnd()),en=st+span;
+    const nd=span>70&&rnd()<.3?3:span>46&&rnd()<.55?2:1;let r=st;
+    for(let d=0;d<nd;d++){const left=en-r,len=d===nd-1?left:left*(.3+rnd()*.35),rb=r+len;
+      if(len>3)add(x.col,hDash(th+(rnd()-.5)*hw*.4,r,rb,hw*(.7+rnd()*.45),rb>=R1-1,rnd));
+      r=rb+3+rnd()*6;if(r>=en-3)break}
+    if(rnd()<.4){const rr=R0+6+rnd()*(R1-R0-14),t2=th+(rnd()<.5?-1:1)*hw*(1.05+rnd()*.3);dots.push('<circle cx="'+hf(HC+Math.cos(t2)*rr)+'" cy="'+hf(HC+Math.sin(t2)*rr)+'" r="'+hf(.6+rnd()*1.1)+'" fill="'+x.col+'"/>')}}
+  let out='';for(const c in by)out+='<path fill="'+c+'" d="'+by[c].join('')+'"/>';out+=dots.join('');
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 280 280" width="280" height="280"><defs><clipPath id="c"><circle cx="140" cy="140" r="140"/></clipPath><filter id="f"><feGaussianBlur stdDeviation=".45"/></filter><filter id="h" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="2.6"/></filter></defs><g clip-path="url(#c)">'
+    +(white&&N?'<circle cx="140" cy="140" r="140" fill="#f3efe8"/>':'')
+    +'<use xlink:href="#p" href="#p" filter="url(#h)" opacity="'+(white?'.5':'.42')+'"/><g filter="url(#f)"><g id="p">'+out+'</g></g>'
+    +(white&&N?'<g fill="none" stroke="rgba(0,0,0,.07)" stroke-width=".7">'+[70,82,94,106,118,130].map(r=>'<circle cx="140" cy="140" r="'+r+'"/>').join('')+'</g>':'')
+    +'</g></svg>';
   HSP[key]={sig,svg};return svg}
-/* anim: the paint drifts, swells and the bubbles wander (SMIL inside the image, so the record can still spin under CSS) */
-function hLiquid(P,rnd,anim){
-  const SP='calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1;.45 0 .55 1" repeatCount="indefinite"';
-  const mv=(amp,lo,hi)=>{if(!anim)return '';const d=(lo+rnd()*(hi-lo)).toFixed(1),p=()=>hf((rnd()-.5)*2*amp)+' '+hf((rnd()-.5)*2*amp);
-    return '<animateTransform attributeName="transform" type="translate" dur="'+d+'s" values="0 0;'+p()+';'+p()+';0 0" '+SP+'/>'};
-  const defs='<defs><mask id="m"><rect width="280" height="280" fill="black"/><circle cx="140" cy="140" r="132" fill="white"/><circle cx="140" cy="140" r="62" fill="black"/></mask><filter id="b"><feGaussianBlur stdDeviation="1.6"/></filter><filter id="g" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9"/></filter></defs>';
-  let blobs='';
-  for(const x of P){const n=Math.round(x.w*4)+1;
-    for(let k=0;k<n;k++){const an=rnd()*2*Math.PI,rr=66+rnd()*62;
-      const r=13+x.w*20+rnd()*6;
-      blobs+='<circle cx="'+hf(HC+Math.cos(an)*rr)+'" cy="'+hf(HC+Math.sin(an)*rr)+'" r="'+hf(r)+'" fill="'+x.col+'">'+mv(22,6,13)
-        +(anim?'<animate attributeName="r" dur="'+(5+rnd()*6).toFixed(1)+'s" values="'+hf(r)+';'+hf(r*1.22)+';'+hf(r*.84)+';'+hf(r)+'" '+SP+'/>':'')+'</circle>'}}
-  let bub='';
-  for(let k=0;k<16;k++){const an=rnd()*2*Math.PI,rr=68+rnd()*58,r=[1.6,2.2,3,4,5.5][Math.floor(rnd()*5)];
-    const cx=HC+Math.cos(an)*rr,cy=HC+Math.sin(an)*rr;
-    bub+='<g><circle cx="'+hf(cx)+'" cy="'+hf(cy)+'" r="'+r+'" fill="rgba(255,255,255,.10)" stroke="rgba(255,255,255,.55)" stroke-width=".7"/><circle cx="'+hf(cx-r*.3)+'" cy="'+hf(cy-r*.35)+'" r="'+hf(r*.28)+'" fill="rgba(255,255,255,.85)"/>'+mv(9,4,9)+'</g>'}
-  let glass='';
-  for(const r of [135,136.6,138.2,56,57.6,59.2])glass+='<circle cx="140" cy="140" r="'+r+'" fill="none" stroke="rgba(255,255,255,.10)" stroke-width=".8"/>';
-  glass+='<circle cx="140" cy="140" r="139" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.4"/><circle cx="140" cy="140" r="132" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.2"/><circle cx="140" cy="140" r="62" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.2"/><circle cx="140" cy="140" r="128" fill="none" stroke="rgba(0,0,0,.45)" stroke-width="7" filter="url(#b)" mask="url(#m)"/><path d="M70 52 A100 100 0 0 1 128 36" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="3" stroke-linecap="round" filter="url(#b)"/><path d="M232 190 A100 100 0 0 1 200 226" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2.4" stroke-linecap="round" filter="url(#b)"/>';
-  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 280" width="280" height="280">'+defs+'<g mask="url(#m)"><rect width="280" height="280" fill="'+hDark(P[0].col,60)+'"/><g filter="url(#g)">'+blobs+'</g></g>'+bub+glass+'</svg>'}
+/* Liquid record. One layout (liqParts) is used everywhere the record shows: the small record in the sleeve, the
+   record in the air and the one on the turntable, so it is the same record all the way. The paint is two rings
+   of overlapping pools, so the record is always full; what shows between pools is a darker blend of the same
+   colors. Very dark colors are lifted a little so a black album reads as dark liquid, not as a hole. */
+function hRgb(c){const m=/^#([0-9a-f]{6})$/i.exec(c||'');if(!m)return null;const n=parseInt(m[1],16);return[n>>16&255,n>>8&255,n&255]}
+const hHex=v=>'#'+v.map(q=>Math.max(0,Math.min(255,Math.round(q))).toString(16).padStart(2,'0')).join('');
+function liqCol(c){const v=hRgb(c);if(!v)return c;const m=Math.max(v[0],v[1],v[2]);if(m>=84)return c;const k=(84-m)/84*.34;return hHex(v.map((q,i)=>q+([122,128,138][i]-q)*k))}
+function liqBase(P){let r=0,g=0,b=0,t=0;for(const x of P){const v=hRgb(liqCol(x.col));if(!v)continue;r+=v[0]*x.w;g+=v[1]*x.w;b+=v[2]*x.w;t+=x.w}
+  return t?hHex([r/t*.56,g/t*.56,b/t*.56]):hDark(P[0].col,56)}
+function liqParts(P,aid){const rnd=hrng(hseed(aid+':9')),NB=22,Q=P.slice(0,NB);let tot=0;for(const x of Q)tot+=x.w;
+  let cols=[];for(const x of Q){const n=Math.max(1,Math.round(NB*x.w/tot));for(let k=0;k<n;k++)cols.push(liqCol(x.col))}
+  while(cols.length<NB)cols.push(liqCol(Q[cols.length%Q.length].col));
+  for(let i=cols.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1)),t=cols[i];cols[i]=cols[j];cols[j]=t}
+  cols=cols.slice(0,NB);
+  const b=[],u=[],ni=9,no=NB-ni,o1=rnd()*6.28,o2=rnd()*6.28;
+  cols.forEach((col,i)=>{const inner=i<ni,an0=inner?o1+(i+(rnd()-.5)*.5)/ni*2*Math.PI:o2+(i-ni+(rnd()-.5)*.5)/no*2*Math.PI;
+    const r0=inner?80+rnd()*8:111+rnd()*8,rad=inner?25+rnd()*7:24+rnd()*8;
+    b.push({an0,r0,r1:r0+3+rnd()*5,rad,col,eps:.015+rnd()*.045,k:1.1+rnd()*1.7,f:.5+rnd()*.9,ph:rnd()*6.28,om:0,lag:0})});
+  for(let k=0;k<16;k++){const r0=72+rnd()*54;u.push({an0:rnd()*2*Math.PI,r0,r1:72+(r0-72)*.6,r:[1.6,2.2,3,4,5.5][Math.floor(rnd()*5)],eps:.1+rnd()*.14,k:2.4+rnd()*1.6,om:0,lag:0})}
+  return{b,u,base:liqBase(P)}}
+/* the record as drawn at rest; the turntable copy is then moved every frame by liqTick */
+function liqSvg(Lq,head){const D=180/Math.PI;
+  let glass='';for(const r of [135,136.6,138.2,56,57.6,59.2])glass+='<circle cx="140" cy="140" r="'+r+'" fill="none" stroke="rgba(255,255,255,.10)" stroke-width=".8"/>';
+  glass+='<circle cx="140" cy="140" r="139" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.4"/><circle cx="140" cy="140" r="132" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.2"/><circle cx="140" cy="140" r="62" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.2"/>';
+  return head+'<defs><mask id="lqm"><rect width="280" height="280" fill="black"/><circle cx="140" cy="140" r="132" fill="white"/><circle cx="140" cy="140" r="62" fill="black"/></mask><filter id="lqg" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9"/></filter></defs>'
+    +'<g mask="url(#lqm)"><rect width="280" height="280" fill="'+Lq.base+'"/><g filter="url(#lqg)">'
+    +Lq.b.map(x=>{const cx=HC+Math.cos(x.an0)*x.r0,cy=HC+Math.sin(x.an0)*x.r0;return '<ellipse class="lb" fill="'+x.col+'" cx="'+hf(cx)+'" cy="'+hf(cy)+'" rx="'+hf(x.rad)+'" ry="'+hf(x.rad)+'" transform="rotate('+hf(x.an0*D+90)+' '+hf(cx)+' '+hf(cy)+')"/>'}).join('')+'</g>'
+    +Lq.u.map(x=>'<g class="lu" transform="translate('+hf(HC+Math.cos(x.an0)*x.r0)+' '+hf(HC+Math.sin(x.an0)*x.r0)+')"><circle r="'+x.r+'" fill="rgba(255,255,255,.10)" stroke="rgba(255,255,255,.55)" stroke-width=".7"/><circle cx="'+hf(-x.r*.3)+'" cy="'+hf(-x.r*.35)+'" r="'+hf(x.r*.28)+'" fill="rgba(255,255,255,.85)"/></g>').join('')+'</g>'+glass+'</svg>'}
+function hLiquid(P,aid){return liqSvg(liqParts(P,aid),'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 280" width="280" height="280">')}
 function hSvgUrl(svg){return 'url("data:image/svg+xml,'+encodeURIComponent(svg)+'")'}
 function hDisc(P,n,aid,songs,cap,anim){
   const tot=P.reduce((q,x)=>q+x.w,0),dk=(c,k)=>'color-mix(in srgb,'+c+' '+(k||76)+'%,#000)';
   if(n===7||n===8)return hSvgUrl(hSplat(songs||[],aid,n===8,cap));   /* no base: the splatter sits on clear vinyl */
   if(!P.length)return '';
-  if(n===9)return hSvgUrl(hLiquid(P,hrng(hseed(aid+':9')),anim));
+  if(n===9)return hSvgUrl(hLiquid(P,aid));
   if(n===3){const sp=P.slice(0,8);
     const bl=sp.map((x,i)=>{const an=(i*137.5+20)*Math.PI/180,rad=8+i*9;
       return 'radial-gradient(circle at '+Math.round(50+Math.cos(an)*rad)+'% '+Math.round(50+Math.sin(an)*rad)+'%,'+dk(x.col,88)+' 0,transparent '+Math.round(28+x.w*34)+'%)'});
@@ -4812,26 +4817,18 @@ const LIQ={sig:'',b:[],u:[],c:0,svg:null,bn:[],un:[]};
 function liqMount(hero,a){const spin=hero.querySelector('.hspin');if(!spin)return;
   const P=HSTY.n===9&&!noMotion()?heroPalette(a):[];
   if(!P.length){if(spin.firstChild)spin.textContent='';spin.classList.remove('liq');LIQ.svg=null;return}
-  const sig=a.id+'|'+P.map(x=>x.col+x.w.toFixed(2)).join(','),rnd=hrng(hseed(a.id+':9')),b=[],u=[];
-  for(const x of P){const n=Math.round(x.w*4)+1;
-    for(let k=0;k<n;k++){const r0=68+rnd()*46,rad=13+x.w*20+rnd()*6;
-      b.push({an0:rnd()*2*Math.PI,r0,r1:Math.min(126-rad*.35,r0+14+rnd()*16),rad,col:x.col,eps:.02+rnd()*.055,k:1.1+rnd()*1.7,f:.5+rnd()*.9,ph:rnd()*6.28,om:0,lag:0})}}
-  for(let k=0;k<16;k++){const r0=70+rnd()*56;u.push({an0:rnd()*2*Math.PI,r0,r1:70+(r0-70)*.35,r:[1.6,2.2,3,4,5.5][Math.floor(rnd()*5)],eps:.1+rnd()*.14,k:2.4+rnd()*1.6,om:0,lag:0})}
+  const sig=a.id+'|'+P.map(x=>x.col+x.w.toFixed(2)).join(','),Lq=liqParts(P,a.id),b=Lq.b,u=Lq.u;
   if(LIQ.sig===sig){b.forEach((x,i)=>{if(LIQ.b[i]){x.om=LIQ.b[i].om;x.lag=LIQ.b[i].lag}});u.forEach((x,i)=>{if(LIQ.u[i]){x.om=LIQ.u[i].om;x.lag=LIQ.u[i].lag}})}
   else LIQ.c=0;
   LIQ.sig=sig;LIQ.b=b;LIQ.u=u;
-  let glass='';for(const r of [135,136.6,138.2,56,57.6,59.2])glass+='<circle cx="140" cy="140" r="'+r+'" fill="none" stroke="rgba(255,255,255,.10)" stroke-width=".8"/>';
-  glass+='<circle cx="140" cy="140" r="139" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.4"/><circle cx="140" cy="140" r="132" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.2"/><circle cx="140" cy="140" r="62" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.2"/>';
   spin.classList.add('liq');
-  spin.innerHTML='<svg class="hliq" viewBox="0 0 280 280" aria-hidden="true"><defs><mask id="lqm"><rect width="280" height="280" fill="black"/><circle cx="140" cy="140" r="132" fill="white"/><circle cx="140" cy="140" r="62" fill="black"/></mask><filter id="lqg" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9"/></filter></defs>'
-    +'<g mask="url(#lqm)"><rect width="280" height="280" fill="'+hDark(P[0].col,60)+'"/><g filter="url(#lqg)">'+b.map(x=>'<ellipse class="lb" fill="'+x.col+'"/>').join('')+'</g>'
-    +u.map(x=>'<g class="lu"><circle r="'+x.r+'" fill="rgba(255,255,255,.10)" stroke="rgba(255,255,255,.55)" stroke-width=".7"/><circle cx="'+hf(-x.r*.3)+'" cy="'+hf(-x.r*.35)+'" r="'+hf(x.r*.28)+'" fill="rgba(255,255,255,.85)"/></g>').join('')+'</g>'+glass+'</svg>';
+  spin.innerHTML=liqSvg(Lq,'<svg class="hliq" viewBox="0 0 280 280" aria-hidden="true">');
   LIQ.svg=spin.firstChild;LIQ.bn=[...LIQ.svg.querySelectorAll('.lb')];LIQ.un=[...LIQ.svg.querySelectorAll('.lu')];liqTick(0,HERO.spd,performance.now())}
 function liqTick(dt,spd,t){if(!LIQ.svg||!LIQ.svg.isConnected)return;
   const h=dt/1000,D=Math.PI/180;LIQ.c+=(Math.pow(spd/200,2)-LIQ.c)*Math.min(1,h*.8);
   LIQ.b.forEach((b,i)=>{const n=LIQ.bn[i];if(!n)return;
     b.om+=(spd*(1-b.eps)-b.om)*Math.min(1,h*b.k);b.lag+=(b.om-spd)*h;
-    const st=1+Math.min(1.6,Math.abs(spd-b.om)/42),an=b.an0+b.lag*D,rr=b.r0+(b.r1-b.r0)*LIQ.c+Math.sin(t/1000*b.f+b.ph)*3.5*(.25+LIQ.c);
+    const st=1+Math.min(.8,Math.abs(spd-b.om)/70),an=b.an0+b.lag*D,rr=b.r0+(b.r1-b.r0)*LIQ.c+Math.sin(t/1000*b.f+b.ph)*3*LIQ.c;
     const cx=HC+Math.cos(an)*rr,cy=HC+Math.sin(an)*rr;
     n.setAttribute('cx',cx.toFixed(1));n.setAttribute('cy',cy.toFixed(1));n.setAttribute('rx',(b.rad*st).toFixed(1));n.setAttribute('ry',(b.rad/Math.sqrt(st)).toFixed(1));
     n.setAttribute('transform','rotate('+(an/D+90).toFixed(1)+' '+cx.toFixed(1)+' '+cy.toFixed(1)+')')});
@@ -4859,7 +4856,7 @@ function discEl(sn,ang){const w=document.createElement('div');w.className='flyw'
   w.innerHTML='<div class="fly'+(sn.clear?' clear':'')+'"><div class="fly-s"></div><i></i></div>';
   const f=w.firstChild,sp=f.firstChild;f.style.backgroundColor=sn.dc;f.lastChild.style.background=sn.lc;
   Object.assign(sp.style,{backgroundImage:sn.bi,backgroundSize:sn.bs,backgroundPosition:sn.bp,backgroundRepeat:sn.br,backgroundColor:sn.bc,transform:'rotate('+(ang||0)+'deg)'});
-  if(sn.svg)sp.innerHTML=sn.svg;
+  if(sn.svg){sp.innerHTML=sn.svg;sp.classList.add('liq')}
   return w}
 /* put the flying record at x,y with diameter d; xc = the sleeve's open edge, and whatever is left of it is inside the sleeve (clipped) */
 function flyPut(w,x,y,d,xc){w.style.transform='translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px) scale('+(d/w._w).toFixed(4)+')';
@@ -5360,11 +5357,13 @@ function relSort(){try{const v=localStorage.getItem(KEY+'_relsort');return REL_S
 function relKind(a){return UI.rel&&UI.rel.aid===a.id&&REL_KINDS[UI.rel.kind]?UI.rel.kind:'all'}
 /* how you rated a release: its own rating, or for one without (a single) the average of its rated songs */
 function relScore(g){const r=RATEABLE.includes(g.kind)?rating(g.id):0;if(r)return r;const rs=g.items.map(i=>rating(i.id)).filter(Boolean);return rs.length?rs.reduce((x,y)=>x+y,0)/rs.length:0}
+/* the average of a release's rated songs (its standard songs): settles a tie between two releases rated the same */
+function relAvg(g){const rs=stdItems(g).map(i=>rating(i.id)).filter(Boolean);return rs.length?rs.reduce((x,y)=>x+y,0)/rs.length:0}
 function relList(a){const k=relKind(a),so=relSort();let L=a.groups.filter(g=>k==='all'||relKindOf(g)===k);
   if(so==='def')return L;
   const yr=g=>String(g.year||''),hp=g=>g.items.length?g.items.filter(i=>isDone(i.id)).length/g.items.length:0,ix=new Map(a.groups.map((g,i)=>[g,i]));
   const cmp={new:(x,y)=>(!yr(x))-(!yr(y))||(yr(x)<yr(y)?1:yr(x)>yr(y)?-1:0),old:(x,y)=>(!yr(x))-(!yr(y))||(yr(x)<yr(y)?-1:yr(x)>yr(y)?1:0),
-    rhi:(x,y)=>(!relScore(x))-(!relScore(y))||relScore(y)-relScore(x),rlo:(x,y)=>(!relScore(x))-(!relScore(y))||relScore(x)-relScore(y),
+    rhi:(x,y)=>(!relScore(x))-(!relScore(y))||relScore(y)-relScore(x)||relAvg(y)-relAvg(x),rlo:(x,y)=>(!relScore(x))-(!relScore(y))||relScore(x)-relScore(y)||(!relAvg(x))-(!relAvg(y))||relAvg(x)-relAvg(y),
     heard:(x,y)=>hp(y)-hp(x),left:(x,y)=>hp(x)-hp(y),az:(x,y)=>String(x.title).localeCompare(String(y.title),undefined,{sensitivity:'base'})}[so];
   return L.slice().sort((x,y)=>cmp(x,y)||ix.get(x)-ix.get(y))}
 function relBar(a){if(a.groups.length<2)return '';
@@ -5409,7 +5408,7 @@ function artistView(a){
       <div class="sl-foot">${shareBtn(g,a)}<details class="gmore"${UI.armed===g.id?' open':''}><summary aria-label="More for this album">\u22ef</summary>${moreBtns(g,dx)}${delGBtn(g,a)}</details></div>
     </div>`}).join('');
   UI.dxAnim=null;                                    /* the switch animation plays once, on the draw it was asked for */
-  return `<div class="head hero${hClear()?' hclear':''}" data-aid="${esc(a.id)}" style="${heroStyle(a)}"><i class="hg" aria-hidden="true"></i>
+  return `<div class="head hero${hClear()?' hclear':''}" data-aid="${esc(a.id)}" style="${esc(heroStyle(a))}"><i class="hg" aria-hidden="true"></i>
     <div class="hrec"><div class="hring" style="--p:${p}"><div class="hdisc"><div class="hspin"></div><div class="hlab"><b${p>=100?' class="s"':''}>${p}%</b><span>heard</span></div></div></div>${HARM}</div>
     <div class="hbody">
       <div class="meta"><h2>${esc(a.name)}</h2>${a.aka&&a.aka.length?`<span class="note">also ${esc(a.aka.slice(0,3).join(' · '))}</span>`:''}</div>
