@@ -458,12 +458,10 @@ footer textarea{font:12px var(--mono);margin-top:8px}
 .ls-df b.up,.ls-sd.up{color:#7fe0a6}.ls-df b.down,.ls-sd.down{color:#ffab8a}
 .track.sl-t>.ls-sd{position:absolute;right:54px;top:50%;margin-top:-10px;z-index:1;font:700 11px var(--mono);padding:2px 6px;border-radius:99px;background:color-mix(in srgb,var(--ink) 9%,transparent);color:var(--muted);font-variant-numeric:tabular-nums}
 .ls-sd.up{color:var(--done);background:var(--done-soft)}.ls-sd.down{color:var(--warn);background:color-mix(in srgb,var(--warn) 16%,transparent)}
-.track.sl-t>.wdiff{position:absolute;top:7px;bottom:7px;pointer-events:none;z-index:0;border-radius:8px}
-.track.sl-t>.wdiff.up{background:linear-gradient(90deg,color-mix(in srgb,var(--done) 8%,transparent),color-mix(in srgb,var(--done) 56%,transparent));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--done) 42%,transparent)}
-.track.sl-t>.wdiff.down{background:linear-gradient(90deg,color-mix(in srgb,var(--warn) 44%,transparent),color-mix(in srgb,var(--warn) 7%,transparent));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--warn) 34%,transparent)}
-.track.sl-t>.wdiff::after{content:"";position:absolute;top:-4px;bottom:-4px;width:2px;border-radius:2px;background:var(--ink);opacity:.5}
-.track.sl-t>.wdiff.up::after{left:-1px}.track.sl-t>.wdiff.down::after{right:-1px}
-.track.sl-t.carry>.wash{opacity:.5}.track.sl-t.carry .rg-n,.track.sl-t.carry .rg-v{opacity:.55}.sl-rate.carry .v{opacity:.55}
+.track.sl-t>.wdiff{position:absolute;top:0;bottom:0;pointer-events:none;z-index:0;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 22px),transparent)}
+.track.sl-t>.wdiff.up{background:linear-gradient(90deg,color-mix(in srgb,color-mix(in srgb,var(--done) 60%,var(--rc)) 22%,transparent) 0%,color-mix(in srgb,color-mix(in srgb,var(--done) 60%,var(--rc)) 50%,transparent) 100%)}
+.track.sl-t>.wdiff.down{background:linear-gradient(90deg,color-mix(in srgb,color-mix(in srgb,var(--warn) 60%,var(--rc)) 40%,transparent) 0%,color-mix(in srgb,color-mix(in srgb,var(--warn) 60%,var(--rc)) 10%,transparent) 100%)}
+.track.sl-t.carry>.wash{opacity:.28}.track.sl-t.carry .rg-n,.track.sl-t.carry .rg-v{opacity:.36}.sl-rate.carry .v{opacity:.36}
 .lsold .track.sl-t,.lsold .sl-rate,.lsold .sl-again,.lsold .sl-ic{cursor:default}
 .lsold .track.sl-t:hover{background:inherit}
 @media (prefers-reduced-motion:no-preference){
@@ -492,11 +490,11 @@ footer textarea{font:12px var(--mono);margin-top:8px}
   .lsflip .track.sl-t:nth-of-type(19){animation-delay:592ms}
   .lsflip .track.sl-t:nth-of-type(20){animation-delay:620ms}
   .lsflip .track.sl-t>.wash,.lsflip .track.sl-t>.wdiff{transform-origin:left;animation:lswash .7s .2s cubic-bezier(.2,.8,.2,1) both}
-  .lsflip .rg-n,.lsflip .ls-sd,.lsflip .sl-rate .v{animation:lspop .5s .3s cubic-bezier(.2,.9,.3,1.3) both}
+  .lsflip .rg-n,.lsflip .ls-sd,.lsflip .sl-rate .v{animation:lspop .5s .3s cubic-bezier(.2,.9,.3,1.3) backwards}
   .lsflip .sl-hero .sl-art,.lsflip .sl-hero [class*="rec"]{animation:lsspin .6s cubic-bezier(.2,.8,.2,1)}
   @keyframes lsfl{from{opacity:0;transform:translateX(var(--fx,26px))}to{opacity:1;transform:none}}
   @keyframes lswash{from{transform:scaleX(0)}to{transform:scaleX(1)}}
-  @keyframes lspop{from{opacity:0;transform:scale(.55)}to{opacity:1;transform:none}}
+  @keyframes lspop{from{opacity:0;transform:scale(.55)}}
   @keyframes lsspin{from{filter:brightness(.7)}to{filter:none}}
 }
 /* ===== Rating history (2026.11.16-n) ===== */
@@ -1665,6 +1663,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-ai', note:'LISTEN AGAIN, POLISH: the change marker in a song bar is now a gradient in the same style as the bar itself (green-tinted where you rated higher, red-tinted where lower, fading out to the right) instead of a box. Carried-over ratings are fainter: the numbers, rings and bar gradients. Fixed the album rating number not fading on a carried rating (the pop-in animation was holding it at full strength).'},
   {v:'2026.11.16-ah', note:'LISTEN AGAIN, CARRY-OVER: a new listen now starts with the last listen\u2019s numbers (songs, checks, album and deluxe rating, dimmed) so sorting, History and totals keep working. A number becomes this listen\u2019s own the moment you rate, check or clear it, and only those show a change. The change marker inside a song bar is now a soft tinted pill (green gained, red lost) with a thin tick at last listen\u2019s rating.'},
   {v:'2026.11.16-ag', note:'LISTEN AGAIN, FIXES: switching listens now animates (the card slides, song bars grow back in, rating numbers pop). Song rows are back to their normal height, with the change chip sitting on the right. Each song bar now shows last listen\u2019s rating inside it: a green striped stretch where you rated it higher, a red one where lower. The latest listen always sets your real scores; arrows only let you look at earlier listens (view only). A new listen clears the album rating, deluxe rating and song ratings. History keeps the album on its last rated listen until you rate the new one.'},
   {v:'2026.11.16-af', note:'LISTEN AGAIN, REDONE: any rated album now has a round arrow button in the top corner (where the bookmark sits). Tap it and the album starts a fresh listen: clean song checks, your album rating carried over so it stays in History. Once an album has two or more listens, arrows under the title flip between them, each listen keeping its own songs, ratings and day. On a later listen every song shows how its rating moved from the listen before (+1, \u22122), and a line gives the album difference and the average song difference. Remove deletes the listen you are on.'},
