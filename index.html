@@ -909,6 +909,12 @@ details.addart .add{border-top:1px solid var(--line)}
 .lseg button .c{font-family:var(--mono);font-size:11px;font-weight:500;opacity:.8;margin-left:5px}
 .lseg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);font-weight:700}
 .llist.wall{border:0;background:transparent;padding:0;border-radius:0}
+/* wide screens: the artist column sticks to the window and the list fills the rest of its height, so the list's own end is always on screen (a tall list that started low on the page ran off the bottom of the window, and its scroll would not pass the wheel to the page, so the last artists could not be reached) */
+@media (min-width:761px){
+  .shell>.side{position:sticky;top:12px;max-height:calc(100dvh - 24px)}
+  .shell>.side .libbody,.shell>.side .lwrap{flex:1 1 auto;min-height:0}
+  .shell>.side .llist{flex:1 1 auto;min-height:160px;max-height:none;overscroll-behavior:auto}   /* at the list's end the wheel carries on to the page, which brings the column's bottom into view */
+}
 .llist.wall .lsec{top:0;padding:10px 2px 8px;z-index:4}
 .lgrid{grid-template-columns:repeat(auto-fill,minmax(clamp(150px,8vw,230px),1fr));gap:24px 18px;padding:6px 2px 14px}
 /* an artist is a sleeve with its record sliding out: the more you have heard, the further out it sits. The record is
@@ -1525,6 +1531,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-l', note:'LIST SCROLL: on a wide screen the artist list could not scroll far enough to show your last artists. It was a tall box that started low on the page, so its bottom ran off the window, and its scrolling would not pass to the page. The artist column now stays on screen as you scroll and the list fills the rest of the window, so its end is always visible.'},
   {v:'2026.11.16-k', note:'GREEN COVERS STAY GREEN: ii (Kenny Beats) had a brown banner because the small orange hand at the bottom of the cover won over the big teal field. The bonus that lets a brown or green ground beat a bright sky now only applies when that earthy area is a real share (at least 40%) of the biggest color on the cover. Every cover is read again.'},
   {v:'2026.11.16-j', note:'SET-DOWN POP: when a record lands on the turntable it no longer pops. The flying record used to vanish in one frame (its shadow, a slightly different sheen and the percent label all changed at once). Now the shadow shrinks as it touches, its sheen matches the landed record, and it fades out over the real record. Every look.'},
   {v:'2026.11.16-i', note:'PINK BANNERS: a cover with a big soft pastel backdrop and a white frame (The Divine Feminine) was being read as white paper, so its banner came out gray. A pastel field that covers over a third of the art now counts as the cover\'s color, and gets a little extra color so it reads as pink instead of beige. Busy covers like Don\'t Be Dumb and bold ones like Blue Slide Park are unchanged. Every cover is read again.'},
