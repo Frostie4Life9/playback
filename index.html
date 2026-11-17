@@ -1583,6 +1583,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-w', note:'FAST CLICKS: if you pick another artist while a record is still on its way to the turntable, that record now turns around from wherever it is and goes back into its own sleeve (or slides back in if it was still coming out) instead of vanishing.'},
   {v:'2026.11.16-v', note:'RECORD COMES OUT FROM BEHIND THE RING TOO: the selected tile\'s green ring was being drawn under the record as it slid out. The record now stays hidden behind the ring as well as the cover until it is fully out.'},
   {v:'2026.11.16-u', note:'RECORD STAYS UNDER ITS OWN TILE: when an artist\'s record leaves its sleeve for the turntable (and when it comes back), it can cross other albums on the way, but the part that is over its own tile is now always hidden behind that tile instead of flying across the cover.'},
   {v:'2026.11.16-t', note:'EDGE FIXES: the green ring around the open artist on the wall is no longer clipped on the left edge, and a record sliding out on hover now stops at the end of its sleeve instead of poking past it (it overshot by a few percent, worst on well-heard artists).'},
@@ -5128,7 +5129,7 @@ function discEl(sn,ang){const w=document.createElement('div');w.className='flyw'
   if(sn.svg){sp.innerHTML=sn.svg;sp.classList.add('liq')}
   return w}
 /* put the flying record at x,y with diameter d; xc = the sleeve's open edge, and whatever is left of it is inside the sleeve (clipped) */
-function flyPut(w,x,y,d,xc){w.style.transform='translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px) scale('+(d/w._w).toFixed(4)+')';
+function flyPut(w,x,y,d,xc){w._p={x,y,d};w.style.transform='translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px) scale('+(d/w._w).toFixed(4)+')';
   const a=xc==null?0:Math.max(0,Math.min(d,xc-x));w.firstChild.style.clipPath=a>0?'inset(0 0 0 '+(a/d*100).toFixed(1)+'%)':''}
 /* the flying record may cross other albums, but never its own tile: hide the part of it that is over that tile's cover */
 function flyClip(w,x,y,d,R){const f=w.firstChild;
@@ -5151,7 +5152,14 @@ function flyOut(F){
   const w=discEl(sn,0);document.body.appendChild(w);flyPut(w,g.x,g.top,g.d,g.xc);
   const t0=performance.now()+(F.old?140:0),A=230,B=640,C=200;
   const step=now=>{const t=now-t0,h=heroNow(),dc=h&&h.querySelector('.hdisc');
-    if(!dc||FLY.aid!==F.to){w.remove();if(FLY.aid===F.to)FLY.active=false;return}
+    if(!dc||FLY.aid!==F.to){
+      /* another artist was picked (or this one closed) while its record was in the air: it goes home from wherever it is */
+      const P=w._p;
+      if(P&&t>0&&t<A+B&&coverR(F.to)){
+        if(t<=A){const x0=P.x,s0=performance.now(),back=n=>{const q=Math.min(1,(n-s0)/170),e=1-Math.pow(1-q,3);flyPut(w,x0+(g.x-x0)*e,g.top,g.d,g.xc);if(q<1)requestAnimationFrame(back);else w.remove()};requestAnimationFrame(back)}   /* still sliding out: slide back in */
+        else{w.remove();flyBack({sn,rect:{left:P.x,top:P.y,width:P.d},ang:0,aid:F.to,mid:true})}}
+      else w.remove();
+      if(FLY.aid===F.to)FLY.active=false;return}
     const r=dc.getBoundingClientRect(),hd=r.width*1.07,hx=r.left-(hd-r.width)/2,hy=r.top-(hd-r.width)/2-10;
     if(t<=A){const q=fOut(Math.max(0,t)/A);flyPut(w,g.x+(g.xc-g.x)*q,g.top,g.d,g.xc)}
     else if(t<=A+B){const q=fEase((t-A)/B),fx=g.xc+(hx-g.xc)*q,fy=g.top+(hy-g.top)*q-26*Math.sin(Math.PI*q),fd=g.d+(hd-g.d)*q;flyPut(w,fx,fy,fd,null);flyClip(w,fx,fy,fd,coverR(F.to))}
@@ -5166,7 +5174,7 @@ function flyOut(F){
 function flyBack(O){
   const w=discEl(O.sn,O.ang),r=O.rect;document.body.appendChild(w);flyPut(w,r.left,r.top,r.width,null);
   const tile=()=>document.querySelector('.tile[data-act="sel"][data-id="'+String(O.aid).replace(/["\\]/g,'\\$&')+'"]');
-  const t0=performance.now(),A=170,B=560,C=240,sd=r.width*1.07,sx=r.left-(sd-r.width)/2,sy=r.top-(sd-r.width)/2-10;let ok=null;
+  const mid=!!O.mid,t0=performance.now(),A=mid?1:170,B=560,C=240,sd=mid?r.width:r.width*1.07,sx=mid?r.left:r.left-(sd-r.width)/2,sy=mid?r.top:r.top-(sd-r.width)/2-10;let ok=null;
   const step=now=>{const t=now-t0,T=tile(),g=T&&tileGeo(T);
     if(ok===null){ok=!!(g&&tileSeen(T,g));if(ok)T.querySelector('.tdisc').classList.add('tuck')}   /* its sleeve waits empty; the new pressing is already inside */
     if(t<=A){const q=fOut(Math.max(0,t)/A),d=r.width*(1+.07*q);flyPut(w,r.left-(d-r.width)/2,r.top-(d-r.width)/2-10*q,d,null)}
