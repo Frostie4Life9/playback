@@ -485,7 +485,7 @@ async function acctInit(env) {
   if (!env.CATALOG) return false;
   await env.CATALOG.batch([
     env.CATALOG.prepare('CREATE TABLE IF NOT EXISTS acct_users (uid TEXT PRIMARY KEY, sub TEXT UNIQUE NOT NULL, name TEXT NOT NULL, code TEXT UNIQUE NOT NULL, share INTEGER NOT NULL DEFAULT 1, made INTEGER NOT NULL, seen INTEGER NOT NULL, rated INTEGER NOT NULL DEFAULT 0)'),
-    env.CATALOG.prepare('CREATE TABLE IF NOT EXISTS acct_ratings (uid TEXT NOT NULL, kind TEXT NOT NULL, k TEXT NOT NULL, t TEXT NOT NULL, r REAL NOT NULL, ttl TEXT, art TEXT, PRIMARY KEY (uid, kind, t))'),
+    env.CATALOG.prepare('CREATE TABLE IF NOT EXISTS acct_ratings (uid TEXT NOT NULL, kind TEXT NOT NULL, k TEXT NOT NULL, t TEXT NOT NULL, r REAL NOT NULL, ttl TEXT, art TEXT, img TEXT, PRIMARY KEY (uid, kind, t))'),
     env.CATALOG.prepare('CREATE INDEX IF NOT EXISTS acct_ratings_k ON acct_ratings (kind, k)'),
     env.CATALOG.prepare('CREATE INDEX IF NOT EXISTS acct_ratings_t ON acct_ratings (kind, t)'),
     env.CATALOG.prepare('CREATE TABLE IF NOT EXISTS acct_friends (a TEXT NOT NULL, b TEXT NOT NULL, st TEXT NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (a, b))'),
@@ -493,6 +493,8 @@ async function acctInit(env) {
     env.CATALOG.prepare('CREATE TABLE IF NOT EXISTS acct_rl (k TEXT PRIMARY KEY, n INTEGER NOT NULL, exp INTEGER NOT NULL)'),
     env.CATALOG.prepare('CREATE TABLE IF NOT EXISTS acct_logs (uid TEXT PRIMARY KEY, mtime INTEGER NOT NULL, bytes INTEGER NOT NULL, data TEXT NOT NULL, at INTEGER NOT NULL)')
   ]);
+  /* the table first shipped without the cover column: add it once (the error just means it is already there) */
+  try { await env.CATALOG.prepare('ALTER TABLE acct_ratings ADD COLUMN img TEXT').run(); } catch (e) { /* already there */ }
   acctReady = true;
   return true;
 }
@@ -568,6 +570,12 @@ async function ownerViaToken(env, request) {
   if (!m || !(Number(m[2]) > Date.now()) || !keyMatches(m[3], await acctSig(env, m[1] + '.' + m[2]))) return false;
   const o = await ownerUid(env);
   return !!o && o === m[1];
+}
+/* a published cover link must be https and on a known cover host, so nobody can plant a tracking address that opens in a friend's browser */
+const IMG_HOSTS = /(^|\.)(scdn\.co|mzstatic\.com|coverartarchive\.org|archive\.org|image\.tmdb\.org)$/;
+function cleanImg(u) {
+  if (typeof u !== 'string' || u.length > 300) return '';
+  try { const x = new URL(u); return x.protocol === 'https:' && !x.username && !x.password && IMG_HOSTS.test(x.hostname) ? x.href : ''; } catch (e) { return ''; }
 }
 const CODE_CH = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const randCode = () => { const b = crypto.getRandomValues(new Uint8Array(8)); return [...b].map(x => CODE_CH[x % CODE_CH.length]).join(''); };
@@ -690,11 +698,11 @@ async function acct(request, env, url) {
       if (!x || (x.kind !== 'a' && x.kind !== 's') || typeof x.t !== 'string' || !x.t) continue;
       const r = Number(x.r); if (!(r > 0 && r <= 10)) continue;
       const t = x.t.slice(0, 200), id = x.kind + '|' + t; if (seen.has(id)) continue; seen.add(id);
-      items.push({ kind: x.kind, k: typeof x.k === 'string' ? x.k.slice(0, 80) : '', t, r: Math.round(r * 2) / 2, n: String(x.n || '').slice(0, 120), a: String(x.a || '').slice(0, 80) });
+      items.push({ kind: x.kind, k: typeof x.k === 'string' ? x.k.slice(0, 80) : '', t, r: Math.round(r * 2) / 2, n: String(x.n || '').slice(0, 120), a: String(x.a || '').slice(0, 80), i: cleanImg(x.i) });
     }
     await env.CATALOG.batch([
       env.CATALOG.prepare('DELETE FROM acct_ratings WHERE uid = ?1').bind(me.uid),
-      env.CATALOG.prepare("INSERT OR REPLACE INTO acct_ratings (uid, kind, k, t, r, ttl, art) SELECT ?1, json_extract(value,'$.kind'), json_extract(value,'$.k'), json_extract(value,'$.t'), json_extract(value,'$.r'), json_extract(value,'$.n'), json_extract(value,'$.a') FROM json_each(?2)").bind(me.uid, JSON.stringify(items)),
+      env.CATALOG.prepare("INSERT OR REPLACE INTO acct_ratings (uid, kind, k, t, r, ttl, art, img) SELECT ?1, json_extract(value,'$.kind'), json_extract(value,'$.k'), json_extract(value,'$.t'), json_extract(value,'$.r'), json_extract(value,'$.n'), json_extract(value,'$.a'), json_extract(value,'$.i') FROM json_each(?2)").bind(me.uid, JSON.stringify(items)),
       env.CATALOG.prepare('UPDATE acct_users SET rated = ?2, seen = ?3 WHERE uid = ?1').bind(me.uid, items.length, now)
     ]);
     return reply({ ok: true, rows: items.length });
@@ -756,7 +764,7 @@ async function acct(request, env, url) {
     const u = await env.CATALOG.prepare('SELECT uid, name, share, made FROM acct_users WHERE uid = ?1').bind(uid).first();
     if (!u) return reply({ error: 'That account is gone.' }, 404);
     if (uid !== me.uid && !u.share) return reply({ error: u.name + ' is not sharing their ratings right now.' }, 403);
-    const items = (await env.CATALOG.prepare('SELECT kind, k, t, r, ttl AS n, art AS a FROM acct_ratings WHERE uid = ?1 ORDER BY r DESC, ttl COLLATE NOCASE LIMIT 4000').bind(uid).all()).results || [];
+    const items = (await env.CATALOG.prepare('SELECT kind, k, t, r, ttl AS n, art AS a, img AS i FROM acct_ratings WHERE uid = ?1 ORDER BY r DESC, ttl COLLATE NOCASE LIMIT 4000').bind(uid).all()).results || [];
     const fc = await env.CATALOG.prepare("SELECT COUNT(*) AS c FROM acct_friends WHERE st = 'ok' AND (a = ?1 OR b = ?1)").bind(uid).first('c');
     return reply({ profile: { uid, name: u.name, since: u.made, friends: fc || 0, items } });
   }

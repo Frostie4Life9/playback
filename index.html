@@ -1842,6 +1842,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-y', note:'COVERS ON ACCOUNT PAGES: albums on your page and on friends\u2019 pages showed a letter instead of the cover whenever the album did not come from MusicBrainz (Spotify and Apple Music imports). The cover link you already have is now shared with your ratings, so those albums show their art. Only Spotify, Apple, MusicBrainz and TMDB picture links are accepted. Your page and your friends\u2019 pages fill in as each person next opens Playback.'},
   {v:'2026.11.17-x', note:'OWNER LOGIN: Account has a new Owner login section. On a device that already syncs with your sync key, tap Make this my owner login once (it takes the key one time). After that, on any new phone or computer you just open Playback, sign in with Google, and the whole app unlocks: your log, photos, Spotify plays, Discogs and suggestions, with no Worker address or key to paste. A device can also switch to Google sign-in with Use Google sign-in on this device. Your sync key keeps working as a fallback, and Give up owner login undoes it. Friends are unaffected: only the one account you claimed gets this, and claiming needs your sync key. Your Worker needs the new playback-sync.js (it takes it from GitHub on its own).'},
   {v:'2026.11.17-w', note:'ACCOUNT SYNC: after signing in, Account has a Keep my log on all my devices switch. Turn it on and your whole log (ratings, listens, collection, shows and films, not photos) is saved under your Google account on Playback’s server, so it shows up on any phone or computer you sign in on, with no setup of your own. Saves are batched about every 20 seconds and sent when you leave the app, and a device that is behind never overwrites a newer copy. If a device already has its own log when you first turn it on and a saved copy exists, you choose which one wins. Only you can see the saved copy (friends still see just the ratings you publish), the size is capped at about 1 MB compressed, and you can delete the copy or your whole account any time. Your own Worker sync is unchanged and is used instead if you have it. The Worker needs the new playback-sync.js (it takes it from GitHub on its own).'},
   {v:'2026.11.17-v', note:'ACCOUNT ICON AND FRIEND PAGES: a round account icon sits at the top right (a person outline until you sign in, then your initial). It opens your Account page: your own page (rating counts and averages, how often you give each score, and your albums and shows) with Google sign-in, your friend code, friend requests and sharing underneath. Tap a friend to open their page, which shows the same plus a taste match with you, and lets you list what you both rated, or only what they rated that you have not (a quick way to find something to hear). Settings keeps a small card that points to it.'},
@@ -5500,13 +5501,15 @@ function accOut(msg){ACC.token='';ACC.me=null;ACC.pubSig='';ACX.fr=null;ACX.frAt
 
 /* a title is matched across people by MusicBrainz id when both have one, else by a plain artist|title key, so a
    friend on Apple Music still lines up with you on Spotify. TMDB id and title|year do the same for shows and films. */
+/* the cover this album has on your side (Spotify, Apple Music or Cover Art Archive), so a friend's page shows it too */
+const accImg=g=>{const u=g.img||'';return typeof u==='string'&&/^https:\/\//.test(u)?u.slice(0,300):''};
 const accKeys=(a,g)=>({k:g.mbid&&!/^sp:/.test(g.mbid)?'mb:'+g.mbid:'',t:'ta:'+nArtist(a.name)+'|'+nTitle(g.title)});
 const accScreenKeys=s=>({k:s.tmdb?'tm:'+s.type+':'+s.tmdb:'',t:'ts:'+nTitle(s.title)+'|'+(s.year||'')});
 function accItems(){
   const out=[];
   for(const a of S.music){if(a.example)continue;
     for(const g of a.groups||[]){if(!RATEABLE.includes(g.kind))continue;const{k,t}=accKeys(a,g);
-      const r=rating(g.id);if(r)out.push({kind:'a',k,t,r,n:g.title,a:a.name});
+      const r=rating(g.id);if(r)out.push({kind:'a',k,t,r,n:g.title,a:a.name,i:accImg(g)});
       const d=rating(dxId(g));if(d)out.push({kind:'a',k:k?k+'~dx':'',t:t+'~dx',r:d,n:dxName(g),a:a.name})}}
   for(const s of S.screen){if(s.example)continue;const r=rating(s.id);if(r){const{k,t}=accScreenKeys(s);out.push({kind:'s',k,t,r,n:s.title,a:''})}}
   return out.slice(0,2000);
@@ -5628,7 +5631,7 @@ function accProfile(uid,force){
     ACX.prof[uid]={at:Date.now(),loading:false,data:status===200?j.profile:null,err:status===200?'':(j.error||'Could not load this page.')};render()
   }).catch(()=>{ACX.prof[uid]={at:Date.now(),loading:false,data:null,err:'Could not reach Playback’s server. Check your connection.'};render()});
 }
-const accCover=x=>{const m=/^mb:([0-9a-f-]{36})$/.exec(x.k||'');return m&&x.kind==='a'?'https://coverartarchive.org/release-group/'+m[1]+'/front-250':''};
+const accCover=x=>{if(x.kind!=='a')return '';if(x.i&&/^https:\/\//.test(x.i))return x.i;const m=/^mb:([0-9a-f-]{36})$/.exec(x.k||'');return m?'https://coverartarchive.org/release-group/'+m[1]+'/front-250':''};
 const accBase=items=>items.filter(x=>!/~dx$/.test(x.t));
 function accStats(items){
   const b=accBase(items),al=b.filter(x=>x.kind==='a'),sc=b.filter(x=>x.kind==='s');
