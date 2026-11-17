@@ -873,6 +873,8 @@ details.addart .add{border-top:1px solid var(--line)}
 /* grooves take the banner's own hue and amount of color: a gray cover gets pale gray grooves, a red one pale rose */
 @supports (color:oklch(from red l c h)){.sl-disc{--gv:oklch(from var(--ac) .86 calc(c*.7) h);--gp:oklch(from var(--ac) .96 calc(c*.25) h);--gg:oklch(from var(--ac) .7 calc(c*.9) h)}}
 .sl-disc i.on{border-color:var(--gv)}
+.sl-disc i.on.fade{border-color:color-mix(in srgb,var(--gv) 24%,transparent)}
+@media (prefers-reduced-motion:no-preference){.sl-disc i.on{transition:border-color .6s ease}}
 /* the pulse: a ripple runs from the label outward through the grooves you have heard. Each groove swells
    a little (its real size, via --j, rather than a transform) and glows, then settles. Because it never
    becomes a transform it is never lifted onto its own layer, so there is nothing to snap when it ends.
@@ -1663,6 +1665,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-al', note:'LISTEN AGAIN: on a new listen the record\u2019s bands start faded (they are last listen\u2019s songs carried over) and each band fills back in fully, with the usual glow, as you mark its songs off on this listen. The green and red change gradient in a song bar now slides with the bar while you drag the rating slider.'},
   {v:'2026.11.16-ak', note:'LISTEN AGAIN: Clear on a song or the album in your newest listen now puts last listen\u2019s rating back (dimmed, carried over, with its gradient) instead of leaving it blank. If last listen had no rating there, Clear still leaves it blank.'},
   {v:'2026.11.16-aj', note:'LISTEN AGAIN: the green and red change gradient in a song bar now fades in from the color before it too, so it has no hard edge on either side.'},
   {v:'2026.11.16-ai', note:'LISTEN AGAIN, POLISH: the change marker in a song bar is now a gradient in the same style as the bar itself (green-tinted where you rated higher, red-tinted where lower, fading out to the right) instead of a box. Carried-over ratings are fainter: the numbers, rings and bar gradients. Fixed the album rating number not fading on a carried rating (the pop-in animation was holding it at full strength).'},
@@ -2150,6 +2153,21 @@ function lsRevert(id){
   else if(id===dxId(g)){if(!p.x||!p.x.r)return false;const m={...(S.marks[id]||{}),r:p.x.r};if(p.x.rd)m.rd=p.x.rd;else delete m.rd;S.marks[id]=m}
   else{const q=p.s&&p.s[id];if(!q||!q.r)return false;const c={...(S.marks[id]||{}),r:q.r};if(q.done)c.done=true;S.marks[id]=c}
   e.c=[...new Set([...(e.c||[]),id])];lsFromMark(g.id);return true}
+/* while the slider is dragged, the change gradient and chip in the song's bar follow it like the bar does */
+function lsLive(row,iid,v){
+  const g=lsOwner(iid);if(!g||LSV!==null)return;const l=lsRaw(g.id);if(l.length<2)return;
+  const p=l[l.length-2],a=p.s&&p.s[iid]&&p.s[iid].r;
+  row.classList.remove('carry');
+  let w=row.querySelector(':scope>.wdiff'),c=row.querySelector(':scope>.ls-sd');
+  if(!a){if(w)w.remove();if(c)c.remove();return}
+  const pc=v*10,pp=a*10,wd=Math.abs(pp-pc),d=v-a,cls=Math.abs(d)<.05?'even':d>0?'up':'down';
+  if(wd<.5){if(w)w.remove()}
+  else{
+    if(!w){w=document.createElement('span');w.setAttribute('aria-hidden','true');w.className='wdiff';w.style.left=pp+'%';w.style.width='0%';
+      const wash=row.querySelector(':scope>.wash');if(wash)wash.after(w);else row.insertBefore(w,row.firstChild);void w.offsetWidth}
+    w.className='wdiff '+(pc>pp?'up':'down');w.style.transition='left .14s,width .14s';w.style.left=Math.min(pp,pc)+'%';w.style.width=wd+'%'}
+  if(!c){c=document.createElement('span');row.insertBefore(c,row.querySelector('.check'))}
+  c.className='ls-sd '+cls;c.textContent=Math.abs(d)<.05?'=':(d>0?'+':'−')+fmt(Math.abs(d))}
 /* the difference to the listen before this one, for the songs and for the album */
 function lsDiff(g){
   const id=g.id,l=lsRaw(id);if(!l.length)return null;const k=lsIdx(id);if(k<1)return null;
@@ -4514,20 +4532,20 @@ function slPulseAsk(gid,base){UI.pulse={g:String(gid),b:base||0}}
 /* which grooves a release has lit right now (the same folding the sleeve is drawn with) */
 function slRings(g){const shown=viewItems(g),R=Math.min(shown.length,22),rings=[];
   for(let j=0;j<R;j++){const lo=Math.floor(j*shown.length/R),hi=Math.max(lo+1,Math.floor((j+1)*shown.length/R)),seg=shown.slice(lo,hi);
-    rings.push(seg.length&&seg.every(i=>isDone(i.id)))}
+    rings.push(!seg.length||!seg.every(i=>isDone(i.id))?0:seg.some(i=>typeof lsCar==='function'&&lsCar(g,i.id))?1:2)}
   return rings}
 const slEl=gid=>document.querySelector('.group.sleeve[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(String(gid)):gid)+'"]');
 /* a song was just heard or first rated: note which grooves that newly lights (the page has not redrawn yet, so the
    record on screen still shows the old state). The next draw holds those grooves dark until slLitNow lights them. */
 function slLitAsk(g,id){const sl=slEl(g.id),is=sl?sl.querySelectorAll('.sl-disc i'):[],idx=[];
-  slRings(g).forEach((on,j)=>{if(on&&is[j]&&!is[j].classList.contains('on'))idx.push(j)});
+  const fi=[];slRings(g).forEach((st,j)=>{if(st===2&&is[j]&&(!is[j].classList.contains('on')||is[j].classList.contains('fade'))){idx.push(j);if(is[j].classList.contains('fade'))fi.push(j)}});
   let band=null;if(id){const shown=viewItems(g),pos=shown.findIndex(i=>i.id===id),n=shown.length,R=Math.min(n,22);
     if(pos>=0)for(let j=0;j<R;j++){if(pos>=Math.floor(j*n/R)&&pos<Math.max(Math.floor(j*n/R)+1,Math.floor((j+1)*n/R))){band=j;break}}}
   if(band==null&&idx.length)band=Math.min(...idx);
-  UI.lit={g:String(g.id),idx,id:id||null,band}}
+  UI.lit={g:String(g.id),idx,fi,id:id||null,band}}
 function slLitApply(sl,L,el){
   const disc=sl.querySelector('.sl-disc');if(!disc)return;
-  const is=disc.querySelectorAll('i');L.idx.forEach(j=>{if(is[j])is[j].classList.add('on','new')});
+  const is=disc.querySelectorAll('i');L.idx.forEach(j=>{if(is[j]){is[j].classList.remove('fade');is[j].classList.add('on','new')}});
   if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)return;
   const nR=is.length,bj=L.band;   /* the glint and ripple go out only as far as the rated song's band */
   if(bj!=null&&nR){const ld=96-bj*(52/nR)+2;sl.style.setProperty('--ld',ld.toFixed(1)+'%');sl.style.setProperty('--ls',(ld/100).toFixed(3))}else{sl.style.removeProperty('--ld');sl.style.removeProperty('--ls')}
@@ -5926,9 +5944,9 @@ function artistView(a){
     /* one groove per song; a long release folds songs into at most 22 grooves */
     const R=Math.min(shown.length,22),rings=[];
     for(let j=0;j<R;j++){const lo=Math.floor(j*shown.length/R),hi=Math.max(lo+1,Math.floor((j+1)*shown.length/R)),seg=shown.slice(lo,hi);
-      rings.push(seg.length&&seg.every(i=>isDone(i.id)))}
+      rings.push(!seg.length||!seg.every(i=>isDone(i.id))?0:seg.some(i=>lsCar(g,i.id))?1:2)}
     const hold=UI.lit&&UI.lit.g===String(g.id)?UI.lit.idx:null;   /* grooves about to light stay dark until the animation lights them */
-    const ringHtml=rings.map((on,j)=>{const d=96-j*(52/Math.max(R,1));return `<i class="${on&&!(hold&&hold.includes(j))?'on':''}" style="--d:${d.toFixed(1)}%;--o:${R-1-j}"></i>`}).join('');
+    const ringHtml=rings.map((st,j)=>{const d=96-j*(52/Math.max(R,1)),held=hold&&hold.includes(j),cls=held?(UI.lit.fi&&UI.lit.fi.includes(j)?'on fade':''):st===2?'on':st===1?'on fade':'';return `<i class="${cls}" style="--d:${d.toFixed(1)}%;--o:${R-1-j}"></i>`}).join('');
     const trackRows=rows.map(({i,k})=>{const s=songShow(i),r=rating(i.id),dn=isDone(i.id);
       const pc=r?r*10:0,dash=(pc*100.53/100).toFixed(2)+' 100.53';
       return `<div class="track sl-t${lsCar(g,i.id)?' carry':''} ${i.dx?'dx':''} ${dn?'done':''} ${r?'rated':''} ${UI.rOpen===i.id?'ropen':''} ${UI.rAnim===i.id?'opening':''} ${UI.rLand===i.id?'landing':''}" data-act="ropen" data-id="${i.id}"${i.dx&&UI.dxAnim===g.id?` style="animation-delay:${Math.min(k,14)*26}ms"`:''}>${r?`<span class="wash" style="width:${pc}%" aria-hidden="true"></span>`:''}${lsSongBar(g,i.id,pc)}<span class="num">${k+1}</span>
@@ -6236,7 +6254,7 @@ document.addEventListener('input',ev=>{
       if(!w){w=document.createElement('span');w.className='wash';w.setAttribute('aria-hidden','true');w.style.width='0%';row.insertBefore(w,row.firstChild);void w.offsetWidth;row.classList.add('rated')}
       w.style.transitionDuration='.14s';w.style.width=(v*10)+'%';
       const n=row.querySelector('.rg-n'),rv=row.querySelector('.rg-v');
-      if(n)n.textContent=fmt(v);if(rv)rv.setAttribute('stroke-dasharray',(v*10*100.53/100).toFixed(2)+' 100.53')}
+      if(n)n.textContent=fmt(v);if(rv)rv.setAttribute('stroke-dasharray',(v*10*100.53/100).toFixed(2)+' 100.53');lsLive(row,rt,v)}
     return}
   if(ev.target.id==='crop-z'){CROP.z=+ev.target.value;cropRedraw();return}
   if(ev.target.id==='crop-r'){CROP.r=+ev.target.value;cropRedraw();return}
