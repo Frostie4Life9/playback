@@ -442,6 +442,52 @@ footer textarea{font:12px var(--mono);margin-top:8px}
 .colfacts .v.dim{color:var(--muted);font-weight:500}
 .sw{display:inline-block;width:.8em;height:.8em;border-radius:50%;margin-right:6px;border:1px solid var(--line);vertical-align:-1px}
 
+/* Listen log (2026.11.16-ae) */
+.sl-ls{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-weight:600;font-size:13px;color:color-mix(in srgb,var(--hi) 88%,transparent)}
+.sl-ls .lsi{font-style:normal;display:inline-block;font-size:15px;transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+.sl-ls.on .lsi{transform:rotate(360deg)}
+.ls-p{width:100%;margin:6px 0 4px;padding:12px;border-radius:14px;border:1px solid color-mix(in srgb,var(--hi) 24%,transparent);background:color-mix(in srgb,var(--hi) 9%,transparent);color:var(--hi);display:flex;flex-direction:column;gap:10px}
+.ls-sum{margin:0;font:600 13px var(--body);font-variant-numeric:tabular-nums}
+.ls-d{font:700 11px var(--mono);padding:2px 7px;border-radius:999px;background:color-mix(in srgb,var(--hi) 14%,transparent);font-variant-numeric:tabular-nums}
+.ls-d.up{background:color-mix(in srgb,var(--done) 30%,transparent)}.ls-d.down{background:color-mix(in srgb,var(--warn) 30%,transparent)}
+.ls-tr{display:flex;align-items:flex-end;gap:6px;height:64px}
+.ls-b{flex:1 1 0;max-width:38px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;font:600 10px var(--mono)}
+.ls-b i{display:block;width:100%;height:var(--h);border-radius:5px 5px 2px 2px;background:color-mix(in srgb,var(--hi) 55%,transparent);transform-origin:bottom}
+.ls-b:last-child i{background:var(--hi)}
+.ls-b b{font-weight:600;opacity:.85}
+.ls-l{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.ls-e{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:8px 10px;border-radius:10px;background:color-mix(in srgb,var(--hi) 8%,transparent)}
+.ls-e.edit{display:block}
+.ls-n{font:600 11px var(--mono);opacity:.7}.ls-dt{font:600 13px var(--body)}
+.ls-r{font:700 15px var(--mono);font-variant-numeric:tabular-nums}
+.ls-nt{flex:1 0 100%;font:400 13px var(--body);opacity:.85}
+.ls-a{margin-left:auto;display:flex;gap:4px}
+.ls-a button,.ls-fb button{min-height:36px;padding:0 12px;border-radius:9px;border:1px solid color-mix(in srgb,var(--hi) 32%,transparent);background:transparent;color:var(--hi);font:600 12px var(--body);cursor:pointer}
+.ls-a button.armed{background:var(--warn);border-color:var(--warn);color:#fff}
+.ls-f{display:flex;flex-direction:column;gap:8px}
+.ls-fr{display:flex;align-items:center;gap:10px;font:600 12px var(--body)}
+.ls-fr>span{flex:0 0 52px;opacity:.8}
+.ls-fr input[type=date],.ls-fr input[type=text]{flex:1 1 auto;min-width:0;min-height:40px;padding:0 12px;border-radius:10px;border:1px solid color-mix(in srgb,var(--hi) 38%,transparent);background:color-mix(in srgb,var(--hi) 10%,transparent);color:var(--hi);font:500 15px var(--body)}
+.ls-fr input::placeholder{color:color-mix(in srgb,var(--hi) 55%,transparent)}
+.ls-rr output{flex:0 0 34px;text-align:right;font:700 15px var(--mono)}
+.lsr{flex:1 1 auto;min-width:0;height:28px;-webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;touch-action:pan-y}
+.lsr::-webkit-slider-runnable-track{height:6px;border-radius:99px;background:linear-gradient(90deg,var(--hi) var(--p),color-mix(in srgb,var(--hi) 25%,transparent) var(--p))}
+.lsr::-moz-range-track{height:6px;border-radius:99px;background:color-mix(in srgb,var(--hi) 25%,transparent)}
+.lsr::-moz-range-progress{height:6px;border-radius:99px;background:var(--hi)}
+.lsr::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;margin-top:-9px;border-radius:50%;background:var(--hi);border:3px solid color-mix(in srgb,var(--hi) 30%,transparent)}
+.lsr::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--hi);border:3px solid color-mix(in srgb,var(--hi) 30%,transparent)}
+.ls-fb{display:flex;gap:8px}.ls-fb .go{background:color-mix(in srgb,var(--hi) 20%,transparent)}
+.hls{font:600 10px var(--mono);font-style:normal;padding:1px 5px;border-radius:99px;border:1px solid var(--line);margin-right:4px}
+@media (prefers-reduced-motion:no-preference){
+  .ls-in{animation:lsin .38s cubic-bezier(.2,.8,.2,1) both}
+  .ls-in .ls-b i,.ls-p .ls-b i{animation:lsgrow .6s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*45ms)}
+  .ls-in .ls-e{animation:lsrow .45s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*40ms + 80ms)}
+  .ls-e.fresh{animation:lsfresh .7s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes lsin{from{opacity:0;transform:translateY(-6px) scale(.98)}to{opacity:1;transform:none}}
+  @keyframes lsgrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+  @keyframes lsrow{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+  @keyframes lsfresh{0%{opacity:0;transform:translateY(-10px) scale(.96);background:color-mix(in srgb,var(--hi) 34%,transparent)}100%{opacity:1;transform:none}}
+}
 /* ===== Rating history (2026.11.16-n) ===== */
 .histv{max-width:880px;--star:#F4B000;--staroff:color-mix(in srgb,var(--muted) 34%,transparent);--starmask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2.8l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.7l-5.9 3.1 1.2-6.5L2.5 9.7l6.6-.9z'/%3E%3C/svg%3E")}
 .hh-hero{align-items:flex-end}
@@ -1608,6 +1654,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-ae', note:'LISTEN LOG: an album you hear again can keep a log. On any rated album, tap Log another listen, pick the day, drag the rating and add a note. Each listen shows its day, its rating and how much it moved from the one before (+1, \u22120.5), with a little bar chart and a summary like 7 \u2192 9 over 3 listens. Edit or delete any listen. Your album rating always follows your latest listen, so History, exports and the share card stay right. History marks relistened albums with \u21bb and has a Relistened filter.'},
   {v:'2026.11.16-ad', note:'RATING DATES: the history list now runs through Nov 5, 2026 (59 more ratings, from Jan 29, 2026 on). An album that is in the history more than once takes its latest day, and a Deluxe listing only falls back to the plain album\'s rating when the plain album is not also in the history, so the two never share one day. The summary now counts ratings. Tap Import rating dates again to apply. Also restores the offline cache file (sw.js), which the previous update accidentally emptied.'},
   {v:'2026.11.16-ac', note:'FLUID COLORS: the strips are gone. The background behind the artist name is now a liquid: a soft base of all your album colors with big pools of each color on top. A pool is as large as its albums are rated high, and every pool circles the tile at its own speed and wobbles, so the colors flow into each other and the tile always stays covered.'},
   {v:'2026.11.16-ab', note:'FULL-COVER COLORS: the background behind the artist name is full again, no blobs. Each color is a wide band as big as its albums are rated high (a 10 takes far more room than a 5), three layers of bands at different angles rotate and slide slowly so the colors keep trading places across the whole tile, and a light fade at the bottom keeps the text readable over white.'},
@@ -2015,7 +2062,21 @@ const isDone=id=>!!(S.marks[id]&&S.marks[id].done);
 const rating=id=>(S.marks[id]&&S.marks[id].r)||0;
 /* the day a rating was set, kept as YYYY-MM-DD on the same mark (rd). Ratings made before this build have no day until you add one. */
 const ratedDate=id=>(S.marks[id]&&S.marks[id].r&&S.marks[id].rd)||'';
-const rdCarry=id=>ratedDate(id)?{rd:ratedDate(id)}:{};
+const rdCarry=id=>{const m=S.marks[id],o=ratedDate(id)?{rd:ratedDate(id)}:{};if(m&&m.r&&Array.isArray(m.ls)&&m.ls.length)o.ls=m.ls.map(x=>({...x}));return o};
+/* ---------- listen log ----------
+   An album you hear more than once keeps a log on its rating mark: ls = [{d:day, r:rating, n:note}], oldest first.
+   The first listen is the rating and day you already had. The mark's own r and rd always mirror the LATEST listen,
+   so History, exports, the share card and everything else keep working with no changes. */
+const lsRaw=id=>{const m=S.marks[id];return m&&m.r&&Array.isArray(m.ls)?m.ls:[]};
+function lsList(id){const l=lsRaw(id);if(l.length)return l;const r=rating(id);return r?[{d:ratedDate(id),r,n:''}]:[]}
+function lsApply(id,list){
+  list=list.filter(x=>x&&x.r>0).map((x,i)=>({x,i})).sort((p,q)=>(p.x.d||'').localeCompare(q.x.d||'')||p.i-q.i).map(p=>p.x);
+  const m={...(S.marks[id]||{})};
+  if(!list.length){delete m.ls;m.r=0;delete m.rd}
+  else{const last=list[list.length-1];m.ls=list;m.r=last.r;if(last.d)m.rd=last.d;else delete m.rd}
+  S.marks[id]=m}
+function lsFromMark(id){const l=lsRaw(id);if(!l.length)return;const c=l.map(x=>({...x}));c[c.length-1].d=(S.marks[id]&&S.marks[id].rd)||'';lsApply(id,c)}
+const lsBase=id=>{const m={...(S.marks[id]||{})};if(!m.r)delete m.ls;return m};
 const todayISO=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
 const fmtRd=d=>{const m=/^(\d{4})-(\d\d)-(\d\d)$/.exec(d||'');return m?new Date(+m[1],+m[2]-1,+m[3]).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'}):''};
 function artistItems(a){return a.groups.flatMap(g=>g.items)}
@@ -2370,7 +2431,7 @@ const mbMarked=id=>{const m=S.marks[id];return !!(m&&(m.done||m.r))};
 function mbFold(into,from){            /* a duplicate's checkmark/rating moves onto the item that stays */
   if(into===from||!S.marks[from])return;
   const a=S.marks[into]||{},b=S.marks[from],m=Object.assign({},a);
-  if(b.done)m.done=true;if(!m.r&&b.r){m.r=b.r;if(b.rd)m.rd=b.rd}S.marks[into]=m;
+  if(b.done)m.done=true;if(!m.r&&b.r){m.r=b.r;if(b.rd)m.rd=b.rd;if(b.ls)m.ls=b.ls}S.marks[into]=m;
 }
 function mbMerge(art,incoming,versions,tidy,sp){
   let a=S.music.find(x=>x.mbid===art.id);
@@ -2838,7 +2899,7 @@ function rdImport(list){
   }
   for(const {pick,e} of picked.values()){
     const cur=ratedDate(pick.id),stars=(+e.s||0)*2;
-    if(!cur){S.marks[pick.id]={...S.marks[pick.id],rd:e.d};rp.set++}
+    if(!cur){S.marks[pick.id]={...S.marks[pick.id],rd:e.d};lsFromMark(pick.id);rp.set++}
     else if(cur===e.d)rp.same++;
     else rp.kept.push(e.t+': you have '+fmtRd(cur)+', the history says '+fmtRd(e.d));
     if(stars&&pick.r!==stars)rp.differ.push(e.t+': '+fmt(pick.r)+' here, '+fmt(stars)+' in the history');
@@ -4136,7 +4197,7 @@ const UI={view:null,libOpen:false,addOpen:false,rOpen:null,lq:{music:'',screen:'
    Every album, EP and deluxe you have rated, as a dated list (the day is rd on the rating). Newest or
    oldest first with a heading per month, or highest first. Albums with no day yet sit at the bottom
    with a + Date button. Linked collab copies (same shared rating) are listed once. */
-Object.assign(UI,{hq:'',hs:'new',hk:'all',hEdit:null,hAnim:false});
+Object.assign(UI,{hq:'',hs:'new',hk:'all',hEdit:null,hAnim:false,lsOpen:null,lsEdit:null,lsNew:null,lsAnim:null});
 function rhAll(){
   const out=[],seen=new Set();
   for(const a of S.music)for(const g of a.groups){
@@ -4145,7 +4206,7 @@ function rhAll(){
       if(dx&&!hasDx(g))continue;
       const r=rating(id);if(!r)continue;
       const ck=canonK(id);if(seen.has(ck))continue;seen.add(ck);
-      out.push({id,a,g,dx,r,d:ratedDate(id),title:dx?dxName(g):g.title,art:dx?(g.dxImg||gArt(g)):gArt(g)});
+      out.push({id,a,g,dx,r,n:lsList(id).length,d:ratedDate(id),title:dx?dxName(g):g.title,art:dx?(g.dxImg||gArt(g)):gArt(g)});
     }
   }
   return out;
@@ -4164,11 +4225,11 @@ function rhRow(e,i,anim){
   return `<li class="hr"${st}>${badge}<button type="button" class="hmain" data-act="hgo" data-a="${esc(e.a.id)}" data-g="${esc(e.g.id)}" data-dx="${e.dx?1:''}" aria-label="Open ${esc(e.title)} by ${esc(e.a.name)}, rated ${fmt(e.r)} out of 10">
     <span class="hcov" aria-hidden="true"><span>${esc((e.title.match(/[\p{L}\p{N}]/u)||['?'])[0].toUpperCase())}</span>${e.art?`<img src="${esc(e.art)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span>
     <span class="hn"><b>${esc(e.title)}</b><span>${esc(sub)}</span></span>
-    <span class="hrt" aria-hidden="true"><span class="hss">${stars}</span><span class="hsc">${fmt(e.r)}</span></span></button></li>`;
+    <span class="hrt" aria-hidden="true"><span class="hss">${stars}</span><span class="hsc">${e.n>1?`<em class="hls" title="Heard ${e.n} times">\u21bb${e.n}</em> `:''}${fmt(e.r)}</span></span></button></li>`;
 }
 function historyList(anim){
   const all=rhAll(),q=nrm(UI.hq||'').trim(),K=e=>e.g.kind==='Studio album'?'album':e.g.kind==='EP'?'ep':'other';
-  const L=all.filter(e=>(UI.hk==='all'||K(e)===UI.hk)&&(!q||nrm(e.title+' '+e.a.name).includes(q)));
+  const L=all.filter(e=>(UI.hk==='all'||(UI.hk==='again'?e.n>1:K(e)===UI.hk))&&(!q||nrm(e.title+' '+e.a.name).includes(q)));
   if(!L.length)return `<p class="lempty">${all.length?'Nothing matches'+(q?' “'+esc(UI.hq)+'”':'')+'.':'Nothing rated yet. Rate an album and it lands here.'}</p>`;
   const cmp=(x,y)=>x.title.localeCompare(y.title),dc=(x,y)=>x.d>y.d?1:x.d<y.d?-1:0;
   let h='',n=0;
@@ -4199,7 +4260,7 @@ function historyView(){
     <div class="hbar">
       <input id="hq" type="search" autocomplete="off" placeholder="Search albums &amp; artists" value="${esc(UI.hq||'')}" aria-label="Search rated albums">
       <div class="hrow2">
-        <div class="hchips" role="group" aria-label="Show">${chip('hkind','all','All',UI.hk)}${chip('hkind','album','Albums',UI.hk)}${chip('hkind','ep','EPs',UI.hk)}${chip('hkind','other','Other',UI.hk)}</div>
+        <div class="hchips" role="group" aria-label="Show">${chip('hkind','all','All',UI.hk)}${chip('hkind','album','Albums',UI.hk)}${chip('hkind','ep','EPs',UI.hk)}${chip('hkind','other','Other',UI.hk)}${all.some(e=>e.n>1)?chip('hkind','again','\u21bb Relistened',UI.hk):''}</div>
         <div class="hchips" role="group" aria-label="Sort">${chip('hsort','new','Newest',UI.hs)}${chip('hsort','old','Oldest',UI.hs)}${chip('hsort','high','Highest',UI.hs)}</div>
       </div>
     </div>
@@ -5455,8 +5516,9 @@ function rtFlyGo(p){
   },done)}
 function rateCommit(el){const id=el.dataset.rate,v=+el.value;if(!id||!v)return;
   if(v===rating(id))return;
+  if(lsRaw(id).length){const c=lsRaw(id).map(x=>({...x}));c[c.length-1].r=v;lsApply(id,c);touch();heroPaint();tdSoon();const n0=document.querySelector('.rt-s');if(n0)n0.focus({preventScroll:true});return}
   const isGroup=S.music.some(a=>a.groups.some(g=>g.id===id||dxId(g)===id)),first=!rating(id);
-  S.marks[id]={...(S.marks[id]||{}),r:v,...(isGroup?{rd:todayISO()}:{}),...(isGroup||isDone(id)?{}:{done:true})};touch();heroPaint();tdSoon();
+  S.marks[id]={...lsBase(id),r:v,...(isGroup?{rd:todayISO()}:{}),...(isGroup||isDone(id)?{}:{done:true})};touch();heroPaint();tdSoon();
   if(first&&!isGroup){const g=grpOfItem(id);if(g)slLitAsk(g,id)}
   const n=document.querySelector('.rt-s');if(n)n.focus({preventScroll:true})}
 
@@ -5662,6 +5724,32 @@ function rdLine(g,dx){
   if(UI.dEdit===g.id)return `<form class="sl-wf" data-form="grd" data-g="${g.id}"><input name="rd" type="date" value="${esc(d||todayISO())}" max="${todayISO()}" aria-label="Date rated"><button>Save</button></form>`;
   return d?`<button type="button" class="sl-wb sl-rd" data-act="dedit" data-g="${g.id}" aria-label="Rated ${esc(fmtRd(d))}. Change the date">Rated ${esc(fmtRd(d))}</button>`
           :''}
+function lsForm(id,kind,i,e){
+  const r=e?e.r:(rating(id)||7),d=e?e.d:todayISO(),n=e?e.n||'':'';
+  return `<form class="ls-f" data-form="${kind}" data-id="${esc(id)}"${i!==null?` data-i="${i}"`:''}>
+    <label class="ls-fr"><span>Day</span><input name="rd" type="date" value="${esc(d)}" max="${todayISO()}" aria-label="Day you listened"></label>
+    <label class="ls-fr ls-rr"><span>Rating</span><input class="lsr" name="r" type="range" min="1" max="10" step="0.5" value="${r}" style="--p:${(r-1)/9*100}%" aria-label="Rating for this listen, out of 10"><output>${fmt(r)}</output></label>
+    <label class="ls-fr"><span>Note</span><input name="n" type="text" maxlength="280" value="${esc(n)}" placeholder="Optional, like “heard it on vinyl”" aria-label="Note about this listen"></label>
+    <div class="ls-fb"><button class="go">${kind==='lsadd'?'Log this listen':'Save'}</button>${kind==='lsedit'?'<button type="button" data-act="lsx">Cancel</button>':''}</div></form>`}
+function lsPanel(g,id,L){
+  const n=L.length,anim=UI.lsAnim===id,nw=UI.lsNew;UI.lsAnim=null;UI.lsNew=null;
+  const dl=(a,b)=>{const x=b-a;return Math.abs(x)<.05?'same':(x>0?'+':'−')+fmt(Math.abs(x))};
+  const cls=(a,b)=>Math.abs(b-a)<.05?'even':b>a?'up':'down';
+  const bars=n>1?`<div class="ls-tr" aria-hidden="true">${L.slice(-12).map((e,k)=>`<span class="ls-b" style="--h:${Math.max(8,e.r*10)}%;--i:${k}"><i></i><b>${fmt(e.r)}</b></span>`).join('')}</div>`:'';
+  const first=L[0],last=L[n-1];
+  const sum=n>1?`<p class="ls-sum">${fmt(first.r)} → ${fmt(last.r)} <span class="ls-d ${cls(first.r,last.r)}">${dl(first.r,last.r)}</span> over ${n} listens</p>`:'<p class="ls-sum">Heard once so far. Log a second listen to compare.</p>';
+  const rows=L.map((e,i)=>{
+    const key=id+'|'+i,prev=i?L[i-1]:null,ed=UI.lsEdit===key;
+    if(ed)return `<li class="ls-e edit">${lsForm(id,'lsedit',i,e)}</li>`;
+    const armed=UI.armed===key;
+    return `<li class="ls-e${nw===key?' fresh':''}" style="--i:${n-1-i}"><span class="ls-n">#${i+1}</span><span class="ls-dt">${esc(fmtRd(e.d)||'No day')}</span><b class="ls-r">${fmt(e.r)}</b>${prev?`<span class="ls-d ${cls(prev.r,e.r)}">${dl(prev.r,e.r)}</span>`:''}${e.n?`<span class="ls-nt">${esc(e.n)}</span>`:''}<span class="ls-a"><button type="button" data-act="lsedit" data-k="${esc(key)}">Edit</button>${n>1?`<button type="button" class="${armed?'armed':''}" data-act="lsdel" data-id="${esc(id)}" data-i="${i}">${armed?'Tap again to delete':'Delete'}</button>`:''}</span></li>`}).reverse().join('');
+  return `<div class="ls-p${anim?' ls-in':''}" role="region" aria-label="Listen log">${sum}${bars}<ul class="ls-l">${rows}</ul>${lsForm(id,'lsadd',null,null)}</div>`}
+function lsLine(g,dx){
+  if(!RATEABLE.includes(g.kind))return '';
+  const id=dx?dxId(g):g.id;if(!rating(id))return '';
+  const L=lsList(id),n=L.length,open=UI.lsOpen===id,dl=n>1?L[n-1].r-L[0].r:0;
+  const t=n>1?'Heard '+n+' times'+(Math.abs(dl)<.05?' · same':' · '+(dl>0?'+':'−')+fmt(Math.abs(dl))):'Log another listen';
+  return `<button type="button" class="sl-wb sl-ls${open?' on':''}" data-act="lsopen" data-id="${esc(id)}" aria-expanded="${open}"><i class="lsi" aria-hidden="true">↻</i>${t}</button>${open?lsPanel(g,id,L):''}`}
 function albumRate(g,a){
   if(!RATEABLE.includes(g.kind))return '';
   const dx=dxOn(g),its=dx?g.items:stdItems(g),rid=dx?dxId(g):g.id,rs=its.map(i=>rating(i.id)).filter(Boolean),n=rs.length,r=rating(rid);
@@ -5770,7 +5858,7 @@ function artistView(a){
           <div class="sl-disc" role="img" aria-label="${gd} of ${shown.length} songs heard">${ringHtml}<span class="sl-lab">${shown.length?gd+'/'+shown.length:'\u2013'}</span></div>
           <div class="sl-cover">${art?`<img src="${esc(art)}" ${dx&&sArt&&art!==sArt?`data-f="${esc(sArt)}" `:''}alt="" loading="lazy" decoding="async" onerror="if(this.dataset.f){this.src=this.dataset.f;this.removeAttribute('data-f')}else this.remove()">`:''}<span class="sl-ph" aria-hidden="true">${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div>
         </div>
-        <div class="sl-meta"><span class="sl-kind">${esc(g.kind)} \u00b7 ${esc(g.year)}</span><h3>${esc(dx?dxName(g):g.title)}</h3>${dx?'<span class="dxbadge">Deluxe</span>':''}${g.w&&g.w.length?`<span class="sl-w">with ${esc(g.w.join(' & '))}</span>`:''}<span class="sl-sub">${gd} of ${shown.length} heard</span>${rdLine(g,dx)}${UI.wEdit===g.id?`<form class="sl-wf" data-form="gwith" data-a="${a.id}" data-g="${g.id}"><input name="w" value="${esc((g.w||[]).join(' & '))}" placeholder="Other artist, like Kenny Beats" aria-label="Collab with" autocomplete="off" autocapitalize="words"><button>Save</button></form>`:''}</div>
+        <div class="sl-meta"><span class="sl-kind">${esc(g.kind)} \u00b7 ${esc(g.year)}</span><h3>${esc(dx?dxName(g):g.title)}</h3>${dx?'<span class="dxbadge">Deluxe</span>':''}${g.w&&g.w.length?`<span class="sl-w">with ${esc(g.w.join(' & '))}</span>`:''}<span class="sl-sub">${gd} of ${shown.length} heard</span>${rdLine(g,dx)}${lsLine(g,dx)}${UI.wEdit===g.id?`<form class="sl-wf" data-form="gwith" data-a="${a.id}" data-g="${g.id}"><input name="w" value="${esc((g.w||[]).join(' & '))}" placeholder="Other artist, like Kenny Beats" aria-label="Collab with" autocomplete="off" autocapitalize="words"><button>Save</button></form>`:''}</div>
       </div>
       ${dxs.length?`<div class="dxseg" role="group" aria-label="Edition" data-dx="${dx?1:0}"><button type="button" data-act="dxsel" data-g="${g.id}" data-v="0" aria-pressed="${!dx}">Standard<span class="mono">${sd}/${std.length}</span></button><button type="button" class="dx" data-act="dxsel" data-g="${g.id}" data-v="1" aria-pressed="${dx}">Deluxe<span class="mono">${dd}/${g.items.length}</span></button></div>`:''}
       ${albumBar(g,a,full,shown.length)}
@@ -5893,7 +5981,7 @@ function filmView(f){
 document.addEventListener('click',ev=>{
   const b=ev.target.closest('[data-act]');if(!b)return;
   const act=b.dataset.act,id=b.dataset.id;
-  if(act!=='del'&&act!=='delg')UI.armed=null;
+  if(act!=='del'&&act!=='delg'&&act!=='lsdel')UI.armed=null;
   if(act!=='mbundo')UI.undoArm=null;
   if(act!=='copy')UI.copied=false;
   if(act!=='coldel')UI.colDel=null;
@@ -5966,15 +6054,21 @@ document.addEventListener('click',ev=>{
   else if(act==='spcopy'){const t=SP_REDIRECT;if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>{SPX.copied=true;render()},()=>{});return}
   else if(act==='rdimp'){rdRun();return}
   else if(act==='hsort'){UI.hs=b.dataset.v;UI.hAnim=true}
+  else if(act==='lsopen'){UI.lsOpen=UI.lsOpen===id?null:id;UI.lsEdit=null;UI.lsAnim=UI.lsOpen}
+  else if(act==='lsedit'){UI.lsEdit=UI.lsEdit===b.dataset.k?null:b.dataset.k}
+  else if(act==='lsx'){UI.lsEdit=null}
+  else if(act==='lsdel'){const k=id+'|'+b.dataset.i;
+    if(UI.armed===k){UI.armed=null;const L=lsList(id).map(x=>({...x}));if(L.length>1){L.splice(+b.dataset.i,1);lsApply(id,L);touch()}}
+    else UI.armed=k}
   else if(act==='hkind'){UI.hk=b.dataset.v;UI.hAnim=true}
   else if(act==='hedit'){UI.hEdit=b.dataset.id;setTimeout(()=>{const i=document.querySelector('.hr.edit input');if(i)i.focus({preventScroll:true})},40)}
   else if(act==='hcancel'){UI.hEdit=null}
-  else if(act==='hclear'){const m0={...(S.marks[id]||{})};delete m0.rd;S.marks[id]=m0;UI.hEdit=null;touch()}
+  else if(act==='hclear'){const m0={...(S.marks[id]||{})};delete m0.rd;S.marks[id]=m0;lsFromMark(id);UI.hEdit=null;touch()}
   else if(act==='hgo'){const a=S.music.find(x=>x.id===b.dataset.a),g=a&&a.groups.find(x=>x.id===b.dataset.g);
     UI.view=null;UI.rel=null;UI.tab='music';UI.sel.music=b.dataset.a;UI.libOpen=false;UI.rOpen=null;UI.filter='all';UI.toAlb=b.dataset.g;
     if(g){if(b.dataset.dx)UI.dxOpen[g.id]=true;else delete UI.dxOpen[g.id]}}
   else if(act==='rymadd'){const r=rymAddWaiting();RYX.report={total:r.albums,zero:0,filled:0,same:0,kept:[],waiting:[],notFound:[],dups:[],added:r};touch()}
-  else if(act==='rclear'){const m0={...(S.marks[id]||{}),r:0};delete m0.rd;S.marks[id]=m0;touch();heroPaint()}
+  else if(act==='rclear'){if(lsRaw(id).length>1){lsApply(id,lsRaw(id).slice(0,-1).map(x=>({...x})))}else{const m0={...(S.marks[id]||{}),r:0};delete m0.rd;delete m0.ls;S.marks[id]=m0}touch();heroPaint()}
   else if(act==='grpall'){const a=S.music.find(x=>x.id===b.dataset.a),g=a.groups.find(x=>x.id===b.dataset.g),its=viewItems(g),full=its.every(i=>isDone(i.id));
     its.forEach(i=>S.marks[i.id]={...(S.marks[i.id]||{}),done:!full});if(!full)slPulseAsk(g.id,0);touch()}
   else if(act==='wedit'){UI.wEdit=UI.wEdit===b.dataset.g?null:b.dataset.g;formUp()}
@@ -6067,6 +6161,7 @@ document.addEventListener('input',ev=>{
   if(ev.target.id==='rsort'){try{localStorage.setItem(KEY+'_relsort',ev.target.value)}catch(e){}render();return}
   if(ev.target.id==='lsort'){const P=lPrefs();P.sort=ev.target.value;lSave(P);UI.llTab=null;render();return}
   if(ev.target.id==='lq'){UI.lq[UI.tab]=ev.target.value;lRedraw()}
+  if(ev.target.classList&&ev.target.classList.contains('lsr')){const o=ev.target.parentElement.querySelector('output');if(o)o.textContent=fmt(+ev.target.value);ev.target.style.setProperty('--p',((+ev.target.value-1)/9*100)+'%');return}
   if(ev.target.id==='hq'){UI.hq=ev.target.value;hRedraw()}
   if(ev.target.id==='col-q'){UI.colQ=ev.target.value;const l=document.getElementById('col-list');if(l)l.innerHTML=colListHTML()}
 });
@@ -6118,15 +6213,22 @@ document.addEventListener('submit',ev=>{
   if(kind==='gwith'){const a=S.music.find(x=>x.id===f.dataset.a),g=a&&a.groups.find(x=>x.id===f.dataset.g);
     if(g){const w=[...new Set(String(d.w||'').split(/\s*(?:&|,|\band\b|\u00d7)\s*/i).map(x=>x.trim()).filter(Boolean))];if(w.length)g.w=w;else delete g.w;linkTwins();touch()}
     UI.wEdit=null;render();return}
+  if(kind==='lsadd'||kind==='lsedit'){const id=f.dataset.id;
+    if(rating(id)){
+      const v=String(d.rd||'').trim(),ok=/^\d{4}-\d\d-\d\d$/.test(v)&&v<=todayISO(),r=Math.min(10,Math.max(1,Math.round((+d.r||0)*2)/2)),n=String(d.n||'').trim().slice(0,280),L=lsList(id).map(x=>({...x}));
+      if(kind==='lsadd'){const e={d:ok?v:todayISO(),r,n};L.push(e);lsApply(id,L);const at=lsRaw(id).lastIndexOf(lsRaw(id).find(x=>x.d===e.d&&x.r===e.r&&x.n===e.n));UI.lsNew=id+'|'+at}
+      else{const i=+f.dataset.i;if(L[i]){L[i]={d:ok?v:'',r,n};lsApply(id,L)}}
+      touch()}
+    UI.lsEdit=null;render();return}
   if(kind==='grd'){const g=S.music.flatMap(x=>x.groups).find(x=>x.id===f.dataset.g);
     if(g){const id=dxOn(g)?dxId(g):g.id,v=String(d.rd||'').trim();
       if(rating(id)&&/^\d{4}-\d\d-\d\d$/.test(v)&&v<=todayISO())S.marks[id]={...S.marks[id],rd:v};
-      else if(rating(id)&&!v){const m0={...S.marks[id]};delete m0.rd;S.marks[id]=m0}
+      else if(rating(id)&&!v){const m0={...S.marks[id]};delete m0.rd;S.marks[id]=m0}lsFromMark(id);
       touch()}
     UI.dEdit=null;render();return}
   if(kind==='hrd'){const id=f.dataset.id,v=String(d.rd||'').trim();
     if(rating(id)&&/^\d{4}-\d\d-\d\d$/.test(v)&&v<=todayISO())S.marks[id]={...S.marks[id],rd:v};
-    else if(rating(id)&&!v){const m0={...S.marks[id]};delete m0.rd;S.marks[id]=m0}
+    else if(rating(id)&&!v){const m0={...S.marks[id]};delete m0.rd;S.marks[id]=m0}lsFromMark(id);
     UI.hEdit=null;touch();render();return}
   if(kind==='listen'){if(llAdd(d.artist,d.title))touch();UI.llOpen=true;render();const el=document.getElementById('wl-artist');if(el)el.focus();return}
   if(kind==='spcid'){const c=(d.cid||'').trim();
