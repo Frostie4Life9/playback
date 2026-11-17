@@ -1687,6 +1687,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-l', note:'FIX: the app sat on \u201cLoading your log\u201d. The artist menu\u2019s new opening animation (2026.11.17-j) referred to a value that did not exist where the menu is drawn, which stopped the page from drawing at all. Nothing in your log was touched. It is drawn again, and the menu animation is unchanged.'},
   {v:'2026.11.17-k', note:'SMOOTHER DELUXE SWITCH: the Standard/Deluxe transition was too quick and abrupt. Everything now runs about twice as slow and with softer easing: the old edition fades out gently, deluxe songs fold shut and open with a longer, more even stagger (they no longer open fast and then stall), and the cover, title and rating ease in instead of popping.'},
   {v:'2026.11.17-j', note:'ARTIST MENU OPENS WITH MOTION (PHONE): tapping the artist bar now slides the full-screen menu up from the bottom, the title and search settle in from the top, and the artists rise into the grid one after another, with the A-Z strip fading in last. It plays only on the tap that opens it, so a sync redraw while the menu is open never replays it. Reduced-motion settings skip it.'},
   {v:'2026.11.17-i', note:'DELUXE SWITCH TRANSITION: going between Standard and Deluxe now plays as a real transition instead of a snap. The old edition fades out (cover, title, rating), switching back folds the deluxe-only songs shut one after another, and going to Deluxe opens them up row by row while the new cover pops in and the title and rating fade up. The sliding switch thumb is unchanged. Reduced-motion settings skip all of it.'},
@@ -4679,10 +4680,11 @@ function render(){
     if(al){al.scrollIntoView({behavior:'smooth',block:'start'});slRipple(al,500)}}
   if(UI.toSheet){UI.toSheet=false;const sh=document.querySelector('.sheet');if(sh)sh.scrollIntoView({behavior:'smooth',block:'start'})}
 }
+let LIBIN=false;   /* set by renderMain for the one draw that opens the artist menu */
 function mainView(e,list){return `
 
   <div class="shell">
-    <aside class="side ${UI.libOpen||!e?'libopen':''}${UI.libOpen&&e?' libfull':''}${libIn&&UI.libOpen&&e?' libin':''}">
+    <aside class="side ${UI.libOpen||!e?'libopen':''}${UI.libOpen&&e?' libfull':''}${LIBIN&&UI.libOpen&&e?' libin':''}">
       ${e?`<button class="libbtn" data-act="lib" aria-expanded="${!!UI.libOpen}"><span class="label">${UI.tab==='music'?'Artists':'Shows & films'} \u00b7 ${list.length}</span><b>${esc(e.name||e.title)}</b><span class="libsw">${UI.libOpen?'Close':'Switch'}</span></button>`:''}
       <div class="libbody">
       ${sideFinder(list)}
@@ -5214,7 +5216,7 @@ function keepImgs(fn){
 function renderMain(){
   if(!READY){document.getElementById('app').innerHTML='<p class="empty">Loading your log\u2026</p>';return}
   const e=current();
-  const libIn=UI.libAnim;UI.libAnim=false;   /* the menu's opening animation plays on the one draw that opens it */
+  LIBIN=!!UI.libAnim;UI.libAnim=false;   /* the menu's opening animation plays on the one draw that opens it */
   const list=S[UI.tab];
   document.getElementById('app').innerHTML=`
   <header class="top">
