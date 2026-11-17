@@ -1525,6 +1525,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-i', note:'PINK BANNERS: a cover with a big soft pastel backdrop and a white frame (The Divine Feminine) was being read as white paper, so its banner came out gray. A pastel field that covers over a third of the art now counts as the cover\'s color, and gets a little extra color so it reads as pink instead of beige. Busy covers like Don\'t Be Dumb and bold ones like Blue Slide Park are unchanged. Every cover is read again.'},
   {v:'2026.11.16-h', note:'COVER COLORS: a middle ground for busy covers. The white-paper banner now only applies when the cover is mostly white and no single color covers more than about a seventh of it. Don\'t Be Dumb (its biggest color is only about a tenth) stays on the paper, and Blue Slide Park (one blue triangle family is about a fifth) keeps its blue, both with room to spare instead of sitting on the edge. Covers right between the two could still go either way. Every cover is read again.'},
   {v:'2026.11.16-g', note:'DARK RECORDS: a black or very dark album no longer gives a record you can barely see. On the record only (the banner stays black), a dark color is lifted to a visible charcoal in every look, the soft fade and marble are no longer darkened further for a dark artist, and every record has a faint light rim so its edge reads on the dark card. BUSY COVERS: when a cover is mostly white paper and no single color covers more than about a fifth of it (like Don\'t Be Dumb), the banner follows the paper instead of picking one of many colors; a big earthy ground area still counts as a color. Every cover is read again with the new rule.'},
   {v:'2026.11.16-f', note:'SPLATTER: the second splatter is back on a dark tint of your highest-rated album\'s color (like the original), and the first stays on clear vinyl. LIQUID: the record that flies to the turntable is now finished exactly like the landed one (it was missing the glassy sheen, so detail seemed to appear when it landed), it is no longer scaled up from a small cached picture while it moves, and the paint now drifts much less while it spins up so the record keeps its shape.'},
@@ -4980,7 +4981,7 @@ function delBtn(id,label){const armed=UI.armed===id;return `<button class="btn d
    the title instead. Near-gray covers stay a quiet charcoal rather than being tinted up.
    Colors are kept on this device so each cover is read once (the key's number goes up whenever
    the picking changes, so every cover is read again with the new rule). */
-const ACOL_KEY=KEY+'_acol11';
+const ACOL_KEY=KEY+'_acol12';
 let ACOL=(()=>{try{return JSON.parse(localStorage.getItem(ACOL_KEY))||{}}catch(e){return{}}})();
 const ACOL_TRY={};
 function acolSave(){try{localStorage.setItem(ACOL_KEY,JSON.stringify(ACOL))}catch(e){ACOL={}}}
@@ -5045,12 +5046,15 @@ function acolFromPixels(d,dark){
     const sc=4*Math.min(1,(c-.06)/.45)+5*Math.sqrt(F.p)+gnd;   /* vividness keeps counting up to very saturated colors, so a bold stripe can beat a big muted field */if(!best||sc>best.sc)best={sc,c:c0,gnd}}
   for(const x of info){const bs=x.f+x.p*.01;if(!back||bs>back.bs)back={bs,c:cen[x.j]}}
   if(!best&&back)best=back;          /* no clear color: follow the backdrop */
+  let soft=0;
   /* A busy cover (mostly white paper, and no color area on more than about a seventh of it) has no color to pick, so the banner follows the paper. A big earthy ground area still counts as a color. */
-  {let top=0;for(const F of fam){if(F.cw/F.p>=.25&&F.p>top)top=F.p}
-   if(!dark&&best&&!(best.gnd>0)&&wh/N>=.18&&top<.15)return '#eeece6'}
+  {let top=0;for(const F of fam){if(F.cw/F.p>=.25&&F.p>top)top=F.p;if(F.p>soft)soft=F.p}
+   /* a soft pastel field (a pink or sky-blue backdrop) still counts as the cover's color when it covers over a third of the art, so a white frame around it does not turn the banner into paper */
+   if(!dark&&best&&!(best.gnd>0)&&wh/N>=.18&&top<.15&&soft<.35)return '#eeece6'}
   if(!best)return acolFix(R/W,G/W,B/W);
   const r=best.c[0]/255,g=best.c[1]/255,b=best.c[2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),c=mx-mn,l=(mx+mn)/2,h=hue(r,g,b,mx,c);
-  const lt=dark?Math.max(.22,Math.min(.36,l)):Math.max(.09,Math.min(.82,l)),st=Math.min(dark?1:.75,c/(1-Math.abs(2*lt-1))),
+  const lt=dark?Math.max(.22,Math.min(.36,l)):Math.max(.09,Math.min(.82,l)),st=Math.min(dark?1:.75,c/(1-Math.abs(2*lt-1))*(!dark&&soft>=.35&&c<.16?1.5:1)),   /* a pastel backdrop (soft pink, sky blue) gets a little more color so the banner reads as that color and not beige */
+       
         q=n=>{const t=(n+h/30)%12,a=st*Math.min(lt,1-lt);return Math.round(255*(lt-a*Math.max(-1,Math.min(t-3,9-t,1))))};
   return dark?acolFix(q(0),q(8),q(4)):'#'+[q(0),q(8),q(4)].map(v=>v.toString(16).padStart(2,'0')).join('')}
 let ACOLV=0;const AQ=[],AQS={};let AQN=0;
