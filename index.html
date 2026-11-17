@@ -830,6 +830,75 @@ details.addart .add{border-top:1px solid var(--line)}
 @keyframes pfup{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @keyframes pfgrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
 @keyframes pfring{from{stroke-dasharray:0 213.6}}
+
+/* account page sections: tabs, Overview cards, and the Albums wall */
+.pf-tabs button{transition:background .2s,color .2s,border-color .2s,transform .15s}
+.pf-tabs button:active,.pf-vt button:active,.pf-fb:active{transform:scale(.95)}
+.pf-card{border:1px solid var(--line);background:var(--surface);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.pf-card h3{margin:0;font:800 16px Archivo,var(--display);display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.pf-card h3 small{font:500 11px var(--mono);color:var(--muted)}
+.pf-mini{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pf-mini>div{background:var(--sunk);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.pf-mini b{font:800 18px Archivo,var(--display)}
+.pf-mini span{font-size:11px;line-height:1.25;color:var(--muted)}
+.pf-act{display:flex;align-items:flex-end;gap:3px;height:96px}
+.pf-act>div{flex:1;min-width:0;height:100%;display:flex;align-items:flex-end}
+.pf-act i{display:block;width:100%;height:var(--v);min-height:2px;border-radius:3px 3px 1px 1px;background:var(--accent);opacity:.45;transform-origin:bottom}
+.pf-act i.top{opacity:1}
+.pf-ta{display:flex;align-items:center;gap:12px}
+.pf-fan{display:flex;width:62px;flex:none}
+.pf-fan .pcv{width:34px;height:34px;border-radius:7px;border:2px solid var(--surface);margin-left:-14px}
+.pf-fan .pcv:first-child{margin-left:0}
+.pf-fan .pcv b{font-size:14px}
+.pf-tar{width:70px;flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.pf-tar .pn{font-size:17px}
+.pf-tar .bar{display:block;width:100%;height:4px;border-radius:2px;background:var(--line)}
+.pf-tar .bar i{display:block;height:4px;border-radius:2px;background:var(--accent);transform-origin:left}
+.pf-ctl{display:flex;flex-direction:column;gap:6px}
+.pf-lab{font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.pf-sum{display:flex;align-items:center;justify-content:space-between;gap:8px;font:500 12px var(--mono);color:var(--muted)}
+.pf-sum .tg{display:flex;gap:8px;align-items:center}
+.pf-fb{min-height:40px;display:inline-flex;gap:6px;align-items:center}
+.pf-fb .c{font:700 11px var(--mono);background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:1px 7px}
+.pf-vt{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:2px}
+.pf-vt button{width:40px;height:34px;border:0;border-radius:999px;background:transparent;color:var(--muted);display:grid;place-items:center;padding:0;transition:background .2s,color .2s,transform .15s}
+.pf-vt button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.pf-fil{display:flex;flex-direction:column;gap:12px;padding:12px 14px;border:1px solid var(--line);background:var(--surface);border-radius:16px}
+.pf-mon{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.pf-mon button{position:relative;overflow:hidden;aspect-ratio:1.25;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink);display:flex;flex-direction:column;justify-content:space-between;align-items:flex-start;padding:5px 7px;text-align:left;transition:border-color .2s,transform .15s}
+.pf-mon button:active{transform:scale(.95)}
+.pf-mon button i{position:absolute;inset:0;background:var(--accent);opacity:calc(var(--a)*.5);pointer-events:none}
+.pf-mon button span,.pf-mon button b{position:relative}
+.pf-mon span{font:600 10px var(--mono);color:var(--muted)}
+.pf-mon b{font:800 16px/1 Archivo,var(--display)}
+.pf-mon button[aria-pressed="true"]{border-color:var(--accent);outline:2px solid var(--accent);outline-offset:1px}
+.pf-mon button:disabled{opacity:.4}
+.pf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.pf-rows{display:flex;flex-direction:column;gap:8px}
+.pf-mh{grid-column:1/-1;display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
+.pf-mh:first-child{border-top:0;padding-top:0}
+.pf-mh b{font:800 17px Archivo,var(--display)}
+.pf-mh span{font:500 11px var(--mono);color:var(--muted)}
+.pf-cv{position:relative;aspect-ratio:1;border-radius:11px;overflow:hidden;background:hsl(var(--c,180) 40% 30%);color:#fff}
+.pf-cv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.pf-cv .ltr{position:absolute;inset:0;display:grid;place-items:center;font:800 34px Archivo,var(--display);opacity:.55}
+.pf-cv .sc{position:absolute;top:6px;left:6px;font:700 12px var(--mono);background:rgb(12 16 14 / .78);color:#fff;border-radius:999px;padding:2px 7px}
+.pf-cv .me{position:absolute;top:6px;right:6px;font:600 10px var(--mono);background:rgb(255 255 255 / .88);color:#111;border-radius:999px;padding:2px 6px}
+.pf-cv .tt{position:absolute;left:0;right:0;bottom:0;padding:18px 7px 6px;background:linear-gradient(transparent,rgb(0 0 0 / .78));display:flex;flex-direction:column;gap:1px}
+.pf-cv .tt b{font:800 11px/1.1 Archivo,var(--display);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pf-cv .tt small{font-size:10px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@keyframes pfpop{from{opacity:0;transform:scale(.86) translateY(8px)}to{opacity:1;transform:none}}
+@keyframes pfwide{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@media (prefers-reduced-motion:no-preference){
+  .pf-list.pf-an .pf-cv{animation:pfpop .42s cubic-bezier(.3,1.35,.5,1) both;animation-delay:calc(var(--i)*24ms)}
+  .pf-list.pf-an .pf-row{animation:pfup .4s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*30ms)}
+  .pf-list.pf-an .pf-mh{animation:pfup .4s cubic-bezier(.2,.8,.2,1) both}
+  .pf-fil.pf-opn{animation:pfup .3s cubic-bezier(.2,.8,.2,1) both}
+  .pf-card.pf-in{animation:pfup .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*70ms + 150ms)}
+  .pf-act.pf-in i{animation:pfgrow .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*18ms + 300ms)}
+  .pf-card.pf-in .pf-tar .bar i{animation:pfwide .8s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*80ms + 500ms)}
+  .pf-card.pf-in .pf-ta{animation:pfup .4s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*60ms + 350ms)}
+}
 /* the rated-albums record on an account page: every rated album is a cover on one spiral groove, best at the outer edge */
 .vl{display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px 14px 14px;border:1px solid var(--line);background:var(--surface);border-radius:20px}
 .vl-wrap{position:relative;width:100%;max-width:560px;aspect-ratio:1;border-radius:50%;box-shadow:0 26px 50px -26px hsl(var(--h,200) 60% 40% / .6),0 0 0 1px rgb(255 255 255 / .06)}
@@ -1919,6 +1988,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-ai', note:'ACCOUNT PAGE SECTIONS AND A BETTER ALBUMS VIEW: your Account page (and a friend\u2019s page) now has three tabs under the top card: Overview, Albums and Shows & films, so the page is no longer one very long list. OVERVIEW keeps the stat tiles, the score bars and the big rated-albums record and adds three cards: Scoring habits (your most common score, how many perfect 10s, and the share rated 8 or higher), Albums rated per month (a bar for every month since your first dated rating, with your busiest month and how many months you rated something) and Top artists (your five highest-averaging artists with two or more albums). ALBUMS is a wall of covers with the exact rating on each one (on a friend\u2019s page your own rating sits in the corner of the albums you both rated). Sort by Highest, Lowest, Newest rated, Oldest rated or A\u2013Z; the Filters button opens a score filter (10, 9+, 8+, 7+, Under 7) and a Year rated filter, and picking a year shows twelve month tiles you can tap to see just that month, with the albums grouped under month headings (the count and average for each month) whenever you sort by date. A switch beside Filters flips between the cover wall and the old list. Shows & films keeps the list with the same sorting and filters. The wall, the month tiles and the new cards all animate in. Nothing about what is published changed, so this works on friends\u2019 pages straight away.'},
   {v:'2026.11.17-ah', note:'RATED DATES ON ACCOUNT PAGES: every album, show and film on your Account page (and on a friend\u2019s page) now says the day it was rated, under the title (Rated Nov 14, 2026). The dates come from the days already on your ratings and are published with them, so a friend only sees them if you accept each other and sharing is on. Nobody can change them: only your own signed-in account can save your published ratings, and the private rating-dates list itself stays on your Worker, readable only with your sync key or owner login, with no way for anyone to write to it. The Worker needs the new playback-sync.js (it takes it from GitHub on its own).'},
   {v:'2026.11.17-ag', note:'THE RATED-ALBUMS RECORD: your Account page (and a friend\u2019s page) now has a big vinyl under the stats with every album rated, each one a cover on a single spiral groove: the highest rated sit on the outer edge and it winds in to the lowest at the label. Hover a cover (or tap it on a phone) to read its title, artist and rating on the label, and tap again to keep it there. The record turns slowly, stops when you point at it, and pops in cover by cover when the page opens. A brighter ring means a higher rating. Deluxe editions rated on their own are not drawn, matching the albums count.'},
   {v:'2026.11.17-af', note:'FIX: DELUXE EDITIONS WITH A ROMAN NUMERAL TITLE NOW FOLD IN: Skate Story: Vol. I and its Deluxe Edition (titled Vol. 1) stayed as two separate albums because Playback read I and 1 as different words. Vol., Part, Chapter, Book, Act and Episode followed by a Roman numeral now count as the number when titles are compared. The tracklist check is unchanged: the deluxe still has to carry nearly all of the standard album\u2019s songs and add more, so a different album with a similar name stays separate. Tap Check for new releases on the artist to apply it; the rating on the stand-alone deluxe moves to your deluxe rating and its song checks move onto the album.'},
@@ -5860,22 +5930,99 @@ function accHeroHtml(P,stats,match,extra){
 }
 function accStatsHtml(st){
   const f=v=>v?v.toFixed(1):'–',mx=Math.max(1,...st.hist);
-  return `<div class="pf-tiles${UI.pAnim?' pf-in':''}"><div><b>${st.al}</b><span>albums rated</span><i>${st.al?'avg '+f(st.aAvg):''}</i></div><div><b>${st.sc}</b><span>shows &amp; films</span><i>${st.sc?'avg '+f(st.sAvg):''}</i></div></div>
-    <div class="pf-hist${UI.pAnim?' pf-in':''}" role="img" aria-label="How often each rating from 1 to 10 was given">${st.hist.map((c,i)=>`<div style="--i:${i};--v:${(c/mx*100).toFixed(0)}%"><em>${c||''}</em><i></i><span>${i+1}</span></div>`).join('')}</div>`;
+  return `<div class="pf-tiles${pfAn()}"><div><b>${st.al}</b><span>albums rated</span><i>${st.al?'avg '+f(st.aAvg):''}</i></div><div><b>${st.sc}</b><span>shows &amp; films</span><i>${st.sc?'avg '+f(st.sAvg):''}</i></div></div>
+    <div class="pf-hist${pfAn()}" role="img" aria-label="How often each rating from 1 to 10 was given">${st.hist.map((c,i)=>`<div style="--i:${i};--v:${(c/mx*100).toFixed(0)}%"><em>${c||''}</em><i></i><span>${i+1}</span></div>`).join('')}</div>`;
 }
-/* the list under a page: albums or shows and films, filtered, with your own rating beside theirs on a friend's page */
+/* ---------- the sections of an account page: Overview (stats, activity, top artists, the record), Albums (a wall of covers you can sort and filter) and Shows & films ---------- */
+function pReset(){UI.pTab='o';UI.pKind='a';UI.pLim=60;UI.pSort='hi';UI.pMin=0;UI.pYear='';UI.pMon=0;UI.pView='g';UI.pFilter='all';UI.pFOpen=false;UI.pAnimL=false;UI.pAnimF=false}
+const pfAn=()=>UI.pAnim||UI.pAnimL?' pf-in':'';
+const pMonthName=(k,short)=>{const[y,m]=k.split('-');return new Date(+y,+m-1,1).toLocaleDateString([],short?{month:'short'}:{month:'long',year:'numeric'})};
+const accAvg=l=>l.length?l.reduce((t,x)=>t+x.r,0)/l.length:0;
+const ACC_SORTS=[['hi','Highest'],['lo','Lowest'],['new','Newest rated'],['old','Oldest rated'],['az','A–Z']];
+const ACC_MINS=[[0,'All'],[10,'10'],[9,'9+'],[8,'8+'],[7,'7+'],[-7,'Under 7']];
+const accPassMin=(r,m)=>!m||(m===10?r>=10:m<0?r<-m:r>=m);
+function accSortFn(sort){
+  const nm=x=>String(x.n||''),ar=x=>String(x.a||'');
+  switch(sort){
+    case 'lo':return(x,y)=>x.r-y.r||nm(x).localeCompare(nm(y));
+    case 'new':return(x,y)=>(!x.d)-(!y.d)||String(y.d||'').localeCompare(String(x.d||''))||y.r-x.r;
+    case 'old':return(x,y)=>(!x.d)-(!y.d)||String(x.d||'').localeCompare(String(y.d||''))||y.r-x.r;
+    case 'az':return(x,y)=>ar(x).localeCompare(ar(y))||nm(x).localeCompare(nm(y));
+    default:return(x,y)=>y.r-x.r||nm(x).localeCompare(nm(y));
+  }
+}
+function accTabsHtml(P){
+  const b=accBase(P.items),nA=b.filter(x=>x.kind==='a').length,nS=b.filter(x=>x.kind==='s').length,t=UI.pTab==='a'||UI.pTab==='s'?UI.pTab:'o';
+  const tb=(v,l,n)=>`<button data-act="ptab" data-v="${v}" aria-pressed="${t===v}">${l}${n==null?'':`<span class="c">${n}</span>`}</button>`;
+  return `<div class="pf-tabs pf-main" role="group" aria-label="Page sections">${tb('o','Overview')}${tb('a','Albums',nA)}${tb('s','Shows &amp; films',nS)}</div>`;
+}
+/* Overview cards under the stats: scoring habits, albums rated per month (from the rated-on dates) and top artists */
+function accInsightsHtml(P){
+  const b=accBase(P.items),al=b.filter(x=>x.kind==='a'),an=pfAn();let n=0,h='';
+  if(b.length){
+    const cnt={};for(const x of b){const k=Math.min(10,Math.max(1,Math.round(x.r)));cnt[k]=(cnt[k]||0)+1}
+    const mode=Object.keys(cnt).map(Number).sort((p,q)=>cnt[q]-cnt[p]||q-p)[0];
+    const tens=b.filter(x=>x.r>=10).length,hi=Math.round(100*b.filter(x=>x.r>=8).length/b.length);
+    h+=`<div class="pf-card${an}" style="--i:${n++}"><h3>Scoring habits</h3><div class="pf-mini"><div><b>${mode}</b><span>most common score</span></div><div><b>${tens}</b><span>perfect 10${tens===1?'':'s'} given</span></div><div><b>${hi}%</b><span>rated 8 or higher</span></div></div></div>`;
+  }
+  const dated=al.filter(x=>/^\d{4}-\d\d/.test(x.d||''));
+  if(dated.length>=3){
+    const by={};for(const x of dated){const k=x.d.slice(0,7);by[k]=(by[k]||0)+1}
+    const ks=Object.keys(by).sort(),[y0,m0]=ks[0].split('-').map(Number),[y1,m1]=ks[ks.length-1].split('-').map(Number);
+    const mo=[];let y=y0,m=m0;
+    while(y<y1||(y===y1&&m<=m1)){const k=y+'-'+String(m).padStart(2,'0');mo.push({k,n:by[k]||0});m++;if(m>12){m=1;y++}}
+    const shown=mo.slice(-30),mx=Math.max(1,...shown.map(x=>x.n)),best=mo.reduce((p,q)=>q.n>p.n?q:p),act=mo.filter(x=>x.n).length;
+    const lab=k=>pMonthName(k,true)+' ’'+k.slice(2,4);
+    h+=`<div class="pf-card${an}" style="--i:${n++}"><h3>Albums rated per month<small>${esc(lab(shown[0].k))} → ${esc(lab(shown[shown.length-1].k))}</small></h3>
+      <div class="pf-act${an}" role="img" aria-label="Albums rated each month, busiest ${esc(pMonthName(best.k))} with ${best.n}">${shown.map((x,i)=>`<div style="--i:${i}"><i style="--v:${(x.n/mx*100).toFixed(0)}%" class="${x.k===best.k?'top':''}"></i></div>`).join('')}</div>
+      <div class="pf-mini"><div><b>${best.n}</b><span>busiest month (${esc(lab(best.k))})</span></div><div><b>${act} of ${mo.length}</b><span>months with a rating</span></div><div><b>${(dated.length/mo.length).toFixed(1)}</b><span>albums a month</span></div></div></div>`;
+  }
+  const ga={};for(const x of al){if(x.a)(ga[x.a]=ga[x.a]||[]).push(x)}
+  const ta=Object.entries(ga).filter(([,l])=>l.length>=2).map(([name,l])=>({name,l:l.slice().sort((p,q)=>q.r-p.r),avg:accAvg(l)})).sort((p,q)=>q.avg-p.avg||q.l.length-p.l.length||p.name.localeCompare(q.name)).slice(0,5);
+  if(ta.length)h+=`<div class="pf-card${an}" style="--i:${n++}"><h3>Top artists<small>by average · 2+ albums</small></h3>${ta.map((a,i)=>`<div class="pf-ta" style="--i:${i}"><span class="pf-fan">${a.l.slice(0,3).map(x=>{const u=accCover(x);return `<span class="pcv"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span>`}).join('')}</span><span class="pt"><b>${esc(a.name)}</b><small>${a.l.length} albums</small></span><span class="pf-tar"><b class="pn">${a.avg.toFixed(1)}</b><span class="bar"><i style="width:${(a.avg*10).toFixed(0)}%"></i></span></span></div>`).join('')}</div>`;
+  return h;
+}
+/* the list under a page: albums as a wall of covers (or a list) and shows and films, sorted and filtered by score and by the year and month they were rated */
 function accListHtml(P,match){
-  const kind=UI.pKind==='s'?'s':'a',base=accBase(P.items).filter(x=>x.kind===kind);
+  const kind=UI.pTab==='s'?'s':'a',all=accBase(P.items).filter(x=>x.kind===kind);
   const self=P.self,mine=x=>match&&match.mine(x);
-  const sh=base.filter(x=>mine(x)!=null).length,only=base.length-sh;
-  const fl=self?'all':UI.pFilter,list=base.filter(x=>fl==='all'||(fl==='shared'?mine(x)!=null:mine(x)==null));
-  const lim=UI.pLim||60,rows=list.slice(0,lim);
-  const nA=accBase(P.items).filter(x=>x.kind==='a').length,nS=accBase(P.items).filter(x=>x.kind==='s').length;
-  return `<div class="pf-list${UI.pAnim?' pf-in':''}">
-    <div class="pf-tabs" role="group" aria-label="What to list"><button data-act="pkind" data-v="a" aria-pressed="${kind==='a'}">Albums<span class="c">${nA}</span></button><button data-act="pkind" data-v="s" aria-pressed="${kind==='s'}">Shows &amp; films<span class="c">${nS}</span></button></div>
-    ${self?'':`<div class="pf-tabs sm" role="group" aria-label="Filter"><button data-act="pfilter" data-v="all" aria-pressed="${fl==='all'}">All<span class="c">${base.length}</span></button><button data-act="pfilter" data-v="shared" aria-pressed="${fl==='shared'}">You both rated<span class="c">${sh}</span></button><button data-act="pfilter" data-v="only" aria-pressed="${fl==='only'}">Not rated by you<span class="c">${only}</span></button></div>`}
-    ${rows.length?rows.map((x,i)=>{const m=self?null:mine(x),u=accCover(x);
-      return `<div class="pf-row" style="--i:${Math.min(i,12)}"><span class="pcv"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span><span class="pt"><b>${esc(x.n||'Untitled')}</b><small>${esc([x.a,x.d&&fmtRd(x.d)?'Rated '+fmtRd(x.d):''].filter(Boolean).join(' \u00b7 '))}</small></span><span class="pr">${m!=null?`<span class="pme" title="Your rating">you ${fmt(m)}</span>`:''}<b class="pn">${fmt(x.r)}</b></span></div>`}).join(''):`<p class="note">${base.length?'Nothing here with that filter.':'Nothing rated here yet.'}</p>`}
+  const sh=all.filter(x=>mine(x)!=null).length,only=all.length-sh;
+  const fl=self?'all':(UI.pFilter||'all');
+  const base=all.filter(x=>fl==='all'||(fl==='shared'?mine(x)!=null:mine(x)==null));
+  const years=[...new Set(base.filter(x=>x.d).map(x=>x.d.slice(0,4)))].sort().reverse();
+  const yr=years.includes(UI.pYear)?UI.pYear:'',mon=yr&&UI.pMon>=1&&UI.pMon<=12?UI.pMon:0,mn=UI.pMin|0;
+  const sort=ACC_SORTS.some(x=>x[0]===UI.pSort)?UI.pSort:'hi',grid=kind==='a'&&UI.pView!=='l';
+  const inYear=base.filter(x=>!yr||(x.d&&x.d.slice(0,4)===yr));
+  const inMon=inYear.filter(x=>!mon||(x.d&&+x.d.slice(5,7)===mon));
+  const list=inMon.filter(x=>accPassMin(x.r,mn)).sort(accSortFn(sort));
+  const noun=kind==='a'?['album','albums']:['title','titles'];
+  const grp=(sort==='new'||sort==='old')&&list.some(x=>x.d);
+  const gs={};if(grp)for(const x of list){const k=x.d?x.d.slice(0,7):'';const g=gs[k]||(gs[k]={n:0,s:0});g.n++;g.s+=x.r}
+  const lim=UI.pLim||60,rows=list.slice(0,lim),nAct=(mn?1:0)+(yr?1:0)+(mon?1:0),fopen=!!UI.pFOpen;
+  const an=(UI.pAnim||UI.pAnimL)?' pf-an':'';
+  const chip=(act,v,label,c,on)=>`<button data-act="${act}" data-v="${v}" aria-pressed="${on}">${label}${c==null?'':`<span class="c">${c}</span>`}</button>`;
+  const minCt=v=>inMon.filter(x=>accPassMin(x.r,v)).length;
+  const MON=Array.from({length:12},(_,i)=>new Date(2000,i,1).toLocaleDateString([],{month:'short'}));
+  const mc=Array(13).fill(0);for(const x of inYear)if(x.d)mc[+x.d.slice(5,7)]++;
+  const mxm=Math.max(1,...mc);
+  const monStrip=yr?`<div class="pf-mon" role="group" aria-label="Month rated in ${yr}">${MON.map((nm,i)=>`<button data-act="pmon" data-v="${i+1}" aria-pressed="${mon===i+1}"${mc[i+1]?'':' disabled'} aria-label="${nm} ${yr}, ${mc[i+1]} ${noun[1]}"><i style="--a:${(mc[i+1]/mxm).toFixed(2)}"></i><span>${nm}</span><b>${mc[i+1]||'–'}</b></button>`).join('')}</div>`:'';
+  const panel=fopen?`<div class="pf-fil${UI.pAnimF?' pf-opn':''}"><div class="pf-ctl"><span class="pf-lab">Score</span><div class="pf-tabs sm" role="group" aria-label="Score">${ACC_MINS.map(([v,l])=>chip('pmin',v,l,minCt(v),mn===v)).join('')}</div></div>${years.length?`<div class="pf-ctl"><span class="pf-lab">Year rated</span><div class="pf-tabs sm" role="group" aria-label="Year rated">${chip('pyear','','All',base.length,!yr)}${years.map(y=>chip('pyear',y,y,base.filter(x=>x.d&&x.d.slice(0,4)===y).length,yr===y)).join('')}</div></div>${monStrip}`:''}${nAct?`<button class="linkish" data-act="pclear">Clear filters</button>`:''}</div>`:'';
+  const avg=accAvg(list);
+  const icoG='<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>';
+  const icoL='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>';
+  const sum=`<div class="pf-sum"><span>${list.length} ${noun[list.length===1?0:1]}${list.length?' · avg '+avg.toFixed(1):''}</span><span class="tg"><button class="btn pf-fb" data-act="pfopen" aria-expanded="${fopen}">Filters${nAct?`<span class="c">${nAct}</span>`:''}</button>${kind==='a'?`<span class="pf-vt" role="group" aria-label="View"><button data-act="pview" data-v="g" aria-pressed="${grid}" aria-label="Cover grid">${icoG}</button><button data-act="pview" data-v="l" aria-pressed="${!grid}" aria-label="List">${icoL}</button></span>`:''}</span></div>`;
+  let last=null,body='';
+  rows.forEach((x,i)=>{
+    if(grp){const k=x.d?x.d.slice(0,7):'';if(k!==last){last=k;const g=gs[k];body+=`<div class="pf-mh"><b>${k?esc(pMonthName(k)):'No date'}</b><span>${g.n} ${noun[g.n===1?0:1]} · avg ${(g.s/g.n).toFixed(1)}</span></div>`}}
+    const m=self?null:mine(x),u=accCover(x),when=x.d&&fmtRd(x.d)?'Rated '+fmtRd(x.d):'';
+    if(grid)body+=`<div class="pf-cv" style="--i:${Math.min(i,20)};--c:${accHue(x.n)}" title="${esc([x.n||'Untitled',x.a,when].filter(Boolean).join(' · '))}"><b class="ltr" aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}<span class="sc">${fmt(x.r)}</span>${m!=null?`<span class="me" title="Your rating">you ${fmt(m)}</span>`:''}<span class="tt"><b>${esc(x.n||'Untitled')}</b><small>${esc(x.a||'')}</small></span></div>`;
+    else body+=`<div class="pf-row" style="--i:${Math.min(i,12)}"><span class="pcv"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span><span class="pt"><b>${esc(x.n||'Untitled')}</b><small>${esc([x.a,when].filter(Boolean).join(' · '))}</small></span><span class="pr">${m!=null?`<span class="pme" title="Your rating">you ${fmt(m)}</span>`:''}<b class="pn">${fmt(x.r)}</b></span></div>`;
+  });
+  return `<div class="pf-list${an}">
+    ${self?'':`<div class="pf-tabs sm" role="group" aria-label="Filter"><button data-act="pfilter" data-v="all" aria-pressed="${fl==='all'}">All<span class="c">${all.length}</span></button><button data-act="pfilter" data-v="shared" aria-pressed="${fl==='shared'}">You both rated<span class="c">${sh}</span></button><button data-act="pfilter" data-v="only" aria-pressed="${fl==='only'}">Not rated by you<span class="c">${only}</span></button></div>`}
+    <div class="pf-ctl"><span class="pf-lab" id="pf-sl">Sort</span><div class="pf-tabs sm" role="group" aria-labelledby="pf-sl">${ACC_SORTS.map(([v,l])=>chip('psort',v,l,null,sort===v)).join('')}</div></div>
+    ${sum}${panel}
+    ${rows.length?`<div class="${grid?'pf-grid':'pf-rows'}">${body}</div>`:`<p class="note">${all.length?'Nothing here with those filters.':'Nothing rated here yet.'}</p>`}
     ${list.length>lim?`<div class="tools"><button class="btn" data-act="pmore">Show ${Math.min(60,list.length-lim)} more</button></div>`:''}</div>`;
 }
 /* the big record: every album this person rated, one cover per spot on a single spiral groove, highest rated at the outer edge and lowest at the label.
@@ -5913,7 +6060,7 @@ function accVinylHtml(P){
   if(!all.length){VL.items=[];return ''}
   const items=all.slice(0,600),{d,pts}=vlLayout(items.length);
   VL.items=items;VL.pin=-1;VL.def=vlLabel(null,P);
-  const anim=UI.pAnim?' pf-in':'',h=accHueOf(P),big=d>=22;
+  const anim=pfAn(),h=accHueOf(P),big=d>=22;
   let grooves='';for(let r=104;r<=288;r+=3.6)grooves+=`<circle cx="300" cy="300" r="${r.toFixed(1)}"/>`;
   const beads=items.map((x,i)=>{
     const[px,py]=pts[i]||[300,300],u=accCover(x),ring=(1+x.r*.22).toFixed(2),op=(.3+x.r*.07).toFixed(2);
@@ -5941,7 +6088,8 @@ document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.clos
 document.addEventListener('keydown',ev=>{if((ev.key==='Enter'||ev.key===' ')&&ev.target.classList&&ev.target.classList.contains('vl-b')){ev.preventDefault();ev.target.dispatchEvent(new MouseEvent('click',{bubbles:true}))}});
 function profileHtml(P,mine){
   const st=accStats(P.items),match=P.self?null:accMatch(P.items,mine);
-  return accHeroHtml(Object.assign({},P,{n:accBase(P.items).length}),st,match,P.extra)+accStatsHtml(st)+accVinylHtml(P)+accListHtml(P,match);
+  const sec=UI.pTab==='a'||UI.pTab==='s'?accListHtml(P,match):accStatsHtml(st)+accInsightsHtml(P)+accVinylHtml(P);
+  return accHeroHtml(Object.assign({},P,{n:accBase(P.items).length}),st,match,P.extra)+accTabsHtml(P)+sec;
 }
 /* the Friends shortcut in the top bar: one tap to the friends list, with a count of requests waiting for you */
 function friendsBtn(){
@@ -6073,7 +6221,7 @@ function accountView(){
     const items=accItems(),F=ACX.fr,P={self:true,name:ACC.me.name,hue:ACC.me.hue,pic:ACC.me.pic,pop:ACX.popAv,friends:F?F.friends.length:0,items,extra:`<span class="pf-code">Code <b>${esc(ACC.me.code)}</b></span>`};
     h=`<section class="settings pf" aria-labelledby="ac-h"><h2 id="ac-h" class="sr">Your page</h2>${profileHtml(P,null)}${accManageHtml()}</section>`;
   }
-  UI.pAnim=false;ACX.popAv=false;return h;
+  UI.pAnim=false;UI.pAnimL=false;UI.pAnimF=false;ACX.popAv=false;return h;
 }
 function friendView(){
   const uid=UI.fid,c=ACX.prof[uid]||{},F=ACX.fr,known=F&&[].concat(F.friends,F.incoming,F.outgoing).find(x=>x.uid===uid);
@@ -6085,7 +6233,7 @@ function friendView(){
     h=`<section class="settings pf" aria-label="${esc(d.name)}’s page">${back}${profileHtml(P,accItems())}</section>`;
   }else if(c.err)h=`<section class="settings pf">${back}<div class="setcard"><h3>${esc(known?known.name:'Friend')}</h3><p class="note">${esc(c.err)}</p></div></section>`;
   else h=`<section class="settings pf">${back}<div class="pf-hero" style="--h:${accHueOf(known||{})}"><div class="pf-av${accPicOf(known)?' pic':''}" aria-hidden="true">${accFace(known||{})}</div><div class="pf-who"><h2>${esc(known?known.name:'Friend')}</h2><span class="pf-sub">Loading…</span></div></div></section>`;
-  UI.pAnim=false;return h;
+  UI.pAnim=false;UI.pAnimL=false;UI.pAnimF=false;return h;
 }
 /* a small card in Settings that points at the Account page */
 function accCard(){
@@ -7127,11 +7275,11 @@ document.addEventListener('click',ev=>{
     const rt=document.querySelector('.rater');
     if(rt&&!matchMedia('(prefers-reduced-motion:reduce)').matches){UI.rClosing=true;const cid=UI.rOpen,fly=rtFlyPrep(cid);rt.classList.remove('rt-in');rt.classList.add('rt-out');
       setTimeout(()=>{UI.rClosing=false;UI.rOpen=null;if(fly)UI.rLand=cid;render()},230);rtFlyGo(fly);return}}
-  if(act==='view'){UI.view=b.dataset.v;UI.rOpen=null;if(UI.view==='account'){UI.pAnim=true;UI.pKind='a';UI.pLim=60}if(UI.view==='friends'){UI.pAnim=true;ACX.anim=true}if(UI.view==='history'){UI.hAnim=true;UI.hEdit=null}window.scrollTo({top:0})}
+  if(act==='view'){UI.view=b.dataset.v;UI.rOpen=null;if(UI.view==='account'){pReset();UI.pAnim=true}if(UI.view==='friends'){UI.pAnim=true;ACX.anim=true}if(UI.view==='history'){UI.hAnim=true;UI.hEdit=null}window.scrollTo({top:0})}
   else if(act==='lib'){UI.libOpen=!UI.libOpen;UI.libAnim=UI.libOpen}
   else if(act==='fropen'){UI.frOpen=true;UI.llOpen=false;ACX.anim=true;if(accOn())accFriends(true)}
   else if(act==='frclose'){UI.frOpen=false}
-  else if(act==='frgo'){UI.frOpen=false;UI.view='account';UI.pAnim=true;UI.pKind='a';UI.pLim=60;window.scrollTo({top:0})}
+  else if(act==='frgo'){UI.frOpen=false;UI.view='account';pReset();UI.pAnim=true;window.scrollTo({top:0})}
   else if(act==='frback'){UI.view=UI.fPrev||null;UI.frOpen=true;ACX.anim=true}
   else if(act==='llopen'){UI.llOpen=true}
   else if(act==='llclose'){UI.llOpen=false}
@@ -7153,9 +7301,16 @@ document.addEventListener('click',ev=>{
   else if(act==='sugload'){sugLoad();return}
   else if(act==='usload'){usLoad();return}
   else if(act==='sugdel'){sugChange('?id='+encodeURIComponent(id));return}
-  else if(act==='friendopen'){if(UI.frOpen){UI.fFrom='sheet';UI.fPrev=UI.view==='friend'?null:UI.view;UI.frOpen=false}else UI.fFrom='account';UI.view='friend';UI.fid=b.dataset.u;UI.pKind='a';UI.pFilter='all';UI.pLim=60;UI.pAnim=true;UI.rOpen=null;window.scrollTo({top:0});if(ACX.prof[UI.fid])ACX.prof[UI.fid].at=0}
-  else if(act==='pkind'){UI.pKind=b.dataset.v;UI.pLim=60}
-  else if(act==='pfilter'){UI.pFilter=b.dataset.v;UI.pLim=60}
+  else if(act==='friendopen'){if(UI.frOpen){UI.fFrom='sheet';UI.fPrev=UI.view==='friend'?null:UI.view;UI.frOpen=false}else UI.fFrom='account';UI.view='friend';UI.fid=b.dataset.u;pReset();UI.pAnim=true;UI.rOpen=null;window.scrollTo({top:0});if(ACX.prof[UI.fid])ACX.prof[UI.fid].at=0}
+  else if(act==='ptab'){UI.pTab=b.dataset.v;UI.pKind=UI.pTab==='s'?'s':'a';UI.pLim=60;UI.pMin=0;UI.pYear='';UI.pMon=0;UI.pAnimL=true}
+  else if(act==='pfilter'){UI.pFilter=b.dataset.v;UI.pLim=60;UI.pAnimL=true}
+  else if(act==='psort'){UI.pSort=b.dataset.v;UI.pLim=60;UI.pAnimL=true}
+  else if(act==='pmin'){UI.pMin=+b.dataset.v;UI.pLim=60;UI.pAnimL=true}
+  else if(act==='pyear'){UI.pYear=b.dataset.v;UI.pMon=0;UI.pLim=60;UI.pAnimL=true;if(UI.pYear&&UI.pSort!=='new'&&UI.pSort!=='old')UI.pSort='new'}   /* a year opens as a month-by-month diary, newest first */
+  else if(act==='pmon'){UI.pMon=UI.pMon===+b.dataset.v?0:+b.dataset.v;UI.pLim=60;UI.pAnimL=true}
+  else if(act==='pview'){UI.pView=b.dataset.v;UI.pAnimL=true}
+  else if(act==='pfopen'){UI.pFOpen=!UI.pFOpen;UI.pAnimF=UI.pFOpen}
+  else if(act==='pclear'){UI.pMin=0;UI.pYear='';UI.pMon=0;UI.pLim=60;UI.pAnimL=true}
   else if(act==='pmore'){UI.pLim=(UI.pLim||60)+60}
   else if(act==='accout'){accOut('Signed out.');ACX.ok=true;render();return}
   else if(act==='accdel'){accDelete();return}
