@@ -700,22 +700,17 @@ details.addart .add{border-top:1px solid var(--line)}
 .head.hero .hmesh{position:absolute;inset:0;z-index:-2;overflow:hidden;pointer-events:none;border-radius:inherit}
 .head.hero .hmesh.hghost{z-index:-1;animation:hGhost 1s cubic-bezier(.4,0,.2,1) forwards}
 @keyframes hGhost{to{opacity:0}}
-.hb{position:absolute;width:62%;height:120%;will-change:transform;
-  background:radial-gradient(closest-side,color-mix(in srgb,var(--c) var(--k),transparent) 0,color-mix(in srgb,var(--c) var(--m),transparent) 50%,transparent 100%);
-  animation:var(--an) var(--du) ease-in-out infinite alternate;animation-delay:var(--dl)}
-.hb0{--c:var(--hb0);--k:var(--hk0);--m:var(--hm0);left:-14%;top:-25%;--an:hOrb0;--du:19s;--dl:-4s}
-.hb1{--c:var(--hb1);--k:var(--hk1);--m:var(--hm1);left:54%;top:-30%;--an:hOrb1;--du:23s;--dl:-11s}
-.hb2{--c:var(--hb2);--k:var(--hk2);--m:var(--hm2);left:22%;top:22%;--an:hOrb2;--du:21s;--dl:-17s}
-.hb3{--c:var(--hb3);--k:var(--hk3);--m:var(--hm3);left:72%;top:28%;--an:hOrb3;--du:27s;--dl:-8s}
-.hb4{--c:var(--hb4);--k:var(--hk4);--m:var(--hm4);left:-6%;top:30%;--an:hOrb4;--du:17s;--dl:-14s}
-.hb5{--c:var(--hb5);--k:var(--hk5);--m:var(--hm5);left:38%;top:-22%;--an:hOrb5;--du:25s;--dl:-21s}
-@keyframes hOrb0{0%{translate:-10% 5%}33%{translate:30% 30%}66%{translate:50% -10%}100%{translate:10% 35%}}
-@keyframes hOrb1{0%{translate:20% 10%}33%{translate:-70% 25%}66%{translate:-30% -15%}100%{translate:-95% 20%}}
-@keyframes hOrb2{0%{translate:-50% -15%}33%{translate:30% -30%}66%{translate:70% 20%}100%{translate:-20% 25%}}
-@keyframes hOrb3{0%{translate:15% -10%}33%{translate:-60% -25%}66%{translate:-90% 15%}100%{translate:-30% 30%}}
-@keyframes hOrb4{0%{translate:0 -10%}33%{translate:35% 15%}66%{translate:15% -30%}100%{translate:55% 25%}}
-@keyframes hOrb5{0%{translate:-60% 20%}33%{translate:10% 35%}66%{translate:60% -20%}100%{translate:-30% -30%}}
-@media (prefers-reduced-motion:reduce){.hb{animation:none}}
+/* full-cover bands: each color's band is as wide as its albums are rated high; three layers at different angles
+   rotate and slide slowly so the colors trade places across the whole tile */
+.hl{position:absolute;inset:-60%;will-change:transform}
+.hl1{background:var(--hg1);animation:hSh1 26s ease-in-out infinite alternate;animation-delay:-7s}
+.hl2{background:var(--hg2);opacity:.65;animation:hSh2 33s ease-in-out infinite alternate;animation-delay:-15s}
+.hl3{background:var(--hg3);opacity:.5;animation:hSh3 41s ease-in-out infinite alternate;animation-delay:-22s}
+.head.hero .hmesh::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 20%,color-mix(in srgb,var(--bg) 32%,transparent))}
+@keyframes hSh1{0%{transform:translate(-12%,-8%) rotate(-14deg) scale(1.1)}50%{transform:translate(8%,7%) rotate(4deg) scale(1.25)}100%{transform:translate(13%,-6%) rotate(14deg) scale(1.12)}}
+@keyframes hSh2{0%{transform:translate(12%,6%) rotate(13deg) scale(1.2)}50%{transform:translate(-9%,-7%) rotate(-5deg) scale(1.1)}100%{transform:translate(-13%,7%) rotate(-14deg) scale(1.22)}}
+@keyframes hSh3{0%{transform:translate(0,8%) rotate(-10deg) scale(1.25)}50%{transform:translate(12%,-8%) rotate(10deg) scale(1.12)}100%{transform:translate(-12%,5%) rotate(-3deg) scale(1.2)}}
+@media (prefers-reduced-motion:reduce){.hl{animation:none}}
 .hrec{position:relative;width:220px;height:220px;flex:0 0 auto}
 .hring{width:220px;height:220px;border-radius:50%;display:grid;place-items:center;
   background:conic-gradient(var(--accent) calc(var(--p)*1%),color-mix(in srgb,var(--ink) 16%,transparent) 0)}
@@ -1607,6 +1602,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-ab', note:'FULL-COVER COLORS: the background behind the artist name is full again, no blobs. Each color is a wide band as big as its albums are rated high (a 10 takes far more room than a 5), three layers of bands at different angles rotate and slide slowly so the colors keep trading places across the whole tile, and a light fade at the bottom keeps the text readable over white.'},
   {v:'2026.11.16-aa', note:'ALBUM COLOR: a cover whose biggest color is a gradient (blue fading into violet, like HYPERYOUTH) is no longer outvoted by a small hot patch (the red at the bottom). Blue and violet now count as one cool field, and a field covering over 40% of the cover wins over a patch less than half its size. About one cover in twenty changes color; every cover is read again once.'},
   {v:'2026.11.16-z', note:'ARTIST COLORS MOVE: every color behind the artist name is now its own big soft blob that drifts across the whole card on its own slow path, so no color stays parked at the bottom. The colors are stronger and more saturated (reds read red, not pink), whites and greens from your albums keep their own blob instead of being merged away, and up to six colors show. The fade between artists carries the moving colors along.'},
   {v:'2026.11.16-y', note:'ARTIST BACKGROUND: the colored background behind the artist name now fades from the last artist\'s colors into the new ones instead of snapping. It is also redrawn: instead of up to 24 scattered blobs it is a few big soft fields of the artist\'s colors (similar colors are merged, the most-rated album gets the most room) with a glow behind the record, and the slow drift is gentler so it no longer flickers.'},
@@ -4384,7 +4380,7 @@ function render(){
   const ll=document.getElementById('llist'),llTop=ll?ll.scrollTop:0,llTab=UI.llTab;UI.llTab=UI.tab;
   let ohg=null;{const oh=document.querySelector('.hero[data-aid]'),m=oh&&oh.querySelector('.hmesh');   /* the old artist's colors, to fade out from */
     if(m){const g=m.cloneNode(true);g.classList.add('hghost');g.dataset.aid=oh.dataset.aid;
-      for(let i=0;i<oh.style.length;i++){const k=oh.style[i];if(/^--h[bkm]\d$/.test(k))g.style.setProperty(k,oh.style.getPropertyValue(k))}
+      for(let i=0;i<oh.style.length;i++){const k=oh.style[i];if(/^--hg\d$/.test(k))g.style.setProperty(k,oh.style.getPropertyValue(k))}
       [...m.children].forEach((b,i)=>{const an=b.getAnimations&&b.getAnimations()[0],d=g.children[i];
         if(an&&d)d.style.animationDelay=((an.effect.getTiming().delay||0)-(an.currentTime||0))+'ms'});
       ohg=g}}
@@ -5097,11 +5093,18 @@ function heroTones(P){const out=[];
 /* push a color toward its pure hue so a red reads red and not dusty pink */
 function hSat(r,k){const l=.299*r[0]+.587*r[1]+.114*r[2],f=v=>Math.max(0,Math.min(255,Math.round(l+(v-l)*k)));
   return '#'+[f(r[0]),f(r[1]),f(r[2])].map(v=>v.toString(16).padStart(2,'0')).join('')}
-/* six blobs, one per color (a short palette repeats), each strong in the middle; every blob drifts on its own path in CSS */
-function heroMesh(P){const T=heroTones(P),top=T[0].w,o={};
-  for(let i=0;i<6;i++){const t=T[i%T.length],rel=.72+.28*Math.pow(t.w/top,.4);
-    o['--hb'+i]=t.rgb?hSat(t.rgb,1.4):t.col;o['--hk'+i]=Math.round(94*rel)+'%';o['--hm'+i]=Math.round(70*rel)+'%'}
-  return o}
+/* A band layer: every color gets a stripe as wide as its share of the rating weight (with a small minimum so a low-rated
+   album still shows), blended softly into its neighbours. The three layers differ in angle and order. */
+function heroBands(T,ang,shift){
+  const raw=T.map(t=>t.w),tot=raw.reduce((x,y)=>x+y,0),fr=raw.map(w=>Math.max(.08,w/tot)),sum=fr.reduce((x,y)=>x+y,0);
+  const L=T.map((t,i)=>({c:t.rgb?hSat(t.rgb,1.4):t.col,f:fr[i]/sum*100}));
+  for(let k=0;k<shift;k++)L.push(L.shift());
+  /* the layer is far bigger than the tile, so the bands are packed into the middle 38% that shows; the ends extend the first and last color */
+  const at0=31,span=.38;let at=0;const st=[],pc=v=>(at0+v*span).toFixed(1)+'%';
+  for(const x of L){st.push(x.c+' '+pc(at+x.f*.08),x.c+' '+pc(at+x.f*.92));at+=x.f}
+  return 'linear-gradient(in oklab '+ang+'deg,'+st.join(',')+')'}
+function heroMesh(P){const T=heroTones(P);
+  return{'--hg1':heroBands(T,115,0),'--hg2':heroBands(T.slice().reverse(),28,1),'--hg3':heroBands(T,165,Math.floor(T.length/2))}}
 function heroVars(a){
   const P=heroPalette(a),songs=hSplatty(HSTY.n)?heroSongs(a):null;
   if(!P.length)return{...heroMesh([{col:heroColor(a).col,w:1}]),'--ac':heroColor(a).col,'--hdisc':songs&&songs.length?hDisc(P,HSTY.n,a.id,songs):''};
@@ -5764,7 +5767,7 @@ function artistView(a){
       <div class="sl-foot">${shareBtn(g,a)}<details class="gmore"${UI.armed===g.id?' open':''}><summary aria-label="More for this album">\u22ef</summary>${moreBtns(g,dx)}${delGBtn(g,a)}</details></div>
     </div>`}).join('');
   UI.dxAnim=null;                                    /* the switch animation plays once, on the draw it was asked for */
-  return `<div class="head hero${hClear()?' hclear':''}" data-aid="${esc(a.id)}" style="${esc(heroStyle(a))}"><i class="hg" aria-hidden="true"></i><div class="hmesh" aria-hidden="true"><i class="hb hb0"></i><i class="hb hb1"></i><i class="hb hb2"></i><i class="hb hb3"></i><i class="hb hb4"></i><i class="hb hb5"></i></div>
+  return `<div class="head hero${hClear()?' hclear':''}" data-aid="${esc(a.id)}" style="${esc(heroStyle(a))}"><i class="hg" aria-hidden="true"></i><div class="hmesh" aria-hidden="true"><i class="hl hl1"></i><i class="hl hl2"></i><i class="hl hl3"></i></div>
     <div class="hrec"><div class="hring" style="--p:${p}"><div class="hdisc"><div class="hspin"></div><div class="hlab"><b${p>=100?' class="s"':''}>${p}%</b><span>heard</span></div></div></div>${HARM}</div>
     <div class="hbody">
       <div class="meta"><h2>${esc(a.name)}</h2>${a.aka&&a.aka.length?`<span class="note">also ${esc(a.aka.slice(0,3).join(' · '))}</span>`:''}</div>
