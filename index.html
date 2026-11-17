@@ -1771,6 +1771,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-t', note:'BLANK PAGE FIX: on a browser that already holds a copy of your log in its regular storage, Playback stopped on start-up with a blank page (the backup reminder tried to run before it was ready). It now waits a moment, so those browsers open normally. Nothing in your log changed.'},
   {v:'2026.11.17-s', note:'ACCOUNTS AND FRIENDS (built, switched on once Playback has a Google client ID, see SETUP.md Part 8): Settings has an Account card where you sign in with Google, get an 8-letter friend code, add friends by code and accept requests. Once you are friends, a Friends strip under each album (and show or film) lists what they rated it, with a bar and the group average, matched by MusicBrainz or TMDB id and by artist and title, so a friend on Apple Music lines up with you on Spotify. Only accepted friends see your ratings, a switch hides them, and Delete my account erases everything. Your log stays on your device; only title, artist and rating are shared. Your Worker needs the updated playback-sync.js (it takes it from GitHub on its own).'},
   {v:'2026.11.17-r', note:'BACKUPS AND SYNC GUIDE: Settings now has Download backup file and Restore from file (it asks before replacing your log). If sync is off and your last backup is more than three weeks old, a small banner offers to download one, and Later hides it for a week. Under Sync there is a step-by-step guide to setting it up with your own copy of the app and your own Cloudflare account, with a button that makes a secret key for you. Nothing changes if you already use sync.'},
   {v:'2026.11.17-r', note:'HISTORY: the No date sort chip is now always there, not only while some albums have no day. With none left it simply shows the list newest first.'},
@@ -4349,7 +4350,7 @@ function boot(){
   seedAll();READY=true;
   if(!S.flags.r10){for(const k in S.marks){if(S.marks[k].r)S.marks[k].r=S.marks[k].r*2}S.flags.r10=true;save()}
   setTimeout(akaBackfill,3000);
-  if(!bkGet().first)bkSet({first:Date.now()});
+  setTimeout(()=>{try{if(!bkGet().first)bkSet({first:Date.now()})}catch(e){}},0);   /* bkGet is defined further down the page: when a log is already in localStorage boot() runs before it exists */
   try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}   /* ask the browser not to clear this log when space runs low */
 }
 if(READY)boot();
