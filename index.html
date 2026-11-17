@@ -1665,6 +1665,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-ao', note:'LISTEN AGAIN, ANIMATIONS: on a second listen the record now glows and ripples when you rate a carried-over song, and tapping a faded check confirms the song for this listen (it lights up) instead of unchecking it. Mark all heard confirms every carried song the same way.'},
   {v:'2026.11.16-an', note:'LISTEN AGAIN: each listen has its own day. A new listen is dated the day you start it, and the album card shows it as Listen 2 \u00b7 that day (tap to change it). The record\u2019s ripple, when it scrolls back into view, now runs only through the bands you have lit on the current listen, not the faded carried-over ones.'},
   {v:'2026.11.16-am', note:'LISTEN AGAIN: your first listen of an album can never be removed. Remove only appears on later listens.'},
   {v:'2026.11.16-al', note:'LISTEN AGAIN: on a new listen the record\u2019s bands start faded (they are last listen\u2019s songs carried over) and each band fills back in fully, with the usual glow, as you mark its songs off on this listen. The green and red change gradient in a song bar now slides with the bar while you drag the rating slider.'},
@@ -5647,10 +5648,10 @@ function rtFlyGo(p){
   },done)}
 function rateCommit(el){const id=el.dataset.rate,v=+el.value;if(!id||!v)return;
   const wasC=lsOwn(id),isGroup=S.music.some(a=>a.groups.some(g=>g.id===id||dxId(g)===id));
-  if(v===rating(id)){if(wasC){if(isGroup)S.marks[id]={...S.marks[id],rd:todayISO()};lsFromMark(id);touch();heroPaint()}return}
+  if(v===rating(id)){if(wasC){if(isGroup)S.marks[id]={...S.marks[id],rd:todayISO()};else{const g0=grpOfItem(id);if(g0)slLitAsk(g0,id)}lsFromMark(id);touch();heroPaint()}return}
   const first=!rating(id);
   S.marks[id]={...lsBase(id),r:v,...(isGroup&&(!lsRaw(id).length||first||wasC)?{rd:todayISO()}:{}),...(isGroup||isDone(id)?{}:{done:true})};lsFromMark(id);touch();heroPaint();tdSoon();
-  if(first&&!isGroup){const g=grpOfItem(id);if(g)slLitAsk(g,id)}
+  if((first||wasC)&&!isGroup){const g=grpOfItem(id);if(g)slLitAsk(g,id)}
   const n=document.querySelector('.rt-s');if(n)n.focus({preventScroll:true})}
 
 function hasDx(g){return g.items.some(i=>i.dx)&&g.items.some(i=>!i.dx)}
@@ -6140,7 +6141,8 @@ document.addEventListener('click',ev=>{
   else if(act==='filter'){UI.filter=b.dataset.v}
   else if(act==='relkind'){const h=document.querySelector('.hero[data-aid]');UI.rel=h?{aid:h.dataset.aid,kind:b.dataset.v}:null}
   else if(act==='epx'){UI.epOpen[id]=!UI.epOpen[id]}
-  else if(act==='tog'){lsOwn(id);const was=isDone(id);S.marks[id]={...(S.marks[id]||{}),done:!was};if(!was){const g=grpOfItem(id);if(g)slLitAsk(g)}touch()}
+  else if(act==='tog'){const wc=lsOwn(id),was=isDone(id)&&!wc;   /* tapping a carried-over song confirms it for this listen */
+    S.marks[id]={...(S.marks[id]||{}),done:!was};if(!was){const g=grpOfItem(id);if(g)slLitAsk(g)}touch()}
   else if(act==='shareopen'){const a=S.music.find(x=>x.id===b.dataset.a),g=a&&a.groups.find(x=>x.id===b.dataset.g);if(g)shareOpen(a,g);return}
   else if(act==='lltog'){const a=S.music.find(x=>x.id===b.dataset.a),g=a&&a.groups.find(x=>x.id===b.dataset.g);if(!g)return;
     if(llOn(a.name,g.title)){const lid=llId(a.name,g.title);S.listen=listenAll().filter(x=>x.id!==lid)}else llAdd(a.name,g.title,g.year);touch()}
@@ -6173,8 +6175,8 @@ document.addEventListener('click',ev=>{
     if(g){if(b.dataset.dx)UI.dxOpen[g.id]=true;else delete UI.dxOpen[g.id]}}
   else if(act==='rymadd'){const r=rymAddWaiting();RYX.report={total:r.albums,zero:0,filled:0,same:0,kept:[],waiting:[],notFound:[],dups:[],added:r};touch()}
   else if(act==='rclear'){lsOwn(id);if(lsRevert(id)){}else if(lsRaw(id).length>1){S.marks[id]={...S.marks[id],r:0};lsFromMark(id)}else{const m0={...(S.marks[id]||{}),r:0};delete m0.rd;delete m0.ls;S.marks[id]=m0}touch();heroPaint()}
-  else if(act==='grpall'){const a=S.music.find(x=>x.id===b.dataset.a),g=a.groups.find(x=>x.id===b.dataset.g),its=viewItems(g),full=its.every(i=>isDone(i.id));
-    its.forEach(i=>lsOwn(i.id));its.forEach(i=>S.marks[i.id]={...(S.marks[i.id]||{}),done:!full});if(!full)slPulseAsk(g.id,0);touch()}
+  else if(act==='grpall'){const a=S.music.find(x=>x.id===b.dataset.a),g=a.groups.find(x=>x.id===b.dataset.g),its=viewItems(g),full=its.every(i=>isDone(i.id))&&!its.some(i=>lsCar(g,i.id));
+    its.forEach(i=>lsOwn(i.id));its.forEach(i=>S.marks[i.id]={...(S.marks[i.id]||{}),done:!full});if(!full){slLitAsk(g);slPulseAsk(g.id,0)}touch()}
   else if(act==='wedit'){UI.wEdit=UI.wEdit===b.dataset.g?null:b.dataset.g;formUp()}
   else if(act==='dedit'){UI.dEdit=UI.dEdit===b.dataset.g?null:b.dataset.g;formUp()}
   else if(act==='dxsel'){UI.dxOpen[b.dataset.g]=b.dataset.v==='1';UI.dxAnim=b.dataset.g;slPulseAsk(b.dataset.g,140)}
