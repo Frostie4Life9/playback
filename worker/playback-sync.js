@@ -113,7 +113,7 @@ const SP_AUTH = 'spotify-auth', SP_META = 'spotify-meta', SP_PLAYS = 'spotify-pl
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, PUT, POST, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'content-type, x-sync-key',
   'Access-Control-Expose-Headers': 'x-pb-worker, retry-after, x-pb-cache',
   'Access-Control-Max-Age': '86400',
@@ -405,6 +405,44 @@ async function daySnap(env, st) {
   } catch (e) {}
 }
 
+/* ---------- friend suggestions ----------
+   POST /suggest  {name?, text}  needs NO key: friends using the shared app send a suggestion here.
+                  Text is cut to 600 characters, a name to 40, one address may send 10 an hour, and
+                  only the newest 200 are kept.
+   GET  /suggest  (x-sync-key)   -> {items:[{id,t,name,text}]}, newest first
+   DELETE /suggest?id=<id> or ?all=1  (x-sync-key)  removes one or all.            */
+const SUG_KEY = 'suggestions', SUG_MAX = 200;
+async function sugList(env) {
+  let list = [];
+  try { list = JSON.parse((await env.STATE.get(SUG_KEY)) || '[]'); } catch (e) {}
+  return Array.isArray(list) ? list : [];
+}
+async function sugPost(request, env) {
+  let b;
+  try { b = await request.json(); } catch (e) { return reply({ error: 'bad body' }, 400); }
+  const text = String((b && b.text) || '').trim().slice(0, 600), name = String((b && b.name) || '').trim().slice(0, 40);
+  if (!text) return reply({ error: 'empty' }, 400);
+  const rk = 'sug-ip:' + (request.headers.get('cf-connecting-ip') || 'x');
+  const n = +(await env.STATE.get(rk)) || 0;
+  if (n >= 10) return reply({ error: 'too many' }, 429);
+  await env.STATE.put(rk, String(n + 1), { expirationTtl: 3600 });
+  const list = await sugList(env);
+  list.unshift({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), t: Date.now(), name, text });
+  await env.STATE.put(SUG_KEY, JSON.stringify(list.slice(0, SUG_MAX)));
+  return reply({ ok: true });
+}
+async function sugOwner(request, env, url) {
+  if (request.method === 'GET') return reply({ items: await sugList(env) });
+  if (request.method === 'DELETE') {
+    if (url.searchParams.get('all') === '1') { await env.STATE.delete(SUG_KEY); return reply({ ok: true }); }
+    const id = url.searchParams.get('id') || '';
+    if (!id) return reply({ error: 'no id' }, 400);
+    await env.STATE.put(SUG_KEY, JSON.stringify((await sugList(env)).filter(x => x.id !== id)));
+    return reply({ ok: true });
+  }
+  return reply({ error: 'method not allowed' }, 405);
+}
+
 export default {
   async scheduled(event, env, ctx) {
     if (env.STATE) ctx.waitUntil(spCheck(env, true, true));
@@ -420,8 +458,10 @@ export default {
     const url = new URL(request.url);
     if (url.pathname === '/brief' && request.method === 'GET') return briefGet(env, url);   /* its own read-only key */
     if (url.pathname === '/photo' && request.method === 'GET') return photoGet(env, url);   /* signed link, no sync key */
+    if (url.pathname === '/suggest' && request.method === 'POST') return sugPost(request, env);   /* open to friends, rate limited */
     const given = (request.headers.get('x-sync-key') || '').trim();
     if (!keyMatches(given, String(env.SECRET).trim())) return reply({ error: 'unauthorized' }, 401);
+    if (url.pathname === '/suggest') return sugOwner(request, env, url);
     if (url.pathname === '/spotify/api') return request.method === 'GET' ? spCatalog(env, url) : reply({ error: 'method not allowed' }, 405);
     if (url.pathname === '/photo') {
       if (request.method === 'PUT') return photoPut(request, env, url);

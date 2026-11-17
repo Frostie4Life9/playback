@@ -744,6 +744,12 @@ details.addart .add{border-top:1px solid var(--line)}
 .settings{display:flex;flex-direction:column;gap:14px;max-width:720px}
 .settings h2{font:800 34px/1 Archivo,var(--display);font-stretch:118%;letter-spacing:-.02em;margin:0}
 .setcard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.sug textarea{width:100%;min-height:96px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:inherit;font:inherit;resize:vertical}
+.sug ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.sug li{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.sug li p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.sug .who{font-size:12px;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){.sug li,.sug .msg.ok{animation:rdin .45s cubic-bezier(.2,.8,.2,1) both}.sug li:nth-child(2){animation-delay:.06s}.sug li:nth-child(3){animation-delay:.12s}.sug li:nth-child(n+4){animation-delay:.18s}}
 .setcard h3{margin:0;font:800 18px Archivo,var(--display);font-stretch:112%}
 .setcard>.add:first-of-type{border-top:0;padding-top:0}
 .setcard details{border-top:1px solid var(--line);padding-top:10px}
@@ -1707,6 +1713,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-n', note:'SUGGEST SOMETHING: friends who use your copy of Playback get a Suggest something box in Settings that sends their note to you (it uses your sync Worker, no sign-in for them, 10 an hour each, 600 characters). In your own Settings, Friend suggestions loads what they sent so you can copy the list, mark one Done or clear all. Your Worker needs the updated playback-sync.js, which it takes from GitHub on its own; until it has, a friend\u2019s Send says it did not send. Open Playback with ?owner=1 on any device that is not already on your own sync Worker to see your side.'},
   {v:'2026.11.17-m', note:'FRIENDS MODE: before you share Playback, other people no longer see the app bar (it linked to your Kitchen, DishLog, Protocol and the rest) and their Ideas box can no longer send anything to your ideas Worker. You stay in owner mode automatically on any browser whose sync is set to your own Worker; on a new device or browser open Playback once with ?owner=1 on the end of the address to switch it on (?owner=0 turns it off). Nothing else changes for anyone.'},
   {v:'2026.11.17-l', note:'FIX: the app sat on \u201cLoading your log\u201d. The artist menu\u2019s new opening animation (2026.11.17-j) referred to a value that did not exist where the menu is drawn, which stopped the page from drawing at all. Nothing in your log was touched. It is drawn again, and the menu animation is unchanged.'},
   {v:'2026.11.17-k', note:'SMOOTHER DELUXE SWITCH: the Standard/Deluxe transition was too quick and abrupt. Everything now runs about twice as slow and with softer easing: the old edition fades out gently, deluxe songs fold shut and open with a longer, more even stagger (they no longer open fast and then stall), and the cover, title and rating ease in instead of popping.'},
@@ -5191,6 +5198,60 @@ function csvCollection(){
   return csvText(head,rows);
 }
 
+/* ---------- friend suggestions ----------
+   Anyone who is not the owner sees a form in Settings that posts to the owner's playback-sync Worker (POST /suggest,
+   no key). The owner (PB_OWNER, set near the top of the page) sees the list instead and reads it with the sync key. */
+const SUG_URL='https://playback-sync.skyfro04.workers.dev';
+const SUGX={busy:false,msg:'',ok:false,list:null,copied:false};
+function sugCard(){
+  if(window.PB_OWNER){
+    if(!syncOn())return `<div class="setcard sug"><h3>Friend suggestions</h3><p class="note">Connect your sync Worker (Sync, below) to read what friends send.</p></div>`;
+    const l=SUGX.list;
+    return `<div class="setcard sug"><h3>Friend suggestions</h3>
+      <p class="note">What friends send from the Suggest box in their Settings.</p>
+      <div class="tools"><button class="btn primary" data-act="sugload" ${SUGX.busy?'disabled':''}>${l?'Refresh':'Load suggestions'}</button>${l&&l.length?`<button class="btn" data-act="sugcopy">${SUGX.copied?'Copied':'Copy list'}</button><button class="btn" data-act="sugclear">Clear all</button>`:''}</div>
+      ${SUGX.msg?`<span class="msg ${SUGX.ok?'':'err'}">${esc(SUGX.msg)}</span>`:''}
+      ${l?(l.length?`<ul>${l.map(x=>`<li><span class="who">${esc(x.name||'Someone')} \u00b7 ${esc(new Date(x.t).toLocaleDateString(undefined,{month:'short',day:'numeric'}))}</span><p>${esc(x.text)}</p><div class="tools"><button class="btn" data-act="sugdel" data-id="${esc(x.id)}">Done</button></div></li>`).join('')}</ul>`:'<p class="note">Nothing yet.</p>'):''}
+    </div>`;
+  }
+  return `<div class="setcard sug"><h3>Suggest something</h3>
+    <form class="panel" data-form="suggest">
+      <p class="note">Something broken, confusing or missing? Tell Skyler. It goes straight to him.</p>
+      <label class="label" for="sug-name">Your name (optional)</label>
+      <input id="sug-name" name="name" maxlength="40" autocomplete="off">
+      <label class="label" for="sug-text">Your suggestion</label>
+      <textarea id="sug-text" name="text" maxlength="600" required></textarea>
+      <div class="tools"><button class="btn primary" ${SUGX.busy?'disabled':''}>${SUGX.busy?'Sending\u2026':'Send'}</button></div>
+      ${SUGX.msg?`<span class="msg ${SUGX.ok?'ok':'err'}">${esc(SUGX.msg)}</span>`:''}
+    </form></div>`;
+}
+async function sugSend(d){
+  const text=String(d.text||'').trim();if(!text||SUGX.busy)return;
+  SUGX.busy=true;SUGX.msg='';render();
+  try{
+    const r=await fetch(SUG_URL+'/suggest',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:String(d.name||'').trim(),text})});
+    if(r.status===429)throw new Error('You have sent a lot just now. Try again in a while.');
+    if(!r.ok)throw new Error('That did not send. Check your connection and try again.');
+    SUGX.ok=true;SUGX.msg='Sent. Thanks!';
+  }catch(e){SUGX.ok=false;SUGX.msg=e.message==='Failed to fetch'?'That did not send. Check your connection and try again.':e.message}
+  SUGX.busy=false;render();
+}
+async function sugCall(method,qs){
+  const r=await fetch(SY.url.replace(/\/+$/,'')+'/suggest'+(qs||''),{method,cache:'no-store',headers:{'x-sync-key':SY.key}});
+  if(!r.ok)throw new Error(r.status===401?'Your sync key was not accepted.':r.status===404?'Your Worker does not have this yet. It updates itself from GitHub; try again in a minute.':'Could not reach your Worker.');
+  return r.json();
+}
+async function sugLoad(){
+  if(SUGX.busy)return;SUGX.busy=true;SUGX.msg='';render();
+  try{const j=await sugCall('GET');SUGX.list=Array.isArray(j.items)?j.items:[]}
+  catch(e){SUGX.ok=false;SUGX.msg=e.message==='Failed to fetch'?'Could not reach your Worker.':e.message}
+  SUGX.busy=false;render();
+}
+async function sugChange(qs){
+  try{await sugCall('DELETE',qs)}catch(e){SUGX.ok=false;SUGX.msg=e.message;render();return}
+  sugLoad();
+}
+
 function settingsView(){return `
   <section class="settings" aria-labelledby="set-h">
     <h2 id="set-h">Settings</h2>
@@ -5199,6 +5260,7 @@ function settingsView(){return `
     <div class="setcard"><h3>Spotify</h3>${spSide()}</div>
     <div class="setcard"><h3>Rate Your Music</h3>${rymSide()}${rtSide()}</div>
     <div class="setcard"><h3>Rating dates</h3>${rdSide()}</div>
+    ${sugCard()}
     <div class="setcard"><h3>Sync &amp; data</h3>
     <details id="syncpanel" ${UI.syncOpen?'open':''}>
       <summary class="label" style="cursor:pointer">Sync</summary>
@@ -6197,6 +6259,7 @@ document.addEventListener('click',ev=>{
   if(['tog','ropen','rclear','dedit','grpall','lsnew','lltog'].includes(act)&&b.closest('.lsold'))return;   /* an earlier listen is view only */
   if(act!=='del'&&act!=='delg'&&act!=='lsrm')UI.armed=null;
   if(act!=='mbundo')UI.undoArm=null;
+  if(act!=='sugclear')UI.sugArm=false;
   if(act!=='copy')UI.copied=false;
   if(act!=='coldel')UI.colDel=null;
   /* closing a rater: let it fold away first, then redraw */
@@ -6223,6 +6286,11 @@ document.addEventListener('click',ev=>{
     document.querySelectorAll('.vw-seg button').forEach(z=>z.setAttribute('aria-pressed',z.dataset.v===UI.vStep));
     const i=VSTEPS.findIndex(v=>v[0]===UI.vStep),nv=document.querySelectorAll('.vw-nav');
     if(nv[0]){nv[0].dataset.v=VSTEPS[Math.max(0,i-1)][0];nv[0].disabled=i<=0}if(nv[1]){nv[1].dataset.v=VSTEPS[Math.min(4,i+1)][0];nv[1].disabled=i>=4}}return}
+  else if(act==='sugload'){sugLoad();return}
+  else if(act==='sugdel'){sugChange('?id='+encodeURIComponent(id));return}
+  else if(act==='sugclear'){if(UI.sugArm){UI.sugArm=false;sugChange('?all=1')}else{UI.sugArm=true;SUGX.ok=false;SUGX.msg='Tap Clear all again to remove every suggestion.';render()}return}
+  else if(act==='sugcopy'){const t=(SUGX.list||[]).map(x=>'- '+(x.name?x.name+': ':'')+x.text).join('\n');
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{SUGX.copied=true;render();setTimeout(()=>{SUGX.copied=false;render()},1600)}).catch(()=>{SUGX.ok=false;SUGX.msg='This browser would not copy.';render()});return}
   else if(act==='phdel'){const x=colAll().find(c=>c.id===id);if(x)photoDel(x,b.dataset.k);return}
   else if(act==='cropx'){cropClose();return}
   else if(act==='cropok'){cropSave();return}
@@ -6418,6 +6486,7 @@ document.addEventListener('submit',ev=>{
   if(kind==='mbsearch'){const q=(d.q||'').trim();if(q)mbSearch(q);return}
   if(kind==='tmsearch'){const q=(d.q||'').trim();if(q)tmSearch(q);return}
   if(kind==='tmkey'){tmSaveKey(d.key);return}
+  if(kind==='suggest'){sugSend(d);return}
   if(kind==='colfind'){dcSearch(d);return}
   if(kind==='dctoken'){const t=String(d.token||'').replace(/\s/g,'');
     if(!/^[A-Za-z0-9]{30,64}$/.test(t))COL.tokMsg='That does not look like a Discogs token (about 40 letters and numbers).';
