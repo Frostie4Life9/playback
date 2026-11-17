@@ -1734,6 +1734,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-r', note:'HISTORY: the No date sort chip is now always there, not only while some albums have no day. With none left it simply shows the list newest first.'},
   {v:'2026.11.17-q', note:'PRIVATE RATING DATES + SAFER STORAGE: your list of rating days no longer sits in the public GitHub repo; it is kept on your sync Worker and the Import rating dates button reads it from there (only you see that card now). Also, Playback now asks the browser to keep its saved log from being cleared when the device runs low on space, which protects friends who are not syncing.'},
   {v:'2026.11.17-q', note:'MUSIC MENU AND HISTORY SORT: History is no longer its own button in the bar. While you are on Music, tap Music again and a small menu drops open with Artists and History (it opens upward on your phone, closes when you tap anywhere else, and Music shows a little arrow when you can open it). History also has a new No date sort that puts the albums with no day first, so you can fill them in one after another; the rest follow newest first.'},
   {v:'2026.11.17-p', note:'IMPORT SOURCE BUTTONS: tapping Automatic, Apple Music or MusicBrainz only in Settings saved the choice but the buttons and the Right now imports read from line did not change until you left the page and came back. They now switch the moment you tap.'},
@@ -4508,7 +4509,7 @@ function historyView(){
       <input id="hq" type="search" autocomplete="off" placeholder="Search albums &amp; artists" value="${esc(UI.hq||'')}" aria-label="Search rated albums">
       <div class="hrow2">
         <div class="hchips" role="group" aria-label="Show">${chip('hkind','all','All',UI.hk)}${chip('hkind','album','Albums',UI.hk)}${chip('hkind','ep','EPs',UI.hk)}${chip('hkind','other','Other',UI.hk)}${all.some(e=>e.n>1)?chip('hkind','again','\u21bb Relistened',UI.hk):''}</div>
-        <div class="hchips" role="group" aria-label="Sort">${chip('hsort','new','Newest',UI.hs)}${chip('hsort','old','Oldest',UI.hs)}${chip('hsort','high','Highest',UI.hs)}${und||UI.hs==='none'?chip('hsort','none','No date',UI.hs):''}</div>
+        <div class="hchips" role="group" aria-label="Sort">${chip('hsort','new','Newest',UI.hs)}${chip('hsort','old','Oldest',UI.hs)}${chip('hsort','high','Highest',UI.hs)}${chip('hsort','none','No date',UI.hs)}</div>
       </div>
     </div>
     <div id="hlist" class="${anim?'hanim':''}">${historyList(anim)}</div>
