@@ -642,10 +642,10 @@ details.addart .add{border-top:1px solid var(--line)}
 .tact svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .tbadge{position:absolute;top:-5px;right:-5px;min-width:20px;height:20px;border-radius:10px;background:var(--accent);color:var(--accent-ink);font:700 11px/20px var(--mono);font-style:normal;text-align:center;padding:0 5px;box-sizing:border-box}
 .sheet:has(.hero){background:transparent;border:0;padding:0}
-.head.hero{--ac:#7a3a24;--hi:#fff;position:relative;overflow:hidden;isolation:isolate;flex-direction:column;flex-wrap:nowrap;align-items:center;gap:16px;
+.head.hero{--ac:#7a3a24;--acb:var(--ac);--hi:#fff;position:relative;overflow:hidden;isolation:isolate;flex-direction:column;flex-wrap:nowrap;align-items:center;gap:16px;
   border-radius:28px;border:1px solid var(--line);padding:20px;
   background:var(--surface)}
-@supports (color:oklch(from red l c h)){.head.hero{--hi:oklch(from var(--ac) clamp(.14,calc((.6 - l) * 100),.985) 0 h)}}
+@supports (color:oklch(from red l c h)){.head.hero{--hi:oklch(from var(--ac) clamp(.14,calc((.66 - l) * 1000),.985) 0 h);--acb:oklch(from var(--ac) calc(min(l,.57) + clamp(0,calc((l - .66) * 1000),1) * (l - min(l,.57))) c h)}}
 .head.hero::before,.head.hero::after,.head.hero .hg{content:"";position:absolute;inset:-30%;z-index:-1;pointer-events:none;will-change:transform,opacity}
 .head.hero .hg{display:block}
 .head.hero::before{background:var(--hbg,linear-gradient(170deg,color-mix(in srgb,var(--ac) 40%,transparent),transparent 62%));animation:hGlowA 8s ease-in-out infinite alternate}
@@ -669,7 +669,7 @@ details.addart .add{border-top:1px solid var(--line)}
 .hero.hclear .hdisc{background:color-mix(in srgb,var(--ink) 4%,transparent)}
 .hero.hclear .hspin{background:repeating-radial-gradient(circle,color-mix(in srgb,var(--ink) 14%,transparent) 0 1px,transparent 1px 3.2px),var(--hdisc,none);background-size:100% 100%;background-position:center;background-repeat:no-repeat}
 .hero.hclear .hdisc::after{background:conic-gradient(from 20deg,rgb(255 255 255 / 0),rgb(255 255 255 / .3) 12%,rgb(255 255 255 / 0) 26%,rgb(255 255 255 / 0) 50%,rgb(255 255 255 / .22) 62%,rgb(255 255 255 / 0) 76%);box-shadow:inset 0 0 0 1.5px rgb(255 255 255 / .45),inset 0 0 0 3px color-mix(in srgb,var(--ink) 10%,transparent)}
-.hlab{z-index:2;position:relative;width:90px;height:90px;border-radius:50%;background:var(--ac);color:var(--hi);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.hlab{z-index:2;position:relative;width:90px;height:90px;border-radius:50%;background:var(--acb);color:var(--hi);display:flex;flex-direction:column;align-items:center;justify-content:center}
 .hlab b{font:800 26px/1 Archivo,var(--display);font-stretch:125%;letter-spacing:-.03em}
 .hlab b.s{font-size:21px;letter-spacing:-.04em}
 .hlab span{font:500 10px var(--mono);letter-spacing:.09em;text-transform:uppercase;margin-top:3px}
@@ -735,15 +735,16 @@ details.addart .add{border-top:1px solid var(--line)}
 @media (min-width:761px){.llover{align-items:center}.llsheet{border-radius:28px}}
 
 /* the sleeve */
-.group.sleeve{--acs:#7a3a24;--acd:var(--acs);--ac:var(--acs);--acsw:var(--acs);--acdw:var(--acd);--hi:#fff;gap:14px;border-radius:24px;overflow:hidden;background:var(--bg);border:1px solid color-mix(in srgb,var(--line) 60%,transparent);padding:0 0 10px}
+.group.sleeve{--acs:#7a3a24;--acd:var(--acs);--ac:var(--acs);--acb:var(--ac);--acsw:var(--acs);--acdw:var(--acd);--hi:#fff;gap:14px;border-radius:24px;overflow:hidden;background:var(--bg);border:1px solid color-mix(in srgb,var(--line) 60%,transparent);padding:0 0 10px}
 .sheet>.group.sleeve+.group.sleeve{margin-top:0}
 .group.sleeve.dxon{--ac:var(--acd)}
 /* The banner takes the cover's own brightness, so it can be light. --hi is the ink for text and buttons on it:
    near-white on a dark banner, near-black on a light one. --acsw/--acdw are darker copies for the song-row wash,
    so a song's white text stays readable even on a pale album. */
 @supports (color:oklch(from red l c h)){
-  .group.sleeve{--hi:oklch(from var(--ac) clamp(.14,calc((.6 - l) * 100),.985) 0 h);--acsw:oklch(from var(--acs) min(l,.46) c h);--acdw:oklch(from var(--acd) min(l,.46) c h)}}
-.sl-hero{position:relative;background:linear-gradient(160deg,color-mix(in srgb,var(--ac) 88%,#fff),color-mix(in srgb,var(--ac) 82%,#000));color:var(--hi);display:flex;flex-direction:column;gap:18px;padding:22px 22px 24px;transition:background-color .5s}
+  /* ink is white or near-black, never a gray in between (the old slope gave mid-gray text on mid-bright reds). A banner that gets white ink is held to a lightness where white reads clearly. */
+  .group.sleeve{--hi:oklch(from var(--ac) clamp(.14,calc((.66 - l) * 1000),.985) 0 h);--acb:oklch(from var(--ac) calc(min(l,.57) + clamp(0,calc((l - .66) * 1000),1) * (l - min(l,.57))) c h);--acsw:oklch(from var(--acs) min(l,.46) c h);--acdw:oklch(from var(--acd) min(l,.46) c h)}}
+.sl-hero{position:relative;background:linear-gradient(160deg,color-mix(in srgb,var(--acb) 94%,#fff),color-mix(in srgb,var(--acb) 82%,#000));color:var(--hi);display:flex;flex-direction:column;gap:18px;padding:22px 22px 24px;transition:background-color .5s}
 .sl-pack{position:relative;height:168px;width:100%;max-width:290px}
 .sl-cover{position:absolute;left:0;top:0;width:160px;height:160px;border-radius:10px;overflow:hidden;background:color-mix(in srgb,var(--ac) 60%,#000);box-shadow:0 14px 30px rgb(0 0 0 / .35);display:grid;place-items:center}
 .sl-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
@@ -764,16 +765,16 @@ details.addart .add{border-top:1px solid var(--line)}
   35%{--j:4.2%;border-color:var(--gp);box-shadow:0 0 8px 1.5px var(--gg)}
   100%{--j:0%;border-color:var(--gv);box-shadow:0 0 0 0 transparent}}
 @media (prefers-reduced-motion:no-preference){.group.sleeve.rip .sl-disc i.on{animation:slPulse .62s cubic-bezier(.3,.6,.3,1) calc(var(--rb,0ms) + var(--o,0)*38ms) backwards}}
-.sl-lab{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:var(--ac);display:grid;place-items:center;font:800 12px Archivo,var(--display);color:var(--hi);font-variant-numeric:tabular-nums}
+.sl-lab{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:var(--acb);display:grid;place-items:center;font:800 12px Archivo,var(--display);color:var(--hi);font-variant-numeric:tabular-nums}
 @media (prefers-reduced-motion:no-preference){.sl-disc{transition:transform .7s cubic-bezier(.2,.8,.2,1)}}
 .group.sleeve.in .sl-disc{transform:translate3d(16px,0,0)}
 .sl-meta{display:flex;flex-direction:column;gap:4px;min-width:0}
-.sl-kind{font:500 13px var(--body);letter-spacing:.01em;color:color-mix(in srgb,var(--hi) 72%,transparent)}
+.sl-kind{font:500 13px var(--body);letter-spacing:.01em;color:color-mix(in srgb,var(--hi) 88%,transparent)}
 .sl-meta h3{margin:0;font:650 28px/1.08 Archivo,var(--display);font-stretch:100%;letter-spacing:-.022em;overflow-wrap:anywhere}
-.sl-sub{font-size:14px;color:color-mix(in srgb,var(--hi) 72%,transparent)}
+.sl-sub{font-size:14px;color:color-mix(in srgb,var(--hi) 88%,transparent)}
 .sl-w{font:600 15px var(--body);color:var(--hi);overflow-wrap:anywhere}
-.sl-wb{align-self:flex-start;margin-top:2px;padding:4px 0;min-height:32px;border:0;background:none;font:500 12px var(--body);letter-spacing:.01em;color:color-mix(in srgb,var(--hi) 55%,transparent);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-.sl-rd{text-decoration:none;font-weight:600;font-size:13px;letter-spacing:.02em;color:color-mix(in srgb,var(--hi) 72%,transparent)}
+.sl-wb{align-self:flex-start;margin-top:2px;padding:4px 0;min-height:32px;border:0;background:none;font:500 12px var(--body);letter-spacing:.01em;color:color-mix(in srgb,var(--hi) 80%,transparent);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.sl-rd{text-decoration:none;font-weight:600;font-size:13px;letter-spacing:.02em;color:color-mix(in srgb,var(--hi) 88%,transparent)}
 .sl-wf{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap}
 .sl-wf input{flex:1 1 150px;min-width:0;min-height:40px;padding:0 12px;border-radius:10px;border:1px solid color-mix(in srgb,var(--hi) 38%,transparent);background:color-mix(in srgb,var(--hi) 10%,transparent);color:var(--hi);font:500 15px var(--body)}
 .sl-wf button{min-height:40px;padding:0 14px;border-radius:10px;border:1px solid color-mix(in srgb,var(--hi) 38%,transparent);background:color-mix(in srgb,var(--hi) 16%,transparent);color:var(--hi);font:600 14px var(--body);cursor:pointer}
@@ -964,7 +965,7 @@ details.addart .add{border-top:1px solid var(--line)}
 .tile[aria-current="true"] .tdisc{visibility:hidden}
 .tdisc.tuck{left:4%!important;transition:none!important}
 /* while a record is in the air the turntable is bare: just the mat and the progress ring */
-.hlab{transition:opacity .3s}
+.hlab{transition:none}
 .head.hero.drop .hspin,.head.hero.drop .hlab,.head.hero.drop .hdisc::after{opacity:0}
 .head.hero.drop:not(.hclear) .hdisc{background:#161b19}
 .flyw{position:fixed;left:0;top:0;z-index:70;pointer-events:none;transform-origin:0 0;will-change:transform;filter:drop-shadow(0 10px 14px rgb(0 0 0 / .45))}
@@ -1521,6 +1522,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-e', note:'SPLATTER: redrawn from your photo. Real splatter pressings are hundreds of fine radial streaks, soft at the edges and patchy along their length, with the vinyl showing between them, so that is what both splatter records are now: every rated song owns streaks in its album color (a higher rating means more and wider streaks) and overlapping streaks mix like wet paint. The second splatter is the same paint on white vinyl. LIQUID: the record no longer changes when set down. The label no longer fades in over a black hole as it lands, and the pools now keep their place (they only slip a little while it spins up, then settle) instead of drifting into a different picture. TEXT: banner text is now clearly white or clearly dark, never a gray in between (bright reds like My Beautiful Dark Twisted Fantasy had gray text), and a banner that gets white text is held to a shade where white reads well. COVER COLORS: the ground now anchors a picture. A big earthy area (brown, tan, olive, grass) in the lower part of a cover can win over a vivid sky above it, so 3D Country takes its brown instead of the sky blue; covers without a big lower earthy area pick as before. Every cover is read again with the new rule.'},
   {v:'2026.11.16-d', note:'LIQUID: the liquid record is now one record everywhere. The paint layout is the same in the sleeve, in the air and on the turntable, so it no longer changes when it is set down; it is two rings of pools so there is never a hole, and very dark colors are lifted slightly so a black album reads as dark liquid. SORTING: changing the release sort no longer breaks the record and colors on the artist card (the record was being cut off inside the page). SCROLLING: the artist wall headings and tiles no longer clip through each other. SPLATTER: both splatter records now look like a real splatter pressing, paint thrown out along spokes from the label to the rim in streaks and dashes, one each; the flung paint look is now the same splatter on white vinyl. RATING SORT: when two releases have the same rating, the one with the higher song average comes first (and last when sorting low to high).'},
   {v:'2026.11.16-c', note:'RELEASES: under the artist card you can now show just Albums, EPs, Singles or Other, and sort the discography: newest or oldest first, by how you rated it (high or low), most or least heard, or by title. The sort is remembered; the kind resets when you open another artist. SPLATTER: no more neat rings. Each song is thrown at a random spot again, at loose angles with stray drops, but every one looks for room first, so they rarely land on each other. LIQUID: the liquid record now behaves like liquid in a spinning dish. When the record starts the paint is left behind and smears into arcs, catches up, is pushed outward as the speed builds, and keeps slipping slowly round; bubbles drift toward the middle. DARK ALBUMS: a black or very dark album keeps its dark banner, but its song rows now wash in a lighter tone of the same color so the rating gradient shows.'},
   {v:'2026.11.16-b', note:'RECORD ON THE TURNTABLE: pick an artist on the wall and its record slides out of the sleeve, is carried over and set down on the turntable, then the arm comes across and it spins up. The open artist\'s sleeve stays empty while its record is playing. SLEEVED BACK: the record you were on is lifted off and slid back into its own sleeve, and its next look slides out from inside instead of snapping to a new design. SPLATTER: every rated song now has a spot of its own, so splatters no longer cover each other and all of them can be seen; higher ratings are still bigger. LIQUID: the liquid records move, the paint drifts and swells and the bubbles wander.'},
@@ -4696,43 +4698,47 @@ function hDark(col,k){const m=/^#([0-9a-f]{6})$/i.exec(col||'');if(!m)return col
   const f=v=>Math.round(v*k/100).toString(16).padStart(2,'0');return '#'+f(n>>16&255)+f(n>>8&255)+f(n&255)}
 const HC=140,hf=v=>v.toFixed(1);
 const hClear=()=>HSTY.n===7||HSTY.n===8;   /* the two splatter looks are pressed on clear vinyl */
-/* Splatter: pressed the way a real splatter record looks. Paint is thrown out from the label, so every mark is a
-   streak pointing along a spoke, some running all the way to the rim, some short, some broken into dashes.
-   Each streak has a slice of the circle to itself, so paint never lands on paint. One streak per rated song, in
-   its album's color; a higher rating makes it wider and longer. An artist with few rated songs gets several
-   streaks per song (more for a higher rating) so the record is still covered. white = the same paint on
-   opaque white vinyl instead of clear. cap keeps only the top-rated songs (the small records on the tiles).
-   The last result per artist is kept. */
+/* Splatter: pressed the way a real splatter record looks. On a real one the paint is flung out from the middle and
+   dragged into hundreds of fine radial streaks, soft at the edges and patchy along their length (pale in one place,
+   deep in the next), with the vinyl showing between them. So the record is drawn "unrolled": every streak is a thin
+   vertical stroke on a canvas whose width is the angle around the record and whose height is the distance out from
+   the label, then that canvas is wrapped round into a disc. Every rated song owns streaks in its album's color (a
+   higher rating means more and wider streaks), and where streaks overlap the colors mix like wet paint. An artist
+   with few rated songs gets several streaks per song so the record is still covered.
+   white = the same paint on opaque white vinyl instead of clear. cap = a small record (the tiles): fewer, coarser streaks.
+   The result is a picture (data URL), kept per artist. */
 const HSP={};
-function hDash(th,ra,rb,hw,open,rnd){const n=5,A=[],B=[];
-  for(let i=0;i<=n;i++){const t=i/n,r=ra+(rb-ra)*t,e=open&&t>.45?1:Math.pow(Math.sin(Math.PI*Math.pow(t,1.35)),.6);
-    const c=th+(rnd()-.5)*hw*.5,wl=hw*e*(.55+rnd()*.75),wr=hw*e*(.55+rnd()*.75);
-    A.push(hf(HC+Math.cos(c-wl)*r)+' '+hf(HC+Math.sin(c-wl)*r));B.push(hf(HC+Math.cos(c+wr)*r)+' '+hf(HC+Math.sin(c+wr)*r))}
-  return 'M'+A.join('L')+'L'+B.reverse().join('L')+'Z'}
 function hSplat(songs,aid,white,cap){
   let L=songs.slice().sort((x,y)=>y.r-x.r||(x.id<y.id?-1:1));if(cap&&L.length>cap)L=L.slice(0,cap);
-  const key=aid+'|'+(white?1:0)+'|'+(cap||0),sig=L.map(x=>x.id+':'+x.r+x.col).join(','),hit=HSP[key];if(hit&&hit.sig===sig)return hit.svg;
-  const N=L.length,sz=r=>.3+.7*Math.pow(r/10,1.7),rnd=hrng(hseed(aid+':s')),R0=cap?44:59,R1=143,T=cap?26:44;
-  let S=[],tot=0;for(const x of L)tot+=sz(x.r);
-  for(const x of L){const f=sz(x.r),k=N>=T?1:Math.max(1,Math.round(T*f/Math.max(tot,.01)));for(let j=0;j<k;j++)S.push({col:x.col,f})}
+  const key=aid+'|'+(white?1:0)+'|'+(cap?1:0),sig=L.map(x=>x.id+':'+x.r+x.col).join(','),hit=HSP[key];if(hit&&hit.sig===sig)return hit.svg;
+  const N=L.length;if(!N)return '';
+  const OUT=cap?128:440,W=cap?640:1800,H=cap?56:170,M=cap?80:190,rnd=hrng(hseed(aid+':s')),sz=r=>.35+.65*Math.pow(r/10,1.4);
+  let tot=0;for(const x of L)tot+=sz(x.r);
+  const S=[];for(const x of L){const f=sz(x.r),k=N>=M?1:Math.max(1,Math.round(M*f/tot));for(let j=0;j<k;j++)S.push({col:x.col,rgb:hRgb(x.col)||[128,128,128],f})}
   for(let i=S.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1)),t=S[i];S[i]=S[j];S[j]=t}
-  let wt=0;for(const x of S){x.w=x.f*(.7+rnd()*.6);wt+=x.w}
-  const by={},add=(c,d)=>{(by[c]||(by[c]=[])).push(d)},dots=[],fill=white?.9:.8;
-  let a=rnd()*2*Math.PI;
-  for(const x of S){const slot=2*Math.PI*x.w/wt,th=a+slot/2,hw=Math.min(.24,slot/2*fill);a+=slot;
-    const lf=Math.max(.28,Math.min(1,.3+.7*x.f+(rnd()-.5)*.3)),span=(R1-R0)*lf,st=R0+(R1-R0-span)*(1-rnd()*rnd()),en=st+span;
-    const nd=span>70&&rnd()<.3?3:span>46&&rnd()<.55?2:1;let r=st;
-    for(let d=0;d<nd;d++){const left=en-r,len=d===nd-1?left:left*(.3+rnd()*.35),rb=r+len;
-      if(len>3)add(x.col,hDash(th+(rnd()-.5)*hw*.4,r,rb,hw*(.7+rnd()*.45),rb>=R1-1,rnd));
-      r=rb+3+rnd()*6;if(r>=en-3)break}
-    if(rnd()<.4){const rr=R0+6+rnd()*(R1-R0-14),t2=th+(rnd()<.5?-1:1)*hw*(1.05+rnd()*.3);dots.push('<circle cx="'+hf(HC+Math.cos(t2)*rr)+'" cy="'+hf(HC+Math.sin(t2)*rr)+'" r="'+hf(.6+rnd()*1.1)+'" fill="'+x.col+'"/>')}}
-  let out='';for(const c in by)out+='<path fill="'+c+'" d="'+by[c].join('')+'"/>';out+=dots.join('');
-  const svg='<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 280 280" width="280" height="280"><defs><clipPath id="c"><circle cx="140" cy="140" r="140"/></clipPath><filter id="f"><feGaussianBlur stdDeviation=".45"/></filter><filter id="h" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="2.6"/></filter></defs><g clip-path="url(#c)">'
-    +(white&&N?'<circle cx="140" cy="140" r="140" fill="#f3efe8"/>':'')
-    +'<use xlink:href="#p" href="#p" filter="url(#h)" opacity="'+(white?'.5':'.42')+'"/><g filter="url(#f)"><g id="p">'+out+'</g></g>'
-    +(white&&N?'<g fill="none" stroke="rgba(0,0,0,.07)" stroke-width=".7">'+[70,82,94,106,118,130].map(r=>'<circle cx="140" cy="140" r="'+r+'"/>').join('')+'</g>':'')
-    +'</g></svg>';
-  HSP[key]={sig,svg};return svg}
+  const pc=document.createElement('canvas');pc.width=W;pc.height=H;const g=pc.getContext('2d'),sl=cap?2:2,K=S.length;
+  const rect=(x,y,w,h,col,a)=>{g.fillStyle='rgba('+col[0]+','+col[1]+','+col[2]+','+a.toFixed(3)+')';
+    g.fillRect(x-w/2,y,w,h);if(x-w/2<0)g.fillRect(x-w/2+W,y,w,h);if(x+w/2>W)g.fillRect(x-w/2-W,y,w,h)};
+  S.forEach((q,i)=>{
+    const x=((i+.5+(rnd()-.5)*1.7)/K)*W,wd=Math.max(cap?3:5,W/K*(1.3+rnd()*2.8)*(.6+.8*q.f)),
+      s0=rnd()<.6?rnd()*.12:rnd()*.6,s1=Math.min(1,s0+.3+rnd()*.7),y0=s0*H,y1=s1*H,base=.62+rnd()*.38,
+      f1=.018+rnd()*.04,f2=.045+rnd()*.07,p1=rnd()*6.3,p2=rnd()*6.3,dk=rnd()<.35?hDark(q.col,80):null,col=dk?hRgb(dk):q.rgb,ln=Math.max(1,y1-y0);
+    for(let y=y0;y<y1;y+=sl){
+      const t=(y-y0)/ln,env=Math.min(1,t/.14,(1-t)/.2),nz=.5+.28*Math.sin(y*f1+p1)+.22*Math.sin(y*f2+p2),a=base*Math.max(0,env)*(.2+.8*nz);
+      if(a<.03)continue;rect(x,y,wd,sl+.6,col,a*.5);rect(x,y,wd*.62,sl+.6,col,a*.55)}});
+  const pd=g.getImageData(0,0,W,H).data,oc=document.createElement('canvas');oc.width=oc.height=OUT;const og=oc.getContext('2d'),od=og.createImageData(OUT,OUT),o=od.data;
+  const c=OUT/2,rIn=(cap?43:60)/140*c,rOut=c*.99,bw=white?[244,240,233]:null;
+  for(let yy=0;yy<OUT;yy++)for(let xx=0;xx<OUT;xx++){
+    const dx=xx+.5-c,dy=yy+.5-c,r=Math.sqrt(dx*dx+dy*dy),e=Math.max(0,Math.min(1,c-r)),k4=(yy*OUT+xx)*4;if(e<=0)continue;
+    let R=0,G=0,B=0,A=0;
+    if(r>=rIn&&r<=rOut){
+      let an=Math.atan2(dy,dx);if(an<0)an+=2*Math.PI;const u=an/(2*Math.PI)*W-.5,v=(r-rIn)/(rOut-rIn)*H-.5,u0=Math.floor(u),v0=Math.max(0,Math.min(H-2,Math.floor(v))),fu=u-u0,fv=Math.max(0,Math.min(1,v-v0));
+      for(let a=0;a<2;a++)for(let b=0;b<2;b++){const uu=((u0+a)%W+W)%W,ii=((v0+b)*W+uu)*4,w=(a?fu:1-fu)*(b?fv:1-fv),al=pd[ii+3]/255*w;R+=pd[ii]*al;G+=pd[ii+1]*al;B+=pd[ii+2]*al;A+=al}
+      if(A>0){R/=A;G/=A;B/=A}}
+    if(bw){const pa=A;o[k4]=R*pa+bw[0]*(1-pa);o[k4+1]=G*pa+bw[1]*(1-pa);o[k4+2]=B*pa+bw[2]*(1-pa);o[k4+3]=255*e}
+    else{o[k4]=R;o[k4+1]=G;o[k4+2]=B;o[k4+3]=A*255*e}}
+  og.putImageData(od,0,0);
+  const url='url("'+oc.toDataURL('image/png')+'")';HSP[key]={sig,svg:url};return url}
 /* Liquid record. One layout (liqParts) is used everywhere the record shows: the small record in the sleeve, the
    record in the air and the one on the turntable, so it is the same record all the way. The paint is two rings
    of overlapping pools, so the record is always full; what shows between pools is a darker blend of the same
@@ -4765,7 +4771,7 @@ function hLiquid(P,aid){return liqSvg(liqParts(P,aid),'<svg xmlns="http://www.w3
 function hSvgUrl(svg){return 'url("data:image/svg+xml,'+encodeURIComponent(svg)+'")'}
 function hDisc(P,n,aid,songs,cap,anim){
   const tot=P.reduce((q,x)=>q+x.w,0),dk=(c,k)=>'color-mix(in srgb,'+c+' '+(k||76)+'%,#000)';
-  if(n===7||n===8)return hSvgUrl(hSplat(songs||[],aid,n===8,cap));   /* no base: the splatter sits on clear vinyl */
+  if(n===7||n===8)return hSplat(songs||[],aid,n===8,cap);   /* no base: the splatter sits on clear vinyl */
   if(!P.length)return '';
   if(n===9)return hSvgUrl(hLiquid(P,aid));
   if(n===3){const sp=P.slice(0,8);
@@ -4827,13 +4833,13 @@ function liqMount(hero,a){const spin=hero.querySelector('.hspin');if(!spin)retur
 function liqTick(dt,spd,t){if(!LIQ.svg||!LIQ.svg.isConnected)return;
   const h=dt/1000,D=Math.PI/180;LIQ.c+=(Math.pow(spd/200,2)-LIQ.c)*Math.min(1,h*.8);
   LIQ.b.forEach((b,i)=>{const n=LIQ.bn[i];if(!n)return;
-    b.om+=(spd*(1-b.eps)-b.om)*Math.min(1,h*b.k);b.lag+=(b.om-spd)*h;
-    const st=1+Math.min(.8,Math.abs(spd-b.om)/70),an=b.an0+b.lag*D,rr=b.r0+(b.r1-b.r0)*LIQ.c+Math.sin(t/1000*b.f+b.ph)*3*LIQ.c;
+    b.om+=(spd*(1-b.eps)-b.om)*Math.min(1,h*b.k);b.lag=Math.max(-34,Math.min(34,b.lag+((b.om-spd)-b.lag*.9)*h));
+    const st=1+Math.min(.22,Math.abs(spd-b.om)/260),an=b.an0+b.lag*D,rr=b.r0+(b.r1-b.r0)*LIQ.c*.5+Math.sin(t/1000*b.f+b.ph)*1.1*LIQ.c;
     const cx=HC+Math.cos(an)*rr,cy=HC+Math.sin(an)*rr;
     n.setAttribute('cx',cx.toFixed(1));n.setAttribute('cy',cy.toFixed(1));n.setAttribute('rx',(b.rad*st).toFixed(1));n.setAttribute('ry',(b.rad/Math.sqrt(st)).toFixed(1));
     n.setAttribute('transform','rotate('+(an/D+90).toFixed(1)+' '+cx.toFixed(1)+' '+cy.toFixed(1)+')')});
   LIQ.u.forEach((b,i)=>{const n=LIQ.un[i];if(!n)return;
-    b.om+=(spd*(1-b.eps)-b.om)*Math.min(1,h*b.k);b.lag+=(b.om-spd)*h;
+    b.om+=(spd*(1-b.eps)-b.om)*Math.min(1,h*b.k);b.lag=Math.max(-60,Math.min(60,b.lag+((b.om-spd)-b.lag*.6)*h));
     const an=b.an0+b.lag*D,rr=b.r0+(b.r1-b.r0)*LIQ.c;n.setAttribute('transform','translate('+(HC+Math.cos(an)*rr).toFixed(1)+' '+(HC+Math.sin(an)*rr).toFixed(1)+')')})}
 const noMotion=()=>!!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches);
 /* Picking an artist on the wall: its record slides out of the sleeve, is carried over and set down on the
@@ -4963,7 +4969,7 @@ function delBtn(id,label){const armed=UI.armed===id;return `<button class="btn d
    the title instead. Near-gray covers stay a quiet charcoal rather than being tinted up.
    Colors are kept on this device so each cover is read once (the key's number goes up whenever
    the picking changes, so every cover is read again with the new rule). */
-const ACOL_KEY=KEY+'_acol8';
+const ACOL_KEY=KEY+'_acol9';
 let ACOL=(()=>{try{return JSON.parse(localStorage.getItem(ACOL_KEY))||{}}catch(e){return{}}})();
 const ACOL_TRY={};
 function acolSave(){try{localStorage.setItem(ACOL_KEY,JSON.stringify(ACOL))}catch(e){ACOL={}}}
@@ -5005,8 +5011,8 @@ function acolFromPixels(d,dark){
   const cnt=new Array(k).fill(0);for(let i=0;i<N;i++)cnt[as[i]]++;
   const hue=(r,g,b,mx,c)=>{if(!c)return 0;let h=mx===r?((g-b)/c)%6:mx===g?(b-r)/c+2:(r-g)/c+4;h*=60;return h<0?h+360:h};
   /* share of each cluster on the outer frame of the art, which is mostly the backdrop */
-  const S=Math.round(Math.sqrt(d.length/4)),m=Math.max(1,Math.round(S*.12)),fr=new Array(k).fill(0);let nf=0;
-  for(let i=0;i<N;i++){const x=pos[i]%S,y=(pos[i]/S)|0;if(x<m||y<m||x>=S-m||y>=S-m){fr[as[i]]++;nf++}}
+  const S=Math.round(Math.sqrt(d.length/4)),m=Math.max(1,Math.round(S*.12)),fr=new Array(k).fill(0),gb=new Array(k).fill(0);let nf=0;
+  for(let i=0;i<N;i++){const x=pos[i]%S,y=(pos[i]/S)|0;if(x<m||y<m||x>=S-m||y>=S-m){fr[as[i]]++;nf++}if(y>=S*.55)gb[as[i]]++}
   /* Clusters of one hue family (within 30 degrees) are merged before scoring: k-means often splits one big color
      (a teal field) into several shades, and each shade alone would look too small to win. */
   const info=[];
@@ -5017,12 +5023,15 @@ function acolFromPixels(d,dark){
   for(const x of info.filter(x=>x.c>=.08&&!x.skin).sort((u,v)=>v.p-u.p)){
     let F=fam.find(y=>{let d=Math.abs(y.h-x.h);if(d>180)d=360-d;return d<=30});
     if(!F){F={h:x.h,p:0,rgb:[0,0,0],m:[]};fam.push(F)}
-    const w=x.p,w2=x.p*x.c*x.c;F.rgb=F.rgb.map((v,i)=>v+cen[x.j][i]*w2);F.w2=(F.w2||0)+w2;F.p+=w;F.cw=(F.cw||0)+x.c*w;F.m.push(x);
+    const w=x.p,w2=x.p*x.c*x.c;F.rgb=F.rgb.map((v,i)=>v+cen[x.j][i]*w2);F.w2=(F.w2||0)+w2;F.p+=w;F.cw=(F.cw||0)+x.c*w;F.m.push(x);F.gb=(F.gb||0)+gb[x.j];
     /* hue of the family follows its biggest member */}
   let best=null,back=null;
   for(const F of fam){const c0=F.rgb.map(v=>v/F.w2),c=F.cw/F.p;
     if(c<.1||F.p<(c>=.25?.02:c>=.18?.05:.08))continue;   /* a small patch only counts if it is strongly colorful */
-    const sc=4*Math.min(1,(c-.06)/.45)+5*Math.sqrt(F.p);   /* vividness keeps counting up to very saturated colors, so a bold stripe can beat a big muted field */if(!best||sc>best.sc)best={sc,c:c0}}
+    /* The ground anchors a picture: a big earthy family (brown, tan, olive, grass) that sits mostly in the lower part of the art
+       gets a lift, so it can win over a vivid sky above it. Only large, lower, earthy families qualify, so other covers score as before. */
+    const bs=F.gb/(F.p*N),gnd=F.h>=12&&F.h<=110&&c<.5&&F.p>=.14?3.4*Math.max(0,Math.min(1,(bs-.5)/.3))*Math.min(1,F.p/.22):0;
+    const sc=4*Math.min(1,(c-.06)/.45)+5*Math.sqrt(F.p)+gnd;   /* vividness keeps counting up to very saturated colors, so a bold stripe can beat a big muted field */if(!best||sc>best.sc)best={sc,c:c0}}
   for(const x of info){const bs=x.f+x.p*.01;if(!back||bs>back.bs)back={bs,c:cen[x.j]}}
   if(!best&&back)best=back;          /* no clear color: follow the backdrop */
   if(!best)return acolFix(R/W,G/W,B/W);
