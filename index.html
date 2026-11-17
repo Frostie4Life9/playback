@@ -1713,6 +1713,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-o', note:'CLEAN START: a brand-new Playback no longer comes with Radiohead and the Severance example already in it, so a friend opening it for the first time starts with an empty log, and the empty screen now tells them how to add their first artist. Anything already in your log, Radiohead and Severance included, stays exactly as it is.'},
   {v:'2026.11.17-n', note:'SUGGEST SOMETHING: friends who use your copy of Playback get a Suggest something box in Settings that sends their note to you (it uses your sync Worker, no sign-in for them, 10 an hour each, 600 characters). In your own Settings, Friend suggestions loads what they sent so you can copy the list, mark one Done or clear all. Your Worker needs the updated playback-sync.js, which it takes from GitHub on its own; until it has, a friend\u2019s Send says it did not send. Open Playback with ?owner=1 on any device that is not already on your own sync Worker to see your side.'},
   {v:'2026.11.17-m', note:'FRIENDS MODE: before you share Playback, other people no longer see the app bar (it linked to your Kitchen, DishLog, Protocol and the rest) and their Ideas box can no longer send anything to your ideas Worker. You stay in owner mode automatically on any browser whose sync is set to your own Worker; on a new device or browser open Playback once with ?owner=1 on the end of the address to switch it on (?owner=0 turns it off). Nothing else changes for anyone.'},
   {v:'2026.11.17-l', note:'FIX: the app sat on \u201cLoading your log\u201d. The artist menu\u2019s new opening animation (2026.11.17-j) referred to a value that did not exist where the menu is drawn, which stopped the page from drawing at all. Nothing in your log was touched. It is drawn again, and the menu animation is unchanged.'},
@@ -1966,7 +1967,7 @@ function seedAll(){
   S.pendingR=S.pendingR||{};
   const aid=sid('artist','radiohead');
   let a=S.music.find(x=>x.id===aid);
-  if(!a&&!S.flags.rhDeleted){a={id:aid,name:'Radiohead',groups:[]};S.music.push(a)}
+  /* 2026.11.17-o: a brand-new log no longer starts with Radiohead; a log that already has it keeps it */
   if(a&&!a.mbid){   /* once Radiohead comes from MusicBrainz, the hand-typed lists are retired */
     for(const [title,year,kind,tracks] of RADIOHEAD){
       const gid=sid(aid,title);
@@ -1979,12 +1980,7 @@ function seedAll(){
       S.flags.rhAlbums=true;
     }
   }
-  if(!S.flags.exSeverance){
-    const id=sid('show','severance');
-    S.screen.push({id,type:'show',title:'Severance',year:'2022',example:true,seasons:[{n:1,eps:9},{n:2,eps:10}]});
-    [1,2,3].forEach(e=>S.marks[sid(id,'s',1,'e',e)]={done:true});
-    S.flags.exSeverance=true;
-  }
+  S.flags.exSeverance=true;   /* 2026.11.17-o: no example show for new logs either; one already in a log stays */
   /* imported artists: fold back anything that duplicates a MusicBrainz song
      (an older copy of the app re-adding the hand-typed lists, say) */
   /* 2026.11.03-c: titles keep meaningful brackets now. Stored keys move to the new
@@ -4730,7 +4726,7 @@ function mainView(e,list){return `
       </details>`:tmSide()}
     </aside>
 
-    <section class="sheet" aria-live="polite">${e?(UI.tab==='music'?artistView(e):e.type==='film'?filmView(e):showView(e)):'<p class="empty">Add your first entry on the left.</p>'}</section>
+    <section class="sheet" aria-live="polite">${e?(UI.tab==='music'?artistView(e):e.type==='film'?filmView(e):showView(e)):'<p class="empty">Tap Add artist or the + button to add your first one.</p>'}</section>
   </div>
 
 `}
