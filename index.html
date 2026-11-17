@@ -1667,6 +1667,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-ar', note:'Picking a different artist now glides back to the top instead of snapping.'},
   {v:'2026.11.16-aq', note:'IMPORT: EPs now claim songs before singles, so a single\u2019s song lands on the EP that carries it. A hand-made album with the same title as an imported release (Astroworld vs ASTROWORLD) is folded into that release instead of staying as a separate card. Picking a different artist now scrolls to the top.'},
   {v:'2026.11.16-ap', note:'LISTEN AGAIN: the record\u2019s ripple on scrolling into view now runs through every band on a second listen, strongly through the ones you have lit on this listen and softly through the faded carried ones. CLEAR ANIMATION: clearing a song now shrinks its colour bar away (down to last listen\u2019s rating on a later listen), pops its check, and fades its band on the record from lit to what it is now.'},
   {v:'2026.11.16-ao', note:'LISTEN AGAIN, ANIMATIONS: on a second listen the record now glows and ripples when you rate a carried-over song, and tapping a faded check confirms the song for this listen (it lights up) instead of unchecking it. Mark all heard confirms every carried song the same way.'},
@@ -4616,7 +4617,7 @@ function render(){
       ohg=g}}
   const swK=!UI.view?UI.tab+':'+(UI.sel[UI.tab]||''):null,swGo=!!(swK&&UI.swKey&&UI.swKey!==swK);if(swK)UI.swKey=swK;
   renderMain();slObserve();slPulseNow();UI.rAnim=null;
-  if(swGo&&!UI.toAlb&&!UI.toSheet)window.scrollTo(0,0);   /* a different artist or title: start at the top, not wherever the last one was scrolled */
+  if(swGo&&!UI.toAlb&&!UI.toSheet)window.scrollTo({top:0,behavior:noMotion()?'auto':'smooth'});   /* a different artist or title: start at the top, not wherever the last one was scrolled */
   if(swGo&&ohg&&!noMotion()){const nh=document.querySelector('.hero[data-aid]');
     if(nh&&nh.dataset.aid!==ohg.dataset.aid){nh.insertBefore(ohg,nh.firstChild);ohg.addEventListener('animationend',e=>{if(e.target===ohg)ohg.remove()})}}
   if(swGo&&!noMotion()){const sh=document.querySelector('.sheet');   /* a different artist or title is open: its text and cards ease in, one after another */
