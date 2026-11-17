@@ -798,7 +798,7 @@ details.addart .add{border-top:1px solid var(--line)}
 .sl-ph{font:900 64px Archivo,var(--display);font-stretch:125%;color:color-mix(in srgb,var(--hi) 35%,transparent)}
 .sl-disc{position:absolute;left:112px;top:4px;width:160px;height:160px;border-radius:50%;background:#141111;box-shadow:0 12px 26px rgb(0 0 0 / .35);will-change:transform;backface-visibility:hidden;transform:translate3d(0,0,0)}
 @property --j{syntax:'<percentage>';inherits:false;initial-value:0%}
-.sl-disc i{position:absolute;left:calc(50% - (var(--d) + var(--j))/2);top:calc(50% - (var(--d) + var(--j))/2);width:calc(var(--d) + var(--j));height:calc(var(--d) + var(--j));border-radius:50%;border:1.5px solid rgb(255 255 255 / .09);box-sizing:border-box}
+.sl-disc i{position:absolute;left:calc(50% - (var(--d) + var(--j))/2);top:calc(50% - (var(--d) + var(--j))/2);width:calc(var(--d) + var(--j));height:calc(var(--d) + var(--j));border-radius:50%;border:1.5px solid rgb(255 255 255 / .09);box-sizing:border-box;will-change:transform}
 .sl-disc{--gv:color-mix(in srgb,var(--ac) 35%,#ffd9a8);--gp:color-mix(in srgb,var(--ac) 8%,#fff4e2);--gg:color-mix(in srgb,var(--ac) 70%,#ffd9a8)}
 /* grooves take the banner's own hue and amount of color: a gray cover gets pale gray grooves, a red one pale rose */
 @supports (color:oklch(from red l c h)){.sl-disc{--gv:oklch(from var(--ac) .86 calc(c*.7) h);--gp:oklch(from var(--ac) .96 calc(c*.25) h);--gg:oklch(from var(--ac) .7 calc(c*.9) h)}}
@@ -808,9 +808,9 @@ details.addart .add{border-top:1px solid var(--line)}
    becomes a transform it is never lifted onto its own layer, so there is nothing to snap when it ends.
    --rb is the start delay: the slide-out waits for the record to emerge. */
 @keyframes slPulse{
-  0%{--j:0%;border-color:var(--gv);box-shadow:0 0 0 0 transparent}
-  35%{--j:7.5%;border-color:#fff;box-shadow:0 0 18px 4px var(--gg)}
-  100%{--j:0%;border-color:var(--gv);box-shadow:0 0 0 0 transparent}}
+  0%{transform:scale(1);border-color:var(--gv)}
+  35%{transform:scale(1.075);border-color:#fff}
+  100%{transform:scale(1);border-color:var(--gv)}}
 @media (prefers-reduced-motion:no-preference){.group.sleeve.rip .sl-disc i.on:not(.nr){animation:slPulse .62s cubic-bezier(.3,.6,.3,1) calc(var(--rb,0ms) + var(--o,0)*38ms) backwards}}
 .sl-lab{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:var(--acb);display:grid;place-items:center;font:800 12px Archivo,var(--display);color:var(--hi);font-variant-numeric:tabular-nums}
 @media (prefers-reduced-motion:no-preference){.sl-disc{transition:transform .7s cubic-bezier(.2,.8,.2,1)}}
@@ -999,15 +999,15 @@ details.addart .add{border-top:1px solid var(--line)}
 }
 /* a groove lights up: when a song is first rated (as its number lands) or ticked heard, the new groove flares,
    a glint runs once around the record, the count on the label jumps, and the ripple follows. */
-.sl-disc::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;opacity:0;
+.sl-disc::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;opacity:0;will-change:transform,opacity;
   background:conic-gradient(from 0deg,transparent 0 45%,color-mix(in srgb,var(--gg) 55%,transparent) 80%,var(--gp) 98%,transparent 100%);
   -webkit-mask:radial-gradient(circle closest-side,transparent 35%,#000 36%,#000 var(--ld,100%),transparent calc(var(--ld,100%) + 1%));mask:radial-gradient(circle closest-side,transparent 35%,#000 36%,#000 var(--ld,100%),transparent calc(var(--ld,100%) + 1%))}
-@keyframes slLit{0%{--j:0%;border-color:rgb(255 255 255 / .09);box-shadow:0 0 0 0 transparent}
-  30%{--j:13%;border-color:#fff;box-shadow:0 0 30px 7px var(--gg),0 0 8px 2px #fff,inset 0 0 16px 3px var(--gg)}
-  100%{--j:0%;border-color:var(--gv);box-shadow:0 0 0 0 transparent}}
+@keyframes slLit{0%{transform:scale(1);border-color:rgb(255 255 255 / .09);box-shadow:0 0 0 0 transparent}
+  30%{transform:scale(1.13);border-color:#fff;box-shadow:0 0 14px 4px var(--gg)}
+  100%{transform:scale(1);border-color:var(--gv);box-shadow:0 0 0 0 transparent}}
 @keyframes slSweep{0%{transform:rotate(-40deg);opacity:0}15%{opacity:1}75%{opacity:1}100%{transform:rotate(500deg);opacity:0}}
 @keyframes slWave{0%{transform:scale(.3);opacity:0}12%{opacity:.95}100%{transform:scale(var(--ls,1));opacity:0}}
-.sl-disc::before{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;opacity:0;border:3px solid #fff;box-shadow:0 0 26px 6px var(--gg),inset 0 0 18px 3px var(--gg)}
+.sl-disc::before{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;opacity:0;will-change:transform,opacity;border:3px solid #fff;box-shadow:0 0 12px 3px var(--gg)}
 @keyframes slLab{0%{transform:scale(1)}30%{transform:scale(1.55)}60%{transform:scale(.95)}100%{transform:scale(1)}}
 @media (prefers-reduced-motion:no-preference){
   .group.sleeve.lit .sl-disc::after{animation:slSweep 1.25s cubic-bezier(.4,0,.2,1)}
@@ -1581,6 +1581,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-q', note:'SMOOTHER RATING ANIMATION: the grooves now swell with a GPU transform instead of resizing every frame, the glows are lighter, and the glint and shockwave sit on their own layers, so the effect should no longer lag.'},
   {v:'2026.11.16-p', note:'BIGGER RATING ANIMATION: rating a song now sends a bright shockwave ring out from the label to that song\'s band, the glint trails a longer glow and spins further, the new groove flares much harder, the ripple through the grooves swells and shines more, and the label count gives a bigger bounce.'},
   {v:'2026.11.16-o', note:'RATING ANIMATION: when you rate a song, the glint that circles the record and the ripple through the grooves now go out only as far as that song\'s band instead of the whole record. Inner grooves still light up, anything outside the band stays still.'},
   {v:'2026.11.16-n', note:'RATING HISTORY: a new History tab lists every album, EP and deluxe you have rated as a dated list: the day on the left (31 Aug), the cover, the title and artist, and your stars with the number. Newest first with a heading for each month, or oldest first, or highest first. Search by album or artist, and show just Albums, EPs or Other. Tap the cover or title to open the album; tap the day to change it, and albums with no day yet sit at the bottom with a + Date button so you can fill them in right there.'},
