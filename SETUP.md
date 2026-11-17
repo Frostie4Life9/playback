@@ -210,6 +210,20 @@ The **Collection** tab keeps an inventory of records you own, one entry per phys
 
 ---
 
+## Part 8. Accounts and friends' ratings (owner setup, one time)
+
+Friends sign in with Google, trade friend codes, and see each other's ratings on the same albums, shows and films. Ratings are shared only between people who accepted each other, and anyone can switch sharing off or delete their account in **Settings**, **Account**. Playback keeps only the Google name and a private id, never an email address. It is free and uses the same Worker and D1 database as Spotify's cache; the tables are created automatically.
+
+This part is done once by whoever runs the Worker (not by each friend).
+
+1. Go to console.cloud.google.com and sign in. Make a new project called Playback.
+2. Open **APIs & Services**, **OAuth consent screen**. Choose **External**, fill in the app name (Playback) and your email, and save. Under **Audience**, tap **Publish app** so anyone with a Google account can sign in (it only asks for name and profile, so no Google review is needed).
+3. Open **Credentials**, **Create credentials**, **OAuth client ID**, type **Web application**. Under **Authorized JavaScript origins** add `https://frostie4life9.github.io` (your copy's address, with no path and no slash at the end). Leave redirect URIs empty. Create it and copy the **Client ID** (it ends in `.apps.googleusercontent.com`).
+4. Put that Client ID in two places, both in the repo: the `GCID` line in `index.html`, and `"vars": { "GOOGLE_CLIENT_ID": "..." }` in `wrangler.jsonc`. The Worker redeploys from GitHub on its own. (A Client ID is public, not a secret.)
+5. Open Playback, **Settings**: the **Account** card now shows Google's sign-in button.
+
+If sign-in says "not accepted", the Client ID in `index.html` and in `wrangler.jsonc` are not identical. If the button never appears, check that the address in step 3 matches the address you open Playback at.
+
 ## Troubleshooting
 
 | What you see | What to do |

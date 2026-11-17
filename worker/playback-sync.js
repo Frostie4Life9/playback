@@ -1,5 +1,5 @@
 /* =========================================================
-   Playback — sync  (worker version 10, 2026.11.13)
+   Playback — sync  (worker version 11, 2026.11.17)
    Cloudflare Worker + KV. Same setup pattern as protocol-sync
    and gamelog-sync.
 
@@ -49,7 +49,8 @@
    along as KV metadata so the newer-copy check needs no parsing.
    Every response carries x-pb-worker: 5 so the app knows what this Worker
    can do (2 = compressed sync, 3 = Spotify plays, 4 = Spotify catalog too,
-   5 = the morning-brief list, 6 = Discogs pressing search, 7 = Discogs pressing photos, 8 = your own record photos).
+   5 = the morning-brief list, 6 = Discogs pressing search, 7 = Discogs pressing photos, 8 = your own record photos,
+   11 = Google accounts, friends and friends' ratings: see the accounts section above the export).
 
    MORNING BRIEF (version 5)
    The app keeps a tiny list of the next episode of each show you follow
@@ -114,10 +115,10 @@ const SP_AUTH = 'spotify-auth', SP_META = 'spotify-meta', SP_PLAYS = 'spotify-pl
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, PUT, POST, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'content-type, x-sync-key',
+  'Access-Control-Allow-Headers': 'content-type, x-sync-key, authorization',
   'Access-Control-Expose-Headers': 'x-pb-worker, retry-after, x-pb-cache',
   'Access-Control-Max-Age': '86400',
-  'x-pb-worker': '10'
+  'x-pb-worker': '11'
 };
 const JSON_H = Object.assign({ 'content-type': 'application/json', 'cache-control': 'no-store' }, CORS);
 const GZ_H = Object.assign({ 'content-type': 'application/gzip', 'cache-control': 'no-store' }, CORS);
@@ -443,11 +444,245 @@ async function sugOwner(request, env, url) {
   return reply({ error: 'method not allowed' }, 405);
 }
 
+/* ---------- accounts (version 11) ----------
+   Sign in with Google, friends by code, and friends' ratings. Lives in the same D1 database as the
+   catalog cache (CATALOG); the tables are created the first time anyone signs in. Nothing here touches
+   the owner's log or the sync key. Needs one variable on the Worker: GOOGLE_CLIENT_ID (set in
+   wrangler.jsonc "vars"; it is public, not a secret). Only the Google account's stable id and display
+   name are kept; the email address is never stored.
+   POST   /acct/google        {credential}  Google ID token -> {token, me}
+   GET    /acct/me            -> {me}                       (Authorization: Bearer <token> on every route below)
+   PUT    /acct/me            {name?, share?}
+   DELETE /acct/me            removes the account, its ratings and its friendships
+   PUT    /acct/ratings       {items:[{kind:'a'|'s', k, t, r, n, a}]}  replaces this person's published ratings
+   GET    /acct/friends       -> {friends, incoming, outgoing}
+   POST   /acct/friends       {code}        asks that person to be friends
+   POST   /acct/friends/accept {uid}
+   DELETE /acct/friends?uid=  removes a friend, declines a request or cancels one
+   POST   /acct/friends/ratings {kind, ks:[], ts:[]} -> {rows:[{uid,name,k,t,r}]}  accepted friends only */
+const GOOGLE_ISS = ['https://accounts.google.com', 'accounts.google.com'];
+const ACCT_MAX_BODY = 400 * 1024, ACCT_MAX_ROWS = 4000;
+let acctReady = false, gKeys = null, gKeysAt = 0;
+
+async function acctInit(env) {
+  if (acctReady) return true;
+  if (!env.CATALOG) return false;
+  await env.CATALOG.batch([
+    env.CATALOG.prepare('CREATE TABLE IF NOT EXISTS acct_users (uid TEXT PRIMARY KEY, sub TEXT UNIQUE NOT NULL, name TEXT NOT NULL, code TEXT UNIQUE NOT NULL, share INTEGER NOT NULL DEFAULT 1, made INTEGER NOT NULL, seen INTEGER NOT NULL, rated INTEGER NOT NULL DEFAULT 0)'),
+    env.CATALOG.prepare('CREATE TABLE IF NOT EXISTS acct_ratings (uid TEXT NOT NULL, kind TEXT NOT NULL, k TEXT NOT NULL, t TEXT NOT NULL, r REAL NOT NULL, ttl TEXT, art TEXT, PRIMARY KEY (uid, kind, t))'),
+    env.CATALOG.prepare('CREATE INDEX IF NOT EXISTS acct_ratings_k ON acct_ratings (kind, k)'),
+    env.CATALOG.prepare('CREATE INDEX IF NOT EXISTS acct_ratings_t ON acct_ratings (kind, t)'),
+    env.CATALOG.prepare('CREATE TABLE IF NOT EXISTS acct_friends (a TEXT NOT NULL, b TEXT NOT NULL, st TEXT NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (a, b))'),
+    env.CATALOG.prepare('CREATE INDEX IF NOT EXISTS acct_friends_b ON acct_friends (b)'),
+    env.CATALOG.prepare('CREATE TABLE IF NOT EXISTS acct_rl (k TEXT PRIMARY KEY, n INTEGER NOT NULL, exp INTEGER NOT NULL)')
+  ]);
+  acctReady = true;
+  return true;
+}
+
+/* a small counter so sign-ins, code guesses and uploads can't be hammered */
+async function rlHit(env, k, max, secs) {
+  const now = Date.now();
+  const row = await env.CATALOG.prepare('SELECT n, exp FROM acct_rl WHERE k = ?1').bind(k).first();
+  if (!row || row.exp < now) {
+    await env.CATALOG.prepare('INSERT OR REPLACE INTO acct_rl (k, n, exp) VALUES (?1, 1, ?2)').bind(k, now + secs * 1000).run();
+    return true;
+  }
+  if (row.n >= max) return false;
+  await env.CATALOG.prepare('UPDATE acct_rl SET n = n + 1 WHERE k = ?1').bind(k).run();
+  return true;
+}
+
+const b64u = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(s.length / 4) * 4, '=')), c => c.charCodeAt(0));
+async function googleKeys(force) {
+  if (!force && gKeys && Date.now() - gKeysAt < 3600 * 1000) return gKeys;
+  const r = await fetch('https://www.googleapis.com/oauth2/v3/certs');
+  if (!r.ok) throw new Error('google keys ' + r.status);
+  gKeys = (await r.json()).keys || []; gKeysAt = Date.now();
+  return gKeys;
+}
+/* checks the signature, the issuer, that it was issued to THIS app's client id, and that it hasn't expired */
+async function googleVerify(env, cred) {
+  const parts = String(cred || '').split('.');
+  if (parts.length !== 3 || String(cred).length > 4096) return null;
+  let head, pay;
+  try {
+    head = JSON.parse(new TextDecoder().decode(b64u(parts[0])));
+    pay = JSON.parse(new TextDecoder().decode(b64u(parts[1])));
+  } catch (e) { return null; }
+  if (head.alg !== 'RS256') return null;
+  let jwk = (await googleKeys(false)).find(k => k.kid === head.kid);
+  if (!jwk) jwk = (await googleKeys(true)).find(k => k.kid === head.kid);
+  if (!jwk) return null;
+  const key = await crypto.subtle.importKey('jwk', jwk, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['verify']);
+  const ok = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, b64u(parts[2]), new TextEncoder().encode(parts[0] + '.' + parts[1]));
+  if (!ok) return null;
+  if (!GOOGLE_ISS.includes(pay.iss) || pay.aud !== String(env.GOOGLE_CLIENT_ID).trim() || !(pay.exp > Date.now() / 1000) || !pay.sub) return null;
+  return pay;
+}
+
+async function acctSig(env, msg) {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode('acct:' + String(env.SECRET).trim()), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  return [...new Uint8Array(await crypto.subtle.sign('HMAC', key, enc.encode(msg)))].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+async function acctToken(env, uid) {
+  const body = uid + '.' + (Date.now() + 30 * 86400 * 1000);
+  return 'pb1.' + body + '.' + await acctSig(env, body);
+}
+/* the signed-in person, or null. A deleted account's token stops working at once. */
+async function acctWho(env, request) {
+  const m = /^Bearer pb1\.([0-9a-f]{16})\.(\d{10,14})\.([0-9a-f]{64})$/.exec(request.headers.get('authorization') || '');
+  if (!m || !(Number(m[2]) > Date.now()) || !keyMatches(m[3], await acctSig(env, m[1] + '.' + m[2]))) return null;
+  return await env.CATALOG.prepare('SELECT uid, name, code, share, rated FROM acct_users WHERE uid = ?1').bind(m[1]).first();
+}
+const meOut = u => ({ name: u.name, code: u.code, share: !!u.share, rated: u.rated || 0 });
+const CODE_CH = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const randCode = () => { const b = crypto.getRandomValues(new Uint8Array(8)); return [...b].map(x => CODE_CH[x % CODE_CH.length]).join(''); };
+const randUid = () => [...crypto.getRandomValues(new Uint8Array(8))].map(b => b.toString(16).padStart(2, '0')).join('');
+const cleanName = s => String(s || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 40);
+async function readBody(request, max) {
+  const t = await request.text();
+  if (t.length > (max || 8192)) return { err: reply({ error: 'payload too large' }, 413) };
+  try { return { j: JSON.parse(t || '{}') }; } catch (e) { return { err: reply({ error: 'body is not valid JSON' }, 400) }; }
+}
+
+async function acct(request, env, url) {
+  if (!env.CATALOG) return reply({ error: 'accounts need the CATALOG database' }, 409);
+  if (!env.GOOGLE_CLIENT_ID) return reply({ error: 'accounts are not set up yet' }, 409);
+  await acctInit(env);
+  const path = url.pathname.slice(5), now = Date.now(), M = request.method;
+
+  if (path === '/google' && M === 'POST') {
+    const ip = request.headers.get('cf-connecting-ip') || 'x';
+    if (!(await rlHit(env, 'login:' + ip, 40, 3600))) return reply({ error: 'too many' }, 429);
+    const { j, err } = await readBody(request, 8192); if (err) return err;
+    let pay; try { pay = await googleVerify(env, j.credential); } catch (e) { return reply({ error: 'could not check Google right now' }, 502); }
+    if (!pay) return reply({ error: 'Google sign-in was not accepted' }, 401);
+    let u = await env.CATALOG.prepare('SELECT uid, name, code, share, rated FROM acct_users WHERE sub = ?1').bind(String(pay.sub)).first();
+    if (!u) {
+      const uid = randUid(), name = cleanName(pay.given_name || pay.name) || 'Friend';
+      for (let i = 0; i < 6 && !u; i++) {
+        const code = randCode();
+        try {
+          await env.CATALOG.prepare('INSERT INTO acct_users (uid, sub, name, code, share, made, seen, rated) VALUES (?1, ?2, ?3, ?4, 1, ?5, ?5, 0)').bind(uid, String(pay.sub), name, code, now).run();
+          u = { uid, name, code, share: 1, rated: 0 };
+        } catch (e) { if (i === 5) return reply({ error: 'could not make the account' }, 500); }
+      }
+    } else await env.CATALOG.prepare('UPDATE acct_users SET seen = ?2 WHERE uid = ?1').bind(u.uid, now).run();
+    return reply({ token: await acctToken(env, u.uid), me: meOut(u) });
+  }
+
+  const me = await acctWho(env, request);
+  if (!me) return reply({ error: 'sign in again' }, 401);
+
+  if (path === '/me') {
+    if (M === 'GET') return reply({ me: meOut(me), token: await acctToken(env, me.uid) });
+    if (M === 'PUT') {
+      const { j, err } = await readBody(request); if (err) return err;
+      const name = j.name === undefined ? me.name : cleanName(j.name), share = j.share === undefined ? me.share : (j.share ? 1 : 0);
+      if (!name) return reply({ error: 'name is empty' }, 400);
+      await env.CATALOG.prepare('UPDATE acct_users SET name = ?2, share = ?3 WHERE uid = ?1').bind(me.uid, name, share).run();
+      return reply({ me: meOut(Object.assign({}, me, { name, share })) });
+    }
+    if (M === 'DELETE') {
+      await env.CATALOG.batch([
+        env.CATALOG.prepare('DELETE FROM acct_ratings WHERE uid = ?1').bind(me.uid),
+        env.CATALOG.prepare('DELETE FROM acct_friends WHERE a = ?1 OR b = ?1').bind(me.uid),
+        env.CATALOG.prepare('DELETE FROM acct_users WHERE uid = ?1').bind(me.uid)
+      ]);
+      return reply({ ok: true });
+    }
+    return reply({ error: 'method not allowed' }, 405);
+  }
+
+  if (path === '/ratings' && M === 'PUT') {
+    if (!(await rlHit(env, 'pub:' + me.uid, 120, 3600))) return reply({ error: 'too many' }, 429);
+    const { j, err } = await readBody(request, ACCT_MAX_BODY); if (err) return err;
+    if (!j || !Array.isArray(j.items)) return reply({ error: 'not a ratings list' }, 400);
+    const seen = new Set(), items = [];
+    for (const x of j.items.slice(0, ACCT_MAX_ROWS)) {
+      if (!x || (x.kind !== 'a' && x.kind !== 's') || typeof x.t !== 'string' || !x.t) continue;
+      const r = Number(x.r); if (!(r > 0 && r <= 10)) continue;
+      const t = x.t.slice(0, 200), id = x.kind + '|' + t; if (seen.has(id)) continue; seen.add(id);
+      items.push({ kind: x.kind, k: typeof x.k === 'string' ? x.k.slice(0, 80) : '', t, r: Math.round(r * 2) / 2, n: String(x.n || '').slice(0, 120), a: String(x.a || '').slice(0, 80) });
+    }
+    await env.CATALOG.batch([
+      env.CATALOG.prepare('DELETE FROM acct_ratings WHERE uid = ?1').bind(me.uid),
+      env.CATALOG.prepare("INSERT OR REPLACE INTO acct_ratings (uid, kind, k, t, r, ttl, art) SELECT ?1, json_extract(value,'$.kind'), json_extract(value,'$.k'), json_extract(value,'$.t'), json_extract(value,'$.r'), json_extract(value,'$.n'), json_extract(value,'$.a') FROM json_each(?2)").bind(me.uid, JSON.stringify(items)),
+      env.CATALOG.prepare('UPDATE acct_users SET rated = ?2, seen = ?3 WHERE uid = ?1').bind(me.uid, items.length, now)
+    ]);
+    return reply({ ok: true, rows: items.length });
+  }
+
+  if (path === '/friends') {
+    if (M === 'GET') {
+      const rows = (await env.CATALOG.prepare('SELECT f.a, f.b, f.st, u.uid AS uid, u.name AS name, u.rated AS rated FROM acct_friends f JOIN acct_users u ON u.uid = (CASE WHEN f.a = ?1 THEN f.b ELSE f.a END) WHERE f.a = ?1 OR f.b = ?1 ORDER BY u.name COLLATE NOCASE').bind(me.uid).all()).results || [];
+      return reply({
+        friends: rows.filter(x => x.st === 'ok').map(x => ({ uid: x.uid, name: x.name, rated: x.rated })),
+        incoming: rows.filter(x => x.st === 'pending' && x.b === me.uid).map(x => ({ uid: x.uid, name: x.name })),
+        outgoing: rows.filter(x => x.st === 'pending' && x.a === me.uid).map(x => ({ uid: x.uid, name: x.name }))
+      });
+    }
+    if (M === 'POST') {
+      const { j, err } = await readBody(request); if (err) return err;
+      const code = String(j.code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (code.length !== 8) return reply({ error: 'A friend code is 8 letters and numbers.' }, 400);
+      if (!(await rlHit(env, 'find:' + me.uid, 20, 3600))) return reply({ error: 'You have tried a lot of codes just now. Try again in a while.' }, 429);
+      const them = await env.CATALOG.prepare('SELECT uid, name FROM acct_users WHERE code = ?1').bind(code).first();
+      if (!them) return reply({ error: 'No one has that code.' }, 404);
+      if (them.uid === me.uid) return reply({ error: 'That is your own code.' }, 400);
+      const ex = await env.CATALOG.prepare('SELECT a, b, st FROM acct_friends WHERE (a = ?1 AND b = ?2) OR (a = ?2 AND b = ?1)').bind(me.uid, them.uid).first();
+      if (ex) {
+        if (ex.st === 'ok') return reply({ error: 'You are already friends.' }, 409);
+        if (ex.a === them.uid) {   /* they already asked you: that is a yes */
+          await env.CATALOG.prepare("UPDATE acct_friends SET st = 'ok', at = ?3 WHERE a = ?1 AND b = ?2").bind(them.uid, me.uid, now).run();
+          return reply({ ok: true, name: them.name, accepted: true });
+        }
+        return reply({ error: 'You already asked ' + them.name + '.' }, 409);
+      }
+      await env.CATALOG.prepare("INSERT INTO acct_friends (a, b, st, at) VALUES (?1, ?2, 'pending', ?3)").bind(me.uid, them.uid, now).run();
+      return reply({ ok: true, name: them.name });
+    }
+    if (M === 'DELETE') {
+      const uid = (url.searchParams.get('uid') || '').replace(/[^0-9a-f]/g, '');
+      if (uid.length !== 16) return reply({ error: 'no such friend' }, 400);
+      await env.CATALOG.prepare('DELETE FROM acct_friends WHERE (a = ?1 AND b = ?2) OR (a = ?2 AND b = ?1)').bind(me.uid, uid).run();
+      return reply({ ok: true });
+    }
+    return reply({ error: 'method not allowed' }, 405);
+  }
+
+  if (path === '/friends/accept' && M === 'POST') {
+    const { j, err } = await readBody(request); if (err) return err;
+    const uid = String(j.uid || '').replace(/[^0-9a-f]/g, '');
+    const r = await env.CATALOG.prepare("UPDATE acct_friends SET st = 'ok', at = ?3 WHERE a = ?2 AND b = ?1 AND st = 'pending'").bind(me.uid, uid, now).run();
+    return r.meta && r.meta.changes ? reply({ ok: true }) : reply({ error: 'That request is gone.' }, 404);
+  }
+
+  if (path === '/friends/ratings' && M === 'POST') {
+    const { j, err } = await readBody(request, 64 * 1024); if (err) return err;
+    const kind = j.kind === 's' ? 's' : 'a';
+    const ks = (Array.isArray(j.ks) ? j.ks : []).filter(x => typeof x === 'string' && x).slice(0, 400).map(x => x.slice(0, 80));
+    const ts = (Array.isArray(j.ts) ? j.ts : []).filter(x => typeof x === 'string' && x).slice(0, 400).map(x => x.slice(0, 200));
+    if (!ks.length && !ts.length) return reply({ rows: [] });
+    const rows = (await env.CATALOG.prepare(
+      "SELECT r.uid AS uid, u.name AS name, r.k AS k, r.t AS t, r.r AS r FROM acct_ratings r JOIN acct_users u ON u.uid = r.uid " +
+      "WHERE r.kind = ?1 AND u.share = 1 AND r.uid IN (SELECT b FROM acct_friends WHERE a = ?2 AND st = 'ok' UNION SELECT a FROM acct_friends WHERE b = ?2 AND st = 'ok') " +
+      "AND (r.k IN (SELECT value FROM json_each(?3)) OR r.t IN (SELECT value FROM json_each(?4))) LIMIT 1500"
+    ).bind(kind, me.uid, JSON.stringify(ks), JSON.stringify(ts)).all()).results || [];
+    return reply({ rows });
+  }
+
+  return reply({ error: 'not found' }, 404);
+}
+
 export default {
   async scheduled(event, env, ctx) {
     if (env.STATE) ctx.waitUntil(spCheck(env, true, true));
     /* once a day (the 10:00 UTC check), drop saved catalog copies that have expired */
     if (env.CATALOG && new Date(event.scheduledTime).getUTCHours() === 10) ctx.waitUntil(env.CATALOG.prepare('DELETE FROM catalog WHERE exp < ?1').bind(Date.now()).run().catch(() => {}));
+    if (env.CATALOG && new Date(event.scheduledTime).getUTCHours() === 10) ctx.waitUntil(env.CATALOG.prepare('DELETE FROM acct_rl WHERE exp < ?1').bind(Date.now()).run().catch(() => {}));
   },
 
   async fetch(request, env) {
@@ -459,6 +694,7 @@ export default {
     if (url.pathname === '/brief' && request.method === 'GET') return briefGet(env, url);   /* its own read-only key */
     if (url.pathname === '/photo' && request.method === 'GET') return photoGet(env, url);   /* signed link, no sync key */
     if (url.pathname === '/suggest' && request.method === 'POST') return sugPost(request, env);   /* open to friends, rate limited */
+    if (url.pathname.startsWith('/acct/')) return acct(request, env, url);   /* Google sign-in token or its own session token, never the sync key */
     const given = (request.headers.get('x-sync-key') || '').trim();
     if (!keyMatches(given, String(env.SECRET).trim())) return reply({ error: 'unauthorized' }, 401);
     if (url.pathname === '/suggest') return sugOwner(request, env, url);

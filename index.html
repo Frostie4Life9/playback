@@ -777,6 +777,38 @@ details.addart .add{border-top:1px solid var(--line)}
 .genkey{display:block;padding:8px 10px;user-select:all;line-height:1.4}
 @media (prefers-reduced-motion:no-preference){.banner.bk{animation:rdin .5s cubic-bezier(.2,.8,.2,1) both}.guide li{animation:rdin .4s cubic-bezier(.2,.8,.2,1) both}.guide li:nth-child(2){animation-delay:.04s}.guide li:nth-child(3){animation-delay:.08s}.guide li:nth-child(n+4){animation-delay:.12s}}
 .setcard h3{margin:0;font:800 18px Archivo,var(--display);font-stretch:112%}
+/* accounts and friends' ratings (Settings > Account, and the Friends strip under an album or title) */
+.acc .gbtn{min-height:44px;display:flex;align-items:center}
+.acc-id{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.acc-code{display:block;font:800 26px var(--mono);letter-spacing:.16em;margin-top:2px}
+.acc-share{display:flex;align-items:center;gap:10px;font-weight:600;cursor:pointer}
+.acc-share input{width:20px;height:20px;accent-color:var(--accent)}
+.acc-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
+.acc-row .sp{flex:1}
+.acc-row .fn{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acc-row .btn{padding:5px 10px;font-size:13px}
+.fav{width:26px;height:26px;flex:none;border-radius:50%;display:grid;place-items:center;font:800 12px var(--display);font-style:normal;background:var(--accent);color:var(--accent-ink)}
+.frs{margin:8px 18px 2px;padding:10px 12px 12px;border:1px solid var(--line);border-radius:14px;background:color-mix(in srgb,var(--surface) 72%,transparent)}
+.frs-h{display:flex;justify-content:space-between;align-items:baseline;font:700 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.frs-h b{color:var(--ink);font-weight:700}
+.frs-l{display:flex;flex-direction:column;gap:7px}
+.frp{display:grid;grid-template-columns:26px minmax(0,96px) 1fr auto;align-items:center;gap:8px;font-size:13px}
+.frp .fn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.frp .fbar{height:6px;border-radius:99px;background:var(--sunk);overflow:hidden}
+.frp .fbar i{display:block;height:100%;width:var(--p);border-radius:inherit;background:var(--accent);transform-origin:left}
+.frp b.fr{font:700 13px var(--mono);min-width:2.3em;text-align:right}
+@keyframes frsin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes frpin{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+@keyframes frfill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes accrow{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:no-preference){
+  .frs.fresh{animation:frsin .5s cubic-bezier(.2,.8,.2,1) both}
+  .frs.fresh .frp{animation:frpin .45s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*70ms + 140ms)}
+  .frs.fresh .frp .fbar i{animation:frfill .85s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*70ms + 260ms)}
+  .acc-row.acc-in{animation:accrow .4s cubic-bezier(.2,.8,.2,1) both}
+  .acc-row.acc-in:nth-of-type(2){animation-delay:.05s}.acc-row.acc-in:nth-of-type(3){animation-delay:.1s}.acc-row.acc-in:nth-of-type(n+4){animation-delay:.15s}
+  .acc-code{animation:accrow .5s cubic-bezier(.2,.8,.2,1) both}
+}
 .setcard>.add:first-of-type{border-top:0;padding-top:0}
 .setcard details{border-top:1px solid var(--line);padding-top:10px}
 .setcard details:first-of-type{border-top:0;padding-top:0}
@@ -1739,6 +1771,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-s', note:'ACCOUNTS AND FRIENDS (built, switched on once Playback has a Google client ID, see SETUP.md Part 8): Settings has an Account card where you sign in with Google, get an 8-letter friend code, add friends by code and accept requests. Once you are friends, a Friends strip under each album (and show or film) lists what they rated it, with a bar and the group average, matched by MusicBrainz or TMDB id and by artist and title, so a friend on Apple Music lines up with you on Spotify. Only accepted friends see your ratings, a switch hides them, and Delete my account erases everything. Your log stays on your device; only title, artist and rating are shared. Your Worker needs the updated playback-sync.js (it takes it from GitHub on its own).'},
   {v:'2026.11.17-r', note:'BACKUPS AND SYNC GUIDE: Settings now has Download backup file and Restore from file (it asks before replacing your log). If sync is off and your last backup is more than three weeks old, a small banner offers to download one, and Later hides it for a week. Under Sync there is a step-by-step guide to setting it up with your own copy of the app and your own Cloudflare account, with a button that makes a secret key for you. Nothing changes if you already use sync.'},
   {v:'2026.11.17-r', note:'HISTORY: the No date sort chip is now always there, not only while some albums have no day. With none left it simply shows the list newest first.'},
   {v:'2026.11.17-q', note:'PRIVATE RATING DATES + SAFER STORAGE: your list of rating days no longer sits in the public GitHub repo; it is kept on your sync Worker and the Import rating dates button reads it from there (only you see that card now). Also, Playback now asks the browser to keep its saved log from being cleared when the device runs low on space, which protects friends who are not syncing.'},
@@ -4339,7 +4372,7 @@ function syncLabel(){
   if(SY.at)return 'Synced '+new Date(SY.at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
   return 'Sync ready';
 }
-function touch(){S.mtime=Date.now();save();if(syncOn()&&SYS.status!=='conflict'){clearTimeout(pushTimer);pushTimer=setTimeout(()=>push(false),1500)}}
+function touch(){S.mtime=Date.now();save();try{accSoon()}catch(e){}if(syncOn()&&SYS.status!=='conflict'){clearTimeout(pushTimer);pushTimer=setTimeout(()=>push(false),1500)}}
 /* Compressed sync: a Worker from 2026.11.03 on answers with x-pb-worker: 2 and
    takes the log gzipped (about 5x smaller, up to 20 MB after compression).
    Until the Worker is updated, plain JSON still works under its old 1 MB cap. */
@@ -4720,7 +4753,7 @@ function render(){
   const flipOn=UI.flip&&!noMotion()&&window.SX&&typeof SX.flip==='function';UI.flip=false;
   if(flipOn)SX.flip(document.body,'#llist .tile,.sheet .group.sleeve',()=>keepImgs(renderMain),{dur:420,key:el=>el.dataset.acol?'g'+el.dataset.acol:el.dataset.g?'a'+el.dataset.g:el.dataset.id?'t'+el.dataset.id:null});
   else keepImgs(renderMain);
-  slObserve();slPulseNow();UI.rAnim=null;
+  slObserve();slPulseNow();UI.rAnim=null;accAfter();
   if(swGo&&!UI.toAlb&&!UI.toSheet)window.scrollTo({top:0,behavior:noMotion()?'auto':'smooth'});   /* a different artist or title: start at the top, not wherever the last one was scrolled */
   if(swGo&&ohg&&!noMotion()){const nh=document.querySelector('.hero[data-aid]');
     if(nh&&nh.dataset.aid!==ohg.dataset.aid){nh.insertBefore(ohg,nh.firstChild);ohg.addEventListener('animationend',e=>{if(e.target===ohg)ohg.remove()})}}
@@ -5340,6 +5373,164 @@ async function sugChange(qs){
   sugLoad();
 }
 
+/* ---------- accounts: Google sign-in, friend codes, friends' ratings ----------
+   Optional. Your log never leaves this device because of this: signing in only publishes a short list of your
+   album and show ratings (title, artist, rating) to the Playback Worker, and only friends you have accepted can
+   see it. The Worker (accounts section of worker/playback-sync.js) keeps a Google id and a display name, never
+   an email address. GCID is Google's public OAuth client ID for this app (not a secret); while it is empty the
+   whole feature stays hidden from friends and the owner is pointed at SETUP.md. */
+const GCID='';
+const ACC_KEY=KEY+'_acct';
+let ACC=(()=>{const d={token:'',tokAt:0,me:null,pubSig:'',pubAt:0};try{return Object.assign(d,JSON.parse(localStorage.getItem(ACC_KEY)||'{}'))}catch(e){return d}})();
+const saveAcc=()=>{try{localStorage.setItem(ACC_KEY,JSON.stringify(ACC))}catch(e){}};
+const ACX={busy:'',msg:'',ok:false,fr:null,frAt:0,loading:false,rows:{},want:{},seen:new Set(),arm:false,anim:false,copied:false,gInit:false};
+const accOn=()=>!!(GCID&&ACC.token&&ACC.me);
+async function accApi(method,path,body){
+  const r=await fetch(SUG_URL+'/acct'+path,{method,cache:'no-store',headers:Object.assign(ACC.token?{authorization:'Bearer '+ACC.token}:{},body?{'content-type':'application/json'}:{}),body:body?JSON.stringify(body):undefined});
+  let j=null;try{j=await r.json()}catch(e){}
+  if(r.status===401&&ACC.token&&path!=='/google')accOut('You were signed out. Sign in again.');
+  return{status:r.status,j:j||{}};
+}
+function accOut(msg){ACC.token='';ACC.me=null;ACC.pubSig='';ACX.fr=null;ACX.frAt=0;ACX.rows={};ACX.want={};ACX.arm=false;ACX.ok=false;ACX.msg=msg||'';saveAcc();render()}
+
+/* a title is matched across people by MusicBrainz id when both have one, else by a plain artist|title key, so a
+   friend on Apple Music still lines up with you on Spotify. TMDB id and title|year do the same for shows and films. */
+const accKeys=(a,g)=>({k:g.mbid&&!/^sp:/.test(g.mbid)?'mb:'+g.mbid:'',t:'ta:'+nArtist(a.name)+'|'+nTitle(g.title)});
+const accScreenKeys=s=>({k:s.tmdb?'tm:'+s.type+':'+s.tmdb:'',t:'ts:'+nTitle(s.title)+'|'+(s.year||'')});
+function accItems(){
+  const out=[];
+  for(const a of S.music){if(a.example)continue;
+    for(const g of a.groups||[]){if(!RATEABLE.includes(g.kind))continue;const{k,t}=accKeys(a,g);
+      const r=rating(g.id);if(r)out.push({kind:'a',k,t,r,n:g.title,a:a.name});
+      const d=rating(dxId(g));if(d)out.push({kind:'a',k:k?k+'~dx':'',t:t+'~dx',r:d,n:dxName(g),a:a.name})}}
+  for(const s of S.screen){if(s.example)continue;const r=rating(s.id);if(r){const{k,t}=accScreenKeys(s);out.push({kind:'s',k,t,r,n:s.title,a:''})}}
+  return out.slice(0,2000);
+}
+const accHash=s=>{let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return String(h)};
+let accT=null,accPubBusy=false;
+function accSoon(){if(!accOn())return;clearTimeout(accT);accT=setTimeout(()=>accPublish(false),20000)}
+async function accPublish(force){
+  if(!accOn()||accPubBusy)return;
+  const items=accItems(),sig=items.length+':'+accHash(JSON.stringify(items));
+  if(!force&&sig===ACC.pubSig)return;
+  accPubBusy=true;
+  try{const{status,j}=await accApi('PUT','/ratings',{items});if(status===200){ACC.pubSig=sig;ACC.pubAt=Date.now();if(ACC.me)ACC.me.rated=j.rows;saveAcc()}}catch(e){}
+  accPubBusy=false;
+}
+function accBoot(){
+  if(!accOn())return;
+  if(Date.now()-(ACC.tokAt||0)>7*86400000)accApi('GET','/me').then(({status,j})=>{if(status===200&&j.token){ACC.token=j.token;ACC.tokAt=Date.now();ACC.me=j.me;saveAcc()}}).catch(()=>{});
+  setTimeout(()=>accPublish(false),4000);
+}
+async function accFriends(force){
+  if(!accOn()||ACX.loading)return;
+  if(!force&&Date.now()-ACX.frAt<30000)return;
+  ACX.loading=true;
+  try{const{status,j}=await accApi('GET','/friends');if(status===200){ACX.fr=j;ACX.anim=true}}catch(e){}
+  ACX.frAt=Date.now();ACX.loading=false;render();
+}
+/* what friends rated, for the artist or title on screen; asked for once every five minutes */
+function accWant(){
+  if(!accOn()||UI.view)return;
+  const e=current();if(!e)return;
+  const key=UI.tab+':'+e.id;
+  if(ACX.want[key]&&Date.now()-ACX.want[key]<300000)return;
+  ACX.want[key]=Date.now();
+  const ks=[],ts=[];let kind='a';
+  if(UI.tab==='music'){for(const g of e.groups||[]){if(!RATEABLE.includes(g.kind))continue;const{k,t}=accKeys(e,g);if(k)ks.push(k,k+'~dx');ts.push(t,t+'~dx')}}
+  else{kind='s';const{k,t}=accScreenKeys(e);if(k)ks.push(k);ts.push(t)}
+  if(!ks.length&&!ts.length)return;
+  accApi('POST','/friends/ratings',{kind,ks:ks.slice(0,400),ts:ts.slice(0,400)}).then(({status,j})=>{if(status===200){ACX.rows[key]=j.rows||[];render()}}).catch(()=>{});
+}
+function accRowsFor(key,k,t){
+  const rows=ACX.rows[key];if(!rows||!rows.length)return[];
+  const by=new Map();
+  for(const x of rows){const byK=!!(x.k&&k&&x.k===k);if(byK||x.t===t){if(!by.has(x.uid)||byK)by.set(x.uid,x)}}
+  return[...by.values()].sort((x,y)=>y.r-x.r||String(x.name).localeCompare(String(y.name)));
+}
+/* friends' ratings under an album's own rating bar. The rise-in plays the first time a strip shows, not on every redraw. */
+function accStrip(rows,id){
+  if(!rows.length)return '';
+  const fresh=!ACX.seen.has(id);ACX.seen.add(id);
+  const avg=rows.reduce((x,y)=>x+y.r,0)/rows.length;
+  return `<div class="frs${fresh?' fresh':''}" role="group" aria-label="Friends’ ratings"><div class="frs-h"><span>Friends</span>${rows.length>1?`<b>avg ${avg.toFixed(1)}</b>`:''}</div><div class="frs-l">${rows.map((x,i)=>`<div class="frp" style="--i:${i};--p:${x.r*10}%"><i class="fav" aria-hidden="true">${esc(String(x.name||'?').charAt(0).toUpperCase())}</i><span class="fn">${esc(x.name)}</span><span class="fbar" aria-hidden="true"><i></i></span><b class="fr">${fmt(x.r)}</b></div>`).join('')}</div></div>`;
+}
+function friendStrip(g,a,dx){
+  if(!accOn()||!RATEABLE.includes(g.kind))return '';
+  const{k,t}=accKeys(a,g),sf=dx?'~dx':'';
+  return accStrip(accRowsFor('music:'+a.id,k?k+sf:'',t+sf),'a'+g.id+sf);
+}
+function screenStrip(s){
+  if(!accOn())return '';
+  const{k,t}=accScreenKeys(s);
+  return accStrip(accRowsFor('screen:'+s.id,k,t),'s'+s.id);
+}
+
+/* Google's sign-in button (loaded only when the Settings page is open and you are signed out) */
+let gsiP=null;
+function gsiLoad(){if(gsiP)return gsiP;gsiP=new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.async=true;s.onload=res;s.onerror=()=>{gsiP=null;rej(new Error('gsi'))};document.head.appendChild(s)});return gsiP}
+async function accMount(){
+  const el=document.getElementById('g-btn');if(!el||el.firstChild)return;
+  try{await gsiLoad()}catch(e){return}
+  const el2=document.getElementById('g-btn');if(!el2||el2.firstChild||!window.google||!google.accounts||!google.accounts.id)return;
+  if(!ACX.gInit){google.accounts.id.initialize({client_id:GCID,callback:accGoogle,cancel_on_tap_outside:true});ACX.gInit=true}
+  const th=document.documentElement.dataset.theme,dark=th==='dark'||(!th&&window.matchMedia&&matchMedia('(prefers-color-scheme:dark)').matches);
+  google.accounts.id.renderButton(el2,{type:'standard',theme:dark?'filled_black':'outline',size:'large',shape:'pill',text:'signin_with',width:260});
+}
+async function accGoogle(resp){
+  ACX.busy='in';ACX.msg='';render();
+  try{
+    const{status,j}=await accApi('POST','/google',{credential:resp&&resp.credential});
+    if(status===200&&j.token){ACC.token=j.token;ACC.tokAt=Date.now();ACC.me=j.me;ACC.pubSig='';saveAcc();ACX.ok=true;ACX.msg='Signed in as '+j.me.name+'.';ACX.busy='';accFriends(true);accPublish(true);return}
+    ACX.ok=false;ACX.msg=status===409?'Accounts are not switched on yet.':status===429?'Too many tries. Wait a bit and try again.':'Google sign-in did not go through. Try again.';
+  }catch(e){ACX.ok=false;ACX.msg='Could not reach Playback’s server. Check your connection.'}
+  ACX.busy='';render();
+}
+function accAfter(){
+  try{
+    if(!GCID)return;
+    if(UI.view==='settings'){if(accOn())accFriends(false);else accMount()}
+    else if(!UI.view&&accOn())accWant();
+  }catch(e){}
+}
+const accMsg=(ok,t)=>{ACX.ok=ok;ACX.msg=t;render()};
+async function accDo(fn){if(ACX.busy)return;ACX.busy='x';ACX.msg='';try{await fn()}catch(e){ACX.ok=false;ACX.msg='Could not reach Playback’s server. Check your connection.'}ACX.busy='';render()}
+const accSetName=d=>accDo(async()=>{const n=String(d.name||'').trim();if(!n){ACX.ok=false;ACX.msg='A name is needed.';return}
+  const{status,j}=await accApi('PUT','/me',{name:n});if(status===200){ACC.me=j.me;saveAcc();ACX.ok=true;ACX.msg='Name saved.'}else{ACX.ok=false;ACX.msg='That did not save. Try again.'}});
+const accSetShare=on=>accDo(async()=>{const{status,j}=await accApi('PUT','/me',{share:on});if(status===200){ACC.me=j.me;saveAcc();ACX.ok=true;ACX.msg=on?'Friends can see your ratings.':'Your ratings are hidden from friends.'}else{ACX.ok=false;ACX.msg='That did not save. Try again.'}});
+const accAdd=d=>accDo(async()=>{const{status,j}=await accApi('POST','/friends',{code:String(d.code||'')});
+  if(status===200){ACX.ok=true;ACX.msg=j.accepted?'You and '+j.name+' are friends.':'Request sent to '+j.name+'.';ACX.want={};await accFriends(true)}else{ACX.ok=false;ACX.msg=j.error||'That did not work. Try again.'}});
+const accAccept=u=>accDo(async()=>{const{status,j}=await accApi('POST','/friends/accept',{uid:u});if(status===200){ACX.ok=true;ACX.msg='Friend added.';ACX.want={};await accFriends(true)}else{ACX.ok=false;ACX.msg=j.error||'That did not work. Try again.'}});
+const accRemove=u=>accDo(async()=>{const{status}=await accApi('DELETE','/friends?uid='+encodeURIComponent(u));if(status===200){ACX.ok=true;ACX.msg='Done.';ACX.want={};ACX.rows={};await accFriends(true)}else{ACX.ok=false;ACX.msg='That did not work. Try again.'}});
+async function accDelete(){
+  if(!ACX.arm){ACX.arm=true;ACX.ok=false;ACX.msg='Tap Delete my account again to erase it. Your own log on this device is not touched.';render();return}
+  ACX.arm=false;ACX.busy='x';render();
+  try{const{status}=await accApi('DELETE','/me');ACX.busy='';if(status===200||status===401){accOut('Account deleted.');ACX.ok=true;render();return}ACX.ok=false;ACX.msg='That did not work. Try again.'}
+  catch(e){ACX.busy='';ACX.ok=false;ACX.msg='Could not reach Playback’s server. Check your connection.'}
+  render();
+}
+function accCard(){
+  if(!GCID)return window.PB_OWNER?`<div class="setcard"><h3>Account</h3><p class="note">Sign in with Google, friend codes and friends’ ratings are built but switched off until Playback has a Google client ID. SETUP.md has the five steps (about 5 minutes, free); then it is one line to paste into the page.</p></div>`:'';
+  const msg=ACX.msg?`<span class="msg ${ACX.ok?'ok':'err'}" role="status">${esc(ACX.msg)}</span>`:'';
+  if(!accOn())return `<div class="setcard acc"><h3>Account</h3>
+    <p class="note">Sign in with Google to add friends and see how they rated the same albums, shows and films. Your ratings are shared only with friends you accept, and you can switch that off any time. Your log stays on this device.</p>
+    <div id="g-btn" class="gbtn" aria-label="Sign in with Google"></div>${ACX.busy==='in'?'<span class="note">Signing in…</span>':''}${msg}
+    <p class="note">Playback keeps your Google name and a private id, never your email address.</p></div>`;
+  const me=ACC.me,F=ACX.fr,b=ACX.busy?' disabled':'',ani=ACX.anim?' acc-in':'';ACX.anim=false;
+  const row=(x,btns)=>`<div class="acc-row${ani}"><i class="fav" aria-hidden="true">${esc(String(x.name||'?').charAt(0).toUpperCase())}</i><span class="fn">${esc(x.name)}</span><span class="sp"></span>${btns}</div>`;
+  return `<div class="setcard acc"><h3>Account</h3>
+    <div class="acc-id"><div><span class="label">Your friend code</span><b class="acc-code" aria-label="Friend code ${esc(me.code.split('').join(' '))}">${esc(me.code)}</b></div><button class="btn" data-act="acccopy">${ACX.copied?'Copied':'Copy'}</button></div>
+    <p class="note">Give your code to a friend. They enter it below, you accept, and you see each other’s ratings.</p>
+    <form class="panel" data-form="accname"><label class="label" for="acc-name">Name friends see</label><input id="acc-name" name="name" maxlength="40" autocomplete="off" value="${esc(me.name)}"><div class="tools"><button class="btn"${b}>Save name</button></div></form>
+    <label class="acc-share"><input type="checkbox" id="acc-share" ${me.share?'checked':''}${b}><span>Friends can see my ratings${me.rated?' <span class="note">(' + me.rated + ' shared)</span>':''}</span></label>
+    <form class="panel" data-form="accadd"><label class="label" for="acc-code">Add a friend</label><input id="acc-code" name="code" maxlength="9" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Their 8-letter code" required><div class="tools"><button class="btn primary"${b}>Send request</button></div></form>
+    ${F&&F.incoming.length?`<div class="label">Wants to be friends</div>${F.incoming.map(x=>row(x,`<button class="btn primary" data-act="accaccept" data-u="${esc(x.uid)}"${b}>Accept</button><button class="btn" data-act="accremove" data-u="${esc(x.uid)}"${b}>Decline</button>`)).join('')}`:''}
+    ${F&&F.outgoing.length?`<div class="label">Waiting for them</div>${F.outgoing.map(x=>row(x,`<button class="btn" data-act="accremove" data-u="${esc(x.uid)}"${b}>Cancel</button>`)).join('')}`:''}
+    ${F?`<div class="label">Friends${F.friends.length?' ('+F.friends.length+')':''}</div>${F.friends.length?F.friends.map(x=>row(x,`<span class="note">${x.rated} rated</span><button class="btn" data-act="accremove" data-u="${esc(x.uid)}"${b}>Remove</button>`)).join(''):'<p class="note">No friends yet.</p>'}`:'<p class="note">Loading friends…</p>'}
+    ${msg}
+    <div class="tools"><button class="btn" data-act="accout"${b}>Sign out</button><button class="btn danger" data-act="accdel"${b}>${ACX.arm?'Tap again to delete':'Delete my account'}</button></div></div>`;
+}
+
 function settingsView(){return `
   <section class="settings" aria-labelledby="set-h">
     <h2 id="set-h">Settings</h2>
@@ -5348,6 +5539,7 @@ function settingsView(){return `
     <div class="setcard"><h3>Spotify</h3>${spSide()}</div>
     <div class="setcard"><h3>Rate Your Music</h3>${rymSide()}${rtSide()}</div>
     ${window.PB_OWNER?`<div class="setcard"><h3>Rating dates</h3>${rdSide()}</div>`:''}
+    ${accCard()}
     ${sugCard()}
     <div class="setcard"><h3>Sync &amp; data</h3>
     <details id="syncpanel" ${UI.syncOpen?'open':''}>
@@ -6231,6 +6423,7 @@ function artistView(a){
       </div>
       ${dxs.length?`<div class="dxseg" role="group" aria-label="Edition" data-dx="${dx?1:0}"><button type="button" data-act="dxsel" data-g="${g.id}" data-v="0" aria-pressed="${!dx}">Standard<span class="mono">${sd}/${std.length}</span></button><button type="button" class="dx" data-act="dxsel" data-g="${g.id}" data-v="1" aria-pressed="${dx}">Deluxe<span class="mono">${dd}/${g.items.length}</span></button></div>`:''}
       ${albumBar(g,a,full,shown.length)}
+      ${friendStrip(g,a,dx)}
       ${g.items.length?'':'<p class="note">No songs listed yet. Tap Find on MusicBrainz above to fill them in; your album rating stays.</p>'}
       <div class="tlist">${trackRows}</div>
       <div class="sl-foot">${shareBtn(g,a)}<details class="gmore"${UI.armed===g.id?' open':''}><summary aria-label="More for this album">\u22ef</summary>${moreBtns(g,dx)}${delGBtn(g,a)}</details></div>
@@ -6320,6 +6513,7 @@ function showView(s){
     ${s.overview?`<p class="overview">${esc(s.overview)}</p>`:''}
     ${watchBlock(s)}
     ${showRate(s)}
+    ${screenStrip(s)}
     ${tmBar(s)}
     ${TME.busy===s.tmdb?'<p class="note">Getting episode names and descriptions from TMDB…</p>':''}
     ${s.seasons.map(se=>{const sids=Array.from({length:se.eps},(_,k)=>sid(s.id,'s',se.n,'e',k+1)),sd=sids.filter(isDone).length,sk=sid(s.id,'s',se.n),more=(se.total||0)-se.eps;
@@ -6343,6 +6537,7 @@ function filmView(f){
     ${f.overview?`<p class="overview">${esc(f.overview)}</p>`:''}
     ${watchBlock(f)}
     <div class="tools"><button class="btn ${d?'':'primary'}" data-act="tog" data-id="${f.id}">${d?'Mark unwatched':'Mark watched'}</button><span class="label">Your rating</span>${rateDots(f.id)}</div>
+    ${screenStrip(f)}
     <div>${delBtn(f.id,'Delete film')}</div>`;
 }
 
@@ -6356,6 +6551,7 @@ document.addEventListener('click',ev=>{
   if(act!=='del'&&act!=='delg'&&act!=='lsrm')UI.armed=null;
   if(act!=='mbundo')UI.undoArm=null;
   if(act!=='sugclear')UI.sugArm=false;
+  if(act!=='accdel'&&ACX.arm){ACX.arm=false}
   if(act!=='copy')UI.copied=false;
   if(act!=='coldel')UI.colDel=null;
   /* closing a rater: let it fold away first, then redraw */
@@ -6384,6 +6580,11 @@ document.addEventListener('click',ev=>{
     if(nv[0]){nv[0].dataset.v=VSTEPS[Math.max(0,i-1)][0];nv[0].disabled=i<=0}if(nv[1]){nv[1].dataset.v=VSTEPS[Math.min(4,i+1)][0];nv[1].disabled=i>=4}}return}
   else if(act==='sugload'){sugLoad();return}
   else if(act==='sugdel'){sugChange('?id='+encodeURIComponent(id));return}
+  else if(act==='accout'){accOut('Signed out.');ACX.ok=true;render();return}
+  else if(act==='accdel'){accDelete();return}
+  else if(act==='accaccept'){accAccept(b.dataset.u);return}
+  else if(act==='accremove'){accRemove(b.dataset.u);return}
+  else if(act==='acccopy'){const t=ACC.me&&ACC.me.code||'';(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{ACX.copied=true;render();setTimeout(()=>{ACX.copied=false;render()},1600)}).catch(()=>{ACX.ok=false;ACX.msg='This browser would not copy it. Select the code and copy it by hand.';render()});return}
   else if(act==='sugclear'){if(UI.sugArm){UI.sugArm=false;sugChange('?all=1')}else{UI.sugArm=true;SUGX.ok=false;SUGX.msg='Tap Clear all again to remove every suggestion.';render()}return}
   else if(act==='sugcopy'){const t=(SUGX.list||[]).map(x=>'- '+(x.name?x.name+': ':'')+x.text).join('\n');
     (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{SUGX.copied=true;render();setTimeout(()=>{SUGX.copied=false;render()},1600)}).catch(()=>{SUGX.ok=false;SUGX.msg='This browser would not copy.';render()});return}
@@ -6575,6 +6776,7 @@ document.addEventListener('keydown',ev=>{
 });
 document.addEventListener('change',ev=>{
   if(ev.target.dataset&&ev.target.dataset.rate){rateCommit(ev.target);return}
+  if(ev.target.id==='acc-share'){accSetShare(!!ev.target.checked);return}
   if(ev.target.id==='new-type'){UI.addType=ev.target.value;render();return}
   if(ev.target.id==='col-sort'){UI.colS=ev.target.value;render();return}
   if(ev.target.dataset&&ev.target.dataset.photo){photoPick(ev.target);return}
@@ -6595,6 +6797,8 @@ document.addEventListener('submit',ev=>{
   if(kind==='tmsearch'){const q=(d.q||'').trim();if(q)tmSearch(q);return}
   if(kind==='tmkey'){tmSaveKey(d.key);return}
   if(kind==='suggest'){sugSend(d);return}
+  if(kind==='accname'){accSetName(d);return}
+  if(kind==='accadd'){accAdd(d);return}
   if(kind==='colfind'){dcSearch(d);return}
   if(kind==='dctoken'){const t=String(d.token||'').replace(/\s/g,'');
     if(!/^[A-Za-z0-9]{30,64}$/.test(t))COL.tokMsg='That does not look like a Discogs token (about 40 letters and numbers).';
@@ -6643,7 +6847,7 @@ document.addEventListener('submit',ev=>{
   touch();render();
 });
 
-function start(){render();pull().finally(()=>{spBoot();tmAutoRefresh()})}
+function start(){render();accBoot();pull().finally(()=>{spBoot();tmAutoRefresh()})}
 if(READY){start();save()}   /* save() also copies a localStorage-only log into IndexedDB */
 else{render();IDB.get(KEY).then(t=>{const o=t?JSON.parse(t):null;if(o&&o.v===1){S=o;SV.idb=true;SV.bytes=t.length}},()=>{}).finally(()=>{boot();start()})}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){setTimeout(tmAutoRefresh,3000);setTimeout(()=>spPoll(false),4000)}});
