@@ -1667,6 +1667,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.17-d', note:'EVEN FEWER SPOTIFY CALLS: during a Spotify import, a plain one-song single (no brackets or dash in its title, and no other release with the same title) no longer costs a request to read its tracklist, because its song is just its own title. Anything with an edition, a remix tag, more than one song, or a saved copy is read exactly as before. Same discography, fewer requests, so more artists fit in a day.'},
   {v:'2026.11.17-c', note:'SPOTIFY CALL COUNTER SHOWS WHAT SPENT THE CALLS: each day in the list under Settings now says how many of its Spotify calls were searches, release lists, albums, artist lookups and so on (it only showed that for today before), so you can see what used up a day’s budget. Nothing else changes.'},
   {v:'2026.11.17-b', note:'MOTION: changing the artist filter (All, Started, New, Done) or sort, or the release kind or sort under an artist, no longer snaps. Tiles and album cards that stay slide to their new spot and the new ones rise in one after another.'},
   {v:'2026.11.17-a', note:'FEWER SPOTIFY CALLS ON IMPORT: a Spotify discography import no longer reads the tracklists of live, remix, instrumental, karaoke and demo albums when “include live albums, remixes and alternate versions” is off, since those were always thrown away afterward. Same results, fewer requests, so more artists fit before Spotify asks for a break. With the box ticked, nothing changes.'},
@@ -3632,11 +3633,17 @@ async function spFetchCatalog(art,existing){
      "other versions" is ticked, so their tracklists are never read (same test spBuild uses; a dropped album has no tracks) */
   const need=MBX.versions?albums:albums.filter(al=>{const nm=String(al.name||'');return !(SP_LIVE.test(nm)||/\b(remix(es|ed)?|instrumentals|karaoke|demos)\b/i.test(nm))});
   MBX.step='Reading tracklists';MBX.n=0;MBX.of=need.length;mbProgress();
-  const C=await spcLoad();let cached=0,since=0;
+  const C=await spcLoad();let cached=0,since=0,spared=0;
+  /* spares Spotify calls: a plain one-song single (no brackets or dash in its title, and no other release sharing that
+     title, so there is no edition to fold or pick between) carries its own title as its song, so its tracklist is not
+     read. Anything else, including every release that has a saved copy, is read exactly as before. */
+  const nameCount={};for(const x of albums){const k=nrm(x.name||'');nameCount[k]=(nameCount[k]||0)+1}
+  const lone=al=>al.album_type==='single'&&al.total_tracks===1&&al.name&&!/[()\[\]]|\s[-–—]\s/.test(al.name)&&nameCount[nrm(al.name)]===1&&Array.isArray(al.artists)&&al.artists.some(x=>x&&x.id===id);
   try{
     for(const al of need){
       const c=C[al.id];
       if(spcFresh(c,al)){al.tracks=c.t.map(spcUnpack);al.img=c.img||'';cached++;MBX.n++;mbProgress();continue}
+      if(!c&&lone(al)){al.tracks=[{name:al.name,type:'track',artists:al.artists.map(x=>({id:x.id,name:x.name}))}];al.img=spPickImg(al.images);spared++;MBX.n++;mbProgress();continue}
       const j=await spApi('albums/'+al.id+'?market=from_token'+(c?'&bust=1':''));   /* a saved copy that is out of date must not come back from the Worker's copy either */
       const tr=((j.tracks&&j.tracks.items)||[]).slice();let next=j.tracks&&j.tracks.next,g=0;
       while(next&&g++<20){const k=await spApi(spRel(next));tr.push(...(k.items||[]));next=k.next}
@@ -3645,7 +3652,7 @@ async function spFetchCatalog(art,existing){
       if(++since%10===0)spcSave();
     }
   }finally{spcSave()}                                   /* even a cut-off run keeps what it read */
-  return{artist:{id,name,img:simg},albums,cached};
+  return{artist:{id,name,img:simg},albums,cached,spared};
 }
 const SP_ED=/\b(deluxe|remaster(ed)?|edition|anniversary|expanded|extended|complete|collector'?s?|platinum|ultimate|bonus|special|explicit|clean|reissue)\b/i;
 const spEd=s=>nrm(String(s).replace(/\s*[\(\[]([^\)\]]*)[\)\]]/g,(m,x)=>SP_ED.test(x)?' ':m).replace(/\s+[-–—]\s+(.+)$/,(m,x)=>SP_ED.test(x)?'':m))||nrm(s);
