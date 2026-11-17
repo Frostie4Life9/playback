@@ -1865,6 +1865,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-aa', note:'MATCH FIX: friends could not open another person\u2019s page (\u201cCould not reach Playback\u2019s server\u201d) when that page had albums without a MusicBrainz id, which is most Spotify and Apple Music imports. The page now opens, taste match counts only things you both rated, and a drawing error is no longer reported as a connection problem.'},
   {v:'2026.11.17-z', note:'PROFILE PHOTO AND ACCOUNT COLOR: on your Account page, under Your account, you can add a photo (it is cropped square and shrunk to a small size), remove it, and pick your account color from a row of swatches, drag a slider for any shade, or tap Auto to go back to the color made from your name. Your photo and color show on the account icon at the top right, on your page, and for friends on your page, in their friends list and next to your ratings under an album. The picture and color are kept on Playback\u2019s server, so your Worker needs the new playback-sync.js (it takes it from GitHub on its own); until it does, saving shows a short \u201cgive it a minute\u201d note.'},
   {v:'2026.11.17-y', note:'COVERS ON ACCOUNT PAGES: albums on your page and on friends\u2019 pages showed a letter instead of the cover whenever the album did not come from MusicBrainz (Spotify and Apple Music imports). The cover link you already have is now shared with your ratings, so those albums show their art. Only Spotify, Apple, MusicBrainz and TMDB picture links are accepted. Your page and your friends\u2019 pages fill in as each person next opens Playback.'},
   {v:'2026.11.17-x', note:'OWNER LOGIN: Account has a new Owner login section. On a device that already syncs with your sync key, tap Make this my owner login once (it takes the key one time). After that, on any new phone or computer you just open Playback, sign in with Google, and the whole app unlocks: your log, photos, Spotify plays, Discogs and suggestions, with no Worker address or key to paste. A device can also switch to Google sign-in with Use Google sign-in on this device. Your sync key keeps working as a fallback, and Give up owner login undoes it. Friends are unaffected: only the one account you claimed gets this, and claiming needs your sync key. Your Worker needs the new playback-sync.js (it takes it from GitHub on its own).'},
@@ -5694,7 +5695,8 @@ function accProfile(uid,force){
   if(c&&(c.loading||(!force&&Date.now()-c.at<60000)))return;
   ACX.prof[uid]=Object.assign({},c,{loading:true,at:Date.now()});
   accApi('GET','/profile?uid='+encodeURIComponent(uid)).then(({status,j})=>{
-    ACX.prof[uid]={at:Date.now(),loading:false,data:status===200?j.profile:null,err:status===200?'':(j.error||'Could not load this page.')};render()
+    ACX.prof[uid]={at:Date.now(),loading:false,data:status===200?j.profile:null,err:status===200?'':(j.error||'Could not load this page.')};
+    try{render()}catch(e){ACX.prof[uid]={at:Date.now(),loading:false,data:null,err:'This page could not be drawn. Try again after Playback updates.'};try{render()}catch(e2){}}   /* a drawing mistake is not a connection problem */
   }).catch(()=>{ACX.prof[uid]={at:Date.now(),loading:false,data:null,err:'Could not reach Playback’s server. Check your connection.'};render()});
 }
 const accCover=x=>{if(x.kind!=='a')return '';if(x.i&&/^https:\/\//.test(x.i))return x.i;const m=/^mb:([0-9a-f-]{36})$/.exec(x.k||'');return m?'https://coverartarchive.org/release-group/'+m[1]+'/front-250':''};
@@ -5710,8 +5712,8 @@ function accMatch(theirs,mine){
   const mk=new Map(),mt=new Map();
   for(const x of mine){if(x.k)mk.set(x.kind+x.k,x.r);mt.set(x.kind+x.t,x.r)}
   let n=0,d=0;const seen=new Map();
-  for(const x of accBase(theirs)){const m=(x.k&&mk.get(x.kind+x.k))??mt.get(x.kind+x.t);if(m!=null){n++;d+=Math.abs(x.r-m);seen.set(x.kind+x.t,m)}}
-  return{n,pct:n?Math.round(100*(1-d/n/9)):0,mine:(x)=>(x.k&&mk.get(x.kind+x.k))??mt.get(x.kind+x.t)};
+  for(const x of accBase(theirs)){const m=(x.k?mk.get(x.kind+x.k):undefined)??mt.get(x.kind+x.t);if(m!=null){n++;d+=Math.abs(x.r-m);seen.set(x.kind+x.t,m)}}
+  return{n,pct:n?Math.round(100*(1-d/n/9)):0,mine:(x)=>(x.k?mk.get(x.kind+x.k):undefined)??mt.get(x.kind+x.t)};
 }
 function accHeroHtml(P,stats,match,extra){
   const h=accHueOf(P),anim=UI.pAnim?' pf-in':'';
@@ -6281,7 +6283,7 @@ const ICO={
   all:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12.5l4 4L15 8M11 16.5l1 1L21 8"/></svg>'
 };
 const SCORES=Array.from({length:20},(_,k)=>(k+1)/2);
-const fmt=v=>Number.isInteger(v)?String(v):v.toFixed(1);
+const fmt=v=>{v=Number(v);return Number.isInteger(v)?String(v):v.toFixed(1)};
 function rateDots(id){const r=rating(id);
   return `<span class="rate" role="group" aria-label="Rating out of 10"><span class="dots">${[1,2,3,4,5,6,7,8,9,10].map(d=>`<span class="dot ${r>=d?'full':r>=d-.5?'half':''}"><button data-act="rate" data-id="${id}" data-v="${d-.5}" aria-label="Rate ${fmt(d-.5)}"></button><button data-act="rate" data-id="${id}" data-v="${d}" aria-label="Rate ${d}"></button></span>`).join('')}</span><span class="rv ${r?'set':''}">${r?fmt(r):'–'}</span></span>`}
 function moreBtns(g,dx){
