@@ -81,9 +81,10 @@ If the first choice has no answer or is temporarily limiting requests, Playback 
 ### Back up (do this once, then now and then)
 
 1. Go to **Settings**.
-2. Open **Backup & restore** and tap **Copy backup**.
-3. Paste it into a note or email to yourself. To restore later, paste it back into the same box and tap **Restore from pasted text**.
-4. For spreadsheets of your ratings, open **Export ratings** and tap **Albums**, **Songs** or **Shows & films**.
+2. Open **Backup & restore** and tap **Download backup file** (or **Copy backup text**).
+3. Keep the file somewhere safe, like your email or a cloud drive. To restore later, tap **Restore from file** and choose it (or paste copied text into the box and tap **Restore from pasted text**). Restoring replaces everything in Playback on that device, and it asks you first.
+4. If sync is off, Playback shows a reminder banner when your last backup is more than three weeks old. **Later** hides it for a week.
+5. For spreadsheets of your ratings, open **Export ratings** and tap **Albums**, **Songs** or **Shows & films**.
 
 ### Make your own copy of the app (optional)
 

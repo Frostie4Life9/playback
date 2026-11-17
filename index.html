@@ -771,6 +771,11 @@ details.addart .add{border-top:1px solid var(--line)}
 .sug li p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
 .sug .who{font-size:12px;color:var(--muted)}
 @media (prefers-reduced-motion:no-preference){.sug li,.sug .msg.ok{animation:rdin .45s cubic-bezier(.2,.8,.2,1) both}.sug li:nth-child(2){animation-delay:.06s}.sug li:nth-child(3){animation-delay:.12s}.sug li:nth-child(n+4){animation-delay:.18s}}
+.bk{animation:none}
+.guide{margin:6px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:9px;font-size:14px;line-height:1.5}
+.guide code,.genkey{font:600 12px var(--mono);background:var(--line);padding:1px 6px;border-radius:6px;overflow-wrap:anywhere}
+.genkey{display:block;padding:8px 10px;user-select:all;line-height:1.4}
+@media (prefers-reduced-motion:no-preference){.banner.bk{animation:rdin .5s cubic-bezier(.2,.8,.2,1) both}.guide li{animation:rdin .4s cubic-bezier(.2,.8,.2,1) both}.guide li:nth-child(2){animation-delay:.04s}.guide li:nth-child(3){animation-delay:.08s}.guide li:nth-child(n+4){animation-delay:.12s}}
 .setcard h3{margin:0;font:800 18px Archivo,var(--display);font-stretch:112%}
 .setcard>.add:first-of-type{border-top:0;padding-top:0}
 .setcard details{border-top:1px solid var(--line);padding-top:10px}
@@ -1734,6 +1739,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-r', note:'BACKUPS AND SYNC GUIDE: Settings now has Download backup file and Restore from file (it asks before replacing your log). If sync is off and your last backup is more than three weeks old, a small banner offers to download one, and Later hides it for a week. Under Sync there is a step-by-step guide to setting it up with your own copy of the app and your own Cloudflare account, with a button that makes a secret key for you. Nothing changes if you already use sync.'},
   {v:'2026.11.17-r', note:'HISTORY: the No date sort chip is now always there, not only while some albums have no day. With none left it simply shows the list newest first.'},
   {v:'2026.11.17-q', note:'PRIVATE RATING DATES + SAFER STORAGE: your list of rating days no longer sits in the public GitHub repo; it is kept on your sync Worker and the Import rating dates button reads it from there (only you see that card now). Also, Playback now asks the browser to keep its saved log from being cleared when the device runs low on space, which protects friends who are not syncing.'},
   {v:'2026.11.17-q', note:'MUSIC MENU AND HISTORY SORT: History is no longer its own button in the bar. While you are on Music, tap Music again and a small menu drops open with Artists and History (it opens upward on your phone, closes when you tap anywhere else, and Music shows a little arrow when you can open it). History also has a new No date sort that puts the albums with no day first, so you can fill them in one after another; the rest follow newest first.'},
@@ -4310,6 +4316,7 @@ function boot(){
   seedAll();READY=true;
   if(!S.flags.r10){for(const k in S.marks){if(S.marks[k].r)S.marks[k].r=S.marks[k].r*2}S.flags.r10=true;save()}
   setTimeout(akaBackfill,3000);
+  if(!bkGet().first)bkSet({first:Date.now()});
   try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}   /* ask the browser not to clear this log when space runs low */
 }
 if(READY)boot();
@@ -4436,7 +4443,7 @@ async function push(force){
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pull()});
 window.addEventListener('online',()=>pull());
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&UI.llOpen){UI.llOpen=false;render()}else if(ev.key==='Escape'&&UI.mm){UI.mm=false;UI.mmAnim=false;render()}});
-document.addEventListener('toggle',ev=>{if(ev.target.id==='syncpanel')UI.syncOpen=ev.target.open;else if(ev.target.id==='addart')UI.addOpen=ev.target.open;else if(ev.target.id==='listenpanel')UI.llOpen=ev.target.open;else if(ev.target.id==='coladd')UI.colAdd=ev.target.open;else if(ev.target.id==='colhand')UI.colHand=ev.target.open;else if(ev.target.id==='coltok')UI.colTok=ev.target.open;else if(ev.target.classList&&ev.target.classList.contains('splog'))UI.spLogOpen=ev.target.open},true);
+document.addEventListener('toggle',ev=>{if(ev.target.id==='syncpanel')UI.syncOpen=ev.target.open;else if(ev.target.id==='syncguide')UI.guideOpen=ev.target.open;else if(ev.target.id==='backup')UI.bkOpen=ev.target.open;else if(ev.target.id==='addart')UI.addOpen=ev.target.open;else if(ev.target.id==='listenpanel')UI.llOpen=ev.target.open;else if(ev.target.id==='coladd')UI.colAdd=ev.target.open;else if(ev.target.id==='colhand')UI.colHand=ev.target.open;else if(ev.target.id==='coltok')UI.colTok=ev.target.open;else if(ev.target.classList&&ev.target.classList.contains('splog'))UI.spLogOpen=ev.target.open},true);
 const UI={view:null,libOpen:false,addOpen:false,rOpen:null,lq:{music:'',screen:''},tab:'music',sel:{music:null,screen:null},filter:'all',armed:null,addType:'show',copied:false,epOpen:{},dxOpen:{},wEdit:null,dEdit:null};
 
 /* ---------- rating history ----------
@@ -5222,6 +5229,63 @@ function csvCollection(){
   return csvText(head,rows);
 }
 
+/* ---------- backups: file download and restore, plus a reminder for logs that are not synced ----------
+   The reminder state is per device (localStorage, never synced): when this log was last backed up, when the app was
+   first opened, and when "Later" was tapped. It shows only while sync is off, once something is worth keeping. */
+const BK_KEY='playback_backup',BK_DAY=864e5,BK_EVERY=21;
+const BKX={pending:null,msg:'',ok:false};
+const bkGet=()=>{try{return JSON.parse(localStorage.getItem(BK_KEY)||'{}')||{}}catch(e){return{}}};
+const bkSet=o=>{try{localStorage.setItem(BK_KEY,JSON.stringify({...bkGet(),...o}))}catch(e){}};
+const bkMark=()=>bkSet({last:Date.now()});
+function bkNudge(){
+  if(syncOn())return '';
+  const b=bkGet(),now=Date.now(),base=b.last||b.first||0;
+  if(!base||now-base<BK_EVERY*BK_DAY||now<(b.snooze||0))return '';
+  if(Object.keys((S&&S.marks)||{}).length<5)return '';   /* nothing worth losing yet */
+  const wk=Math.max(1,Math.round((now-base)/(7*BK_DAY)));
+  return `<div class="banner bk" role="status"><p>${b.last?`You last backed up your log ${wk} weeks ago.`:'You have not backed up your log yet.'} A backup file is your only copy if this browser ever clears its saved data.</p><button class="btn primary" data-act="bkfile">Download backup</button><button class="btn" data-act="bksnooze">Later</button></div>`;
+}
+function bkDownload(){
+  const txt=JSON.stringify(S),d=new Date(),ds=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  const u=URL.createObjectURL(new Blob([txt],{type:'application/json'})),a=document.createElement('a');
+  a.href=u;a.download='playback-backup-'+ds+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);
+  bkMark();BKX.ok=true;BKX.msg='Backup file saved ('+mb(txt.length)+'). Keep it somewhere safe, like your email or a cloud drive.';UI.bkOpen=true;render();
+}
+function bkPick(txt){
+  let o;try{o=JSON.parse(txt)}catch(e){o=null}
+  if(!o||o.v!==1||!Array.isArray(o.music)){BKX.pending=null;BKX.ok=false;BKX.msg='That file is not a Playback backup. Nothing was changed.';UI.bkOpen=true;render();return}
+  BKX.pending=o;BKX.ok=true;UI.bkOpen=true;
+  BKX.msg='This backup has '+o.music.length+' artist'+(o.music.length===1?'':'s')+' and '+((o.screen||[]).length)+' show'+((o.screen||[]).length===1?'':'s')+' or film'+((o.screen||[]).length===1?'':'s')+'. Restoring replaces everything in Playback on this device.';
+  render();
+}
+function bkApply(){
+  const o=BKX.pending;if(!o)return;BKX.pending=null;
+  S=o;S.flags=S.flags||{};S.marks=S.marks||{};S.music=S.music||[];S.screen=S.screen||[];seedAll();touch();
+  BKX.ok=true;BKX.msg='Restored.';render();
+}
+
+/* ---------- sync set-up guide + key maker (Settings, Sync) ---------- */
+const GEN={key:'',copied:false};
+function genKeyMake(){const a=new Uint8Array(32);crypto.getRandomValues(a);GEN.key=[...a].map(x=>x.toString(16).padStart(2,'0')).join('');GEN.copied=false}
+function syncGuide(){
+  if(syncOn())return '';
+  return `<details id="syncguide" ${UI.guideOpen?'open':''}><summary class="label" style="cursor:pointer">How to set up sync (about 25 minutes, free)</summary>
+    <p class="note">Sync is optional. It keeps one log on your phone and computer and doubles as an online backup. It needs three free things: a GitHub account, a Cloudflare account, and your own copy of Playback. Everyone needs their <b>own</b> Worker (the small program that stores the log); never share one, or ratings get mixed together.</p>
+    <ol class="guide">
+      <li><b>Save a backup first.</b> Your own copy of the app has its own web address, so it starts empty. Use <i>Download backup file</i> under Backup &amp; restore below, and restore it on your copy at the end.</li>
+      <li><b>Make your copy.</b> Sign up at <code>github.com</code>, open <code>github.com/Frostie4Life9/playback</code>, tap <b>Fork</b>, then <b>Create fork</b>. In your fork open <b>Settings</b>, then <b>Pages</b>, set Source to <b>Deploy from a branch</b>, choose <b>main</b> and <b>/ (root)</b>, and <b>Save</b>. After a minute or two it lives at <code>https://YOUR-NAME.github.io/playback/</code>. Use that address from now on.</li>
+      <li><b>Make the storage.</b> Sign up at <code>cloudflare.com</code> (no domain needed). Open <b>Storage &amp; databases</b>, then <b>KV</b>, <b>Create</b>, name it <code>playback</code>, and copy its <b>ID</b>.</li>
+      <li><b>Point your copy at it.</b> On GitHub open <code>wrangler.jsonc</code> in your fork, tap the pencil, and replace the ID on the line starting <code>"id": "1236…</code> with yours. Commit the change.</li>
+      <li><b>Deploy the Worker.</b> In Cloudflare open <b>Workers &amp; Pages</b>, <b>Create application</b>, <b>Import a repository</b>, connect GitHub, choose your <code>playback</code> fork, keep the name <code>playback-sync</code>, and <b>Deploy</b>. Copy the address it shows (<code>https://playback-sync.YOUR-NAME.workers.dev</code>).</li>
+      <li><b>Set your secret key.</b> Open the Worker, then <b>Settings</b>, <b>Variables and Secrets</b>, <b>Add</b>. Type: <b>Secret</b>, Name: <code>SECRET</code>, Value: a long random string. Tap the button below if you want one made for you, and save it somewhere safe, because every device needs it.
+        <div class="tools"><button type="button" class="btn" data-act="genkey">Make a key for me</button>${GEN.key?`<button type="button" class="btn" data-act="gencopy">${GEN.copied?'Copied':'Copy key'}</button>`:''}</div>${GEN.key?`<code class="genkey">${esc(GEN.key)}</code>`:''}</li>
+      <li><b>Check it.</b> Open the Worker address in a browser. If it says <code>{"error":"unauthorized"}</code>, it is running and locked. Anything else means a step above needs another look.</li>
+      <li><b>Connect.</b> On your copy of Playback, paste the address into <b>Worker URL</b> and the key into <b>Sync key</b> below, then tap <b>Save and sync</b>. On another device, install the app from your address and enter the same two values. Restore your backup file on your copy before you connect, so the log you upload is the one you want.</li>
+    </ol>
+    <p class="note">Cloudflare's screens change now and then, so a button may be worded a little differently. The full guide with troubleshooting is SETUP.md (Part 4) in the Playback repo on GitHub.</p>
+  </details>`;
+}
+
 /* ---------- friend suggestions ----------
    Anyone who is not the owner sees a form in Settings that posts to the owner's playback-sync Worker (POST /suggest,
    no key). The owner (PB_OWNER, set near the top of the page) sees the list instead and reads it with the sync key. */
@@ -5288,6 +5352,7 @@ function settingsView(){return `
     <div class="setcard"><h3>Sync &amp; data</h3>
     <details id="syncpanel" ${UI.syncOpen?'open':''}>
       <summary class="label" style="cursor:pointer">Sync</summary>
+      ${syncGuide()}
       <form class="panel" data-form="sync">
         <p class="note">Connect your playback-sync Worker so your phone and PC share one log. Changes upload a moment after you make them, and the app checks for newer data whenever you open it.</p>
         <label class="label" for="sync-url">Worker URL</label>
@@ -5300,11 +5365,14 @@ function settingsView(){return `
     </details>
     ${statSide()}
     ${expSide()}
-    <details id="backup">
+    <details id="backup" ${UI.bkOpen?'open':''}>
       <summary class="label" style="cursor:pointer">Backup &amp; restore</summary>
-      <p class="note">Your log${SV.bytes?' ('+mb(SV.bytes)+')':''} is saved in this browser${SV.idb?'\u2019s database':''}${syncOn()?' and on your Worker':' only'}. Copy the backup to keep it somewhere safe, or paste one back in to restore it.</p>
+      <p class="note">Your log${SV.bytes?' ('+mb(SV.bytes)+')':''} is saved in this browser${SV.idb?'\u2019s database':''}${syncOn()?' and on your Worker':' only'}. ${syncOn()?'':'Download a backup file now and then and keep it somewhere safe, like your email or a cloud drive. '}Paste or load a backup to restore it.${bkGet().last?' Last backup from this device: '+esc(new Date(bkGet().last).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}))+'.':''}</p>
+      <div class="tools"><button class="btn primary" data-act="bkfile">Download backup file</button><label class="btn" for="bk-file" style="cursor:pointer">Restore from file</label><input type="file" id="bk-file" accept=".json,application/json" hidden></div>
+      ${BKX.msg?`<p class="msg ${BKX.ok?'':'err'}" role="status">${esc(BKX.msg)}</p>`:''}
+      ${BKX.pending?`<div class="tools"><button class="btn primary" data-act="bkgo">Replace my log with this backup</button><button class="btn" data-act="bkno">Cancel</button></div>`:''}
       <textarea id="backup-text" aria-label="Backup data"></textarea>
-      <div class="tools"><button class="btn" data-act="copy">${UI.copied?'Copied':'Copy backup'}</button><button class="btn" data-act="restore">Restore from pasted text</button></div>
+      <div class="tools"><button class="btn" data-act="copy">${UI.copied?'Copied':'Copy backup text'}</button><button class="btn" data-act="restore">Restore from pasted text</button></div>
     </details>
     </div>
   </section>
@@ -5343,6 +5411,7 @@ function renderMain(){
   ${UI.llOpen&&!UI.view&&UI.tab==='music'?`<div class="llover"><button class="llbk" data-act="llclose" aria-label="Close Listen list"></button>${listenSide()}</div>`:''}
   ${SV.err?`<div class="banner" role="alert"><p>This browser would not save your last change. It is still on screen, but it will be gone if you close the app. ${syncOn()?'Tap Upload now in Sync at the bottom so it is safe on your Worker, or copy a backup.':'Copy a backup at the bottom to keep it safe.'}</p></div>`:''}
   ${SYS.status==='conflict'?conflictBanner():''}
+  ${bkNudge()}
 
 ${UI.view==='settings'?settingsView():UI.view==='collection'?collectionView():UI.view==='history'?historyView():mainView(e,list)}
   <footer>
@@ -6318,6 +6387,12 @@ document.addEventListener('click',ev=>{
   else if(act==='sugclear'){if(UI.sugArm){UI.sugArm=false;sugChange('?all=1')}else{UI.sugArm=true;SUGX.ok=false;SUGX.msg='Tap Clear all again to remove every suggestion.';render()}return}
   else if(act==='sugcopy'){const t=(SUGX.list||[]).map(x=>'- '+(x.name?x.name+': ':'')+x.text).join('\n');
     (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{SUGX.copied=true;render();setTimeout(()=>{SUGX.copied=false;render()},1600)}).catch(()=>{SUGX.ok=false;SUGX.msg='This browser would not copy.';render()});return}
+  else if(act==='bkfile'){bkDownload();return}
+  else if(act==='bksnooze'){bkSet({snooze:Date.now()+7*BK_DAY});render();return}
+  else if(act==='bkgo'){bkApply();return}
+  else if(act==='bkno'){BKX.pending=null;BKX.msg='';render();return}
+  else if(act==='genkey'){genKeyMake();UI.guideOpen=true;render();return}
+  else if(act==='gencopy'){const k=GEN.key;(navigator.clipboard?navigator.clipboard.writeText(k):Promise.reject()).then(()=>{GEN.copied=true;render()}).catch(()=>{})  ;return}
   else if(act==='phdel'){const x=colAll().find(c=>c.id===id);if(x)photoDel(x,b.dataset.k);return}
   else if(act==='cropx'){cropClose();return}
   else if(act==='cropok'){cropSave();return}
@@ -6452,7 +6527,7 @@ document.addEventListener('click',ev=>{
   else if(act==='rymbase'){rymMark();EXP.open=true;touch()}
   else if(act==='copy'){
     const txt=JSON.stringify(S);const ta=document.getElementById('backup-text');ta.value=txt;
-    const done=()=>{UI.copied=true;render();document.getElementById('backup').open=true;document.getElementById('backup-text').value=txt};
+    const done=()=>{UI.copied=true;bkMark();render();document.getElementById('backup').open=true;document.getElementById('backup-text').value=txt};
     if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,()=>{ta.select()})}else{ta.select()}
     return;
   }
@@ -6508,6 +6583,7 @@ document.addEventListener('change',ev=>{
     for(const z in x.art)if(x.art[z]===u)delete x.art[z];if(k)x.art[k]=u;touch();
     const g=document.querySelector('[data-gal="'+(+x.discogs)+'"]');if(g)g.innerHTML=colGalHTML(x.discogs);return}
   if(ev.target.id==='mb-ver'){MBX.versions=ev.target.checked;return}
+  if(ev.target.id==='bk-file'){const f=ev.target.files&&ev.target.files[0];ev.target.value='';if(f)f.text().then(bkPick).catch(()=>{BKX.pending=null;BKX.ok=false;BKX.msg='Could not read that file. Nothing was changed.';UI.bkOpen=true;render()});return}
   if(ev.target.id==='rym-file'){const f=ev.target.files&&ev.target.files[0];ev.target.value='';
     if(f)f.text().then(rymImport).catch(()=>{RYX.err='Could not read that file. Nothing was changed.';RYX.report=null;render()});return}
 });
