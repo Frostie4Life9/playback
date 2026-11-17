@@ -777,6 +777,71 @@ details.addart .add{border-top:1px solid var(--line)}
 .genkey{display:block;padding:8px 10px;user-select:all;line-height:1.4}
 @media (prefers-reduced-motion:no-preference){.banner.bk{animation:rdin .5s cubic-bezier(.2,.8,.2,1) both}.guide li{animation:rdin .4s cubic-bezier(.2,.8,.2,1) both}.guide li:nth-child(2){animation-delay:.04s}.guide li:nth-child(3){animation-delay:.08s}.guide li:nth-child(n+4){animation-delay:.12s}}
 .setcard h3{margin:0;font:800 18px Archivo,var(--display);font-stretch:112%}
+/* Account icon, Account page and friends' pages */
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.tacc.on{background:hsl(var(--h,180) 42% 38%);border-color:transparent;color:#fff}
+.tacc b{font:800 17px var(--display);font-style:normal}
+.tacc[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:2px}
+.fav{background:hsl(var(--h,180) 42% 38%);color:#fff}
+.linkish{border:0;background:transparent;padding:0;text-align:left;font:inherit;font-weight:700;color:var(--ink);cursor:pointer;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.linkish:hover{text-decoration-color:var(--accent)}
+.pf{max-width:760px}
+.pf-back{align-self:flex-start}
+.pf-hero{display:flex;align-items:center;gap:16px;padding:20px;border-radius:20px;border:1px solid var(--line);background:linear-gradient(135deg,hsl(var(--h,180) 40% 30%),hsl(calc(var(--h,180) + 40) 45% 20%));color:#fff;position:relative;overflow:hidden}
+.pf-hero::after{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.16),transparent 65%)}
+.pf-av{width:68px;height:68px;flex:none;border-radius:50%;display:grid;place-items:center;font:800 32px Archivo,var(--display);background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.55)}
+.pf-who{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.pf-who h2{margin:0;font:800 28px/1.05 Archivo,var(--display);font-stretch:112%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff}
+.pf-sub{font:500 12px var(--mono);opacity:.82;letter-spacing:.02em}
+.pf-code{font:500 12px var(--mono);opacity:.9}.pf-code b{letter-spacing:.14em;font-weight:800}
+.pf-match{position:relative;width:84px;height:84px;flex:none;display:grid;place-items:center;text-align:center;z-index:1}
+.pf-match svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.pf-match circle{fill:none;stroke-width:6}
+.pf-match .mt{stroke:rgba(255,255,255,.2)}
+.pf-match .mv{stroke:#fff;stroke-linecap:round;stroke-dasharray:var(--d) 213.6}
+.pf-match b{font:800 20px var(--display);line-height:1;margin-top:-6px}
+.pf-match span{position:absolute;bottom:16px;font:600 8px var(--mono);letter-spacing:.08em;text-transform:uppercase;opacity:.8}
+.pf-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pf-tiles>div{border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.pf-tiles b{font:800 30px/1 Archivo,var(--display)}
+.pf-tiles span{font:600 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.pf-tiles i{font:500 12px var(--mono);font-style:normal;color:var(--accent);min-height:1em}
+.pf-hist{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;align-items:end;height:128px;padding:14px 12px 8px;border:1px solid var(--line);background:var(--surface);border-radius:16px}
+.pf-hist>div{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:3px;min-width:0}
+.pf-hist i{display:block;width:100%;height:var(--v);min-height:2px;border-radius:5px 5px 2px 2px;background:var(--accent);transform-origin:bottom}
+.pf-hist em{font:600 10px var(--mono);font-style:normal;color:var(--muted);min-height:12px}
+.pf-hist span{font:600 10px var(--mono);color:var(--muted)}
+.pf-list{display:flex;flex-direction:column;gap:8px}
+.pf-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.pf-tabs button{border:1px solid var(--line);background:transparent;border-radius:999px;padding:6px 14px;font-weight:700;font-size:14px;color:var(--muted);display:inline-flex;gap:7px;align-items:center}
+.pf-tabs.sm button{font-size:13px;padding:4px 12px}
+.pf-tabs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.pf-tabs .c{font:600 11px var(--mono);opacity:.75}
+.pf-row{display:flex;align-items:center;gap:12px;padding:8px 10px;border:1px solid var(--line);background:var(--surface);border-radius:14px}
+.pcv{position:relative;width:46px;height:46px;flex:none;border-radius:8px;overflow:hidden;background:var(--sunk);display:grid;place-items:center}
+.pcv b{font:800 18px var(--display);color:var(--muted)}
+.pcv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.pt{display:flex;flex-direction:column;min-width:0;flex:1}
+.pt b{font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pt small{color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pr{display:flex;align-items:center;gap:10px;flex:none}
+.pn{font:800 20px var(--mono)}
+.pme{font:600 11px var(--mono);color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 8px}
+@keyframes pfup{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes pfgrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes pfring{from{stroke-dasharray:0 213.6}}
+@media (prefers-reduced-motion:no-preference){
+  .pf-hero.pf-in{animation:pfup .55s cubic-bezier(.2,.8,.2,1) both}
+  .pf-hero.pf-in .pf-av{animation:pfup .6s .12s cubic-bezier(.3,1.35,.5,1) both}
+  .pf-match .mv{animation:pfring 1.1s .25s cubic-bezier(.2,.8,.2,1) both}
+  .pf-tiles.pf-in{animation:pfup .5s .08s cubic-bezier(.2,.8,.2,1) both}
+  .pf-hist.pf-in{animation:pfup .5s .14s cubic-bezier(.2,.8,.2,1) both}
+  .pf-hist.pf-in i{animation:pfgrow .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*45ms + 280ms)}
+  .pf-list.pf-in{animation:pfup .5s .2s cubic-bezier(.2,.8,.2,1) both}
+  .pf-list.pf-in .pf-row{animation:pfup .45s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*40ms + 300ms)}
+  .tacc{transition:transform .2s cubic-bezier(.3,1.35,.5,1)}.tacc:active{transform:scale(.92)}
+}
+@media (max-width:560px){.pf-hero{padding:16px;gap:12px}.pf-av{width:56px;height:56px;font-size:26px}.pf-who h2{font-size:23px}.pf-match{width:72px;height:72px}.pf-match b{font-size:17px}}
 /* accounts and friends' ratings (Settings > Account, and the Friends strip under an album or title) */
 .acc .gbtn{min-height:44px;display:flex;align-items:center}
 .acc-id{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
@@ -787,7 +852,7 @@ details.addart .add{border-top:1px solid var(--line)}
 .acc-row .sp{flex:1}
 .acc-row .fn{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .acc-row .btn{padding:5px 10px;font-size:13px}
-.fav{width:26px;height:26px;flex:none;border-radius:50%;display:grid;place-items:center;font:800 12px var(--display);font-style:normal;background:var(--accent);color:var(--accent-ink)}
+.fav{width:26px;height:26px;flex:none;border-radius:50%;display:grid;place-items:center;font:800 12px var(--display);font-style:normal}
 .frs{margin:8px 18px 2px;padding:10px 12px 12px;border:1px solid var(--line);border-radius:14px;background:color-mix(in srgb,var(--surface) 72%,transparent)}
 .frs-h{display:flex;justify-content:space-between;align-items:baseline;font:700 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
 .frs-h b{color:var(--ink);font-weight:700}
@@ -1771,6 +1836,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-v', note:'ACCOUNT ICON AND FRIEND PAGES: a round account icon sits at the top right (a person outline until you sign in, then your initial). It opens your Account page: your own page (rating counts and averages, how often you give each score, and your albums and shows) with Google sign-in, your friend code, friend requests and sharing underneath. Tap a friend to open their page, which shows the same plus a taste match with you, and lets you list what you both rated, or only what they rated that you have not (a quick way to find something to hear). Settings keeps a small card that points to it.'},
   {v:'2026.11.17-u', note:'ACCOUNTS ARE ON: Sign in with Google now shows in Settings under Account. Sign in, share your friend code, and add friends to see how they rated the same albums, shows and films.'},
   {v:'2026.11.17-t', note:'BLANK PAGE FIX: on a browser that already holds a copy of your log in its regular storage, Playback stopped on start-up with a blank page (the backup reminder tried to run before it was ready). It now waits a moment, so those browsers open normally. Nothing in your log changed.'},
   {v:'2026.11.17-s', note:'ACCOUNTS AND FRIENDS (built, switched on once Playback has a Google client ID, see SETUP.md Part 8): Settings has an Account card where you sign in with Google, get an 8-letter friend code, add friends by code and accept requests. Once you are friends, a Friends strip under each album (and show or film) lists what they rated it, with a bar and the group average, matched by MusicBrainz or TMDB id and by artist and title, so a friend on Apple Music lines up with you on Spotify. Only accepted friends see your ratings, a switch hides them, and Delete my account erases everything. Your log stays on your device; only title, artist and rating are shared. Your Worker needs the updated playback-sync.js (it takes it from GitHub on its own).'},
@@ -5385,7 +5451,7 @@ const GCID='961476018828-tkjmdic1fnrtr7jtfmb7ta9alrupn8km.apps.googleusercontent
 const ACC_KEY=KEY+'_acct';
 let ACC=(()=>{const d={token:'',tokAt:0,me:null,pubSig:'',pubAt:0};try{return Object.assign(d,JSON.parse(localStorage.getItem(ACC_KEY)||'{}'))}catch(e){return d}})();
 const saveAcc=()=>{try{localStorage.setItem(ACC_KEY,JSON.stringify(ACC))}catch(e){}};
-const ACX={busy:'',msg:'',ok:false,fr:null,frAt:0,loading:false,rows:{},want:{},seen:new Set(),arm:false,anim:false,copied:false,gInit:false};
+const ACX={busy:'',msg:'',ok:false,fr:null,frAt:0,loading:false,rows:{},prof:{},want:{},seen:new Set(),arm:false,anim:false,copied:false,gInit:false};
 const accOn=()=>!!(GCID&&ACC.token&&ACC.me);
 async function accApi(method,path,body){
   const r=await fetch(SUG_URL+'/acct'+path,{method,cache:'no-store',headers:Object.assign(ACC.token?{authorization:'Bearer '+ACC.token}:{},body?{'content-type':'application/json'}:{}),body:body?JSON.stringify(body):undefined});
@@ -5393,7 +5459,7 @@ async function accApi(method,path,body){
   if(r.status===401&&ACC.token&&path!=='/google')accOut('You were signed out. Sign in again.');
   return{status:r.status,j:j||{}};
 }
-function accOut(msg){ACC.token='';ACC.me=null;ACC.pubSig='';ACX.fr=null;ACX.frAt=0;ACX.rows={};ACX.want={};ACX.arm=false;ACX.ok=false;ACX.msg=msg||'';saveAcc();render()}
+function accOut(msg){ACC.token='';ACC.me=null;ACC.pubSig='';ACX.fr=null;ACX.frAt=0;ACX.rows={};ACX.prof={};ACX.want={};ACX.arm=false;ACX.ok=false;ACX.msg=msg||'';saveAcc();if(UI.view==='friend')UI.view='account';render()}
 
 /* a title is matched across people by MusicBrainz id when both have one, else by a plain artist|title key, so a
    friend on Apple Music still lines up with you on Spotify. TMDB id and title|year do the same for shows and films. */
@@ -5455,7 +5521,7 @@ function accStrip(rows,id){
   if(!rows.length)return '';
   const fresh=!ACX.seen.has(id);ACX.seen.add(id);
   const avg=rows.reduce((x,y)=>x+y.r,0)/rows.length;
-  return `<div class="frs${fresh?' fresh':''}" role="group" aria-label="Friends’ ratings"><div class="frs-h"><span>Friends</span>${rows.length>1?`<b>avg ${avg.toFixed(1)}</b>`:''}</div><div class="frs-l">${rows.map((x,i)=>`<div class="frp" style="--i:${i};--p:${x.r*10}%"><i class="fav" aria-hidden="true">${esc(String(x.name||'?').charAt(0).toUpperCase())}</i><span class="fn">${esc(x.name)}</span><span class="fbar" aria-hidden="true"><i></i></span><b class="fr">${fmt(x.r)}</b></div>`).join('')}</div></div>`;
+  return `<div class="frs${fresh?' fresh':''}" role="group" aria-label="Friends’ ratings"><div class="frs-h"><span>Friends</span>${rows.length>1?`<b>avg ${avg.toFixed(1)}</b>`:''}</div><div class="frs-l">${rows.map((x,i)=>`<div class="frp" style="--i:${i};--p:${x.r*10}%"><i class="fav" style="--h:${accHue(x.name)}" aria-hidden="true">${esc(String(x.name||'?').charAt(0).toUpperCase())}</i><span class="fn">${esc(x.name)}</span><span class="fbar" aria-hidden="true"><i></i></span><b class="fr">${fmt(x.r)}</b></div>`).join('')}</div></div>`;
 }
 function friendStrip(g,a,dx){
   if(!accOn()||!RATEABLE.includes(g.kind))return '';
@@ -5491,7 +5557,8 @@ async function accGoogle(resp){
 function accAfter(){
   try{
     if(!GCID)return;
-    if(UI.view==='settings'){if(accOn())accFriends(false);else accMount()}
+    if(UI.view==='account'){if(accOn())accFriends(false);else accMount()}
+    else if(UI.view==='friend'){if(accOn()&&UI.fid){accFriends(false);accProfile(UI.fid,false)}}
     else if(!UI.view&&accOn())accWant();
   }catch(e){}
 }
@@ -5511,26 +5578,118 @@ async function accDelete(){
   catch(e){ACX.busy='';ACX.ok=false;ACX.msg='Could not reach Playback’s server. Check your connection.'}
   render();
 }
-function accCard(){
-  if(!GCID)return window.PB_OWNER?`<div class="setcard"><h3>Account</h3><p class="note">Sign in with Google, friend codes and friends’ ratings are built but switched off until Playback has a Google client ID. SETUP.md has the five steps (about 5 minutes, free); then it is one line to paste into the page.</p></div>`:'';
-  const msg=ACX.msg?`<span class="msg ${ACX.ok?'ok':'err'}" role="status">${esc(ACX.msg)}</span>`:'';
-  if(!accOn())return `<div class="setcard acc"><h3>Account</h3>
-    <p class="note">Sign in with Google to add friends and see how they rated the same albums, shows and films. Your ratings are shared only with friends you accept, and you can switch that off any time. Your log stays on this device.</p>
-    <div id="g-btn" class="gbtn" aria-label="Sign in with Google"></div>${ACX.busy==='in'?'<span class="note">Signing in…</span>':''}${msg}
-    <p class="note">Playback keeps your Google name and a private id, never your email address.</p></div>`;
+/* ---------- the Account page and friends' pages ---------- */
+const accHue=n=>{let h=0;for(const c of String(n||'?'))h=(h*31+c.charCodeAt(0))%360;return h};
+const accIni=n=>esc(String(n||'?').trim().charAt(0).toUpperCase()||'?');
+function accProfile(uid,force){
+  const c=ACX.prof[uid];
+  if(c&&(c.loading||(!force&&Date.now()-c.at<60000)))return;
+  ACX.prof[uid]=Object.assign({},c,{loading:true,at:Date.now()});
+  accApi('GET','/profile?uid='+encodeURIComponent(uid)).then(({status,j})=>{
+    ACX.prof[uid]={at:Date.now(),loading:false,data:status===200?j.profile:null,err:status===200?'':(j.error||'Could not load this page.')};render()
+  }).catch(()=>{ACX.prof[uid]={at:Date.now(),loading:false,data:null,err:'Could not reach Playback’s server. Check your connection.'};render()});
+}
+const accCover=x=>{const m=/^mb:([0-9a-f-]{36})$/.exec(x.k||'');return m&&x.kind==='a'?'https://coverartarchive.org/release-group/'+m[1]+'/front-250':''};
+const accBase=items=>items.filter(x=>!/~dx$/.test(x.t));
+function accStats(items){
+  const b=accBase(items),al=b.filter(x=>x.kind==='a'),sc=b.filter(x=>x.kind==='s');
+  const avg=l=>l.length?l.reduce((s,x)=>s+x.r,0)/l.length:0,hist=Array(10).fill(0);
+  for(const x of b)hist[Math.min(10,Math.max(1,Math.round(x.r)))-1]++;
+  return{al:al.length,sc:sc.length,aAvg:avg(al),sAvg:avg(sc),hist,top:b.slice().sort((x,y)=>y.r-x.r)[0]||null};
+}
+/* how alike two people's ratings are, over what both rated: 100 means identical, about 0 means opposite ends of the scale */
+function accMatch(theirs,mine){
+  const mk=new Map(),mt=new Map();
+  for(const x of mine){if(x.k)mk.set(x.kind+x.k,x.r);mt.set(x.kind+x.t,x.r)}
+  let n=0,d=0;const seen=new Map();
+  for(const x of accBase(theirs)){const m=(x.k&&mk.get(x.kind+x.k))??mt.get(x.kind+x.t);if(m!=null){n++;d+=Math.abs(x.r-m);seen.set(x.kind+x.t,m)}}
+  return{n,pct:n?Math.round(100*(1-d/n/9)):0,mine:(x)=>(x.k&&mk.get(x.kind+x.k))??mt.get(x.kind+x.t)};
+}
+function accHeroHtml(P,stats,match,extra){
+  const h=accHue(P.name),anim=UI.pAnim?' pf-in':'';
+  const ring=match&&match.n>=3?`<div class="pf-match" title="How alike your ratings are, from ${match.n} things you both rated"><svg viewBox="0 0 80 80" aria-hidden="true"><circle class="mt" cx="40" cy="40" r="34"/><circle class="mv" cx="40" cy="40" r="34" style="--d:${(match.pct*2.136).toFixed(1)}"/></svg><b>${match.pct}%</b><span>taste match</span></div>`:'';
+  return `<div class="pf-hero${anim}" style="--h:${h}"><div class="pf-av" aria-hidden="true">${accIni(P.name)}</div>
+    <div class="pf-who"><h2>${esc(P.name)}</h2><span class="pf-sub">${P.n} rating${P.n===1?'':'s'} shared · ${P.friends} friend${P.friends===1?'':'s'}${match&&match.n&&match.n<3?` · ${match.n} in common`:''}</span>${extra||''}</div>${ring}</div>`;
+}
+function accStatsHtml(st){
+  const f=v=>v?v.toFixed(1):'–',mx=Math.max(1,...st.hist);
+  return `<div class="pf-tiles${UI.pAnim?' pf-in':''}"><div><b>${st.al}</b><span>albums rated</span><i>${st.al?'avg '+f(st.aAvg):''}</i></div><div><b>${st.sc}</b><span>shows &amp; films</span><i>${st.sc?'avg '+f(st.sAvg):''}</i></div></div>
+    <div class="pf-hist${UI.pAnim?' pf-in':''}" role="img" aria-label="How often each rating from 1 to 10 was given">${st.hist.map((c,i)=>`<div style="--i:${i};--v:${(c/mx*100).toFixed(0)}%"><em>${c||''}</em><i></i><span>${i+1}</span></div>`).join('')}</div>`;
+}
+/* the list under a page: albums or shows and films, filtered, with your own rating beside theirs on a friend's page */
+function accListHtml(P,match){
+  const kind=UI.pKind==='s'?'s':'a',base=accBase(P.items).filter(x=>x.kind===kind);
+  const self=P.self,mine=x=>match&&match.mine(x);
+  const sh=base.filter(x=>mine(x)!=null).length,only=base.length-sh;
+  const fl=self?'all':UI.pFilter,list=base.filter(x=>fl==='all'||(fl==='shared'?mine(x)!=null:mine(x)==null));
+  const lim=UI.pLim||60,rows=list.slice(0,lim);
+  const nA=accBase(P.items).filter(x=>x.kind==='a').length,nS=accBase(P.items).filter(x=>x.kind==='s').length;
+  return `<div class="pf-list${UI.pAnim?' pf-in':''}">
+    <div class="pf-tabs" role="group" aria-label="What to list"><button data-act="pkind" data-v="a" aria-pressed="${kind==='a'}">Albums<span class="c">${nA}</span></button><button data-act="pkind" data-v="s" aria-pressed="${kind==='s'}">Shows &amp; films<span class="c">${nS}</span></button></div>
+    ${self?'':`<div class="pf-tabs sm" role="group" aria-label="Filter"><button data-act="pfilter" data-v="all" aria-pressed="${fl==='all'}">All<span class="c">${base.length}</span></button><button data-act="pfilter" data-v="shared" aria-pressed="${fl==='shared'}">You both rated<span class="c">${sh}</span></button><button data-act="pfilter" data-v="only" aria-pressed="${fl==='only'}">Not rated by you<span class="c">${only}</span></button></div>`}
+    ${rows.length?rows.map((x,i)=>{const m=self?null:mine(x),u=accCover(x);
+      return `<div class="pf-row" style="--i:${Math.min(i,12)}"><span class="pcv"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span><span class="pt"><b>${esc(x.n||'Untitled')}</b><small>${esc(x.a||(x.kind==='s'?'':''))}</small></span><span class="pr">${m!=null?`<span class="pme" title="Your rating">you ${fmt(m)}</span>`:''}<b class="pn">${fmt(x.r)}</b></span></div>`}).join(''):`<p class="note">${base.length?'Nothing here with that filter.':'Nothing rated here yet.'}</p>`}
+    ${list.length>lim?`<div class="tools"><button class="btn" data-act="pmore">Show ${Math.min(60,list.length-lim)} more</button></div>`:''}</div>`;
+}
+function profileHtml(P,mine){
+  const st=accStats(P.items),match=P.self?null:accMatch(P.items,mine);
+  return accHeroHtml(Object.assign({},P,{n:accBase(P.items).length}),st,match,P.extra)+accStatsHtml(st)+accListHtml(P,match);
+}
+/* the account icon in the top bar */
+function accBtn(){
+  if(!GCID)return '';
+  const on=accOn(),cur=UI.view==='account'||UI.view==='friend';
+  return `<button class="tact tacc${on?' on':''}" data-act="view" data-v="account" aria-pressed="${cur}" aria-label="${on?'Account: '+esc(ACC.me.name):'Sign in or make an account'}"${on?` style="--h:${accHue(ACC.me.name)}"`:''}>${on?`<b aria-hidden="true">${accIni(ACC.me.name)}</b>`:ICO.user}</button>`;
+}
+function accManageHtml(){
   const me=ACC.me,F=ACX.fr,b=ACX.busy?' disabled':'',ani=ACX.anim?' acc-in':'';ACX.anim=false;
-  const row=(x,btns)=>`<div class="acc-row${ani}"><i class="fav" aria-hidden="true">${esc(String(x.name||'?').charAt(0).toUpperCase())}</i><span class="fn">${esc(x.name)}</span><span class="sp"></span>${btns}</div>`;
-  return `<div class="setcard acc"><h3>Account</h3>
+  const row=(x,btns,open)=>`<div class="acc-row${ani}"><i class="fav" style="--h:${accHue(x.name)}" aria-hidden="true">${accIni(x.name)}</i>${open?`<button class="fn linkish" data-act="friendopen" data-u="${esc(x.uid)}">${esc(x.name)}</button>`:`<span class="fn">${esc(x.name)}</span>`}<span class="sp"></span>${btns}</div>`;
+  const msg=ACX.msg?`<span class="msg ${ACX.ok?'ok':'err'}" role="status">${esc(ACX.msg)}</span>`:'';
+  return `<div class="setcard acc">
+    <h3>Friends</h3>
     <div class="acc-id"><div><span class="label">Your friend code</span><b class="acc-code" aria-label="Friend code ${esc(me.code.split('').join(' '))}">${esc(me.code)}</b></div><button class="btn" data-act="acccopy">${ACX.copied?'Copied':'Copy'}</button></div>
-    <p class="note">Give your code to a friend. They enter it below, you accept, and you see each other’s ratings.</p>
-    <form class="panel" data-form="accname"><label class="label" for="acc-name">Name friends see</label><input id="acc-name" name="name" maxlength="40" autocomplete="off" value="${esc(me.name)}"><div class="tools"><button class="btn"${b}>Save name</button></div></form>
-    <label class="acc-share"><input type="checkbox" id="acc-share" ${me.share?'checked':''}${b}><span>Friends can see my ratings${me.rated?' <span class="note">(' + me.rated + ' shared)</span>':''}</span></label>
+    <p class="note">Give your code to a friend. They enter it below, you accept, and you can open each other’s pages.</p>
     <form class="panel" data-form="accadd"><label class="label" for="acc-code">Add a friend</label><input id="acc-code" name="code" maxlength="9" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Their 8-letter code" required><div class="tools"><button class="btn primary"${b}>Send request</button></div></form>
     ${F&&F.incoming.length?`<div class="label">Wants to be friends</div>${F.incoming.map(x=>row(x,`<button class="btn primary" data-act="accaccept" data-u="${esc(x.uid)}"${b}>Accept</button><button class="btn" data-act="accremove" data-u="${esc(x.uid)}"${b}>Decline</button>`)).join('')}`:''}
     ${F&&F.outgoing.length?`<div class="label">Waiting for them</div>${F.outgoing.map(x=>row(x,`<button class="btn" data-act="accremove" data-u="${esc(x.uid)}"${b}>Cancel</button>`)).join('')}`:''}
-    ${F?`<div class="label">Friends${F.friends.length?' ('+F.friends.length+')':''}</div>${F.friends.length?F.friends.map(x=>row(x,`<span class="note">${x.rated} rated</span><button class="btn" data-act="accremove" data-u="${esc(x.uid)}"${b}>Remove</button>`)).join(''):'<p class="note">No friends yet.</p>'}`:'<p class="note">Loading friends…</p>'}
-    ${msg}
+    ${F?`<div class="label">Friends${F.friends.length?' ('+F.friends.length+')':''}</div>${F.friends.length?F.friends.map(x=>row(x,`<span class="note">${x.share===false?'not sharing':x.rated+' rated'}</span><button class="btn" data-act="accremove" data-u="${esc(x.uid)}"${b}>Remove</button>`,x.share!==false)).join(''):'<p class="note">No friends yet.</p>'}`:'<p class="note">Loading friends…</p>'}
+    ${msg}</div>
+    <div class="setcard acc"><h3>Your account</h3>
+    <form class="panel" data-form="accname"><label class="label" for="acc-name">Name friends see</label><input id="acc-name" name="name" maxlength="40" autocomplete="off" value="${esc(me.name)}"><div class="tools"><button class="btn"${b}>Save name</button></div></form>
+    <label class="acc-share"><input type="checkbox" id="acc-share" ${me.share?'checked':''}${b}><span>Friends can open my page and see my ratings</span></label>
     <div class="tools"><button class="btn" data-act="accout"${b}>Sign out</button><button class="btn danger" data-act="accdel"${b}>${ACX.arm?'Tap again to delete':'Delete my account'}</button></div></div>`;
+}
+function accountView(){
+  const anim=UI.pAnim;
+  let h;
+  if(!accOn()){
+    h=`<section class="settings pf" aria-labelledby="ac-h"><h2 id="ac-h">Account</h2>
+      <div class="setcard acc"><h3>Sign in</h3>
+      <p class="note">Make an account with Google to get a page of your own, add friends, and open their pages to see what they rated and how alike your tastes are. Your ratings are shared only with friends you accept, and you can switch that off any time. Your log stays on this device.</p>
+      <div id="g-btn" class="gbtn" aria-label="Sign in with Google"></div>${ACX.busy==='in'?'<span class="note">Signing in…</span>':''}${ACX.msg?`<span class="msg ${ACX.ok?'ok':'err'}" role="status">${esc(ACX.msg)}</span>`:''}
+      <p class="note">Playback keeps your Google name and a private id, never your email address. <a href="privacy.html" target="_blank" rel="noopener">Privacy policy</a></p></div></section>`;
+  }else{
+    const items=accItems(),F=ACX.fr,P={self:true,name:ACC.me.name,friends:F?F.friends.length:0,items,extra:`<span class="pf-code">Code <b>${esc(ACC.me.code)}</b></span>`};
+    h=`<section class="settings pf" aria-labelledby="ac-h"><h2 id="ac-h" class="sr">Your page</h2>${profileHtml(P,null)}${accManageHtml()}</section>`;
+  }
+  UI.pAnim=false;return h;
+}
+function friendView(){
+  const uid=UI.fid,c=ACX.prof[uid]||{},F=ACX.fr,known=F&&[].concat(F.friends,F.incoming,F.outgoing).find(x=>x.uid===uid);
+  const back=`<button class="btn pf-back" data-act="view" data-v="account">← Account</button>`;
+  let h;
+  if(!accOn())h=`<section class="settings pf">${back}<p class="note">Sign in to see friends’ pages.</p></section>`;
+  else if(c.data){
+    const d=c.data,P={self:false,name:d.name,friends:d.friends,items:d.items};
+    h=`<section class="settings pf" aria-label="${esc(d.name)}’s page">${back}${profileHtml(P,accItems())}</section>`;
+  }else if(c.err)h=`<section class="settings pf">${back}<div class="setcard"><h3>${esc(known?known.name:'Friend')}</h3><p class="note">${esc(c.err)}</p></div></section>`;
+  else h=`<section class="settings pf">${back}<div class="pf-hero" style="--h:${accHue(known&&known.name)}"><div class="pf-av" aria-hidden="true">${accIni(known&&known.name)}</div><div class="pf-who"><h2>${esc(known?known.name:'Friend')}</h2><span class="pf-sub">Loading…</span></div></div></section>`;
+  UI.pAnim=false;return h;
+}
+/* a small card in Settings that points at the Account page */
+function accCard(){
+  if(!GCID)return '';
+  return `<div class="setcard"><h3>Account</h3><p class="note">${accOn()?'Signed in as '+esc(ACC.me.name)+'. Your page, friends and sharing are on the Account page.':'Sign in with Google to get a page, add friends and see their ratings.'}</p><div class="tools"><button class="btn primary" data-act="view" data-v="account">Open Account</button></div></div>`;
 }
 
 function settingsView(){return `
@@ -5600,6 +5759,7 @@ function renderMain(){
     <div class="topr">
       <button class="sync" data-act="opensync" data-s="${SYS.status}"><i></i>${esc(syncLabel())}</button>
       ${!UI.view?`<div class="topact">${UI.tab==='music'?`<button class="tact" data-act="llopen" aria-label="Listen list, ${llCount()} to hear">${ICO.mark}${llCount()?`<i class="tbadge">${llCount()}</i>`:''}</button>`:''}<button class="tact tmob" data-act="lib" aria-label="${UI.tab==='music'?'Switch artist':'Switch show or film'}">${ICO.grid}</button>${UI.tab==='music'?`<button class="tact tmob" data-act="addart" aria-label="Add an artist">${ICO.plus}</button>`:''}</div>`:''}
+      ${accBtn()}
     </div>
   </header>
   ${UI.llOpen&&!UI.view&&UI.tab==='music'?`<div class="llover"><button class="llbk" data-act="llclose" aria-label="Close Listen list"></button>${listenSide()}</div>`:''}
@@ -5607,7 +5767,7 @@ function renderMain(){
   ${SYS.status==='conflict'?conflictBanner():''}
   ${bkNudge()}
 
-${UI.view==='settings'?settingsView():UI.view==='collection'?collectionView():UI.view==='history'?historyView():mainView(e,list)}
+${UI.view==='settings'?settingsView():UI.view==='account'?accountView():UI.view==='friend'?friendView():UI.view==='collection'?collectionView():UI.view==='history'?historyView():mainView(e,list)}
   <footer>
     <p class="buildid">Build ${esc(BUILD)}</p>
   </footer>`;
@@ -5929,6 +6089,7 @@ function heroTick(t){
   liqTick(dt,HERO.spd,t);
   HERO.raf=requestAnimationFrame(heroTick)}
 const ICO={
+  user:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.8 20c.6-3.7 3.7-5.8 7.2-5.8s6.6 2.1 7.2 5.8"/></svg>',
   mark:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h11v17L12 16.5l-5.5 4z"/></svg>',
   close:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
   grid:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="8" width="12" height="12" rx="2.5"/><path d="M8 4.5h10.5a2 2 0 0 1 2 2V17"/></svg>',
@@ -6561,7 +6722,7 @@ document.addEventListener('click',ev=>{
     const rt=document.querySelector('.rater');
     if(rt&&!matchMedia('(prefers-reduced-motion:reduce)').matches){UI.rClosing=true;const cid=UI.rOpen,fly=rtFlyPrep(cid);rt.classList.remove('rt-in');rt.classList.add('rt-out');
       setTimeout(()=>{UI.rClosing=false;UI.rOpen=null;if(fly)UI.rLand=cid;render()},230);rtFlyGo(fly);return}}
-  if(act==='view'){UI.view=b.dataset.v;UI.rOpen=null;if(UI.view==='history'){UI.hAnim=true;UI.hEdit=null}window.scrollTo({top:0})}
+  if(act==='view'){UI.view=b.dataset.v;UI.rOpen=null;if(UI.view==='account'){UI.pAnim=true;UI.pKind='a';UI.pLim=60}if(UI.view==='history'){UI.hAnim=true;UI.hEdit=null}window.scrollTo({top:0})}
   else if(act==='lib'){UI.libOpen=!UI.libOpen;UI.libAnim=UI.libOpen}
   else if(act==='llopen'){UI.llOpen=true}
   else if(act==='llclose'){UI.llOpen=false}
@@ -6582,6 +6743,10 @@ document.addEventListener('click',ev=>{
     if(nv[0]){nv[0].dataset.v=VSTEPS[Math.max(0,i-1)][0];nv[0].disabled=i<=0}if(nv[1]){nv[1].dataset.v=VSTEPS[Math.min(4,i+1)][0];nv[1].disabled=i>=4}}return}
   else if(act==='sugload'){sugLoad();return}
   else if(act==='sugdel'){sugChange('?id='+encodeURIComponent(id));return}
+  else if(act==='friendopen'){UI.view='friend';UI.fid=b.dataset.u;UI.pKind='a';UI.pFilter='all';UI.pLim=60;UI.pAnim=true;UI.rOpen=null;window.scrollTo({top:0});if(ACX.prof[UI.fid])ACX.prof[UI.fid].at=0}
+  else if(act==='pkind'){UI.pKind=b.dataset.v;UI.pLim=60}
+  else if(act==='pfilter'){UI.pFilter=b.dataset.v;UI.pLim=60}
+  else if(act==='pmore'){UI.pLim=(UI.pLim||60)+60}
   else if(act==='accout'){accOut('Signed out.');ACX.ok=true;render();return}
   else if(act==='accdel'){accDelete();return}
   else if(act==='accaccept'){accAccept(b.dataset.u);return}

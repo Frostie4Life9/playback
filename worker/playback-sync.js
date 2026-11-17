@@ -459,6 +459,7 @@ async function sugOwner(request, env, url) {
    POST   /acct/friends       {code}        asks that person to be friends
    POST   /acct/friends/accept {uid}
    DELETE /acct/friends?uid=  removes a friend, declines a request or cancels one
+   GET    /acct/profile?uid=  -> {profile:{name, friends, items}}  your own page, or a friend's who is sharing
    POST   /acct/friends/ratings {kind, ks:[], ts:[]} -> {rows:[{uid,name,k,t,r}]}  accepted friends only */
 const GOOGLE_ISS = ['https://accounts.google.com', 'accounts.google.com'];
 const ACCT_MAX_BODY = 400 * 1024, ACCT_MAX_ROWS = 4000;
@@ -617,9 +618,9 @@ async function acct(request, env, url) {
 
   if (path === '/friends') {
     if (M === 'GET') {
-      const rows = (await env.CATALOG.prepare('SELECT f.a, f.b, f.st, u.uid AS uid, u.name AS name, u.rated AS rated FROM acct_friends f JOIN acct_users u ON u.uid = (CASE WHEN f.a = ?1 THEN f.b ELSE f.a END) WHERE f.a = ?1 OR f.b = ?1 ORDER BY u.name COLLATE NOCASE').bind(me.uid).all()).results || [];
+      const rows = (await env.CATALOG.prepare('SELECT f.a, f.b, f.st, u.uid AS uid, u.name AS name, u.rated AS rated, u.share AS share FROM acct_friends f JOIN acct_users u ON u.uid = (CASE WHEN f.a = ?1 THEN f.b ELSE f.a END) WHERE f.a = ?1 OR f.b = ?1 ORDER BY u.name COLLATE NOCASE').bind(me.uid).all()).results || [];
       return reply({
-        friends: rows.filter(x => x.st === 'ok').map(x => ({ uid: x.uid, name: x.name, rated: x.rated })),
+        friends: rows.filter(x => x.st === 'ok').map(x => ({ uid: x.uid, name: x.name, rated: x.rated, share: !!x.share })),
         incoming: rows.filter(x => x.st === 'pending' && x.b === me.uid).map(x => ({ uid: x.uid, name: x.name })),
         outgoing: rows.filter(x => x.st === 'pending' && x.a === me.uid).map(x => ({ uid: x.uid, name: x.name }))
       });
@@ -658,6 +659,22 @@ async function acct(request, env, url) {
     const uid = String(j.uid || '').replace(/[^0-9a-f]/g, '');
     const r = await env.CATALOG.prepare("UPDATE acct_friends SET st = 'ok', at = ?3 WHERE a = ?2 AND b = ?1 AND st = 'pending'").bind(me.uid, uid, now).run();
     return r.meta && r.meta.changes ? reply({ ok: true }) : reply({ error: 'That request is gone.' }, 404);
+  }
+
+  /* a person's page: their published ratings. Yours always; a friend's only if you are friends and they are sharing. */
+  if (path === '/profile' && M === 'GET') {
+    const uid = (url.searchParams.get('uid') || '').replace(/[^0-9a-f]/g, '');
+    if (uid.length !== 16) return reply({ error: 'no such person' }, 400);
+    if (uid !== me.uid) {
+      const f = await env.CATALOG.prepare("SELECT 1 AS x FROM acct_friends WHERE st = 'ok' AND ((a = ?1 AND b = ?2) OR (a = ?2 AND b = ?1))").bind(me.uid, uid).first();
+      if (!f) return reply({ error: 'You are not friends with this person.' }, 404);
+    }
+    const u = await env.CATALOG.prepare('SELECT uid, name, share, made FROM acct_users WHERE uid = ?1').bind(uid).first();
+    if (!u) return reply({ error: 'That account is gone.' }, 404);
+    if (uid !== me.uid && !u.share) return reply({ error: u.name + ' is not sharing their ratings right now.' }, 403);
+    const items = (await env.CATALOG.prepare('SELECT kind, k, t, r, ttl AS n, art AS a FROM acct_ratings WHERE uid = ?1 ORDER BY r DESC, ttl COLLATE NOCASE LIMIT 4000').bind(uid).all()).results || [];
+    const fc = await env.CATALOG.prepare("SELECT COUNT(*) AS c FROM acct_friends WHERE st = 'ok' AND (a = ?1 OR b = ?1)").bind(uid).first('c');
+    return reply({ profile: { uid, name: u.name, since: u.made, friends: fc || 0, items } });
   }
 
   if (path === '/friends/ratings' && M === 'POST') {
