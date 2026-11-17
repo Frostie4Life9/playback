@@ -1583,6 +1583,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-v', note:'RECORD COMES OUT FROM BEHIND THE RING TOO: the selected tile\'s green ring was being drawn under the record as it slid out. The record now stays hidden behind the ring as well as the cover until it is fully out.'},
   {v:'2026.11.16-u', note:'RECORD STAYS UNDER ITS OWN TILE: when an artist\'s record leaves its sleeve for the turntable (and when it comes back), it can cross other albums on the way, but the part that is over its own tile is now always hidden behind that tile instead of flying across the cover.'},
   {v:'2026.11.16-t', note:'EDGE FIXES: the green ring around the open artist on the wall is no longer clipped on the left edge, and a record sliding out on hover now stops at the end of its sleeve instead of poking past it (it overshot by a few percent, worst on well-heard artists).'},
   {v:'2026.11.16-s', note:'RATING ANIMATION NO LONGER CUTS OUT: the page redraws itself about a second and a half after you rate (your sync starting and finishing), and that rebuilt the record in the middle of the effect. A redraw now picks the effect up exactly where it was, so it plays through every time.'},
@@ -5114,7 +5115,7 @@ const fEase=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,fOut=t=>1-Math.pow(1-t,3),fIn
 function tileGeo(T){const pk=T&&T.querySelector('.tpack'),cv=T&&T.querySelector('.tpack .tcov');if(!pk||!cv)return null;
   const p=pk.getBoundingClientRect(),c=cv.getBoundingClientRect();if(!p.width||!c.width)return null;
   const pv=parseFloat(pk.style.getPropertyValue('--p'))||0;
-  return{x:p.left+p.width*(.088+pv*.00236),xc:c.right,top:p.top+p.height*.04,d:p.height*.92,cx:c.left+c.width/2,cy:c.top+c.height/2,R:{l:c.left,t:c.top,r:c.right,b:c.bottom}}}
+  return{x:p.left+p.width*(.088+pv*.00236),xc:c.right+5,top:p.top+p.height*.04,d:p.height*.92,cx:c.left+c.width/2,cy:c.top+c.height/2,R:{l:c.left-5,t:c.top-5,r:c.right+5,b:c.bottom+5}}}
 function tileSeen(T,g){const e=document.elementFromPoint(g.cx,g.cy);return !!(e&&T.contains(e))}
 function discSnap(hero){const d=hero.querySelector('.hdisc'),sp=hero.querySelector('.hspin'),l=hero.querySelector('.hlab');if(!d||!sp||!l)return null;
   const cs=getComputedStyle(sp),w=d.getBoundingClientRect().width;if(!w)return null;
@@ -5135,7 +5136,7 @@ function flyClip(w,x,y,d,R){const f=w.firstChild;
   const W=w._w,s=d/W,l=(R.l-x)/s,t=(R.t-y)/s,r=(R.r-x)/s,b=(R.b-y)/s;
   if(r<=0||l>=W||b<=0||t>=W){f.style.clipPath='';return}
   const B=W*3;f.style.clipPath="path(evenodd,'M"+(-B)+' '+(-B)+'H'+B+'V'+B+'H'+(-B)+'ZM'+l.toFixed(1)+' '+t.toFixed(1)+'H'+r.toFixed(1)+'V'+b.toFixed(1)+'H'+l.toFixed(1)+"Z')"}
-const coverR=aid=>{const T=document.querySelector('.tile[data-act="sel"][data-id="'+String(aid).replace(/["\\]/g,'\\$&')+'"]'),c=T&&T.querySelector('.tpack .tcov');if(!c)return null;const r=c.getBoundingClientRect();return r.width?{l:r.left,t:r.top,r:r.right,b:r.bottom}:null};
+const coverR=aid=>{const T=document.querySelector('.tile[data-act="sel"][data-id="'+String(aid).replace(/["\\]/g,'\\$&')+'"]'),c=T&&T.querySelector('.tpack .tcov');if(!c)return null;const r=c.getBoundingClientRect();return r.width?{l:r.left-5,t:r.top-5,r:r.right+5,b:r.bottom+5}:null};
 function flyAsk(b,id){UI.fly=null;if(noMotion())return;
   const cur=document.querySelector('.hero[data-aid]');if(cur&&cur.dataset.aid===id)return;
   const g=tileGeo(b);if(!g)return;
