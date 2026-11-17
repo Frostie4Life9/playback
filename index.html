@@ -971,7 +971,7 @@ details.addart .add{border-top:1px solid var(--line)}
 .flyw{position:fixed;left:0;top:0;z-index:70;pointer-events:none;transform-origin:0 0}
 .fly{position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden;box-shadow:0 10px 14px rgb(0 0 0 / .45)}
 /* the glassy sheen of the landed record, so nothing is gained or lost when it is set down */
-.fly::after{content:"";position:absolute;inset:0;border-radius:50%;z-index:1;pointer-events:none;background:conic-gradient(from 20deg,rgb(255 255 255 / 0),rgb(255 255 255 / .12) 12%,rgb(255 255 255 / 0) 26%,rgb(255 255 255 / 0) 50%,rgb(255 255 255 / .09) 62%,rgb(255 255 255 / 0) 76%)}
+.fly::after{content:"";position:absolute;inset:0;border-radius:50%;z-index:1;pointer-events:none;box-shadow:inset 0 0 0 1.5px rgb(255 255 255 / .2);background:conic-gradient(from 20deg,rgb(255 255 255 / 0),rgb(255 255 255 / .18) 12%,rgb(255 255 255 / 0) 26%,rgb(255 255 255 / 0) 50%,rgb(255 255 255 / .13) 62%,rgb(255 255 255 / 0) 76%)}
 .fly.clear::after{background:conic-gradient(from 20deg,rgb(255 255 255 / 0),rgb(255 255 255 / .3) 12%,rgb(255 255 255 / 0) 26%,rgb(255 255 255 / 0) 50%,rgb(255 255 255 / .22) 62%,rgb(255 255 255 / 0) 76%)}
 .fly.clear{box-shadow:inset 0 0 0 1.5px rgb(255 255 255 / .45),0 10px 14px rgb(0 0 0 / .45)}
 .fly-s{position:absolute;inset:0;border-radius:50%}
@@ -1525,6 +1525,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-j', note:'SET-DOWN POP: when a record lands on the turntable it no longer pops. The flying record used to vanish in one frame (its shadow, a slightly different sheen and the percent label all changed at once). Now the shadow shrinks as it touches, its sheen matches the landed record, and it fades out over the real record. Every look.'},
   {v:'2026.11.16-i', note:'PINK BANNERS: a cover with a big soft pastel backdrop and a white frame (The Divine Feminine) was being read as white paper, so its banner came out gray. A pastel field that covers over a third of the art now counts as the cover\'s color, and gets a little extra color so it reads as pink instead of beige. Busy covers like Don\'t Be Dumb and bold ones like Blue Slide Park are unchanged. Every cover is read again.'},
   {v:'2026.11.16-h', note:'COVER COLORS: a middle ground for busy covers. The white-paper banner now only applies when the cover is mostly white and no single color covers more than about a seventh of it. Don\'t Be Dumb (its biggest color is only about a tenth) stays on the paper, and Blue Slide Park (one blue triangle family is about a fifth) keeps its blue, both with room to spare instead of sitting on the edge. Covers right between the two could still go either way. Every cover is read again.'},
   {v:'2026.11.16-g', note:'DARK RECORDS: a black or very dark album no longer gives a record you can barely see. On the record only (the banner stays black), a dark color is lifted to a visible charcoal in every look, the soft fade and marble are no longer darkened further for a dark artist, and every record has a faint light rim so its edge reads on the dark card. BUSY COVERS: when a cover is mostly white paper and no single color covers more than about a fifth of it (like Don\'t Be Dumb), the banner follows the paper instead of picking one of many colors; a big earthy ground area still counts as a color. Every cover is read again with the new rule.'},
@@ -4897,7 +4898,11 @@ function flyOut(F){
     const r=dc.getBoundingClientRect(),hd=r.width*1.07,hx=r.left-(hd-r.width)/2,hy=r.top-(hd-r.width)/2-10;
     if(t<=A){const q=fOut(Math.max(0,t)/A);flyPut(w,g.x+(g.xc-g.x)*q,g.top,g.d,g.xc)}
     else if(t<=A+B){const q=fEase((t-A)/B);flyPut(w,g.xc+(hx-g.xc)*q,g.top+(hy-g.top)*q-26*Math.sin(Math.PI*q),g.d+(hd-g.d)*q,null)}
-    else if(t<A+B+C){const q=fIn((t-A-B)/C),dd=r.width*(1.07-.07*q);flyPut(w,r.left-(dd-r.width)/2,r.top-(dd-r.width)/2-10*(1-q),dd,null)}
+    else if(t<A+B+C){const u=(t-A-B)/C,q=fIn(u),dd=r.width*(1.07-.07*q);flyPut(w,r.left-(dd-r.width)/2,r.top-(dd-r.width)/2-10*(1-q),dd,null);
+      /* set down without a pop: the shadow shrinks as the record touches, the real record appears underneath, and the flying copy fades out over it */
+      const f=w.firstChild,k=1-q;f.style.boxShadow=(f.classList.contains('clear')?'inset 0 0 0 1.5px rgb(255 255 255 / .45),':'')+'0 '+(10*k).toFixed(1)+'px '+(14*k).toFixed(1)+'px rgb(0 0 0 / '+(.45*k).toFixed(3)+')';
+      if(u>.4&&h.classList.contains('drop'))h.classList.remove('drop');
+      const z=Math.max(0,Math.min(1,(u-.45)/.55));w.style.opacity=String(1-z*z*(3-2*z))}
     else{w.remove();FLY.active=false;h.classList.remove('drop');HERO.begin=performance.now()+650;h.classList.add('play');return}
     requestAnimationFrame(step)};
   requestAnimationFrame(step);return true}
