@@ -884,7 +884,7 @@ details.addart .add{border-top:1px solid var(--line)}
   30%{transform:scale(1.075);border-color:#fff}
   65%{transform:scale(1.025);border-color:color-mix(in srgb,var(--gp) 60%,var(--gv))}
   100%{transform:scale(1);border-color:var(--gv)}}
-@media (prefers-reduced-motion:no-preference){.group.sleeve.rip .sl-disc i.on:not(.nr){animation:slPulse .9s cubic-bezier(.4,0,.25,1) calc(var(--rb,0ms) + var(--o,0)*42ms) backwards}}
+@media (prefers-reduced-motion:no-preference){.group.sleeve.rip .sl-disc i.on:not(.fade):not(.nr){animation:slPulse .9s cubic-bezier(.4,0,.25,1) calc(var(--rb,0ms) + var(--o,0)*42ms) backwards}}
 .sl-lab{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:var(--acb);display:grid;place-items:center;font:800 12px Archivo,var(--display);color:var(--hi);font-variant-numeric:tabular-nums}
 @media (prefers-reduced-motion:no-preference){.sl-disc{transition:transform .7s cubic-bezier(.2,.8,.2,1)}}
 .group.sleeve.in .sl-disc{transform:translate3d(16px,0,0)}
@@ -1665,6 +1665,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-an', note:'LISTEN AGAIN: each listen has its own day. A new listen is dated the day you start it, and the album card shows it as Listen 2 \u00b7 that day (tap to change it). The record\u2019s ripple, when it scrolls back into view, now runs only through the bands you have lit on the current listen, not the faded carried-over ones.'},
   {v:'2026.11.16-am', note:'LISTEN AGAIN: your first listen of an album can never be removed. Remove only appears on later listens.'},
   {v:'2026.11.16-al', note:'LISTEN AGAIN: on a new listen the record\u2019s bands start faded (they are last listen\u2019s songs carried over) and each band fills back in fully, with the usual glow, as you mark its songs off on this listen. The green and red change gradient in a song bar now slides with the bar while you drag the rating slider.'},
   {v:'2026.11.16-ak', note:'LISTEN AGAIN: Clear on a song or the album in your newest listen now puts last listen\u2019s rating back (dimmed, carried over, with its gradient) instead of leaving it blank. If last listen had no rating there, Clear still leaves it blank.'},
@@ -2119,8 +2120,8 @@ function lsNew(g){
   lsSave(g);const l=lsRaw(id),c=[id],dm=S.marks[dxId(g)];
   for(const i of g.items){const q=S.marks[i.id];if(q&&(q.r||q.done))c.push(i.id)}
   if(dm&&dm.r)c.push(dxId(g));
-  l.push({d:S.marks[id].rd||'',r:S.marks[id].r,n:'',s:lsSnap(g),c,...(dm&&dm.r?{x:{r:dm.r,rd:dm.rd||''}}:{})});
-  S.marks[id]={...S.marks[id],ls:l};
+  l.push({d:todayISO(),r:S.marks[id].r,n:'',s:lsSnap(g),c,...(dm&&dm.r?{x:{r:dm.r,rd:dm.rd||''}}:{})});
+  S.marks[id]={...S.marks[id],ls:l,rd:todayISO()};
   delete UI.lsView[id];UI.rOpen=null;lsFlip(id,1);touch()}
 function lsGo(g,k){
   const id=g.id,l=lsRaw(id),cur=UI.lsView[id]!==undefined?UI.lsView[id]:l.length-1;
@@ -2151,7 +2152,7 @@ function lsHeal(){
 function lsRevert(id){
   const g=lsOwner(id);if(!g||LSV!==null)return false;const l=lsRaw(g.id);if(l.length<2)return false;
   const p=l[l.length-2],e=l[l.length-1];
-  if(id===g.id){if(!p.r)return false;const m={...S.marks[id],r:p.r};if(p.d)m.rd=p.d;else delete m.rd;S.marks[id]=m}
+  if(id===g.id){if(!p.r)return false;S.marks[id]={...S.marks[id],r:p.r}}   /* the listen keeps its own day */
   else if(id===dxId(g)){if(!p.x||!p.x.r)return false;const m={...(S.marks[id]||{}),r:p.x.r};if(p.x.rd)m.rd=p.x.rd;else delete m.rd;S.marks[id]=m}
   else{const q=p.s&&p.s[id];if(!q||!q.r)return false;const c={...(S.marks[id]||{}),r:q.r};if(q.done)c.done=true;S.marks[id]=c}
   e.c=[...new Set([...(e.c||[]),id])];lsFromMark(g.id);return true}
@@ -4525,7 +4526,7 @@ const SLIN=new Set();let slIO=null;
 /* run the groove ripple on one sleeve. base = ms to wait before it starts (the slide-out needs ~220) */
 function slRipple(sl,base,minJ,el){
   el=el||0;if(!el&&sl&&sl.dataset.acol)UI.fxr={g:sl.dataset.acol,base,minJ,t0:Date.now()};
-  if(!sl||!sl.querySelector('.sl-disc i.on'))return;
+  if(!sl||!sl.querySelector('.sl-disc i.on:not(.fade)'))return;
   const is=sl.querySelectorAll('.sl-disc i');is.forEach((e,j)=>e.classList.toggle('nr',minJ!=null&&j<minJ));   /* grooves outside the rated song's band sit the ripple out */
   sl.style.setProperty('--rb',(base-el)+'ms');sl.classList.remove('rip');void sl.offsetWidth;sl.classList.add('rip');
   clearTimeout(sl._rt);sl._rt=setTimeout(()=>{sl.classList.remove('rip');sl.querySelectorAll('.sl-disc i.nr').forEach(e=>e.classList.remove('nr'))},Math.max(0,base+2600-el))}
@@ -5852,7 +5853,8 @@ function rdLine(g,dx){
   const id=dx?dxId(g):g.id;if(!rating(id))return '';
   const d=ratedDate(id);
   if(UI.dEdit===g.id)return `<form class="sl-wf" data-form="grd" data-g="${g.id}"><input name="rd" type="date" value="${esc(d||todayISO())}" max="${todayISO()}" aria-label="Date rated"><button>Save</button></form>`;
-  return d?`<button type="button" class="sl-wb sl-rd" data-act="dedit" data-g="${g.id}" aria-label="Rated ${esc(fmtRd(d))}. Change the date">Rated ${esc(fmtRd(d))}</button>`
+  const ln=!dx&&lsRaw(g.id).length>1?'Listen '+(lsIdx(g.id)+1)+' \u00b7 ':'Rated ';
+  return d?`<button type="button" class="sl-wb sl-rd" data-act="dedit" data-g="${g.id}" aria-label="${esc(ln)}${esc(fmtRd(d))}. Change the date">${esc(ln)}${esc(fmtRd(d))}</button>`
           :''}
 function albumRate(g,a){
   if(!RATEABLE.includes(g.kind))return '';
