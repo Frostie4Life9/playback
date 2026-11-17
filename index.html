@@ -931,6 +931,16 @@ details.addart .add{border-top:1px solid var(--line)}
   .track.sl-t.landed .rg-n,.sl-rate.landed .v{display:inline-block;animation:rgNum .45s cubic-bezier(.2,.8,.2,1)}
 }
 
+/* ===== Artist switch (2026.11.16-x): the title, stats and album cards ease in instead of popping ===== */
+@keyframes swUp{from{opacity:0;transform:translate3d(0,18px,0)}}
+@keyframes swTitle{from{opacity:0;transform:translate3d(0,12px,0) scale(.97);filter:blur(5px)}}
+@media (prefers-reduced-motion:no-preference){
+  .sheet.swin .head.hero .meta{animation:swTitle .55s cubic-bezier(.2,.8,.2,1) .05s backwards}
+  .sheet.swin .head.hero .hstats{animation:swUp .5s cubic-bezier(.2,.8,.2,1) .13s backwards}
+  .sheet.swin .head.hero .tools,.sheet.swin .head.hero .mbsrc{animation:swUp .5s cubic-bezier(.2,.8,.2,1) .2s backwards}
+  .sheet.swin>.relbar{animation:swUp .5s cubic-bezier(.2,.8,.2,1) .26s backwards}
+  .sheet.swin>.group.sleeve,.sheet.swin>.empty{animation:swUp .62s cubic-bezier(.2,.8,.2,1) calc(.3s + var(--sw,0ms)) backwards}
+}
 /* ===== Crate frame (2026.11.16-a): the header, the artist list and its controls take the Sleeve's own parts ===== */
 .top{align-items:center}
 .sync{border:0;background:transparent;padding:6px 4px;min-height:44px;font:500 11px var(--mono);letter-spacing:.09em;text-transform:uppercase}
@@ -1583,6 +1593,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-x', note:'ARTIST SWITCH: when you open another artist, its name, stats, filters and album cards now rise in one after another instead of popping onto the page. Same for shows and films. Redraws on the same artist (rating, syncing) do not replay it.'},
   {v:'2026.11.16-w', note:'FAST CLICKS: if you pick another artist while a record is still on its way to the turntable, that record now turns around from wherever it is and goes back into its own sleeve (or slides back in if it was still coming out) instead of vanishing.'},
   {v:'2026.11.16-v', note:'RECORD COMES OUT FROM BEHIND THE RING TOO: the selected tile\'s green ring was being drawn under the record as it slid out. The record now stays hidden behind the ring as well as the cover until it is fully out.'},
   {v:'2026.11.16-u', note:'RECORD STAYS UNDER ITS OWN TILE: when an artist\'s record leaves its sleeve for the turntable (and when it comes back), it can cross other albums on the way, but the part that is over its own tile is now always hidden behind that tile instead of flying across the cover.'},
@@ -4354,7 +4365,10 @@ function slObserve(){
 /* ---------- render ---------- */
 function render(){
   const ll=document.getElementById('llist'),llTop=ll?ll.scrollTop:0,llTab=UI.llTab;UI.llTab=UI.tab;
+  const swK=!UI.view?UI.tab+':'+(UI.sel[UI.tab]||''):null,swGo=!!(swK&&UI.swKey&&UI.swKey!==swK);if(swK)UI.swKey=swK;
   renderMain();slObserve();slPulseNow();UI.rAnim=null;
+  if(swGo&&!noMotion()){const sh=document.querySelector('.sheet');   /* a different artist or title is open: its text and cards ease in, one after another */
+    if(sh){[...sh.children].forEach((c,i)=>c.style.setProperty('--sw',Math.min(i,6)*70+'ms'));sh.classList.add('swin');clearTimeout(UI.swT);UI.swT=setTimeout(()=>sh.classList.remove('swin'),1500)}}
   if(UI.lit&&!UI.rLand&&!(UI.lit.id&&UI.lit.id===UI.rOpen))slLitNow();   /* no number is flying in and its slider is closed, so the groove lights with this draw */
   slFxResume();
   tdPaint();
