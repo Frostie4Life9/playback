@@ -1666,7 +1666,13 @@ details.addart .add{border-top:1px solid var(--line)}
    Provo, and the letter counts builds within that day (a, b, c...). The update
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
+/* A cover that fails to load (a phone's signal dipping, a slow image server) is asked for again twice before it is given up on, instead of vanishing the first time. */
+window.coverErr=function(im){const n=+im.dataset.rt||0;
+  if(n>=2||!im.isConnected){im.remove();return}
+  im.dataset.rt=n+1;const u=im.currentSrc||im.src;
+  setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-g', note:'COVERS NO LONGER VANISH ON A HICCUP: if an album cover or poster failed to load once (weak signal, a slow image server), it was thrown away until the next redraw, which is why covers kept disappearing and flashing back. It now asks for the picture again up to two more times before giving up.'},
   {v:'2026.11.17-f', note:'MOBILE: THE RECORD COMES OUT SOONER: on a phone, an album\u2019s vinyl now slides out of its sleeve (and starts its animation) as soon as the album is a little way onto the screen from the bottom, and stays out until it is nearly off the top, so it is out for much more of your scrolling. Before, it only came out while the album sat in a narrow band in the middle of the screen. Computers are unchanged.'},
   {v:'2026.11.17-e', note:'FIX: A DELUXE RATING YOU CLEARED NO LONGER COMES BACK: every time the app started (and on every import), an album with a deluxe edition and no deluxe rating copied its own standard rating onto the deluxe, because the two titles look the same once \u201c(Deluxe)\u201d is dropped. Short n\u2019 Sweet (Deluxe) got Short n\u2019 Sweet\u2019s rating back each time you removed it. The deluxe now only takes a rating from a separate old deluxe album it is absorbing, never from the standard album itself.'},
   {v:'2026.11.17-d', note:'EVEN FEWER SPOTIFY CALLS: during a Spotify import, a plain one-song single (no brackets or dash in its title, and no other release with the same title) no longer costs a request to read its tracklist, because its song is just its own title. Anything with an edition, a remix tag, more than one song, or a saved copy is read exactly as before. Same discography, fewer requests, so more artists fit in a day.'},
@@ -4226,7 +4232,7 @@ function tmBar(x){
   }
   return h;
 }
-const tmPoster=x=>x.poster?`<img class="poster" src="${TM_IMG}w154${esc(x.poster)}" alt="" width="62" height="93" decoding="async" onerror="this.remove()">`:'';
+const tmPoster=x=>x.poster?`<img class="poster" src="${TM_IMG}w154${esc(x.poster)}" alt="" width="62" height="93" decoding="async" onerror="coverErr(this)">`:'';
 
 /* ---------- UI state ---------- */
 let S=load();
@@ -4393,7 +4399,7 @@ function rhRow(e,i,anim){
   const sub=[e.a.name,yr,kind].filter(Boolean).join(' · ');
   const stars=[1,2,3,4,5].map(k=>`<i class="hs" style="--f:${e.r>=2*k?100:e.r>=2*k-1?50:0}%"></i>`).join('');
   return `<li class="hr"${st}>${badge}<button type="button" class="hmain" data-act="hgo" data-a="${esc(e.a.id)}" data-g="${esc(e.g.id)}" data-dx="${e.dx?1:''}" aria-label="Open ${esc(e.title)} by ${esc(e.a.name)}, rated ${fmt(e.r)} out of 10">
-    <span class="hcov" aria-hidden="true"><span>${esc((e.title.match(/[\p{L}\p{N}]/u)||['?'])[0].toUpperCase())}</span>${e.art?`<img src="${esc(e.art)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span>
+    <span class="hcov" aria-hidden="true"><span>${esc((e.title.match(/[\p{L}\p{N}]/u)||['?'])[0].toUpperCase())}</span>${e.art?`<img src="${esc(e.art)}" alt="" loading="lazy" decoding="async" onerror="coverErr(this)">`:''}</span>
     <span class="hn"><b>${esc(e.title)}</b><span>${esc(sub)}</span></span>
     <span class="hrt" aria-hidden="true"><span class="hss">${stars}</span><span class="hsc">${e.n>1?`<em class="hls" title="Heard ${e.n} times">\u21bb${e.n}</em> `:''}${fmt(e.r)}</span></span></button></li>`;
 }
@@ -4503,7 +4509,7 @@ function lCover(x){let best=null,bs=-1;
 function lTile(s,e){const x=s.x,cv=lCover(x),pic=x.simg||(cv&&cv.u)||'',col=(cv&&ACOL[cv.g.id])||acolFallback({title:x.name,id:x.id}),
   ini=([...lName(x)][0]||'#').toUpperCase(),cor=!!(cv&&cv.sc>0),rv=s.r?fmt(Math.round(s.r*10)/10):'',
   lab=x.name+', '+(s.p>=100?'finished':s.p+'% heard')+(rv?', rated '+rv:'');
-  return `<button class="tile${s.p>=100?' done':''}" data-act="sel" data-id="${x.id}" aria-current="${!!(e&&e.id===x.id)}" aria-label="${esc(lab)}"><span class="tpack" style="--p:${s.p};--tl:${esc(col)}"><span class="tdisc" data-td="${esc(x.id)}" aria-hidden="true"><i></i></span><span class="tcov" style="--ac:${esc(col)}"><span class="tini" aria-hidden="true">${esc(ini)}</span>${pic?`<img src="${esc(pic)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${cor?`<span class="tcorner" title="${esc('Your best-rated album: '+(cv.g.title||''))}"><img src="${esc(cv.u)}" alt="" loading="lazy" decoding="async" onerror="this.parentNode.remove()"></span>`:''}${rv?`<span class="trate" title="Your average rating">${rv}</span>`:''}</span></span><span class="tn">${esc(x.name)}${x.example?'<span class="ex">Example</span>':''}</span><span class="tm">${s.p>=100?'Finished':s.p+'% heard'}</span></button>`}
+  return `<button class="tile${s.p>=100?' done':''}" data-act="sel" data-id="${x.id}" aria-current="${!!(e&&e.id===x.id)}" aria-label="${esc(lab)}"><span class="tpack" style="--p:${s.p};--tl:${esc(col)}"><span class="tdisc" data-td="${esc(x.id)}" aria-hidden="true"><i></i></span><span class="tcov" style="--ac:${esc(col)}"><span class="tini" aria-hidden="true">${esc(ini)}</span>${pic?`<img src="${esc(pic)}" alt="" loading="lazy" decoding="async" onerror="coverErr(this)">`:''}${cor?`<span class="tcorner" title="${esc('Your best-rated album: '+(cv.g.title||''))}"><img src="${esc(cv.u)}" alt="" loading="lazy" decoding="async" onerror="this.parentNode.remove()"></span>`:''}${rv?`<span class="trate" title="Your average rating">${rv}</span>`:''}</span></span><span class="tn">${esc(x.name)}${x.example?'<span class="ex">Example</span>':''}</span><span class="tm">${s.p>=100?'Finished':s.p+'% heard'}</span></button>`}
 const L_ADD='<button class="tile add" data-act="addart"><span class="tcov"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="tn">Add an artist</span></button>';
 /* the A-Z rail beside the wall: the letters that have artists, in the order the list shows them */
 let LRAIL=[];
@@ -4523,7 +4529,7 @@ function lAlbums(sums,q){
   const tile=({a,g})=>{const u=g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-250':''),
     col=ACOL[g.id]||acolFallback({title:g.title,id:g.id}),r=rating(g.id),rv=r?fmt(r):'',ini=([...lName(g)][0]||'#').toUpperCase(),
     lab=g.title+' by '+a.name+(rv?', rated '+rv:'');
-    return `<button class="tile alb" data-act="selalb" data-id="${a.id}" data-g="${esc(String(g.id))}" aria-label="${esc(lab)}"><span class="tcov" style="--ac:${esc(col)}"><span class="tini" aria-hidden="true">${esc(ini)}</span>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${rv?`<span class="trate" title="Your rating">${rv}</span>`:''}</span><span class="tn">${esc(g.title)}</span><span class="ts">${esc(a.name)}${/^\d{4}/.test(g.year||'')?' \u00b7 '+esc(String(g.year).slice(0,4)):''}</span></button>`};
+    return `<button class="tile alb" data-act="selalb" data-id="${a.id}" data-g="${esc(String(g.id))}" aria-label="${esc(lab)}"><span class="tcov" style="--ac:${esc(col)}"><span class="tini" aria-hidden="true">${esc(ini)}</span>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="coverErr(this)">`:''}${rv?`<span class="trate" title="Your rating">${rv}</span>`:''}</span><span class="tn">${esc(g.title)}</span><span class="ts">${esc(a.name)}${/^\d{4}/.test(g.year||'')?' \u00b7 '+esc(String(g.year).slice(0,4)):''}</span></button>`};
   return `<section class="lsect"><div class="lsec" data-sec="Albums"><span>Albums</span><span>${hits.length}</span></div><div class="lgrid">${shown.map(tile).join('')}</div></section>`}
 function sideList(list,e){
   LRAIL=[];
@@ -4836,7 +4842,7 @@ function colArt(x){const {a,g}=colMatch(x);
   const mb=g&&(g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-250':''))||'';
   const own=x.photos&&x.photos.front&&x.photos.front.url;
   return{a,g,art:own||x.cover||mb||x.thumb||'',key:own||mb||x.thumb||''}}
-function colCover(x,art){return `<span class="rec-cover">${art?`<img src="${esc(art)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}<span class="sl-ph" aria-hidden="true">${esc((x.title||'?').trim().charAt(0).toUpperCase())}</span></span>`}
+function colCover(x,art){return `<span class="rec-cover">${art?`<img src="${esc(art)}" alt="" loading="lazy" decoding="async" onerror="coverErr(this)">`:''}<span class="sl-ph" aria-hidden="true">${esc((x.title||'?').trim().charAt(0).toUpperCase())}</span></span>`}
 function colCard(x){
   const {art,key}=colArt(x),col=acolFor('c_'+x.id,key,{title:x.title,id:x.id}),v=vinylLook(x,art),open=UI.colOpen===x.id;
   const sub=[x.color||(x.fmt?'Black':''),x.year].filter(Boolean).join(' · ');
@@ -6009,7 +6015,7 @@ function artistView(a){
         ${listBtn(g,a)}${relBtn(g)}
         <div class="sl-pack">
           <div class="sl-disc" role="img" aria-label="${gd} of ${shown.length} songs heard">${ringHtml}<span class="sl-lab">${shown.length?gd+'/'+shown.length:'\u2013'}</span></div>
-          <div class="sl-cover">${art?`<img src="${esc(art)}" ${dx&&sArt&&art!==sArt?`data-f="${esc(sArt)}" `:''}alt="" loading="lazy" decoding="async" onerror="if(this.dataset.f){this.src=this.dataset.f;this.removeAttribute('data-f')}else this.remove()">`:''}<span class="sl-ph" aria-hidden="true">${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div>
+          <div class="sl-cover">${art?`<img src="${esc(art)}" ${dx&&sArt&&art!==sArt?`data-f="${esc(sArt)}" `:''}alt="" loading="lazy" decoding="async" onerror="if(this.dataset.f){this.src=this.dataset.f;this.removeAttribute('data-f')}else coverErr(this)">`:''}<span class="sl-ph" aria-hidden="true">${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div>
         </div>
         <div class="sl-meta"><span class="sl-kind">${esc(g.kind)} \u00b7 ${esc(g.year)}</span><h3>${esc(dx?dxName(g):g.title)}</h3>${dx?'<span class="dxbadge">Deluxe</span>':''}${g.w&&g.w.length?`<span class="sl-w">with ${esc(g.w.join(' & '))}</span>`:''}<span class="sl-sub">${gd} of ${shown.length} heard</span>${rdLine(g,dx)}${lsPager(g)}${UI.wEdit===g.id?`<form class="sl-wf" data-form="gwith" data-a="${a.id}" data-g="${g.id}"><input name="w" value="${esc((g.w||[]).join(' & '))}" placeholder="Other artist, like Kenny Beats" aria-label="Collab with" autocomplete="off" autocapitalize="words"><button>Save</button></form>`:''}</div>
       </div>
