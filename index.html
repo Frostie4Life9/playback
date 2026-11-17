@@ -964,7 +964,7 @@ details.addart .add{border-top:1px solid var(--line)}
   .shell>.side .llist{flex:1 1 auto;min-height:160px;max-height:none;overscroll-behavior:auto}   /* at the list's end the wheel carries on to the page, which brings the column's bottom into view */
 }
 .llist.wall .lsec{top:0;padding:10px 2px 8px;z-index:4}
-.lgrid{grid-template-columns:repeat(auto-fill,minmax(clamp(150px,8vw,230px),1fr));gap:24px 18px;padding:6px 2px 14px}
+.lgrid{grid-template-columns:repeat(auto-fill,minmax(clamp(150px,8vw,230px),1fr));gap:24px 18px;padding:6px 8px 14px}
 /* an artist is a sleeve with its record sliding out: the more you have heard, the further out it sits. The record is
    pressed from the same colors and look as the one that opens (see tdPaint). */
 .tile{gap:8px}
@@ -979,7 +979,7 @@ details.addart .add{border-top:1px solid var(--line)}
 .tm{margin-top:-4px;font:500 11px var(--mono);letter-spacing:.04em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (prefers-reduced-motion:no-preference){
   .tdisc{transition:left .5s cubic-bezier(.2,.8,.2,1)}
-  .tile:hover .tdisc{left:calc(12% + var(--p,0)*.236%)}
+  .tile:hover .tdisc{left:calc(12% + var(--p,0)*.204%)}   /* meets the resting spot at 100% heard, so it never slides past the end of the sleeve */
 }
 /* small text on the artist card sits on moving color, so it takes the ink instead of the gray */
 .head.hero .hstats span,.head.hero .hstats b small,.head.hero .note,.head.hero .mbsrc .label{color:color-mix(in srgb,var(--ink) 86%,transparent)}
@@ -1583,6 +1583,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-t', note:'EDGE FIXES: the green ring around the open artist on the wall is no longer clipped on the left edge, and a record sliding out on hover now stops at the end of its sleeve instead of poking past it (it overshot by a few percent, worst on well-heard artists).'},
   {v:'2026.11.16-s', note:'RATING ANIMATION NO LONGER CUTS OUT: the page redraws itself about a second and a half after you rate (your sync starting and finishing), and that rebuilt the record in the middle of the effect. A redraw now picks the effect up exactly where it was, so it plays through every time.'},
   {v:'2026.11.16-r', note:'SOFTER ENDING: the rating animation no longer cuts off. The ripple, glint, shockwave and flare run a little longer and fade out gradually, and nothing is removed until it has finished.'},
   {v:'2026.11.16-q', note:'SMOOTHER RATING ANIMATION: the grooves now swell with a GPU transform instead of resizing every frame, the glows are lighter, and the glint and shockwave sit on their own layers, so the effect should no longer lag.'},
