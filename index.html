@@ -972,6 +972,26 @@ details.addart .add{border-top:1px solid var(--line)}
 .fly.clear{box-shadow:inset 0 0 0 1.5px rgb(255 255 255 / .45)}
 .fly-s{position:absolute;inset:0;border-radius:50%}
 .fly i{position:absolute;left:28.2%;top:28.2%;width:43.6%;height:43.6%;border-radius:50%}
+
+/* ===== 2026.11.16-c ===== */
+/* liquid record on the turntable: the paint is real shapes inside the record, moved every frame (see liqTick) */
+.hspin .hliq{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hspin.liq::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;background:repeating-radial-gradient(circle,rgb(0 0 0 / .26) 0 1px,transparent 1px 3.2px)}
+.fly-s .hliq{position:absolute;inset:0;width:100%;height:100%;display:block}
+/* a dark album keeps its dark banner, but on the dark theme its song rows would wash black on black.
+   The row wash is lifted to a mid tone of the same hue (a black album washes smoke gray), so the gradient shows. */
+@supports (color:oklch(from red l c h)){
+  :root[data-theme="dark"] .group.sleeve{--acsw:oklch(from var(--acs) .5 c h);--acdw:oklch(from var(--acd) .5 c h)}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .group.sleeve{--acsw:oklch(from var(--acs) .5 c h);--acdw:oklch(from var(--acd) .5 c h)}}
+}
+/* which releases, in what order */
+.relbar{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;justify-content:space-between}
+.rseg{display:flex;gap:2px;padding:4px;border-radius:999px;background:var(--sunk);border:1px solid var(--line);max-width:100%;overflow-x:auto;scrollbar-width:none}
+.rseg::-webkit-scrollbar{display:none}
+.rseg button{flex:0 0 auto;min-height:40px;padding:0 14px;border:0;border-radius:999px;background:transparent;color:var(--muted);font-size:13px;font-weight:600;white-space:nowrap}
+.rseg button .c{font-family:var(--mono);font-size:11px;font-weight:500;opacity:.8;margin-left:6px}
+.rseg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);font-weight:700}
+.rsort select{border:1px solid var(--line);padding-left:16px;max-width:100%}
 </style>
 
 <!-- suite:css v10 · shared by Kitchen, Grocery, Lift, DishLog, Protocol, Rail, Game Log, Playback — edit tools/suite.py in the kitchen repo, not here -->
@@ -1501,6 +1521,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-c', note:'RELEASES: under the artist card you can now show just Albums, EPs, Singles or Other, and sort the discography: newest or oldest first, by how you rated it (high or low), most or least heard, or by title. The sort is remembered; the kind resets when you open another artist. SPLATTER: no more neat rings. Each song is thrown at a random spot again, at loose angles with stray drops, but every one looks for room first, so they rarely land on each other. LIQUID: the liquid record now behaves like liquid in a spinning dish. When the record starts the paint is left behind and smears into arcs, catches up, is pushed outward as the speed builds, and keeps slipping slowly round; bubbles drift toward the middle. DARK ALBUMS: a black or very dark album keeps its dark banner, but its song rows now wash in a lighter tone of the same color so the rating gradient shows.'},
   {v:'2026.11.16-b', note:'RECORD ON THE TURNTABLE: pick an artist on the wall and its record slides out of the sleeve, is carried over and set down on the turntable, then the arm comes across and it spins up. The open artist\'s sleeve stays empty while its record is playing. SLEEVED BACK: the record you were on is lifted off and slid back into its own sleeve, and its next look slides out from inside instead of snapping to a new design. SPLATTER: every rated song now has a spot of its own, so splatters no longer cover each other and all of them can be seen; higher ratings are still bigger. LIQUID: the liquid records move, the paint drifts and swells and the bubbles wander.'},
   {v:'2026.11.16-a', note:'THE CRATE: the frame now matches the albums. Music, Screen, Collection and Settings are one switch like Everything / Still to hear, the sync status is plain text, and the artist list has a big title, one search bar with the sort inside it, and a single All / Started / New / Done switch. Each artist is a sleeve with its record sliding out: the more you have heard, the further out it sits. That record is pressed from the albums you rated and is the same one that opens, and an artist gets a new look each time you leave it. SPLATTER: the splatter records were drawn off-center and are fixed. Each splatter is now one song you rated, in its album color, and the higher the rating the bigger the splatter. GROOVE LIGHT: when you rate a song for the first time or tick it heard, its groove on the album record flares as the number lands, a glint runs around the record and the count jumps. The small text on the artist card is also easier to read.'},
   {v:'2026.11.15-h', note:'CLEAR SPLATTER VINYL: the two splatter records (streak splatter and flung paint) are now pressed on clear vinyl. The black backing is gone, so the glow behind the card shows through the record, with just the grooves, a glassy rim and the paint on top.'},
@@ -4679,30 +4700,43 @@ function hStreak(cx,cy,th,L,r,col){const dx=Math.cos(th),dy=Math.sin(th),px=-dy,
   const cl=[cx+dx*L*.5+px*r*.35,cy+dy*L*.5+py*r*.35],cr=[cx+dx*L*.5-px*r*.35,cy+dy*L*.5-py*r*.35];
   return '<path d="M'+hf(l[0])+' '+hf(l[1])+' Q'+hf(cl[0])+' '+hf(cl[1])+' '+hf(tip[0])+' '+hf(tip[1])+' Q'+hf(cr[0])+' '+hf(cr[1])+' '+hf(rt[0])+' '+hf(rt[1])+' A'+hf(r)+' '+hf(r)+' 0 0 0 '+hf(l[0])+' '+hf(l[1])+'Z" fill="'+col+'"/>'}
 /* Splatter: one splatter per rated song, in its album's color, and the higher the rating the bigger it is.
-   Every song gets a cell of its own, so no two overlap and all of them can be seen: the band between the label
-   and the rim is cut into rings, each ring into equal slots, and a song's paint stays inside its slot. More
-   songs means more rings and smaller cells. Songs are dealt into slots in a fixed shuffled order, so big and
-   small ratings mix. blob = flung paint (round splats), otherwise streaks thrown in from the rim.
-   cap keeps only the top-rated songs. */
+   It is thrown, not laid out: each song tries a handful of random spots and takes the one that crowds the
+   others least, biggest songs first, so the record still reads as a splatter but paint rarely lands on paint.
+   Sizes are scaled so the paint covers about the same share of the record however many songs there are.
+   blob = flung paint (round splats with drops), otherwise streaks thrown in from the rim at loose angles.
+   cap keeps only the top-rated songs. The last result per artist is kept, since the search is not free. */
+const HSP={};
 function hSplat(songs,aid,blob,cap){
   let L=songs.slice().sort((x,y)=>y.r-x.r||(x.id<y.id?-1:1));if(cap&&L.length>cap)L=L.slice(0,cap);
+  const key=aid+'|'+(blob?1:0)+'|'+(cap||0),sig=L.map(x=>x.id+':'+x.r+x.col).join(','),hit=HSP[key];if(hit&&hit.sig===sig)return hit.svg;
   const N=L.length,sz=r=>.3+.7*Math.pow(r/10,1.7),C=(x,y,r,c)=>'<circle cx="'+hf(x)+'" cy="'+hf(y)+'" r="'+hf(r)+'" fill="'+c+'"/>';
-  let out='';
-  if(N){
-    L=L.map(x=>[hseed(aid+':'+x.id),x]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
-    const R0=64,R1=135,span=R1-R0,K=Math.max(1,Math.min(9,Math.round(Math.sqrt(.1136*N/(blob?1:2.4))))),h=span/K;
-    const mids=[];for(let i=0;i<K;i++)mids.push(R1-(i+.5)*h);
-    const tot=mids.reduce((q,x)=>q+x,0),cnt=mids.map(m=>Math.max(1,Math.round(N*m/tot)));
-    let d=N-cnt.reduce((q,x)=>q+x,0);for(let i=0;d!==0;i=(i+1)%K){if(d>0){cnt[i]++;d--}else if(cnt[i]>1){cnt[i]--;d++}}
-    const rnd=hrng(hseed(aid+':s'));let k=0;
-    for(let i=0;i<K&&k<N;i++){const n=cnt[i],rm=mids[i],ro=rm+h/2,cw=2*Math.PI*rm/n,off=rnd()*2*Math.PI;
-      for(let j=0;j<n&&k<N;j++,k++){const s=L[k],f=sz(s.r),an=off+(j+.5+(rnd()-.5)*.16)/n*2*Math.PI;
-        if(blob){const R=Math.max(1.2,Math.min(cw,h,46)/2*.84*f),rr=rm+(rnd()-.5)*Math.max(0,h-2*R-2)*.7,cx=HC+Math.cos(an)*rr,cy=HC+Math.sin(an)*rr;
-          out+=C(cx,cy,R*.82,s.col);
-          for(let q=0;q<3;q++){const t=rnd()*2*Math.PI;out+=C(cx+Math.cos(t)*R*.42,cy+Math.sin(t)*R*.42,R*(.4+rnd()*.16),s.col)}}
-        else{const hw=Math.max(.7,Math.min(cw*.34,5.5)*f),len=Math.max(3,(h-2)*f-hw),st=ro-1-hw;
-          out+=hStreak(HC+Math.cos(an)*st,HC+Math.sin(an)*st,an+Math.PI+(rnd()-.5)*.06,len,hw,s.col)}}}}
-  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 280" width="280" height="280"><defs><clipPath id="c"><circle cx="140" cy="140" r="140"/></clipPath><filter id="f"><feGaussianBlur stdDeviation=".3"/></filter></defs><g clip-path="url(#c)"><g filter="url(#f)" opacity=".96">'+out+'</g></g></svg>'}
+  const R0=64,R1=136,band=Math.PI*(R1*R1-R0*R0),rnd=hrng(hseed(aid+':s')),put=[];
+  const gap=(x,y,r)=>{let m=1e9;for(const q of put){const d=Math.hypot(x-q[0],y-q[1])-q[2]-r;if(d<m)m=d}return m};
+  let out='',f2=0;for(const x of L)f2+=sz(x.r)*sz(x.r);
+  if(blob){const k=Math.min(21,Math.sqrt(band*.4/(1.35*Math.PI*Math.max(f2,.01))));
+    for(const x of L){const R=Math.max(1.4,k*sz(x.r)),lo=R0+R+1,hi=Math.max(lo+1,R1-R-1);let best=null,bs=-1e9;
+      for(let t=0;t<16;t++){const an=rnd()*2*Math.PI,rr=Math.sqrt(lo*lo+rnd()*(hi*hi-lo*lo)),px=HC+Math.cos(an)*rr,py=HC+Math.sin(an)*rr,g=gap(px,py,R*1.08);
+        if(g>bs){bs=g;best=[px,py]}if(g>1.5)break}
+      const cx=best[0],cy=best[1];put.push([cx,cy,R*1.08]);
+      out+=C(cx,cy,R*.78,x.col);
+      const nl=3+Math.floor(rnd()*3);for(let j=0;j<nl;j++){const t=rnd()*2*Math.PI,d=R*(.4+rnd()*.32);out+=C(cx+Math.cos(t)*d,cy+Math.sin(t)*d,R*(.3+rnd()*.26),x.col)}
+      const fl=rnd()*2*Math.PI,nd=1+Math.floor(rnd()*2);
+      for(let j=0;j<nd;j++){const d=R*(1.25+j*.4+rnd()*.25),px=cx+Math.cos(fl)*d,py=cy+Math.sin(fl)*d,dd=Math.hypot(px-HC,py-HC);
+        if(dd>R1||dd<R0)continue;out+=C(px,py,Math.max(.6,R*(.13-j*.04)+rnd()*.3),x.col)}}}
+  else{const k=Math.min(5.5,Math.sqrt(band*.3/(11*Math.max(f2,.01))));
+    for(const x of L){const f=sz(x.r),hw=Math.max(.7,k*f),len=Math.min(R1-R0-hw-4,Math.max(4,k*f*9)),lo=R0+len+2,hi=Math.max(lo+1,R1-hw-1);let best=null,bs=-1e9;
+      for(let t=0;t<16;t++){const an=rnd()*2*Math.PI,rh=Math.sqrt(lo*lo+rnd()*(hi*hi-lo*lo)),th=an+Math.PI+(rnd()-.5)*.7;
+        const hx=HC+Math.cos(an)*rh,hy=HC+Math.sin(an)*rh,dx=Math.cos(th),dy=Math.sin(th);
+        const g=Math.min(gap(hx,hy,hw),gap(hx+dx*len*.36,hy+dy*len*.36,hw*.72),gap(hx+dx*len*.72,hy+dy*len*.72,hw*.4));
+        if(g>bs){bs=g;best=[hx,hy,th,an,rh]}if(g>1.2)break}
+      const hx=best[0],hy=best[1],th=best[2],dx=Math.cos(th),dy=Math.sin(th);
+      put.push([hx,hy,hw],[hx+dx*len*.36,hy+dy*len*.36,hw*.72],[hx+dx*len*.72,hy+dy*len*.72,hw*.4]);
+      out+=hStreak(hx,hy,th,len,hw,x.col);
+      const nd=Math.floor(rnd()*3);   /* a drop or two thrown past the head */
+      for(let j=0;j<nd;j++){const d=hw*(1.5+rnd()*1.3),q=(rnd()-.5)*1.6,px=hx-Math.cos(th+q)*d,py=hy-Math.sin(th+q)*d;
+        if(Math.hypot(px-HC,py-HC)>R1)continue;out+=C(px,py,Math.max(.5,hw*(.2+rnd()*.22)),x.col)}}}
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 280" width="280" height="280"><defs><clipPath id="c"><circle cx="140" cy="140" r="140"/></clipPath><filter id="f"><feGaussianBlur stdDeviation=".35"/></filter></defs><g clip-path="url(#c)"><g filter="url(#f)" opacity=".96">'+out+'</g></g></svg>';
+  HSP[key]={sig,svg};return svg}
 /* anim: the paint drifts, swells and the bubbles wander (SMIL inside the image, so the record can still spin under CSS) */
 function hLiquid(P,rnd,anim){
   const SP='calcMode="spline" keySplines=".45 0 .55 1;.45 0 .55 1;.45 0 .55 1" repeatCount="indefinite"';
@@ -4742,8 +4776,9 @@ function heroBlobs(P,off,sx,sy,boost){
     return 'radial-gradient(circle at '+px+'% '+py+'%,color-mix(in srgb,'+x.col+' '+Math.min(95,Math.round(boost*(42+x.w*42)))+'%,transparent) 0,transparent '+Math.round(24+x.w*26)+'%)'}).join(',')}
 function heroVars(a){
   const P=heroPalette(a),songs=hClear()?heroSongs(a):null;
-  if(!P.length)return{'--ac':heroColor(a).col,'--hbg':'','--hbg2':'','--hbg3':'','--hdisc':songs&&songs.length?hDisc(P,HSTY.n,a.id,songs,0,!noMotion()):''};
-  return{'--ac':P[0].col,'--hbg':heroBlobs(P,-60,1,.5,1),'--hbg2':heroBlobs(P,120,1,.5,.9),'--hbg3':heroBlobs(P,30,1,.5,.8),'--hdisc':hDisc(P,HSTY.n,a.id,songs,0,!noMotion())}}
+  if(!P.length)return{'--ac':heroColor(a).col,'--hbg':'','--hbg2':'','--hbg3':'','--hdisc':songs&&songs.length?hDisc(P,HSTY.n,a.id,songs):''};
+  const live=HSTY.n===9&&!noMotion();   /* the liquid record is drawn live inside the record (liqMount), not as a picture */
+  return{'--ac':P[0].col,'--hbg':heroBlobs(P,-60,1,.5,1),'--hbg2':heroBlobs(P,120,1,.5,.9),'--hbg3':heroBlobs(P,30,1,.5,.8),'--hdisc':live?'none':hDisc(P,HSTY.n,a.id,songs)}}
 /* The records on the artist tiles. Each artist gets a small style rule of its own holding its record, rebuilt only
    when that artist's ratings, colors or look change, so a redraw of the list costs nothing. Splatter records keep
    the 70 top-rated songs at this size. */
@@ -4765,10 +4800,44 @@ function heroStyle(a){const v=heroVars(a);return Object.keys(v).filter(k=>v[k]).
 function heroPaint(){const el=document.querySelector('.hero[data-aid]');if(!el)return;
   const a=S.music.find(x=>x.id===el.dataset.aid);if(!a)return;
   const v=heroVars(a);for(const k in v){if(v[k])el.style.setProperty(k,v[k]);else el.style.removeProperty(k)}
-  el.classList.toggle('hclear',hClear())}
+  el.classList.toggle('hclear',hClear());liqMount(el,a)}
 /* The record spins up and the arm drops when an artist opens. A redraw of the same artist keeps spinning
    from where it was; leaving the Music tab and coming back opens it again. */
 const HERO={aid:null,ang:0,spd:0,raf:0,last:0,begin:0,el:null};
+/* Liquid record: the paint is carried by the spin the way liquid in a spinning dish is. Each blob has its own
+   speed that is dragged toward the record's speed, so when the record starts the paint is left behind and smears
+   into arcs, then catches up; it is thrown outward as the speed builds; and it never quite matches the record,
+   so it keeps slipping slowly round. Bubbles are light, so they slip more and drift toward the middle. */
+const LIQ={sig:'',b:[],u:[],c:0,svg:null,bn:[],un:[]};
+function liqMount(hero,a){const spin=hero.querySelector('.hspin');if(!spin)return;
+  const P=HSTY.n===9&&!noMotion()?heroPalette(a):[];
+  if(!P.length){if(spin.firstChild)spin.textContent='';spin.classList.remove('liq');LIQ.svg=null;return}
+  const sig=a.id+'|'+P.map(x=>x.col+x.w.toFixed(2)).join(','),rnd=hrng(hseed(a.id+':9')),b=[],u=[];
+  for(const x of P){const n=Math.round(x.w*4)+1;
+    for(let k=0;k<n;k++){const r0=68+rnd()*46,rad=13+x.w*20+rnd()*6;
+      b.push({an0:rnd()*2*Math.PI,r0,r1:Math.min(126-rad*.35,r0+14+rnd()*16),rad,col:x.col,eps:.02+rnd()*.055,k:1.1+rnd()*1.7,f:.5+rnd()*.9,ph:rnd()*6.28,om:0,lag:0})}}
+  for(let k=0;k<16;k++){const r0=70+rnd()*56;u.push({an0:rnd()*2*Math.PI,r0,r1:70+(r0-70)*.35,r:[1.6,2.2,3,4,5.5][Math.floor(rnd()*5)],eps:.1+rnd()*.14,k:2.4+rnd()*1.6,om:0,lag:0})}
+  if(LIQ.sig===sig){b.forEach((x,i)=>{if(LIQ.b[i]){x.om=LIQ.b[i].om;x.lag=LIQ.b[i].lag}});u.forEach((x,i)=>{if(LIQ.u[i]){x.om=LIQ.u[i].om;x.lag=LIQ.u[i].lag}})}
+  else LIQ.c=0;
+  LIQ.sig=sig;LIQ.b=b;LIQ.u=u;
+  let glass='';for(const r of [135,136.6,138.2,56,57.6,59.2])glass+='<circle cx="140" cy="140" r="'+r+'" fill="none" stroke="rgba(255,255,255,.10)" stroke-width=".8"/>';
+  glass+='<circle cx="140" cy="140" r="139" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.4"/><circle cx="140" cy="140" r="132" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.2"/><circle cx="140" cy="140" r="62" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.2"/>';
+  spin.classList.add('liq');
+  spin.innerHTML='<svg class="hliq" viewBox="0 0 280 280" aria-hidden="true"><defs><mask id="lqm"><rect width="280" height="280" fill="black"/><circle cx="140" cy="140" r="132" fill="white"/><circle cx="140" cy="140" r="62" fill="black"/></mask><filter id="lqg" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9"/></filter></defs>'
+    +'<g mask="url(#lqm)"><rect width="280" height="280" fill="'+hDark(P[0].col,60)+'"/><g filter="url(#lqg)">'+b.map(x=>'<ellipse class="lb" fill="'+x.col+'"/>').join('')+'</g>'
+    +u.map(x=>'<g class="lu"><circle r="'+x.r+'" fill="rgba(255,255,255,.10)" stroke="rgba(255,255,255,.55)" stroke-width=".7"/><circle cx="'+hf(-x.r*.3)+'" cy="'+hf(-x.r*.35)+'" r="'+hf(x.r*.28)+'" fill="rgba(255,255,255,.85)"/></g>').join('')+'</g>'+glass+'</svg>';
+  LIQ.svg=spin.firstChild;LIQ.bn=[...LIQ.svg.querySelectorAll('.lb')];LIQ.un=[...LIQ.svg.querySelectorAll('.lu')];liqTick(0,HERO.spd,performance.now())}
+function liqTick(dt,spd,t){if(!LIQ.svg||!LIQ.svg.isConnected)return;
+  const h=dt/1000,D=Math.PI/180;LIQ.c+=(Math.pow(spd/200,2)-LIQ.c)*Math.min(1,h*.8);
+  LIQ.b.forEach((b,i)=>{const n=LIQ.bn[i];if(!n)return;
+    b.om+=(spd*(1-b.eps)-b.om)*Math.min(1,h*b.k);b.lag+=(b.om-spd)*h;
+    const st=1+Math.min(1.6,Math.abs(spd-b.om)/42),an=b.an0+b.lag*D,rr=b.r0+(b.r1-b.r0)*LIQ.c+Math.sin(t/1000*b.f+b.ph)*3.5*(.25+LIQ.c);
+    const cx=HC+Math.cos(an)*rr,cy=HC+Math.sin(an)*rr;
+    n.setAttribute('cx',cx.toFixed(1));n.setAttribute('cy',cy.toFixed(1));n.setAttribute('rx',(b.rad*st).toFixed(1));n.setAttribute('ry',(b.rad/Math.sqrt(st)).toFixed(1));
+    n.setAttribute('transform','rotate('+(an/D+90).toFixed(1)+' '+cx.toFixed(1)+' '+cy.toFixed(1)+')')});
+  LIQ.u.forEach((b,i)=>{const n=LIQ.un[i];if(!n)return;
+    b.om+=(spd*(1-b.eps)-b.om)*Math.min(1,h*b.k);b.lag+=(b.om-spd)*h;
+    const an=b.an0+b.lag*D,rr=b.r0+(b.r1-b.r0)*LIQ.c;n.setAttribute('transform','translate('+(HC+Math.cos(an)*rr).toFixed(1)+' '+(HC+Math.sin(an)*rr).toFixed(1)+')')})}
 const noMotion=()=>!!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches);
 /* Picking an artist on the wall: its record slides out of the sleeve, is carried over and set down on the
    turntable, then the arm comes across and it spins up. The record that was playing is lifted off and slid
@@ -4785,11 +4854,12 @@ function tileSeen(T,g){const e=document.elementFromPoint(g.cx,g.cy);return !!(e&
 function discSnap(hero){const d=hero.querySelector('.hdisc'),sp=hero.querySelector('.hspin'),l=hero.querySelector('.hlab');if(!d||!sp||!l)return null;
   const cs=getComputedStyle(sp),w=d.getBoundingClientRect().width;if(!w)return null;
   return{bi:cs.backgroundImage,bs:cs.backgroundSize,bp:cs.backgroundPosition,br:cs.backgroundRepeat,bc:cs.backgroundColor,
-    dc:hero.classList.contains('hclear')?'transparent':'#0b0d0c',lc:getComputedStyle(l).backgroundColor,clear:hero.classList.contains('hclear'),w}}
+    dc:hero.classList.contains('hclear')?'transparent':'#0b0d0c',lc:getComputedStyle(l).backgroundColor,clear:hero.classList.contains('hclear'),w,svg:sp.classList.contains('liq')?sp.innerHTML:''}}
 function discEl(sn,ang){const w=document.createElement('div');w.className='flyw';w._w=sn.w;w.style.width=w.style.height=sn.w+'px';
   w.innerHTML='<div class="fly'+(sn.clear?' clear':'')+'"><div class="fly-s"></div><i></i></div>';
   const f=w.firstChild,sp=f.firstChild;f.style.backgroundColor=sn.dc;f.lastChild.style.background=sn.lc;
   Object.assign(sp.style,{backgroundImage:sn.bi,backgroundSize:sn.bs,backgroundPosition:sn.bp,backgroundRepeat:sn.br,backgroundColor:sn.bc,transform:'rotate('+(ang||0)+'deg)'});
+  if(sn.svg)sp.innerHTML=sn.svg;
   return w}
 /* put the flying record at x,y with diameter d; xc = the sleeve's open edge, and whatever is left of it is inside the sleeve (clipped) */
 function flyPut(w,x,y,d,xc){w.style.transform='translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px) scale('+(d/w._w).toFixed(4)+')';
@@ -4838,6 +4908,7 @@ function heroStart(){
     if(prev){const o=HSTY.list.filter(x=>x!==HLOOK[prev]);HLOOK[prev]=o[Math.floor(Math.random()*o.length)];TD.lv++}   /* the artist you left gets a new look for next time */
     heroPaint()}
   const F=UI.fly;UI.fly=null;
+  {const a=S.music.find(x=>x.id===el.dataset.aid);if(a)liqMount(el,a)}
   if(noMotion()){el.classList.add('play');return}
   const aid=el.dataset.aid;HERO.el=spin;
   if(HERO.aid===aid){
@@ -4854,6 +4925,7 @@ function heroTick(t){
   const q=Math.max(0,Math.min(1,(t-HERO.begin)/1600));HERO.spd=200*q*q*(3-2*q);
   HERO.ang=(HERO.ang+HERO.spd*dt/1000)%360;
   el.style.transform='rotate('+HERO.ang.toFixed(2)+'deg)';
+  liqTick(dt,HERO.spd,t);
   HERO.raf=requestAnimationFrame(heroTick)}
 const ICO={
   mark:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h11v17L12 16.5l-5.5 4z"/></svg>',
@@ -5279,9 +5351,29 @@ function listenSide(){
     </div></div>`}
 const llCount=()=>listenAll().map(llResolve).filter(r=>!r.heard).length;
 
+/* Which of an artist's releases show, and in what order. The kind filter belongs to the artist you are on
+   (it resets when you open another); the sort order is remembered. */
+const REL_SORTS={def:'Default order',new:'Newest first',old:'Oldest first',rhi:'My rating: high to low',rlo:'My rating: low to high',heard:'Most heard first',left:'Least heard first',az:'Title A to Z'};
+const REL_KINDS={all:'All',alb:'Albums',ep:'EPs',sin:'Singles',oth:'Other'};
+const relKindOf=g=>g.kind==='Studio album'?'alb':g.kind==='EP'?'ep':g.kind==='Single'?'sin':'oth';
+function relSort(){try{const v=localStorage.getItem(KEY+'_relsort');return REL_SORTS[v]?v:'def'}catch(e){return 'def'}}
+function relKind(a){return UI.rel&&UI.rel.aid===a.id&&REL_KINDS[UI.rel.kind]?UI.rel.kind:'all'}
+/* how you rated a release: its own rating, or for one without (a single) the average of its rated songs */
+function relScore(g){const r=RATEABLE.includes(g.kind)?rating(g.id):0;if(r)return r;const rs=g.items.map(i=>rating(i.id)).filter(Boolean);return rs.length?rs.reduce((x,y)=>x+y,0)/rs.length:0}
+function relList(a){const k=relKind(a),so=relSort();let L=a.groups.filter(g=>k==='all'||relKindOf(g)===k);
+  if(so==='def')return L;
+  const yr=g=>String(g.year||''),hp=g=>g.items.length?g.items.filter(i=>isDone(i.id)).length/g.items.length:0,ix=new Map(a.groups.map((g,i)=>[g,i]));
+  const cmp={new:(x,y)=>(!yr(x))-(!yr(y))||(yr(x)<yr(y)?1:yr(x)>yr(y)?-1:0),old:(x,y)=>(!yr(x))-(!yr(y))||(yr(x)<yr(y)?-1:yr(x)>yr(y)?1:0),
+    rhi:(x,y)=>(!relScore(x))-(!relScore(y))||relScore(y)-relScore(x),rlo:(x,y)=>(!relScore(x))-(!relScore(y))||relScore(x)-relScore(y),
+    heard:(x,y)=>hp(y)-hp(x),left:(x,y)=>hp(x)-hp(y),az:(x,y)=>String(x.title).localeCompare(String(y.title),undefined,{sensitivity:'base'})}[so];
+  return L.slice().sort((x,y)=>cmp(x,y)||ix.get(x)-ix.get(y))}
+function relBar(a){if(a.groups.length<2)return '';
+  const n={all:a.groups.length,alb:0,ep:0,sin:0,oth:0};a.groups.forEach(g=>n[relKindOf(g)]++);const k=relKind(a),so=relSort();
+  return `<div class="relbar"><div class="rseg" role="group" aria-label="Kind of release">${Object.entries(REL_KINDS).filter(([v])=>v==='all'||n[v]||v===k).map(([v,t])=>`<button data-act="relkind" data-v="${v}" aria-pressed="${k===v}">${t}<span class="c">${n[v]}</span></button>`).join('')}</div>
+    <label class="lsort rsort"><select id="rsort" aria-label="Sort releases">${Object.entries(REL_SORTS).map(([v,t])=>`<option value="${v}"${so===v?' selected':''}>${t}</option>`).join('')}</select></label></div>`}
 function artistView(a){
   const all=artistItems(a),done=all.filter(i=>isDone(i.id)).length,rated=all.filter(i=>rating(i.id)).length,p=pct(all.map(i=>i.id));
-  const groups=a.groups.map(g=>{
+  const groups=relList(a).map(g=>{
     const std=stdItems(g),dxs=dxItems(g),dx=dxOn(g),shown=dx?g.items:std;
     const gd=shown.filter(i=>isDone(i.id)).length,full=gd===shown.length&&shown.length>0;
     const sd=std.filter(i=>isDone(i.id)).length,dd=g.items.filter(i=>isDone(i.id)).length;
@@ -5325,7 +5417,8 @@ function artistView(a){
       <div class="tools" role="group" aria-label="Show"><button class="chip" data-act="filter" data-v="all" aria-pressed="${UI.filter==='all'}">Everything</button><button class="chip" data-act="filter" data-v="open" aria-pressed="${UI.filter==='open'}">Still to hear</button></div>
       ${mbArtistBar(a)}
     </div></div>
-    ${groups||'<p class="empty">You have heard every track listed here.</p>'}
+    ${relBar(a)}
+    ${groups||`<p class="empty">${relKind(a)!=='all'&&UI.filter==='all'?'No releases of that kind here.':'You have heard every track listed here.'}</p>`}
     <details class="more"><summary>Add a release</summary>
       <form data-form="group" data-a="${a.id}">
         <div class="row2"><input id="g-title" name="title" placeholder="Release title" required><input id="g-year" name="year" placeholder="Year" style="max-width:90px"></div>
@@ -5473,13 +5566,14 @@ document.addEventListener('click',ev=>{
   else if(act==='tab'){UI.view=null;UI.rOpen=null;UI.tab=b.dataset.v;try{localStorage.setItem(KEY+'_tab',UI.tab)}catch(e){}}
   else if(act==='sel'){if(UI.tab==='music'&&!UI.view)flyAsk(b,id);UI.sel[UI.tab]=id;UI.libOpen=false;UI.rOpen=null;
     if(matchMedia('(max-width:760px)').matches)UI.toSheet=true}
-  else if(act==='selalb'){UI.tab='music';UI.sel.music=id;UI.libOpen=false;UI.rOpen=null;UI.filter='all';UI.toAlb=b.dataset.g}
+  else if(act==='selalb'){UI.rel=null;UI.tab='music';UI.sel.music=id;UI.libOpen=false;UI.rOpen=null;UI.filter='all';UI.toAlb=b.dataset.g}
   else if(act==='lsort'||act==='lshow'){const P=lPrefs();P[act==='lsort'?'sort':'show']=b.dataset.v;lSave(P);UI.llTab=null}
   else if(act==='ljump'){const ll=document.getElementById('llist'),h=[...document.querySelectorAll('#llist .lsec')].find(z=>z.dataset.sec===b.dataset.l),sc=h&&h.parentElement;if(ll&&sc)ll.scrollTo({top:sc.offsetTop-4});return}
   else if(act==='lqx'){UI.lq[UI.tab]='';lRedraw();const i=document.getElementById('lq');if(i){i.value='';i.focus()}return}
   else if(act==='go'){UI.view=null;UI.rOpen=null;UI.tab=b.dataset.tab;UI.sel[UI.tab]=id;UI.filter='all'}
   else if(act==='statgo'){UI.view=null;UI.tab=b.dataset.tab;UI.sel[UI.tab]=id;UI.filter='all';UI.toSheet=true;window.scrollTo({top:0,behavior:'smooth'})}
   else if(act==='filter'){UI.filter=b.dataset.v}
+  else if(act==='relkind'){const h=document.querySelector('.hero[data-aid]');UI.rel=h?{aid:h.dataset.aid,kind:b.dataset.v}:null}
   else if(act==='epx'){UI.epOpen[id]=!UI.epOpen[id]}
   else if(act==='tog'){const was=isDone(id);S.marks[id]={...(S.marks[id]||{}),done:!was};if(!was){const g=grpOfItem(id);if(g)slLitAsk(g)}touch()}
   else if(act==='shareopen'){const a=S.music.find(x=>x.id===b.dataset.a),g=a&&a.groups.find(x=>x.id===b.dataset.g);if(g)shareOpen(a,g);return}
@@ -5591,6 +5685,7 @@ document.addEventListener('input',ev=>{
     return}
   if(ev.target.id==='crop-z'){CROP.z=+ev.target.value;cropRedraw();return}
   if(ev.target.id==='crop-r'){CROP.r=+ev.target.value;cropRedraw();return}
+  if(ev.target.id==='rsort'){try{localStorage.setItem(KEY+'_relsort',ev.target.value)}catch(e){}render();return}
   if(ev.target.id==='lsort'){const P=lPrefs();P.sort=ev.target.value;lSave(P);UI.llTab=null;render();return}
   if(ev.target.id==='lq'){UI.lq[UI.tab]=ev.target.value;lRedraw()}
   if(ev.target.id==='col-q'){UI.colQ=ev.target.value;const l=document.getElementById('col-list');if(l)l.innerHTML=colListHTML()}
