@@ -1663,6 +1663,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-ak', note:'LISTEN AGAIN: Clear on a song or the album in your newest listen now puts last listen\u2019s rating back (dimmed, carried over, with its gradient) instead of leaving it blank. If last listen had no rating there, Clear still leaves it blank.'},
   {v:'2026.11.16-aj', note:'LISTEN AGAIN: the green and red change gradient in a song bar now fades in from the color before it too, so it has no hard edge on either side.'},
   {v:'2026.11.16-ai', note:'LISTEN AGAIN, POLISH: the change marker in a song bar is now a gradient in the same style as the bar itself (green-tinted where you rated higher, red-tinted where lower, fading out to the right) instead of a box. Carried-over ratings are fainter: the numbers, rings and bar gradients. Fixed the album rating number not fading on a carried rating (the pop-in animation was holding it at full strength).'},
   {v:'2026.11.16-ah', note:'LISTEN AGAIN, CARRY-OVER: a new listen now starts with the last listen\u2019s numbers (songs, checks, album and deluxe rating, dimmed) so sorting, History and totals keep working. A number becomes this listen\u2019s own the moment you rate, check or clear it, and only those show a change. The change marker inside a song bar is now a soft tinted pill (green gained, red lost) with a thin tick at last listen\u2019s rating.'},
@@ -2141,6 +2142,14 @@ function lsHeal(){
     if(!g||!Number.isInteger(at)||at>=l.length-1){delete m.at;continue}
     const dm=S.marks[dxId(g)],e={...l[at],d:m.rd||'',r:m.r||0,s:lsSnap(g)};if(dm&&dm.r)e.x={r:dm.r,rd:dm.rd||''};else delete e.x;l[at]=e;
     delete m.at;lsLoad(g,l.length-1);touch()}}
+/* Clear on the newest listen puts the listen before it back (dimmed, carried) instead of leaving the number blank */
+function lsRevert(id){
+  const g=lsOwner(id);if(!g||LSV!==null)return false;const l=lsRaw(g.id);if(l.length<2)return false;
+  const p=l[l.length-2],e=l[l.length-1];
+  if(id===g.id){if(!p.r)return false;const m={...S.marks[id],r:p.r};if(p.d)m.rd=p.d;else delete m.rd;S.marks[id]=m}
+  else if(id===dxId(g)){if(!p.x||!p.x.r)return false;const m={...(S.marks[id]||{}),r:p.x.r};if(p.x.rd)m.rd=p.x.rd;else delete m.rd;S.marks[id]=m}
+  else{const q=p.s&&p.s[id];if(!q||!q.r)return false;const c={...(S.marks[id]||{}),r:q.r};if(q.done)c.done=true;S.marks[id]=c}
+  e.c=[...new Set([...(e.c||[]),id])];lsFromMark(g.id);return true}
 /* the difference to the listen before this one, for the songs and for the album */
 function lsDiff(g){
   const id=g.id,l=lsRaw(id);if(!l.length)return null;const k=lsIdx(id);if(k<1)return null;
@@ -6141,7 +6150,7 @@ document.addEventListener('click',ev=>{
     UI.view=null;UI.rel=null;UI.tab='music';UI.sel.music=b.dataset.a;UI.libOpen=false;UI.rOpen=null;UI.filter='all';UI.toAlb=b.dataset.g;
     if(g){if(b.dataset.dx)UI.dxOpen[g.id]=true;else delete UI.dxOpen[g.id]}}
   else if(act==='rymadd'){const r=rymAddWaiting();RYX.report={total:r.albums,zero:0,filled:0,same:0,kept:[],waiting:[],notFound:[],dups:[],added:r};touch()}
-  else if(act==='rclear'){lsOwn(id);if(lsRaw(id).length>1){S.marks[id]={...S.marks[id],r:0};lsFromMark(id)}else{const m0={...(S.marks[id]||{}),r:0};delete m0.rd;delete m0.ls;S.marks[id]=m0}touch();heroPaint()}
+  else if(act==='rclear'){lsOwn(id);if(lsRevert(id)){}else if(lsRaw(id).length>1){S.marks[id]={...S.marks[id],r:0};lsFromMark(id)}else{const m0={...(S.marks[id]||{}),r:0};delete m0.rd;delete m0.ls;S.marks[id]=m0}touch();heroPaint()}
   else if(act==='grpall'){const a=S.music.find(x=>x.id===b.dataset.a),g=a.groups.find(x=>x.id===b.dataset.g),its=viewItems(g),full=its.every(i=>isDone(i.id));
     its.forEach(i=>lsOwn(i.id));its.forEach(i=>S.marks[i.id]={...(S.marks[i.id]||{}),done:!full});if(!full)slPulseAsk(g.id,0);touch()}
   else if(act==='wedit'){UI.wEdit=UI.wEdit===b.dataset.g?null:b.dataset.g;formUp()}
