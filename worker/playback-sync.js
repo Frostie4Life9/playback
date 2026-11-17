@@ -1,5 +1,5 @@
 /* =========================================================
-   Playback — sync  (worker version 12, 2026.11.17)
+   Playback — sync  (worker version 13, 2026.11.17)
    Cloudflare Worker + KV. Same setup pattern as protocol-sync
    and gamelog-sync.
 
@@ -50,7 +50,7 @@
    Every response carries x-pb-worker: 5 so the app knows what this Worker
    can do (2 = compressed sync, 3 = Spotify plays, 4 = Spotify catalog too,
    5 = the morning-brief list, 6 = Discogs pressing search, 7 = Discogs pressing photos, 8 = your own record photos,
-   11 = Google accounts, friends and friends' ratings, 12 = a capped copy of a friend's log under their Google account: see the accounts section above the export).
+   11 = Google accounts, friends and friends' ratings, 12 = a capped copy of a friend's log under their Google account, 13 = the owner can sign in with Google instead of pasting the sync key: see the accounts section above the export).
 
    MORNING BRIEF (version 5)
    The app keeps a tiny list of the next episode of each show you follow
@@ -118,7 +118,7 @@ const CORS = {
   'Access-Control-Allow-Headers': 'content-type, x-sync-key, authorization',
   'Access-Control-Expose-Headers': 'x-pb-worker, retry-after, x-pb-cache',
   'Access-Control-Max-Age': '86400',
-  'x-pb-worker': '12'
+  'x-pb-worker': '13'
 };
 const JSON_H = Object.assign({ 'content-type': 'application/json', 'cache-control': 'no-store' }, CORS);
 const GZ_H = Object.assign({ 'content-type': 'application/gzip', 'cache-control': 'no-store' }, CORS);
@@ -465,6 +465,12 @@ async function sugOwner(request, env, url) {
    PUT    /acct/sync?base=&force=  {mtime, b64}  saves it. Same stale-device rules as the owner's PUT /: 409 and the stored copy
                               if it changed since ?base= or is newer than this upload; ?force=1 overrides.
    DELETE /acct/sync          removes the saved copy
+   POST   /acct/claim         (send the sync key in x-sync-key AND the account's Bearer token) makes this Google account the
+                              owner login (version 13). The owner's account id is kept in KV under 'owner-uid'. After that, every
+                              owner route (the log, photos, Spotify, Discogs, the brief, suggestions) accepts that account's
+                              Bearer token as well as the sync key. The sync key keeps working as a fallback, always.
+   DELETE /acct/claim         (sync key, or the owner's token) gives the owner login up again.
+   GET    /acct/me            also says {me:{owner:true}} for the owner account.
    Why this is cheap on the free plan: one row per person in D1 (D1 allows 100,000 writes a day, KV only 1,000), the log
    is stored exactly as the app sent it (base64 text; this Worker never unpacks it, so it costs almost no CPU), photos are
    never part of it (they need the owner's sync key), a log over about 1 MB compressed is refused (413), a person can save at
@@ -547,7 +553,22 @@ async function acctWho(env, request) {
   if (!m || !(Number(m[2]) > Date.now()) || !keyMatches(m[3], await acctSig(env, m[1] + '.' + m[2]))) return null;
   return await env.CATALOG.prepare('SELECT uid, name, code, share, rated FROM acct_users WHERE uid = ?1').bind(m[1]).first();
 }
-const meOut = u => ({ name: u.name, code: u.code, share: !!u.share, rated: u.rated || 0 });
+const meOut = (u, owner) => ({ name: u.name, code: u.code, share: !!u.share, rated: u.rated || 0, owner: !!owner });
+/* the account that is the owner (claimed once with the sync key), cached for a minute so owner requests don't read KV every time */
+let ownerCache = { v: null, at: 0 };
+async function ownerUid(env) {
+  if (Date.now() - ownerCache.at < 60000) return ownerCache.v;
+  const v = (await env.STATE.get('owner-uid')) || '';
+  ownerCache = { v, at: Date.now() };
+  return v;
+}
+/* a valid account token whose account is the owner: signature and expiry only, no database read */
+async function ownerViaToken(env, request) {
+  const m = /^Bearer pb1\.([0-9a-f]{16})\.(\d{10,14})\.([0-9a-f]{64})$/.exec(request.headers.get('authorization') || '');
+  if (!m || !(Number(m[2]) > Date.now()) || !keyMatches(m[3], await acctSig(env, m[1] + '.' + m[2]))) return false;
+  const o = await ownerUid(env);
+  return !!o && o === m[1];
+}
 const CODE_CH = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const randCode = () => { const b = crypto.getRandomValues(new Uint8Array(8)); return [...b].map(x => CODE_CH[x % CODE_CH.length]).join(''); };
 const randUid = () => [...crypto.getRandomValues(new Uint8Array(8))].map(b => b.toString(16).padStart(2, '0')).join('');
@@ -581,28 +602,48 @@ async function acct(request, env, url) {
         } catch (e) { if (i === 5) return reply({ error: 'could not make the account' }, 500); }
       }
     } else await env.CATALOG.prepare('UPDATE acct_users SET seen = ?2 WHERE uid = ?1').bind(u.uid, now).run();
-    return reply({ token: await acctToken(env, u.uid), me: meOut(u) });
+    return reply({ token: await acctToken(env, u.uid), me: meOut(u, (await ownerUid(env)) === u.uid) });
   }
 
   const me = await acctWho(env, request);
   if (!me) return reply({ error: 'sign in again' }, 401);
 
   if (path === '/me') {
-    if (M === 'GET') return reply({ me: meOut(me), token: await acctToken(env, me.uid) });
+    if (M === 'GET') return reply({ me: meOut(me, (await ownerUid(env)) === me.uid), token: await acctToken(env, me.uid) });
     if (M === 'PUT') {
       const { j, err } = await readBody(request); if (err) return err;
       const name = j.name === undefined ? me.name : cleanName(j.name), share = j.share === undefined ? me.share : (j.share ? 1 : 0);
       if (!name) return reply({ error: 'name is empty' }, 400);
       await env.CATALOG.prepare('UPDATE acct_users SET name = ?2, share = ?3 WHERE uid = ?1').bind(me.uid, name, share).run();
-      return reply({ me: meOut(Object.assign({}, me, { name, share })) });
+      return reply({ me: meOut(Object.assign({}, me, { name, share }), (await ownerUid(env)) === me.uid) });
     }
     if (M === 'DELETE') {
+      if ((await ownerUid(env)) === me.uid) { await env.STATE.delete('owner-uid'); ownerCache = { v: '', at: Date.now() }; }
       await env.CATALOG.batch([
         env.CATALOG.prepare('DELETE FROM acct_ratings WHERE uid = ?1').bind(me.uid),
         env.CATALOG.prepare('DELETE FROM acct_logs WHERE uid = ?1').bind(me.uid),
         env.CATALOG.prepare('DELETE FROM acct_friends WHERE a = ?1 OR b = ?1').bind(me.uid),
         env.CATALOG.prepare('DELETE FROM acct_users WHERE uid = ?1').bind(me.uid)
       ]);
+      return reply({ ok: true });
+    }
+    return reply({ error: 'method not allowed' }, 405);
+  }
+
+  /* make this account the owner login, or give it up (version 13). Claiming needs the sync key, so nobody else can. */
+  if (path === '/claim') {
+    const given = (request.headers.get('x-sync-key') || '').trim(), isKey = keyMatches(given, String(env.SECRET).trim());
+    if (M === 'POST') {
+      if (!(await rlHit(env, 'claim:' + me.uid, 10, 3600))) return reply({ error: 'too many' }, 429);
+      if (!isKey) return reply({ error: 'the sync key does not match' }, 401);
+      await env.STATE.put('owner-uid', me.uid);
+      ownerCache = { v: me.uid, at: Date.now() };
+      return reply({ ok: true });
+    }
+    if (M === 'DELETE') {
+      if (!isKey && (await ownerUid(env)) !== me.uid) return reply({ error: 'not allowed' }, 403);
+      await env.STATE.delete('owner-uid');
+      ownerCache = { v: '', at: Date.now() };
       return reply({ ok: true });
     }
     return reply({ error: 'method not allowed' }, 405);
@@ -756,7 +797,8 @@ export default {
     if (url.pathname === '/suggest' && request.method === 'POST') return sugPost(request, env);   /* open to friends, rate limited */
     if (url.pathname.startsWith('/acct/')) return acct(request, env, url);   /* Google sign-in token or its own session token, never the sync key */
     const given = (request.headers.get('x-sync-key') || '').trim();
-    if (!keyMatches(given, String(env.SECRET).trim())) return reply({ error: 'unauthorized' }, 401);
+    /* the sync key, or (version 13) the signed-in owner account's token */
+    if (!keyMatches(given, String(env.SECRET).trim()) && !(await ownerViaToken(env, request))) return reply({ error: 'unauthorized' }, 401);
     if (url.pathname === '/suggest') return sugOwner(request, env, url);
     if (url.pathname === '/rating-dates') {   /* the owner's private list of rating days (kept in KV, not in the public repo) */
       if (request.method === 'GET') return new Response((await env.STATE.get('rating-dates')) || '[]', { headers: JSON_H });

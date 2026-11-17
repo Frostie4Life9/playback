@@ -241,3 +241,7 @@ If sign-in says "not accepted", the Client ID in `index.html` and in `wrangler.j
 ### Syncing a log under the Google account (no setup for friends)
 
 Once accounts are on, anyone who signs in can switch on **Keep my log on all my devices** (Account page). The Worker stores one compressed copy of their log per person in the same D1 database (table `acct_logs`, created the first time it is used). It never opens the file, which keeps CPU use tiny, and it protects your free plan with these caps (constants near the top of the accounts section of `worker/playback-sync.js`): about 1 MB compressed per person, 120 saves per person per hour, and at most `ACCT_LOG_USERS` (200) people holding a saved copy at once. Photos are never included, because uploading them needs your sync key. Your own sync (your Worker and key) is untouched and takes priority on your devices.
+
+### Owner login (sign in with Google instead of pasting the sync key)
+
+Open Playback on a device that already syncs with your sync key, sign in with Google (Account), and tap **Make this my owner login** once. The Worker stores that account's id in KV (`owner-uid`) and from then on accepts its sign-in token on every owner route as well as the sync key. On any new device you just sign in with Google; the app switches itself to owner mode and loads your log. The sync key is never disabled, so it is the fallback if Google sign-in ever breaks. **Give up owner login** (Account) or deleting that account removes the claim.
