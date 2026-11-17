@@ -1667,6 +1667,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.17-f', note:'MOBILE: THE RECORD COMES OUT SOONER: on a phone, an album\u2019s vinyl now slides out of its sleeve (and starts its animation) as soon as the album is a little way onto the screen from the bottom, and stays out until it is nearly off the top, so it is out for much more of your scrolling. Before, it only came out while the album sat in a narrow band in the middle of the screen. Computers are unchanged.'},
   {v:'2026.11.17-e', note:'FIX: A DELUXE RATING YOU CLEARED NO LONGER COMES BACK: every time the app started (and on every import), an album with a deluxe edition and no deluxe rating copied its own standard rating onto the deluxe, because the two titles look the same once \u201c(Deluxe)\u201d is dropped. Short n\u2019 Sweet (Deluxe) got Short n\u2019 Sweet\u2019s rating back each time you removed it. The deluxe now only takes a rating from a separate old deluxe album it is absorbing, never from the standard album itself.'},
   {v:'2026.11.17-d', note:'EVEN FEWER SPOTIFY CALLS: during a Spotify import, a plain one-song single (no brackets or dash in its title, and no other release with the same title) no longer costs a request to read its tracklist, because its song is just its own title. Anything with an edition, a remix tag, more than one song, or a saved copy is read exactly as before. Same discography, fewer requests, so more artists fit in a day.'},
   {v:'2026.11.17-c', note:'SPOTIFY CALL COUNTER SHOWS WHAT SPENT THE CALLS: each day in the list under Settings now says how many of its Spotify calls were searches, release lists, albums, artist lookups and so on (it only showed that for today before), so you can see what used up a day’s budget. Nothing else changes.'},
@@ -4615,7 +4616,7 @@ function slObserve(){
       const on=e.isIntersecting,was=SLIN.has(id);if(on)SLIN.add(id);else SLIN.delete(id);sl.classList.toggle('in',on);
       /* ripple only when the record actually slides out now, not on every redraw of a sleeve already open */
       if(on&&!was)slRipple(sl,220);
-      if(!on)sl.classList.remove('rip')}},{rootMargin:'-16% 0px -22% 0px',threshold:0.85});
+      if(!on)sl.classList.remove('rip')}},{rootMargin:matchMedia('(max-width:760px)').matches?'-5% 0px -8% 0px':'-16% 0px -22% 0px',threshold:matchMedia('(max-width:760px)').matches?0.6:0.85});   /* a phone is short, so the band where the record is out is wider there */
   slIO.disconnect();document.querySelectorAll('.group.sleeve[data-acol] .sl-hero').forEach(el=>slIO.observe(el))}
 
 /* ---------- render ---------- */
