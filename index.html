@@ -555,6 +555,27 @@ footer textarea{font:12px var(--mono);margin-top:8px}
   .hr.edit form{animation:hrin .25s cubic-bezier(.2,.8,.2,1) both}
 }
 
+/* ===== Music menu: tap Music again for History (2026.11.17-q) ===== */
+.tabs .caret{display:none;width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateY(-2px) rotate(45deg);margin-left:2px;transition:transform .25s cubic-bezier(.2,.8,.2,1);flex:0 0 auto}
+.tabs button[data-v="music"][aria-pressed="true"] .caret{display:inline-block}
+.tabs button[data-v="music"][aria-expanded="true"] .caret{transform:translateY(2px) rotate(225deg)}
+.tabs .mmenu{position:absolute;z-index:60;left:4px;top:calc(100% + 8px);min-width:190px;display:flex;flex-direction:column;gap:2px;padding:6px;border:1px solid var(--line);border-radius:18px;background:var(--surface);box-shadow:0 14px 36px rgb(0 0 0 / .32);transform-origin:top left}
+.tabs .mmenu button{flex:none;display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:12px;width:100%;height:46px;min-height:46px;padding:0 14px;border-radius:12px;background:transparent;color:var(--ink);font-size:15px;font-weight:600;text-align:left;box-shadow:none}
+.tabs .mmenu button span{position:static;width:auto;height:auto;overflow:visible;clip:auto}
+.tabs .mmenu.mmenu button svg{display:block;width:20px;height:20px}
+.tabs .mmenu button:hover{background:var(--sunk)}
+.tabs .mmenu button[aria-current="true"]{background:var(--ink);color:var(--bg)}
+@media (min-width:761px){.tabs{position:relative;z-index:45}}
+@media (max-width:760px){.tabs .mmenu{left:12px;top:auto;bottom:calc(100% + 10px);transform-origin:bottom left}}
+@keyframes mmin{from{opacity:0;transform:translateY(-8px) scale(.94)}to{opacity:1;transform:none}}
+@keyframes mmitem{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:no-preference){
+  .tabs .mmenu.mm-in{animation:mmin .24s cubic-bezier(.2,.9,.3,1.2) both}
+  .tabs .mmenu.mm-in button{animation:mmitem .3s cubic-bezier(.2,.8,.2,1) both}
+  .tabs .mmenu.mm-in button:nth-child(2){animation-delay:60ms}
+}
+@media (prefers-reduced-motion:no-preference) and (max-width:760px){.tabs .mmenu.mm-in{animation-name:mmin-up}@keyframes mmin-up{from{opacity:0;transform:translateY(8px) scale(.94)}to{opacity:1;transform:none}}}
+
 /* ===== Collection: the crate (2026.11.11-g) ===== */
 .colv{max-width:none}
 .col-hero{position:relative;overflow:hidden;border-radius:20px;background:#1a1512;color:#f4ece4;padding:22px 20px;display:flex;flex-wrap:wrap;align-items:flex-end;gap:18px 28px;border:1px solid var(--line);
@@ -1713,6 +1734,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-q', note:'MUSIC MENU AND HISTORY SORT: History is no longer its own button in the bar. While you are on Music, tap Music again and a small menu drops open with Artists and History (it opens upward on your phone, closes when you tap anywhere else, and Music shows a little arrow when you can open it). History also has a new No date sort that puts the albums with no day first, so you can fill them in one after another; the rest follow newest first.'},
   {v:'2026.11.17-p', note:'IMPORT SOURCE BUTTONS: tapping Automatic, Apple Music or MusicBrainz only in Settings saved the choice but the buttons and the Right now imports read from line did not change until you left the page and came back. They now switch the moment you tap.'},
   {v:'2026.11.17-o', note:'CLEAN START: a brand-new Playback no longer comes with Radiohead and the Severance example already in it, so a friend opening it for the first time starts with an empty log, and the empty screen now tells them how to add their first artist. Anything already in your log, Radiohead and Severance included, stays exactly as it is.'},
   {v:'2026.11.17-n', note:'SUGGEST SOMETHING: friends who use your copy of Playback get a Suggest something box in Settings that sends their note to you (it uses your sync Worker, no sign-in for them, 10 an hour each, 600 characters). In your own Settings, Friend suggestions loads what they sent so you can copy the list, mark one Done or clear all. Your Worker needs the updated playback-sync.js, which it takes from GitHub on its own; until it has, a friend\u2019s Send says it did not send. Open Playback with ?owner=1 on any device that is not already on your own sync Worker to see your side.'},
@@ -4409,7 +4431,7 @@ async function push(force){
 }
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pull()});
 window.addEventListener('online',()=>pull());
-document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&UI.llOpen){UI.llOpen=false;render()}});
+document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&UI.llOpen){UI.llOpen=false;render()}else if(ev.key==='Escape'&&UI.mm){UI.mm=false;UI.mmAnim=false;render()}});
 document.addEventListener('toggle',ev=>{if(ev.target.id==='syncpanel')UI.syncOpen=ev.target.open;else if(ev.target.id==='addart')UI.addOpen=ev.target.open;else if(ev.target.id==='listenpanel')UI.llOpen=ev.target.open;else if(ev.target.id==='coladd')UI.colAdd=ev.target.open;else if(ev.target.id==='colhand')UI.colHand=ev.target.open;else if(ev.target.id==='coltok')UI.colTok=ev.target.open;else if(ev.target.classList&&ev.target.classList.contains('splog'))UI.spLogOpen=ev.target.open},true);
 const UI={view:null,libOpen:false,addOpen:false,rOpen:null,lq:{music:'',screen:''},tab:'music',sel:{music:null,screen:null},filter:'all',armed:null,addType:'show',copied:false,epOpen:{},dxOpen:{},wEdit:null,dEdit:null};
 
@@ -4453,20 +4475,21 @@ function historyList(anim){
   const L=all.filter(e=>(UI.hk==='all'||(UI.hk==='again'?e.n>1:K(e)===UI.hk))&&(!q||nrm(e.title+' '+e.a.name).includes(q)));
   if(!L.length)return `<p class="lempty">${all.length?'Nothing matches'+(q?' “'+esc(UI.hq)+'”':'')+'.':'Nothing rated yet. Rate an album and it lands here.'}</p>`;
   const cmp=(x,y)=>x.title.localeCompare(y.title),dc=(x,y)=>x.d>y.d?1:x.d<y.d?-1:0;
-  let h='',n=0;
+  let n=0;
   if(UI.hs==='high'){
     L.sort((x,y)=>y.r-x.r||dc(y,x)||cmp(x,y));
     return `<ol class="hl">${L.map(e=>rhRow(e,n++,anim)).join('')}</ol>`;
   }
   const dated=L.filter(e=>e.d).sort(UI.hs==='old'?(x,y)=>dc(x,y)||cmp(x,y):(x,y)=>dc(y,x)||cmp(x,y)),und=L.filter(e=>!e.d).sort(cmp);
   const per={};dated.forEach(e=>{const k=e.d.slice(0,7);per[k]=(per[k]||0)+1});
-  let cur='';
-  for(const e of dated){const k=e.d.slice(0,7);
-    if(k!==cur){if(cur)h+='</ol>';cur=k;h+=`<h3 class="hm">${esc(rhMonth(e.d))} <span>· ${per[k]}</span></h3><ol class="hl">`}
-    h+=rhRow(e,n++,anim)}
-  if(cur)h+='</ol>';
-  if(und.length)h+=`<h3 class="hm">No day yet <span>· ${und.length}</span></h3><ol class="hl">${und.map(e=>rhRow(e,n++,anim)).join('')}</ol>`;
-  return h;
+  const datedHtml=()=>{let o='',cur='';
+    for(const e of dated){const k=e.d.slice(0,7);
+      if(k!==cur){if(cur)o+='</ol>';cur=k;o+=`<h3 class="hm">${esc(rhMonth(e.d))} <span>· ${per[k]}</span></h3><ol class="hl">`}
+      o+=rhRow(e,n++,anim)}
+    return o+(cur?'</ol>':'')};
+  const undHtml=()=>und.length?`<h3 class="hm">No day yet <span>· ${und.length}</span></h3><ol class="hl">${und.map(e=>rhRow(e,n++,anim)).join('')}</ol>`:'';
+  /* "No date" sort puts the albums with no day first (so they are easy to fill in); the rest follow newest first */
+  return UI.hs==='none'?undHtml()+datedHtml():datedHtml()+undHtml();
 }
 function historyView(){
   const anim=UI.hAnim;UI.hAnim=false;
@@ -4482,7 +4505,7 @@ function historyView(){
       <input id="hq" type="search" autocomplete="off" placeholder="Search albums &amp; artists" value="${esc(UI.hq||'')}" aria-label="Search rated albums">
       <div class="hrow2">
         <div class="hchips" role="group" aria-label="Show">${chip('hkind','all','All',UI.hk)}${chip('hkind','album','Albums',UI.hk)}${chip('hkind','ep','EPs',UI.hk)}${chip('hkind','other','Other',UI.hk)}${all.some(e=>e.n>1)?chip('hkind','again','\u21bb Relistened',UI.hk):''}</div>
-        <div class="hchips" role="group" aria-label="Sort">${chip('hsort','new','Newest',UI.hs)}${chip('hsort','old','Oldest',UI.hs)}${chip('hsort','high','Highest',UI.hs)}</div>
+        <div class="hchips" role="group" aria-label="Sort">${chip('hsort','new','Newest',UI.hs)}${chip('hsort','old','Oldest',UI.hs)}${chip('hsort','high','Highest',UI.hs)}${und||UI.hs==='none'?chip('hsort','none','No date',UI.hs):''}</div>
       </div>
     </div>
     <div id="hlist" class="${anim?'hanim':''}">${historyList(anim)}</div>
@@ -5296,16 +5319,17 @@ function keepImgs(fn){
 function renderMain(){
   if(!READY){document.getElementById('app').innerHTML='<p class="empty">Loading your log\u2026</p>';return}
   const e=current();
-  LIBIN=!!UI.libAnim;UI.libAnim=false;   /* the menu's opening animation plays on the one draw that opens it */
+  LIBIN=!!UI.libAnim;UI.libAnim=false;
+  if(UI.mm&&(UI.tab!=='music'||(UI.view&&UI.view!=='history')))UI.mm=false;   /* the Music menu only belongs to Music */   /* the menu's opening animation plays on the one draw that opens it */
   const list=S[UI.tab];
   document.getElementById('app').innerHTML=`
   <header class="top">
       <nav class="tabs" aria-label="Section">
-        <button data-act="tab" data-v="music" aria-pressed="${!UI.view&&UI.tab==='music'}">${ICO.music}<span>Music</span></button>
+        <button data-act="tab" data-v="music" aria-pressed="${(!UI.view&&UI.tab==='music')||UI.view==='history'}" aria-haspopup="menu" aria-expanded="${!!UI.mm}">${ICO.music}<span>Music</span><i class="caret" aria-hidden="true"></i></button>
         <button data-act="tab" data-v="screen" aria-pressed="${!UI.view&&UI.tab==='screen'}">${ICO.screen}<span>Screen</span></button>
-        <button data-act="view" data-v="history" aria-pressed="${UI.view==='history'}">${ICO.history}<span>History</span></button>
         <button data-act="view" data-v="collection" aria-pressed="${UI.view==='collection'}">${ICO.collection}<span>Collection</span></button>
         <button data-act="view" data-v="settings" aria-pressed="${UI.view==='settings'}">${ICO.settings}<span>Settings</span></button>
+        ${UI.mm?`<div class="mmenu${UI.mmAnim?' mm-in':''}" role="menu" aria-label="Music"><button role="menuitem" data-act="mmgo" data-v="artists"${UI.view!=='history'?' aria-current="true"':''}>${ICO.grid}<span>Artists</span></button><button role="menuitem" data-act="mmgo" data-v="history"${UI.view==='history'?' aria-current="true"':''}>${ICO.history}<span>History</span></button></div>`:''}
       </nav>
     <div class="topr">
       <button class="sync" data-act="opensync" data-s="${SYS.status}"><i></i>${esc(syncLabel())}</button>
@@ -6251,8 +6275,10 @@ function filmView(f){
 
 /* ---------- events ---------- */
 document.addEventListener('click',ev=>{
-  const b=ev.target.closest('[data-act]');if(!b)return;
+  const b=ev.target.closest('[data-act]');
+  if(!b){if(UI.mm&&!ev.target.closest('.mmenu')){UI.mm=false;UI.mmAnim=false;render()}return}
   const act=b.dataset.act,id=b.dataset.id;
+  const mmWas=!!UI.mm;UI.mm=false;UI.mmAnim=false;   /* any tap closes the Music menu; tapping Music again below toggles it */
   if(['tog','ropen','rclear','dedit','grpall','lsnew','lltog'].includes(act)&&b.closest('.lsold'))return;   /* an earlier listen is view only */
   if(act!=='del'&&act!=='delg'&&act!=='lsrm')UI.armed=null;
   if(act!=='mbundo')UI.undoArm=null;
@@ -6300,7 +6326,12 @@ document.addEventListener('click',ev=>{
   else if(act==='colexport'){dlCSV('playback-collection.csv',csvCollection());return}
   else if(act==='ropen'){const prev=UI.rOpen,fly=prev&&prev!==id?rtFlyPrep(prev):null;UI.rOpen=UI.rOpen===id?null:id;UI.rAnim=UI.rOpen;if(fly){UI.rLand=prev;UI.rFly=fly}}
   else if(act==='rclose'){UI.rOpen=null}
-  else if(act==='tab'){UI.view=null;UI.rOpen=null;UI.tab=b.dataset.v;try{localStorage.setItem(KEY+'_tab',UI.tab)}catch(e){}}
+  else if(act==='tab'){
+    if(b.dataset.v==='music'&&UI.tab==='music'&&(!UI.view||UI.view==='history')){UI.mm=!mmWas;UI.mmAnim=UI.mm}   /* already on Music: tapping it again opens the menu with History */
+    else{UI.view=null;UI.rOpen=null;UI.tab=b.dataset.v;try{localStorage.setItem(KEY+'_tab',UI.tab)}catch(e){}}}
+  else if(act==='mmgo'){UI.tab='music';UI.rOpen=null;
+    if(b.dataset.v==='history'){UI.view='history';UI.hAnim=true;UI.hEdit=null}else UI.view=null;
+    try{localStorage.setItem(KEY+'_tab','music')}catch(e){}window.scrollTo({top:0})}
   else if(act==='sel'){if(UI.tab==='music'&&!UI.view)flyAsk(b,id);UI.sel[UI.tab]=id;UI.libOpen=false;UI.rOpen=null;
     if(matchMedia('(max-width:760px)').matches)UI.toSheet=true}
   else if(act==='selalb'){UI.rel=null;UI.tab='music';UI.sel.music=id;UI.libOpen=false;UI.rOpen=null;UI.filter='all';UI.toAlb=b.dataset.g}
