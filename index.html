@@ -1012,10 +1012,10 @@ details.addart .add{border-top:1px solid var(--line)}
 .sl-disc::before{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;opacity:0;will-change:transform,opacity;border:3px solid #fff;box-shadow:0 0 12px 3px var(--gg)}
 @keyframes slLab{0%{transform:scale(1)}30%{transform:scale(1.55)}60%{transform:scale(.95)}100%{transform:scale(1)}}
 @media (prefers-reduced-motion:no-preference){
-  .group.sleeve.lit .sl-disc::after{animation:slSweep 1.7s cubic-bezier(.3,.1,.3,1)}
-  .group.sleeve.lit .sl-disc::before{animation:slWave 1.3s cubic-bezier(.15,.6,.3,1)}
-  .group.sleeve.lit .sl-lab{animation:slLab .95s cubic-bezier(.2,.8,.2,1)}
-  .group.sleeve.lit .sl-disc i.new{animation:slLit 1.5s cubic-bezier(.3,.6,.3,1) both}
+  .group.sleeve.lit .sl-disc::after{animation:slSweep 1.7s cubic-bezier(.3,.1,.3,1) var(--fxo,0ms)}
+  .group.sleeve.lit .sl-disc::before{animation:slWave 1.3s cubic-bezier(.15,.6,.3,1) var(--fxo,0ms)}
+  .group.sleeve.lit .sl-lab{animation:slLab .95s cubic-bezier(.2,.8,.2,1) var(--fxo,0ms)}
+  .group.sleeve.lit .sl-disc i.new{animation:slLit 1.5s cubic-bezier(.3,.6,.3,1) var(--fxo,0ms) both}
 }
 
 /* ===== The record leaves its sleeve (2026.11.16-b) ===== */
@@ -1583,6 +1583,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.16-s', note:'RATING ANIMATION NO LONGER CUTS OUT: the page redraws itself about a second and a half after you rate (your sync starting and finishing), and that rebuilt the record in the middle of the effect. A redraw now picks the effect up exactly where it was, so it plays through every time.'},
   {v:'2026.11.16-r', note:'SOFTER ENDING: the rating animation no longer cuts off. The ripple, glint, shockwave and flare run a little longer and fade out gradually, and nothing is removed until it has finished.'},
   {v:'2026.11.16-q', note:'SMOOTHER RATING ANIMATION: the grooves now swell with a GPU transform instead of resizing every frame, the glows are lighter, and the glint and shockwave sit on their own layers, so the effect should no longer lag.'},
   {v:'2026.11.16-p', note:'BIGGER RATING ANIMATION: rating a song now sends a bright shockwave ring out from the label to that song\'s band, the glint trails a longer glow and spins further, the new groove flares much harder, the ripple through the grooves swells and shines more, and the label count gives a bigger bounce.'},
@@ -4292,11 +4293,12 @@ function lRedraw(){const el=document.getElementById('llist');if(el)el.innerHTML=
    remembered across redraws, so a tap never replays or resets the motion. */
 const SLIN=new Set();let slIO=null;
 /* run the groove ripple on one sleeve. base = ms to wait before it starts (the slide-out needs ~220) */
-function slRipple(sl,base,minJ){
+function slRipple(sl,base,minJ,el){
+  el=el||0;if(!el&&sl&&sl.dataset.acol)UI.fxr={g:sl.dataset.acol,base,minJ,t0:Date.now()};
   if(!sl||!sl.querySelector('.sl-disc i.on'))return;
   const is=sl.querySelectorAll('.sl-disc i');is.forEach((e,j)=>e.classList.toggle('nr',minJ!=null&&j<minJ));   /* grooves outside the rated song's band sit the ripple out */
-  sl.style.setProperty('--rb',base+'ms');sl.classList.remove('rip');void sl.offsetWidth;sl.classList.add('rip');
-  clearTimeout(sl._rt);sl._rt=setTimeout(()=>{sl.classList.remove('rip');sl.querySelectorAll('.sl-disc i.nr').forEach(e=>e.classList.remove('nr'))},base+2600)}
+  sl.style.setProperty('--rb',(base-el)+'ms');sl.classList.remove('rip');void sl.offsetWidth;sl.classList.add('rip');
+  clearTimeout(sl._rt);sl._rt=setTimeout(()=>{sl.classList.remove('rip');sl.querySelectorAll('.sl-disc i.nr').forEach(e=>e.classList.remove('nr'))},Math.max(0,base+2600-el))}
 /* ask for a ripple on the next draw of this release (checking a song off, switching to Deluxe) */
 function slPulseAsk(gid,base){UI.pulse={g:String(gid),b:base||0}}
 /* which grooves a release has lit right now (the same folding the sleeve is drawn with) */
@@ -4313,15 +4315,24 @@ function slLitAsk(g,id){const sl=slEl(g.id),is=sl?sl.querySelectorAll('.sl-disc 
     if(pos>=0)for(let j=0;j<R;j++){if(pos>=Math.floor(j*n/R)&&pos<Math.max(Math.floor(j*n/R)+1,Math.floor((j+1)*n/R))){band=j;break}}}
   if(band==null&&idx.length)band=Math.min(...idx);
   UI.lit={g:String(g.id),idx,id:id||null,band}}
-function slLitNow(){const L=UI.lit;UI.lit=null;if(!L)return;
-  const sl=slEl(L.g),disc=sl&&sl.querySelector('.sl-disc');if(!disc)return;
+function slLitApply(sl,L,el){
+  const disc=sl.querySelector('.sl-disc');if(!disc)return;
   const is=disc.querySelectorAll('i');L.idx.forEach(j=>{if(is[j])is[j].classList.add('on','new')});
   if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)return;
   const nR=is.length,bj=L.band;   /* the glint and ripple go out only as far as the rated song's band */
   if(bj!=null&&nR){const ld=96-bj*(52/nR)+2;sl.style.setProperty('--ld',ld.toFixed(1)+'%');sl.style.setProperty('--ls',(ld/100).toFixed(3))}else{sl.style.removeProperty('--ld');sl.style.removeProperty('--ls')}
+  if(el)sl.style.setProperty('--fxo',(-el)+'ms');else sl.style.removeProperty('--fxo');   /* a redraw mid-effect picks it up where it was */
   sl.classList.remove('lit');void sl.offsetWidth;sl.classList.add('lit');
-  clearTimeout(sl._lt);sl._lt=setTimeout(()=>{sl.classList.remove('lit');disc.querySelectorAll('i.new').forEach(e=>e.classList.remove('new'))},2100);
-  slRipple(sl,520,bj)}
+  clearTimeout(sl._lt);sl._lt=setTimeout(()=>{sl.classList.remove('lit');sl.style.removeProperty('--fxo');disc.querySelectorAll('i.new').forEach(e=>e.classList.remove('new'))},Math.max(0,2100-el));
+  slRipple(sl,520,bj,el)}
+function slLitNow(){const L=UI.lit;UI.lit=null;if(!L)return;
+  const sl=slEl(L.g);if(!sl||!sl.querySelector('.sl-disc'))return;
+  UI.fxl={...L,t0:Date.now()};slLitApply(sl,L,0)}
+/* the page redraws itself now and then (sync starting and finishing, for one) and that rebuilds the record, which
+   would cut a running effect off. After every draw, put any effect that is still running back where it was. */
+function slFxResume(){const now=Date.now();
+  const f=UI.fxl;if(f){const el=now-f.t0;if(el>=2100)UI.fxl=null;else if(el>40){const sl=slEl(f.g);if(sl)slLitApply(sl,f,el)}}
+  const r=UI.fxr;if(r){const el=now-r.t0;if(el>=r.base+2600)UI.fxr=null;else if(el>40&&!(UI.fxl&&UI.fxl.g===r.g)){const sl=slEl(r.g);if(sl){const a=r.base;slRipple(sl,a,r.minJ,el)}}}}
 function slPulseNow(){const p=UI.pulse;UI.pulse=null;if(!p)return;
   const sl=document.querySelector('.group.sleeve[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(p.g):p.g)+'"]');slRipple(sl,p.b)}
 function grpOfItem(id){for(const a of S.music){const g=a.groups.find(g=>g.items.some(i=>i.id===id));if(g)return g}return null}
@@ -4341,6 +4352,7 @@ function render(){
   const ll=document.getElementById('llist'),llTop=ll?ll.scrollTop:0,llTab=UI.llTab;UI.llTab=UI.tab;
   renderMain();slObserve();slPulseNow();UI.rAnim=null;
   if(UI.lit&&!UI.rLand&&!(UI.lit.id&&UI.lit.id===UI.rOpen))slLitNow();   /* no number is flying in and its slider is closed, so the groove lights with this draw */
+  slFxResume();
   tdPaint();
   const nl=document.getElementById('llist');
   if(nl){if(ll&&llTab===UI.tab)nl.scrollTop=llTop;
