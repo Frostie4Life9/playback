@@ -1325,6 +1325,26 @@ details.addart .add{border-top:1px solid var(--line)}
 <!-- /suite:css -->
 </head>
 <body>
+<!-- friends mode: lives OUTSIDE the generated suite blocks on purpose, so tools/suite.py never overwrites it.
+     Anyone who is not the owner gets no app bar (it links to the owner's other apps) and the suite Ideas
+     box cannot reach the owner's ideas Worker. You are the owner when this browser's sync points at your own
+     Worker, or after opening the app once with ?owner=1 (use ?owner=0 to switch it off again). -->
+<script>
+(function(){
+  var owner=false;
+  try{
+    if(/[?&]owner=1(&|$)/.test(location.search))localStorage.setItem('playback_owner','1');
+    if(/[?&]owner=0(&|$)/.test(location.search))localStorage.removeItem('playback_owner');
+    owner=localStorage.getItem('playback_owner')==='1';
+    if(!owner){var sy=JSON.parse(localStorage.getItem('playback_v1_sync')||'{}');owner=/skyfro04/.test(sy.url||'')}
+  }catch(e){}
+  window.PB_OWNER=owner;
+  if(owner)return;
+  var st=document.createElement('style');st.textContent='.sx-bar{display:none!important}';document.head.appendChild(st);
+  var f=window.fetch;
+  if(f)window.fetch=function(u){var s=typeof u==='string'?u:(u&&u.url)||'';if(s.indexOf('ideas-sync.skyfro04.workers.dev')>-1)return Promise.reject(new Error('ideas off'));return f.apply(this,arguments)};
+})();
+</script>
 <!-- suite:bar -->
 <nav class="sx-bar" style="--app:var(--sx-playback)" data-app="playback" aria-label="Your apps"><div class="sx-in">
   <div class="sx-id"><img class="sx-tile" src="apple-touch-icon.png?v=20261021a" alt="" width="32" height="32"><span class="sx-name">Playback</span></div>
@@ -1687,6 +1707,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-m', note:'FRIENDS MODE: before you share Playback, other people no longer see the app bar (it linked to your Kitchen, DishLog, Protocol and the rest) and their Ideas box can no longer send anything to your ideas Worker. You stay in owner mode automatically on any browser whose sync is set to your own Worker; on a new device or browser open Playback once with ?owner=1 on the end of the address to switch it on (?owner=0 turns it off). Nothing else changes for anyone.'},
   {v:'2026.11.17-l', note:'FIX: the app sat on \u201cLoading your log\u201d. The artist menu\u2019s new opening animation (2026.11.17-j) referred to a value that did not exist where the menu is drawn, which stopped the page from drawing at all. Nothing in your log was touched. It is drawn again, and the menu animation is unchanged.'},
   {v:'2026.11.17-k', note:'SMOOTHER DELUXE SWITCH: the Standard/Deluxe transition was too quick and abrupt. Everything now runs about twice as slow and with softer easing: the old edition fades out gently, deluxe songs fold shut and open with a longer, more even stagger (they no longer open fast and then stall), and the cover, title and rating ease in instead of popping.'},
   {v:'2026.11.17-j', note:'ARTIST MENU OPENS WITH MOTION (PHONE): tapping the artist bar now slides the full-screen menu up from the bottom, the title and search settle in from the top, and the artists rise into the grid one after another, with the A-Z strip fading in last. It plays only on the tap that opens it, so a sync redraw while the menu is open never replays it. Reduced-motion settings skip it.'},
