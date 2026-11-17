@@ -1667,6 +1667,7 @@ details.addart .add{border-top:1px solid var(--line)}
    bar reads the first v:'...' in the live file, so this list must stay the
    first place that pattern appears. Keep sw.js CACHE in step. */
 const CHANGELOG=[
+  {v:'2026.11.17-e', note:'FIX: A DELUXE RATING YOU CLEARED NO LONGER COMES BACK: every time the app started (and on every import), an album with a deluxe edition and no deluxe rating copied its own standard rating onto the deluxe, because the two titles look the same once \u201c(Deluxe)\u201d is dropped. Short n\u2019 Sweet (Deluxe) got Short n\u2019 Sweet\u2019s rating back each time you removed it. The deluxe now only takes a rating from a separate old deluxe album it is absorbing, never from the standard album itself.'},
   {v:'2026.11.17-d', note:'EVEN FEWER SPOTIFY CALLS: during a Spotify import, a plain one-song single (no brackets or dash in its title, and no other release with the same title) no longer costs a request to read its tracklist, because its song is just its own title. Anything with an edition, a remix tag, more than one song, or a saved copy is read exactly as before. Same discography, fewer requests, so more artists fit in a day.'},
   {v:'2026.11.17-c', note:'SPOTIFY CALL COUNTER SHOWS WHAT SPENT THE CALLS: each day in the list under Settings now says how many of its Spotify calls were searches, release lists, albums, artist lookups and so on (it only showed that for today before), so you can see what used up a day’s budget. Nothing else changes.'},
   {v:'2026.11.17-b', note:'MOTION: changing the artist filter (All, Started, New, Done) or sort, or the release kind or sort under an artist, no longer snaps. Tiles and album cards that stay slide to their new spot and the new ones rise in one after another.'},
@@ -2691,7 +2692,7 @@ function mbMerge(art,incoming,versions,tidy,sp){
       if(looseFold(i,k)||fuzzyFold(k))continue;
       const id=idFor(k);if(usedIds.has(id))continue;
       if(mbMarked(id)||(tidy&&g.src==='kept'))kept.push({id,title:i.title,k,...(i.f&&i.f.length?{f:i.f}:{})});else dropped++}}
-  const oldR=a.groups.map(g=>[nTitle(g.title),rating(g.id)]).filter(x=>x[1]);
+  const oldR=a.groups.map(g=>[nTitle(g.title),rating(g.id),g.id]).filter(x=>x[1]);
   const oldX=a.groups.map(g=>[nTitle(g.title),rating(dxId(g))]).filter(x=>x[1]);
   a.groups=[...groups,...manual];
   const srcKey=tidy?(a.src||'mb'):(sp?(sp.am?'am':'sp'):'mb'),fromSp=srcKey!=='mb';
@@ -2701,7 +2702,7 @@ function mbMerge(art,incoming,versions,tidy,sp){
   for(const g of a.groups){if(rating(g.id))continue;const o=oldR.find(x=>x[0]===nTitle(g.title));if(o)S.marks[g.id]={...(S.marks[g.id]||{}),r:o[1]}}
   for(const g of a.groups){if(!hasDx(g)||rating(dxId(g)))continue;
     /* its own deluxe rating from before, or the rating of the separate deluxe album it has just absorbed */
-    const o=oldX.find(x=>x[0]===nTitle(g.title))||(g.dxTitle?oldR.find(x=>x[0]===nTitle(g.dxTitle)):null);
+    const o=oldX.find(x=>x[0]===nTitle(g.title))||(g.dxTitle?oldR.find(x=>x[0]===nTitle(g.dxTitle)&&x[2]!==g.id):null);
     if(o)S.marks[dxId(g)]={...(S.marks[dxId(g)]||{}),r:o[1]}}
   applyPending(a);
   linkTwins();
