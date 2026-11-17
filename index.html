@@ -309,20 +309,20 @@ code.uri{font:500 12px var(--mono);background:var(--sunk);border-radius:4px;padd
 /* motion: only on the tap that switches editions (the page marks that group .dxanim for one draw),
    so ticking a song or rating never replays it */
 @media (prefers-reduced-motion:no-preference){
-  @keyframes dxRise{from{opacity:0;transform:translateY(7px);max-height:0;padding-top:0;padding-bottom:0;overflow:hidden}to{opacity:1;transform:none;max-height:160px}}
-  @keyframes dxFade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
-  @keyframes dxCover{from{opacity:0;transform:scale(.82) rotate(-4deg)}to{opacity:1;transform:none}}
+  @keyframes dxRise{from{opacity:0;transform:translateY(7px);max-height:0;padding-top:0;padding-bottom:0;overflow:hidden}to{opacity:1;transform:none;max-height:92px}}
+  @keyframes dxFade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+  @keyframes dxCover{from{opacity:0;transform:scale(.9) rotate(-3deg)}to{opacity:1;transform:none}}
   @keyframes dxToR{from{transform:translateX(0)}to{transform:translateX(calc(100% + 4px))}}
   @keyframes dxToL{from{transform:translateX(calc(100% + 4px))}to{transform:translateX(0)}}
   .group.dxanim .dxseg[data-dx="1"]::before{animation:dxToR .34s cubic-bezier(.3,.8,.2,1)}
   .group.dxanim .dxseg[data-dx="0"]::before{animation:dxToL .34s cubic-bezier(.3,.8,.2,1)}
   .group.dxanim .ghead .art{animation:dxCover .45s cubic-bezier(.2,.8,.2,1)}
   .group.dxanim .ghead h3,.group.dxanim .ghead .dxbadge,.group.dxanim .arate{animation:dxFade .32s ease-out both}
-  .group.dxanim .track{animation:dxFade .26s ease-out both}
-  .group.dxanim .track.dx{animation:dxRise .42s cubic-bezier(.2,.8,.2,1) backwards}
+  .group.dxanim .track{animation:dxFade .5s cubic-bezier(.25,.6,.25,1) both}
+  .group.dxanim .track.dx{animation:dxRise .7s cubic-bezier(.25,.6,.25,1) backwards}
   /* the sleeve's own header: the cover pops in, the title, badge, count and rating fade up */
-  .group.dxanim .sl-cover{animation:dxCover .5s cubic-bezier(.2,.8,.2,1)}
-  .group.dxanim .sl-meta>*,.group.dxanim .arate{animation:dxFade .34s ease-out both}
+  .group.dxanim .sl-cover{animation:dxCover .75s cubic-bezier(.22,.7,.2,1)}
+  .group.dxanim .sl-meta>*,.group.dxanim .arate{animation:dxFade .55s cubic-bezier(.25,.6,.25,1) .08s both}
   .track{transition:background-color .15s}
   .check,.chip,.dxseg button{transition:transform .12s,color .2s,background-color .15s,border-color .15s}
   .check:active,.chip:active,.dxseg button:active{transform:scale(.93)}
@@ -1687,6 +1687,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-k', note:'SMOOTHER DELUXE SWITCH: the Standard/Deluxe transition was too quick and abrupt. Everything now runs about twice as slow and with softer easing: the old edition fades out gently, deluxe songs fold shut and open with a longer, more even stagger (they no longer open fast and then stall), and the cover, title and rating ease in instead of popping.'},
   {v:'2026.11.17-j', note:'ARTIST MENU OPENS WITH MOTION (PHONE): tapping the artist bar now slides the full-screen menu up from the bottom, the title and search settle in from the top, and the artists rise into the grid one after another, with the A-Z strip fading in last. It plays only on the tap that opens it, so a sync redraw while the menu is open never replays it. Reduced-motion settings skip it.'},
   {v:'2026.11.17-i', note:'DELUXE SWITCH TRANSITION: going between Standard and Deluxe now plays as a real transition instead of a snap. The old edition fades out (cover, title, rating), switching back folds the deluxe-only songs shut one after another, and going to Deluxe opens them up row by row while the new cover pops in and the title and rating fade up. The sliding switch thumb is unchanged. Reduced-motion settings skip all of it.'},
   {v:'2026.11.17-h', note:'NO MORE COVER FLASH: opening a song or album rating (or anything else that redraws the page) made the album cover blink, because every redraw rebuilt each cover as a new picture. Covers that are already on screen are now kept through a redraw and put straight back in place, so they no longer blink, flicker or reload.'},
@@ -6036,7 +6037,7 @@ function artistView(a){
     const ringHtml=rings.map((st,j)=>{const d=96-j*(52/Math.max(R,1)),held=hold&&hold.includes(j),cls=held?(UI.lit.fi&&UI.lit.fi.includes(j)?'on fade':''):st===2?'on':st===1?'on fade':'';return `<i class="${cls}" style="--d:${d.toFixed(1)}%;--o:${R-1-j}"></i>`}).join('');
     const trackRows=rows.map(({i,k})=>{const s=songShow(i),r=rating(i.id),dn=isDone(i.id);
       const pc=r?r*10:0,dash=(pc*100.53/100).toFixed(2)+' 100.53';
-      return `<div class="track sl-t${lsCar(g,i.id)?' carry':''} ${i.dx?'dx':''} ${dn?'done':''} ${r?'rated':''} ${UI.rOpen===i.id?'ropen':''} ${UI.rAnim===i.id?'opening':''} ${UI.rLand===i.id?'landing':''}" data-act="ropen" data-id="${i.id}"${i.dx&&UI.dxAnim===g.id?` style="animation-delay:${Math.min(k,14)*26}ms"`:''}>${r?`<span class="wash" style="width:${pc}%" aria-hidden="true"></span>`:''}${lsSongBar(g,i.id,pc)}<span class="num">${k+1}</span>
+      return `<div class="track sl-t${lsCar(g,i.id)?' carry':''} ${i.dx?'dx':''} ${dn?'done':''} ${r?'rated':''} ${UI.rOpen===i.id?'ropen':''} ${UI.rAnim===i.id?'opening':''} ${UI.rLand===i.id?'landing':''}" data-act="ropen" data-id="${i.id}"${i.dx&&UI.dxAnim===g.id?` style="animation-delay:${60+Math.min(k,14)*38}ms"`:''}>${r?`<span class="wash" style="width:${pc}%" aria-hidden="true"></span>`:''}${lsSongBar(g,i.id,pc)}<span class="num">${k+1}</span>
         <span class="ttl">${esc(s.t)}${s.f.length?`<span class="feat">feat. ${esc(s.f.join(', '))}</span>`:''}</span>${lsSongDelta(g,i.id)}
         <button class="check" data-act="tog" data-id="${i.id}" aria-pressed="${dn}" aria-label="${r?'Rated '+fmt(r)+'. ':''}${dn?'Heard':'Not heard'}: ${esc(i.title)}"><svg viewBox="0 0 44 44" aria-hidden="true"><circle class="rg-t" cx="22" cy="22" r="16"/>${r?`<circle class="rg-v" cx="22" cy="22" r="16" stroke-dasharray="${dash}"/>`:''}</svg>${r?`<span class="rg-n">${fmt(r)}</span>`:dn?'<span class="rg-d"></span>':''}</button></div>
         ${UI.rOpen===i.id?rateMeter(i.id,s.t):''}`}).join('');
@@ -6264,10 +6265,10 @@ document.addEventListener('click',ev=>{
   else if(act==='dxsel'){const gid=b.dataset.g,to=b.dataset.v==='1',go=()=>{UI.dxOpen[gid]=to;UI.dxAnim=gid;slPulseAsk(gid,140)};
     const sl=document.querySelector('.group.sleeve[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(gid):gid)+'"]');
     if(sl&&!noMotion()&&sl.animate&&!!UI.dxOpen[gid]!==to&&!UI.dxBusy){   /* the old edition leaves first: header fades, deluxe-only songs fold shut, then the new one rises in */
-      UI.dxBusy=true;const E='cubic-bezier(.4,0,.2,1)',as=[];
-      sl.querySelectorAll('.sl-cover,.sl-meta>*,.arate').forEach(e=>as.push(e.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateY(-3px)'}],{duration:170,easing:E,fill:'forwards'})));
+      UI.dxBusy=true;const E='cubic-bezier(.45,.05,.4,1)',as=[];
+      sl.querySelectorAll('.sl-cover,.sl-meta>*,.arate').forEach(e=>as.push(e.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateY(-4px)'}],{duration:300,easing:E,fill:'forwards'})));
       if(!to){const r=[...sl.querySelectorAll('.track.dx')];r.forEach((e,k)=>{const h=e.getBoundingClientRect().height;e.style.overflow='hidden';
-        as.push(e.animate([{opacity:1,maxHeight:h+'px',transform:'none'},{opacity:0,maxHeight:'0px',paddingTop:'0px',paddingBottom:'0px',transform:'translateY(-6px)'}],{duration:230,delay:Math.min(r.length-1-k,6)*14,easing:E,fill:'forwards'}))})}
+        as.push(e.animate([{opacity:1,maxHeight:h+'px',transform:'none'},{opacity:0,maxHeight:'0px',paddingTop:'0px',paddingBottom:'0px',transform:'translateY(-6px)'}],{duration:420,delay:Math.min(r.length-1-k,6)*26,easing:E,fill:'forwards'}))})}
       Promise.all(as.map(a=>a.finished.catch(()=>{}))).then(()=>{UI.dxBusy=false;go();render()});
       return}
     go()}
