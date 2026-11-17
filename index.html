@@ -842,6 +842,12 @@ details.addart .add{border-top:1px solid var(--line)}
   .tacc{transition:transform .2s cubic-bezier(.3,1.35,.5,1)}.tacc:active{transform:scale(.92)}
 }
 @media (max-width:560px){.pf-hero{padding:16px;gap:12px}.pf-av{width:56px;height:56px;font-size:26px}.pf-who h2{font-size:23px}.pf-match{width:72px;height:72px}.pf-match b{font-size:17px}}
+/* Friends shortcut in the top bar and the Friends page */
+.tfr.cur{outline:2px solid var(--accent);outline-offset:2px}
+.tfr .tbadge{animation:none}
+@keyframes tfrpop{0%{transform:scale(.4)}60%{transform:scale(1.25)}100%{transform:scale(1)}}
+.frwrap.pf-in .setcard{animation:pfup .5s cubic-bezier(.2,.8,.2,1) both}
+@media (prefers-reduced-motion:no-preference){.tfr .tbadge{animation:tfrpop .45s cubic-bezier(.3,1.35,.5,1) both}.tfr:active{transform:scale(.92)}.tfr{transition:transform .2s cubic-bezier(.3,1.35,.5,1)}}
 /* accounts and friends' ratings (Settings > Account, and the Friends strip under an album or title) */
 /* profile picture and account color */
 .tacc.pic,.fav.pic,.pf-av.pic{overflow:hidden;padding:0}
@@ -1872,6 +1878,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-ac', note:'FRIENDS ONE TAP AWAY: once you are signed in, a Friends button (two people) sits in the top bar next to your account icon. It opens a Friends page with just the list: requests waiting for you first, then your friends (tap a name to open their page, and the back button returns to the list), then your friend code and the add-by-code box. A small number on the button shows how many requests are waiting. The list also lives on your Account page as before.'},
   {v:'2026.11.17-ab', note:'PROBLEM REPORTS: if Playback crashes on a friend\u2019s phone, a small card slides in offering to send the error details to Skyler through the Suggest box (one tap, only after they press Send report). Network hiccups are not reported, and each error shows once. The owner does not see it. They read in Settings, Friend suggestions, starting with [auto].'},
   {v:'2026.11.17-aa', note:'MATCH FIX: friends could not open another person\u2019s page (\u201cCould not reach Playback\u2019s server\u201d) when that page had albums without a MusicBrainz id, which is most Spotify and Apple Music imports. The page now opens, taste match counts only things you both rated, and a drawing error is no longer reported as a connection problem.'},
   {v:'2026.11.17-z', note:'PROFILE PHOTO AND ACCOUNT COLOR: on your Account page, under Your account, you can add a photo (it is cropped square and shrunk to a small size), remove it, and pick your account color from a row of swatches, drag a slider for any shade, or tap Auto to go back to the color made from your name. Your photo and color show on the account icon at the top right, on your page, and for friends on your page, in their friends list and next to your ratings under an album. The picture and color are kept on Playback\u2019s server, so your Worker needs the new playback-sync.js (it takes it from GitHub on its own); until it does, saving shows a short \u201cgive it a minute\u201d note.'},
@@ -5677,9 +5684,10 @@ async function accGoogle(resp){
 function accAfter(){
   try{
     if(!GCID)return;
-    if(UI.view==='account'){if(accOn())accFriends(false);else accMount()}
+    if(UI.view==='friends'){if(accOn())accFriends(false)}
+    else if(UI.view==='account'){if(accOn())accFriends(false);else accMount()}
     else if(UI.view==='friend'){if(accOn()&&UI.fid){accFriends(false);accProfile(UI.fid,false)}}
-    else if(!UI.view&&accOn())accWant();
+    else if(!UI.view&&accOn()){accWant();accFriends(false)}
   }catch(e){}
 }
 const accMsg=(ok,t)=>{ACX.ok=ok;ACX.msg=t;render()};
@@ -5798,10 +5806,23 @@ function profileHtml(P,mine){
   const st=accStats(P.items),match=P.self?null:accMatch(P.items,mine);
   return accHeroHtml(Object.assign({},P,{n:accBase(P.items).length}),st,match,P.extra)+accStatsHtml(st)+accListHtml(P,match);
 }
+/* the Friends shortcut in the top bar: one tap to the friends list, with a count of requests waiting for you */
+function friendsBtn(){
+  if(!GCID||!accOn())return '';
+  const n=ACX.fr?ACX.fr.incoming.length:0,cur=UI.view==='friends'||UI.view==='friend';
+  return `<button class="tact tfr${cur?' cur':''}" data-act="view" data-v="friends" aria-pressed="${cur}" aria-label="Friends${n?', '+n+' request'+(n===1?'':'s')+' waiting':''}">${ICO.friends}${n?`<i class="tbadge" aria-hidden="true">${n}</i>`:''}</button>`;
+}
+/* the Friends page: just the friends list (requests, friends, add by code), no scrolling past your own stats */
+function friendsView(){
+  const ani=UI.pAnim?' pf-in':'';UI.pAnim=false;
+  if(!accOn())return `<section class="settings pf" aria-labelledby="fr-h"><h2 id="fr-h">Friends</h2><div class="setcard acc"><p class="note">Sign in to add friends and open their pages.</p><div class="tools"><button class="btn primary" data-act="view" data-v="account">Sign in</button></div></div></section>`;
+  const fc=accFriendsCardHtml(true);ACX.anim=false;
+  return `<section class="settings pf" aria-labelledby="fr-h"><h2 id="fr-h" class="sr">Friends</h2><div class="frwrap${ani}">${fc}</div></section>`;
+}
 /* the account icon in the top bar */
 function accBtn(){
   if(!GCID)return '';
-  const on=accOn(),cur=UI.view==='account'||UI.view==='friend';
+  const on=accOn(),cur=UI.view==='account';
   const pic=on&&accPicOf(ACC.me);
   return `<button class="tact tacc${on?' on':''}${pic?' pic':''}" data-act="view" data-v="account" aria-pressed="${cur}" aria-label="${on?'Account: '+esc(ACC.me.name):'Sign in or make an account'}"${on?` style="--h:${accHueOf(ACC.me)}"`:''}>${on?(pic?accFace(ACC.me):`<b aria-hidden="true">${accIni(ACC.me.name)}</b>`):ICO.user}</button>`;
 }
@@ -5869,19 +5890,25 @@ async function accSyncDel(){
   catch(e){ACX.syncOk=false;ACX.syncMsg='Could not reach Playback’s server. Check your connection.'}
   render();
 }
-function accManageHtml(){
-  const me=ACC.me,F=ACX.fr,b=ACX.busy?' disabled':'',ani=ACX.anim?' acc-in':'';ACX.anim=false;
-  const row=(x,btns,open)=>`<div class="acc-row${ani}"><i class="fav${accPicOf(x)?' pic':''}" style="--h:${accHueOf(x)}" aria-hidden="true">${accFace(x)}</i>${open?`<button class="fn linkish" data-act="friendopen" data-u="${esc(x.uid)}">${esc(x.name)}</button>`:`<span class="fn">${esc(x.name)}</span>`}<span class="sp"></span>${btns}</div>`;
+function accFriendsCardHtml(listFirst){
+  const me=ACC.me,F=ACX.fr,b=ACX.busy?' disabled':'',ani=ACX.anim?' acc-in':'';
   const msg=ACX.msg?`<span class="msg ${ACX.ok?'ok':'err'}" role="status">${esc(ACX.msg)}</span>`:'';
-  return `<div class="setcard acc">
-    <h3>Friends</h3>
-    <div class="acc-id"><div><span class="label">Your friend code</span><b class="acc-code" aria-label="Friend code ${esc(me.code.split('').join(' '))}">${esc(me.code)}</b></div><button class="btn" data-act="acccopy">${ACX.copied?'Copied':'Copy'}</button></div>
+  const row=(x,btns,open)=>`<div class="acc-row${ani}"><i class="fav${accPicOf(x)?' pic':''}" style="--h:${accHueOf(x)}" aria-hidden="true">${accFace(x)}</i>${open?`<button class="fn linkish" data-act="friendopen" data-u="${esc(x.uid)}">${esc(x.name)}</button>`:`<span class="fn">${esc(x.name)}</span>`}<span class="sp"></span>${btns}</div>`;
+  const add=`<div class="acc-id"><div><span class="label">Your friend code</span><b class="acc-code" aria-label="Friend code ${esc(me.code.split('').join(' '))}">${esc(me.code)}</b></div><button class="btn" data-act="acccopy">${ACX.copied?'Copied':'Copy'}</button></div>
     <p class="note">Give your code to a friend. They enter it below, you accept, and you can open each other’s pages.</p>
-    <form class="panel" data-form="accadd"><label class="label" for="acc-code">Add a friend</label><input id="acc-code" name="code" maxlength="9" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Their 8-letter code" required><div class="tools"><button class="btn primary"${b}>Send request</button></div></form>
-    ${F&&F.incoming.length?`<div class="label">Wants to be friends</div>${F.incoming.map(x=>row(x,`<button class="btn primary" data-act="accaccept" data-u="${esc(x.uid)}"${b}>Accept</button><button class="btn" data-act="accremove" data-u="${esc(x.uid)}"${b}>Decline</button>`)).join('')}`:''}
+    <form class="panel" data-form="accadd"><label class="label" for="acc-code">Add a friend</label><input id="acc-code" name="code" maxlength="9" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Their 8-letter code" required><div class="tools"><button class="btn primary"${b}>Send request</button></div></form>`;
+  const list=`${F&&F.incoming.length?`<div class="label">Wants to be friends</div>${F.incoming.map(x=>row(x,`<button class="btn primary" data-act="accaccept" data-u="${esc(x.uid)}"${b}>Accept</button><button class="btn" data-act="accremove" data-u="${esc(x.uid)}"${b}>Decline</button>`)).join('')}`:''}
     ${F&&F.outgoing.length?`<div class="label">Waiting for them</div>${F.outgoing.map(x=>row(x,`<button class="btn" data-act="accremove" data-u="${esc(x.uid)}"${b}>Cancel</button>`)).join('')}`:''}
-    ${F?`<div class="label">Friends${F.friends.length?' ('+F.friends.length+')':''}</div>${F.friends.length?F.friends.map(x=>row(x,`<span class="note">${x.share===false?'not sharing':x.rated+' rated'}</span><button class="btn" data-act="accremove" data-u="${esc(x.uid)}"${b}>Remove</button>`,x.share!==false)).join(''):'<p class="note">No friends yet.</p>'}`:'<p class="note">Loading friends…</p>'}
-    ${msg}</div>
+    ${F?`<div class="label">Friends${F.friends.length?' ('+F.friends.length+')':''}</div>${F.friends.length?F.friends.map(x=>row(x,`<span class="note">${x.share===false?'not sharing':x.rated+' rated'}</span><button class="btn" data-act="accremove" data-u="${esc(x.uid)}"${b}>Remove</button>`,x.share!==false)).join(''):'<p class="note">No friends yet.</p>'}`:'<p class="note">Loading friends…</p>'}`;
+  return `<div class="setcard acc${listFirst?' frpage':''}">
+    <h3>Friends</h3>
+    ${listFirst?list+add:add+list}
+    ${msg}</div>`;
+}
+function accManageHtml(){
+  const me=ACC.me,b=ACX.busy?' disabled':'';
+  const fc=accFriendsCardHtml(false);ACX.anim=false;
+  return fc+`
     <div class="setcard acc"><h3>Your account</h3>
     ${accLookHtml(b)}
     <form class="panel" data-form="accname"><label class="label" for="acc-name">Name friends see</label><input id="acc-name" name="name" maxlength="40" autocomplete="off" value="${esc(me.name)}"><div class="tools"><button class="btn"${b}>Save name</button></div></form>
@@ -5907,7 +5934,7 @@ function accountView(){
 }
 function friendView(){
   const uid=UI.fid,c=ACX.prof[uid]||{},F=ACX.fr,known=F&&[].concat(F.friends,F.incoming,F.outgoing).find(x=>x.uid===uid);
-  const back=`<button class="btn pf-back" data-act="view" data-v="account">← Account</button>`;
+  const back=UI.fFrom==='friends'?`<button class="btn pf-back" data-act="view" data-v="friends">← Friends</button>`:`<button class="btn pf-back" data-act="view" data-v="account">← Account</button>`;
   let h;
   if(!accOn())h=`<section class="settings pf">${back}<p class="note">Sign in to see friends’ pages.</p></section>`;
   else if(c.data){
@@ -5990,7 +6017,7 @@ function renderMain(){
     <div class="topr">
       <button class="sync" data-act="opensync" data-s="${SYS.status}"><i></i>${esc(syncLabel())}</button>
       ${!UI.view?`<div class="topact">${UI.tab==='music'?`<button class="tact" data-act="llopen" aria-label="Listen list, ${llCount()} to hear">${ICO.mark}${llCount()?`<i class="tbadge">${llCount()}</i>`:''}</button>`:''}<button class="tact tmob" data-act="lib" aria-label="${UI.tab==='music'?'Switch artist':'Switch show or film'}">${ICO.grid}</button>${UI.tab==='music'?`<button class="tact tmob" data-act="addart" aria-label="Add an artist">${ICO.plus}</button>`:''}</div>`:''}
-      ${accBtn()}
+      ${friendsBtn()}${accBtn()}
     </div>
   </header>
   ${UI.llOpen&&!UI.view&&UI.tab==='music'?`<div class="llover"><button class="llbk" data-act="llclose" aria-label="Close Listen list"></button>${listenSide()}</div>`:''}
@@ -5998,7 +6025,7 @@ function renderMain(){
   ${SYS.status==='conflict'?conflictBanner():''}
   ${bkNudge()}
 
-${UI.view==='settings'?settingsView():UI.view==='account'?accountView():UI.view==='friend'?friendView():UI.view==='collection'?collectionView():UI.view==='history'?historyView():mainView(e,list)}
+${UI.view==='settings'?settingsView():UI.view==='account'?accountView():UI.view==='friends'?friendsView():UI.view==='friend'?friendView():UI.view==='collection'?collectionView():UI.view==='history'?historyView():mainView(e,list)}
   <footer>
     <p class="buildid">Build ${esc(BUILD)}</p>
   </footer>`;
@@ -6320,6 +6347,7 @@ function heroTick(t){
   liqTick(dt,HERO.spd,t);
   HERO.raf=requestAnimationFrame(heroTick)}
 const ICO={
+  friends:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5c.5-3.3 3-5.2 6-5.2s5.5 1.9 6 5.2"/><circle cx="17" cy="9.5" r="2.5"/><path d="M16.5 14.6c2.6-.2 4.6 1.4 5 4.4"/></svg>',
   user:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.8 20c.6-3.7 3.7-5.8 7.2-5.8s6.6 2.1 7.2 5.8"/></svg>',
   mark:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h11v17L12 16.5l-5.5 4z"/></svg>',
   close:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
@@ -6955,7 +6983,7 @@ document.addEventListener('click',ev=>{
     const rt=document.querySelector('.rater');
     if(rt&&!matchMedia('(prefers-reduced-motion:reduce)').matches){UI.rClosing=true;const cid=UI.rOpen,fly=rtFlyPrep(cid);rt.classList.remove('rt-in');rt.classList.add('rt-out');
       setTimeout(()=>{UI.rClosing=false;UI.rOpen=null;if(fly)UI.rLand=cid;render()},230);rtFlyGo(fly);return}}
-  if(act==='view'){UI.view=b.dataset.v;UI.rOpen=null;if(UI.view==='account'){UI.pAnim=true;UI.pKind='a';UI.pLim=60}if(UI.view==='history'){UI.hAnim=true;UI.hEdit=null}window.scrollTo({top:0})}
+  if(act==='view'){UI.view=b.dataset.v;UI.rOpen=null;if(UI.view==='account'){UI.pAnim=true;UI.pKind='a';UI.pLim=60}if(UI.view==='friends'){UI.pAnim=true;ACX.anim=true}if(UI.view==='history'){UI.hAnim=true;UI.hEdit=null}window.scrollTo({top:0})}
   else if(act==='lib'){UI.libOpen=!UI.libOpen;UI.libAnim=UI.libOpen}
   else if(act==='llopen'){UI.llOpen=true}
   else if(act==='llclose'){UI.llOpen=false}
@@ -6976,7 +7004,7 @@ document.addEventListener('click',ev=>{
     if(nv[0]){nv[0].dataset.v=VSTEPS[Math.max(0,i-1)][0];nv[0].disabled=i<=0}if(nv[1]){nv[1].dataset.v=VSTEPS[Math.min(4,i+1)][0];nv[1].disabled=i>=4}}return}
   else if(act==='sugload'){sugLoad();return}
   else if(act==='sugdel'){sugChange('?id='+encodeURIComponent(id));return}
-  else if(act==='friendopen'){UI.view='friend';UI.fid=b.dataset.u;UI.pKind='a';UI.pFilter='all';UI.pLim=60;UI.pAnim=true;UI.rOpen=null;window.scrollTo({top:0});if(ACX.prof[UI.fid])ACX.prof[UI.fid].at=0}
+  else if(act==='friendopen'){UI.fFrom=UI.view==='friends'?'friends':'account';UI.view='friend';UI.fid=b.dataset.u;UI.pKind='a';UI.pFilter='all';UI.pLim=60;UI.pAnim=true;UI.rOpen=null;window.scrollTo({top:0});if(ACX.prof[UI.fid])ACX.prof[UI.fid].at=0}
   else if(act==='pkind'){UI.pKind=b.dataset.v;UI.pLim=60}
   else if(act==='pfilter'){UI.pFilter=b.dataset.v;UI.pLim=60}
   else if(act==='pmore'){UI.pLim=(UI.pLim||60)+60}
