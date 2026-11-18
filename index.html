@@ -1595,6 +1595,68 @@ body{overflow-x:clip}
 .pberr small{display:block;color:var(--muted);font-weight:400;font-size:12px;margin-top:2px}
 .pberr .pbb{display:flex;gap:8px}
 @media (prefers-reduced-motion:reduce){.pberr{transition:none;transform:none}}
+/* Stats page (Music menu › Stats): ranked lists, activity chart, time-of-day bars */
+.stv{display:flex;flex-direction:column;gap:14px;max-width:none}
+.st-ctl{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.st-sel{width:auto;flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;color:var(--muted)}
+.st-demo{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;padding:12px 16px;border-radius:14px;border:1px dashed var(--accent);background:color-mix(in srgb,var(--accent) 9%,var(--surface));font-size:14px}
+.st-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px;align-items:start}
+.st-side{display:flex;flex-direction:column;gap:14px;min-width:0}
+@media (max-width:900px){.st-grid{grid-template-columns:minmax(0,1fr)}}
+.st-main{min-width:0}
+.st-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.st-row{position:relative;display:grid;grid-template-columns:28px 44px minmax(0,1fr) auto;align-items:center;gap:12px;padding:9px 2px;border-top:1px solid var(--line)}
+.st-row:first-child{border-top:0}
+.st-rk{font:700 13px var(--mono);color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.st-cv{position:relative;width:44px;height:44px;border-radius:8px;overflow:hidden;display:grid;place-items:center;background:hsl(var(--h) 42% 40%);color:#fff;box-shadow:0 0 0 1px var(--line)}
+.st-cv b{font:800 18px var(--display)}
+.st-cv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.st-m{display:flex;flex-direction:column;min-width:0;gap:1px}
+.st-m small,.st-n small{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st-t{font-weight:700;font-size:15px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;color:var(--ink)}
+button.st-t{color:var(--ink)}
+button.st-t:hover{color:var(--accent);text-decoration:underline}
+.st-n{display:flex;flex-direction:column;align-items:flex-end;font-variant-numeric:tabular-nums}
+.st-n b{font:800 17px var(--display)}
+.st-fill{position:absolute;left:84px;right:0;bottom:3px;height:3px;border-radius:3px;background:var(--line);overflow:hidden;pointer-events:none}
+.st-fill::after{content:"";position:absolute;inset:0 auto 0 0;width:var(--w);background:var(--accent);border-radius:3px;transform-origin:left}
+.st-chart{display:block;width:100%;height:auto;overflow:visible}
+.st-chart rect{fill:var(--accent);transform-box:fill-box;transform-origin:50% 100%}
+.st-chart rect:hover{opacity:.75}
+.st-ax{display:flex;justify-content:space-between;font:600 11px var(--mono);color:var(--muted);margin-top:6px}
+.st-cols{display:flex;align-items:flex-end;gap:3px;height:110px}
+.st-dow{gap:8px}
+.st-col{flex:1 1 0;height:100%;display:flex;align-items:flex-end}
+.st-col i{display:block;width:100%;height:var(--h);min-height:2px;border-radius:4px 4px 2px 2px;background:var(--accent);transform-origin:50% 100%}
+.st-col:hover i{opacity:.75}
+.st-ax7{padding:0 2px}
+.st-ax7 span{flex:1 1 0;text-align:center}
+.st-hi dl{margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px 16px}
+.st-hi dt{font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.st-hi dd{margin:2px 0 0;font:800 22px/1.1 var(--display);font-variant-numeric:tabular-nums}
+.st-hi dd small{display:block;font:500 12px/1.3 var(--body);color:var(--muted);margin-top:2px}
+.st-file{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.st-file:focus-visible+label{outline:2px solid var(--accent);outline-offset:2px}
+.st-manage label.btn{cursor:pointer}
+.st-manage label.btn.off{opacity:.6;pointer-events:none}
+.st-ok{color:var(--done)}
+.st-prog::before{content:"";display:inline-block;width:10px;height:10px;margin-right:8px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--accent)}
+.plset{margin-top:10px}
+@media (prefers-reduced-motion:no-preference){
+  @keyframes stin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @keyframes stfillx{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  @keyframes stup{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+  @keyframes stspin{to{transform:rotate(360deg)}}
+  .stanim .st-row{animation:stin .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*28ms)}
+  .stanim .st-fill::after{animation:stfillx .8s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*28ms + 120ms)}
+  .stanim .st-chart rect{animation:stup .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*14ms)}
+  .stanim .st-col i{animation:stup .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*18ms)}
+  .stanim .setcard,.stanim .st-demo{animation:stin .5s cubic-bezier(.2,.8,.2,1) both}
+  .stanim .st-side>.setcard:nth-child(2){animation-delay:70ms}.stanim .st-side>.setcard:nth-child(3){animation-delay:140ms}.stanim .st-side>.setcard:nth-child(4){animation-delay:210ms}
+  .st-prog::before{animation:stspin .8s linear infinite}
+  .st-col i,.st-chart rect{transition:opacity .15s}
+}
+@media (max-width:560px){.st-row{grid-template-columns:22px 40px minmax(0,1fr) auto;gap:10px}.st-cv{width:40px;height:40px}.st-fill{left:72px}}
 </style>
 
 <!-- suite:css v10 · shared by Kitchen, Grocery, Lift, DishLog, Protocol, Rail, Game Log, Playback — edit tools/suite.py in the kitchen repo, not here -->
@@ -2150,6 +2212,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.18-g', note:'STATS PAGE AND A PLAY HISTORY FOR EVERY SONG: Music menu › Stats is a stats.fm-style page: your top songs, artists and albums for the last 4 weeks, 6 months, 12 months, this year, any year or all time, plus plays over time, busiest day, longest streak, songs new to you, time of day and day of the week. Every play Spotify reports is now kept in a separate play history on this device, including songs from artists you have not added to Playback; add the artist later and its old plays show up as counts on its songs. To fill in the past, request Extended streaming history from Spotify (spotify.com/account/privacy) and choose the zip on the Stats page, no unzipping; it counts plays of 30 seconds or more like Spotify does, and importing a newer export later replaces the dates it covers so nothing is counted twice. Preview with fake stats shows the page with made-up listening that is never saved. Songs you have played are not checked off as heard on their own: after an import there is an optional button for that, with Undo. The history is kept on the device it was imported on (not synced), so keep the Spotify zip.'},
   {v:'2026.11.18-f', note:'PLAY COUNTS: every Spotify play of a song in your log is now counted. Song rows show a small ▶ number (hover for the last play date), and Settings › Spotify has a Most played list of your top songs and albums. The first time it runs it counts everything your Worker has saved (up to its last 3,000 plays); after that it adds each new play. Plays of songs not in Playback are not counted, and Spotify leaves out private-session plays.'},
   {v:'2026.11.18-e', note:'NEW RELEASES FROM YOUR ARTISTS: once a day while Playback is open (and on Check now), it asks Apple Music, which needs no key and uses none of your Spotify allowance, for the albums and EPs of up to 25 of your artists at a time, the ones checked longest ago first. Anything out in the last two months, or already announced, that is not in your log lands at the top of the Listen list under New from your artists, with Add to list, Artist and Dismiss, and the bookmark badge counts them. They also go to your morning brief (Worker 18 adds newReleases to /brief). Daily checks can be turned off in that box. It only runs while the app is open, and Apple is sent artist names only.'},
   {v:'2026.11.18-d', note:'YEAR IN REVIEW: Overview on your own account page has a Year in review card. Make my 2026 card builds a picture from your rated-on dates: albums rated, your average, how many artists, your top album big with its score, albums rated each month (busiest month lit) and your next best covers. Share it, copy it or save it like the rating card; switch years when you have rated 3+ albums in more than one.'},
@@ -2611,6 +2674,453 @@ function plHtml(){const T=plTop();if(!T.so.length)return '';
     <p class="note">Songs</p><ol class="pcl">${T.so.map(x=>`<li><button type="button" class="link" data-act="splgo" data-a="${esc(x.aid)}">${esc(x.t)}</button> <span class="why">\u2013 ${esc(x.a)}</span><b>${x.n}</b>${bar(x)}</li>`).join('')}</ol>
     <p class="note">Albums</p><ol class="pcl">${T.al.map(x=>`<li><button type="button" class="link" data-act="splgo" data-a="${esc(x.aid)}">${esc(x.t)}</button> <span class="why">\u2013 ${esc(x.a)}</span><b>${x.n}</b>${abar(x)}</li>`).join('')}</ol>
     <p class="note">Counts started when Spotify was connected. Private sessions and very short plays are not counted by Spotify.</p></details>`}
+/* PLAYS:BEGIN (play history engine and Stats page) */
+/* ---------- PLAY HISTORY ----------
+   Every play Spotify tells us about is kept here, whether or not the song's artist is in the log.
+   It lives on this device (IndexedDB, key plays_v1), NOT in the log: a long history is hundreds of
+   thousands of plays, far too much for the log that is saved on every tap and synced.
+   Four columns of whole numbers (time, song, album, listening time) plus one flag byte hold the plays
+   in time order, and three short name lists say what each song, album and artist number means.
+   Songs are joined by artist + title (remasters and explicit tags are the same song, live / remix /
+   demo versions stay apart), the same rule the Spotify check-off uses, so a song never splits in two.
+   Songs in the log get their play count from here (S.marks[id].pc), so adding an artist later
+   brings its old plays with it. */
+const PL_KEY='plays_v1',PL_MIN=30000;
+const PL={d:null,loading:null,demo:null,busy:false,prog:null,msg:'',err:'',sync:null,ver:0,sig:-1,st:0,tmr:0,img:null,imgSig:'',q:new Map(),arm:''};
+const plEmpty=()=>({v:1,ar:[],tk:[],al:[],ts:new Uint32Array(0),ti:new Uint32Array(0),ai:new Uint32Array(0),ms:new Uint32Array(0),sr:new Uint8Array(0),cur:0,exp:0,imp:[]});
+const plHide=(o,k,v)=>Object.defineProperty(o,k,{value:v,enumerable:false,writable:true,configurable:true});
+function plMaps(d){
+  if(d._m)return d._m;
+  const m={ar:new Map(),tk:new Map(),al:new Map(),raw:new Map()};
+  d.ar.forEach((x,i)=>m.ar.set(x.k,i));d.tk.forEach((x,i)=>m.tk.set(x.k,i));d.al.forEach((x,i)=>m.al.set(x.k,i));
+  plHide(d,'_m',m);return m;
+}
+/* an album's key: deluxe / remaster / anniversary editions are the album they extend */
+const plAlbKey=s=>mbK(String(s||'').replace(/\s*[\(\[][^)\]]*(deluxe|remaster|edition|version|anniversary|expanded)[^)\]]*[\)\]]/ig,''));
+/* the title shown: remaster / mono tags come off, live / remix / demo stay */
+const plTitle=t=>String(t).replace(/\s*[\(\[][^)\]]*\b(remaster(ed)?|mono|stereo)\b[^)\]]*[\)\]]/ig,'').replace(/\s+[-–—]\s+(\d{4}\s+)?remaster(ed)?(\s+\d{4})?\s*$/i,'').trim()||String(t);
+function plRef(d,a,t,al){
+  const m=plMaps(d),rk=a+'\u0001'+t+'\u0001'+al,hit=m.raw.get(rk);
+  if(hit)return hit;
+  const ak=nArtist(a)||'?';
+  let ar=m.ar.get(ak);if(ar===undefined){ar=d.ar.length;d.ar.push({k:ak,n:a});m.ar.set(ak,ar)}
+  const sp=mbSplit(t),alt=sp.descs.filter(x=>mbVClass(x)==='alt').map(mbK).join('');
+  const kk=ak+'|'+mbKeyOf(t)+(alt?'~'+alt:'');
+  let ti=m.tk.get(kk);if(ti===undefined){ti=d.tk.length;d.tk.push({k:kk,t:alt?String(t).trim():plTitle(t),a:ar});m.tk.set(kk,ti)}
+  const lk=ak+'|'+plAlbKey(al);
+  let ai=m.al.get(lk);if(ai===undefined){ai=d.al.length;d.al.push({k:lk,n:al||'',a:ar});m.al.set(lk,ai)}
+  const r=[ti,ai];m.raw.set(rk,r);return r;
+}
+const plBatch=()=>({ts:[],ti:[],ai:[],ms:[]});
+function plPush(d,B,a,t,al,sec,ms){const r=plRef(d,a,t,al);B.ts.push(sec);B.ti.push(r[0]);B.ai.push(r[1]);B.ms.push(ms>0?Math.min(Math.round(ms),4294967295):0)}
+function plLower(ts,v){let lo=0,hi=ts.length;while(lo<hi){const m=(lo+hi)>>>1;if(ts[m]<v)lo=m+1;else hi=m}return lo}
+const plCols=d=>({ts:d.ts,ti:d.ti,ai:d.ai,ms:d.ms,sr:d.sr});
+function plCat(parts){
+  let n=0;for(const p of parts)n+=p.ts.length;
+  const o={ts:new Uint32Array(n),ti:new Uint32Array(n),ai:new Uint32Array(n),ms:new Uint32Array(n),sr:new Uint8Array(n)};
+  let at=0;for(const p of parts){for(const k of ['ts','ti','ai','ms','sr'])o[k].set(p[k],at);at+=p.ts.length}
+  return o;
+}
+const plSlice=(c,a,b)=>({ts:c.ts.subarray(a,b),ti:c.ti.subarray(a,b),ai:c.ai.subarray(a,b),ms:c.ms.subarray(a,b),sr:c.sr.subarray(a,b)});
+/* two time-ordered runs into one (the older run first when times are equal) */
+function plZip2(A,B){
+  const na=A.ts.length,nb=B.ts.length,n=na+nb,o={ts:new Uint32Array(n),ti:new Uint32Array(n),ai:new Uint32Array(n),ms:new Uint32Array(n),sr:new Uint8Array(n)};
+  let i=0,j=0,k=0;
+  while(i<na||j<nb){const fromA=j>=nb||(i<na&&A.ts[i]<=B.ts[j]),S_=fromA?A:B,x=fromA?i++:j++;
+    o.ts[k]=S_.ts[x];o.ti[k]=S_.ti[x];o.ai[k]=S_.ai[x];o.ms[k]=S_.ms[x];o.sr[k]=S_.sr[x];k++}
+  return o;
+}
+/* put a batch of plays into the history. src 0 = Spotify's data export: it is complete for the time it
+   covers, so it REPLACES whatever is already there for that time (old export or live plays).
+   src 1 = plays seen live: added, skipping any the history already has. Returns {added,removed}. */
+function plCommit(d,B,src){
+  const n=B.ts.length;if(!n)return{added:0,removed:0};
+  const ord=new Uint32Array(n);for(let i=0;i<n;i++)ord[i]=i;
+  ord.sort((x,y)=>B.ts[x]-B.ts[y]||x-y);
+  let N={ts:new Uint32Array(n),ti:new Uint32Array(n),ai:new Uint32Array(n),ms:new Uint32Array(n),sr:new Uint8Array(n).fill(src?1:0)};
+  for(let i=0;i<n;i++){const o=ord[i];N.ts[i]=B.ts[o];N.ti[i]=B.ti[o];N.ai[i]=B.ai[o];N.ms[i]=B.ms[o]}
+  const E=plCols(d),en=E.ts.length,lo0=N.ts[0],hi0=N.ts[n-1];
+  let out,added=n,removed=0;
+  if(src===0){
+    const a=plLower(E.ts,lo0),b=plLower(E.ts,hi0+1);removed=b-a;
+    out=plCat([plSlice(E,0,a),N,plSlice(E,b,en)]);
+  }else{
+    const s=plLower(E.ts,lo0);
+    if(s<en){   /* overlaps what is there: drop plays it already has */
+      const seen=new Set();for(let i=s;i<en;i++)seen.add(E.ts[i]+':'+E.ti[i]);
+      const keep=[];for(let i=0;i<n;i++)if(!seen.has(N.ts[i]+':'+N.ti[i]))keep.push(i);
+      if(keep.length!==n){const M={ts:new Uint32Array(keep.length),ti:new Uint32Array(keep.length),ai:new Uint32Array(keep.length),ms:new Uint32Array(keep.length),sr:new Uint8Array(keep.length).fill(1)};
+        keep.forEach((x,i)=>{M.ts[i]=N.ts[x];M.ti[i]=N.ti[x];M.ai[i]=N.ai[x];M.ms[i]=N.ms[x]});N=M;added=keep.length}
+      out=added?plZip2(E,N):null;
+    }else out=plCat([E,N]);
+  }
+  if(!out)return{added:0,removed:0};
+  d.ts=out.ts;d.ti=out.ti;d.ai=out.ai;d.ms=out.ms;d.sr=out.sr;PL.ver++;
+  return{added,removed};
+}
+/* per-song facts the stats need, worked out once per change: when it was first played and how long it
+   usually plays (to estimate the time of live plays, which come without a length) */
+function plDerived(d){
+  if(d._x&&d._x.ver===PL.ver&&d._x.n===d.ts.length)return d._x;
+  const T=d.tk.length,R=d.ar.length,E=d.ts.length,sum=new Float64Array(T),cnt=new Uint32Array(T),first=new Uint32Array(T).fill(4294967295),afirst=new Uint32Array(R).fill(4294967295);
+  let ts=0,tc=0;
+  for(let i=0;i<E;i++){const t=d.ti[i],s=d.ts[i];if(d.ms[i]>0){sum[t]+=d.ms[i];cnt[t]++;ts+=d.ms[i];tc++}if(s<first[t])first[t]=s;const r=d.tk[t].a;if(s<afirst[r])afirst[r]=s}
+  const est=new Float64Array(T);for(let i=0;i<T;i++)est[i]=cnt[i]?sum[i]/cnt[i]:0;
+  const x={ver:PL.ver,n:E,first,afirst,est,avg:tc?ts/tc:210000};plHide(d,'_x',x);return x;
+}
+/* everything the Stats page shows for plays between from and to (seconds) */
+function plQuery(d,from,to){
+  const X=plDerived(d),T=d.tk.length,A=d.al.length,R=d.ar.length,lo=plLower(d.ts,from),hi=plLower(d.ts,to);
+  const q={n:hi-lo,ms:0,est:0,cT:new Uint32Array(T),cA:new Uint32Array(A),cR:new Uint32Array(R),mT:new Float64Array(T),mA:new Float64Array(A),mR:new Float64Array(R),lastAl:new Int32Array(T).fill(-1),hrs:new Array(24).fill(0),dow:new Array(7).fill(0),days:new Map()};
+  const dt=new Date(0);
+  for(let i=lo;i<hi;i++){
+    const t=d.ti[i],a=d.ai[i],r=d.tk[t].a,known=d.ms[i]>0,m=known?d.ms[i]:(X.est[t]||X.avg);
+    if(!known)q.est++;
+    q.cT[t]++;q.cA[a]++;q.cR[r]++;q.mT[t]+=m;q.mA[a]+=m;q.mR[r]+=m;q.lastAl[t]=a;q.ms+=m;
+    dt.setTime(d.ts[i]*1000);q.hrs[dt.getHours()]++;q.dow[dt.getDay()]++;
+    const dk=dt.getFullYear()*10000+(dt.getMonth()+1)*100+dt.getDate();q.days.set(dk,(q.days.get(dk)||0)+1);
+  }
+  let nT=0,nA=0,nR=0,newT=0,newR=0;
+  for(let i=0;i<T;i++)if(q.cT[i]){nT++;if(X.first[i]>=from&&X.first[i]<to)newT++}
+  for(let i=0;i<A;i++)if(q.cA[i]&&d.al[i].n)nA++;
+  for(let i=0;i<R;i++)if(q.cR[i]){nR++;if(X.afirst[i]>=from&&X.afirst[i]<to)newR++}
+  Object.assign(q,{nT,nA,nR,newT,newR});
+  /* busiest day and longest run of days in a row */
+  let best=null,run=0,runBest=0,runEnd=0,prev=null;
+  const keys=[...q.days.keys()].sort((x,y)=>x-y);
+  for(const k of keys){const n=q.days.get(k);if(!best||n>best.n)best={dk:k,n};
+    const dn=Date.UTC(Math.floor(k/10000),Math.floor(k/100)%100-1,k%100)/864e5;
+    run=prev!==null&&dn-prev===1?run+1:1;prev=dn;if(run>runBest){runBest=run;runEnd=k}}
+  q.best=best;q.streak=runBest;q.streakEnd=runEnd;q.dayCount=keys.length;
+  return q;
+}
+/* the list for one tab: song (t), artist (r) or album (a), most played first */
+function plTop(q,kind,limit){
+  const c=kind==='t'?q.cT:kind==='r'?q.cR:q.cA,m=kind==='t'?q.mT:kind==='r'?q.mR:q.mA,idx=[];
+  for(let i=0;i<c.length;i++)if(c[i])idx.push(i);
+  idx.sort((x,y)=>c[y]-c[x]||m[y]-m[x]||x-y);
+  return limit?idx.slice(0,limit):idx;
+}
+/* the time ranges on the page. gran: how the activity chart is cut up (d day, w week, m month, y year) */
+function plRange(d,k,now){
+  now=now||Math.floor(Date.now()/1000);const D=86400,nd=new Date(now*1000);let from,to=now+1,label;
+  if(k==='4w'){from=now-28*D;label='Last 4 weeks'}
+  else if(k==='6m'){from=now-183*D;label='Last 6 months'}
+  else if(k==='12m'){from=now-365*D;label='Last 12 months'}
+  else if(k==='ytd'){from=Math.floor(new Date(nd.getFullYear(),0,1).getTime()/1000);label='This year'}
+  else if(/^y\d{4}$/.test(k)){const y=+k.slice(1);from=Math.floor(new Date(y,0,1).getTime()/1000);to=Math.floor(new Date(y+1,0,1).getTime()/1000);label=String(y)}
+  else{from=d.ts.length?d.ts[0]:now-D;label='All time';k='all'}
+  const span=(Math.min(to,now+1)-from)/D,gran=span<=35?'d':span<=200?'w':span<=2200?'m':'y';
+  return{k,from,to,label,gran,span};
+}
+/* the chart's bars: the per-day counts folded into days, weeks, months or years */
+function plBuckets(days,r){
+  const out=[],M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],cnt=(y,m,d)=>days.get(y*10000+(m+1)*100+d)||0;
+  const fs=(y,m,d)=>`${M[m]} ${d}`;
+  const a=new Date(r.from*1000),z=new Date(Math.min(r.to,Math.floor(Date.now()/1000)+1)*1000-1);
+  if(r.gran==='d'){
+    for(let t=new Date(a.getFullYear(),a.getMonth(),a.getDate());t<=z;t.setDate(t.getDate()+1)){const n=cnt(t.getFullYear(),t.getMonth(),t.getDate());out.push({l:fs(t.getFullYear(),t.getMonth(),t.getDate()),t:t.toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'}),n})}
+  }else if(r.gran==='w'){
+    for(let t=new Date(a.getFullYear(),a.getMonth(),a.getDate());t<=z;){let n=0;const s=new Date(t);for(let i=0;i<7&&t<=z;i++){n+=cnt(t.getFullYear(),t.getMonth(),t.getDate());t.setDate(t.getDate()+1)}
+      out.push({l:fs(s.getFullYear(),s.getMonth(),s.getDate()),t:'Week of '+s.toLocaleDateString([],{month:'short',day:'numeric'}),n})}
+  }else if(r.gran==='m'){
+    for(let y=a.getFullYear(),m=a.getMonth();y<z.getFullYear()||(y===z.getFullYear()&&m<=z.getMonth());){let n=0;for(let d=1;d<=31;d++)n+=cnt(y,m,d);
+      out.push({l:M[m]+(m===0||!out.length?' '+String(y).slice(2):''),t:M[m]+' '+y,n});if(++m>11){m=0;y++}}
+  }else{
+    for(let y=a.getFullYear();y<=z.getFullYear();y++){let n=0;for(let m=0;m<12;m++)for(let d=1;d<=31;d++)n+=cnt(y,m,d);out.push({l:String(y),t:String(y),n})}
+  }
+  return out;
+}
+/* ---- keeping it ---- */
+function plSaveNow(){
+  const d=PL.d;if(!d)return Promise.resolve();
+  return IDB.put(PL_KEY,{v:1,ar:d.ar,tk:d.tk,al:d.al,ts:d.ts,ti:d.ti,ai:d.ai,ms:d.ms,sr:d.sr,cur:d.cur,exp:d.exp,imp:d.imp}).then(()=>{PL.err=''},()=>{PL.err='This device would not keep the play history (private browsing, or storage is full). It will be gone when the page closes.'});
+}
+function plSaveSoon(){clearTimeout(PL.st);PL.st=setTimeout(()=>{plSaveNow().then(()=>{if(PL.err)render()})},2500)}
+function plLoad(){
+  if(PL.d)return Promise.resolve(PL.d);
+  return PL.loading||(PL.loading=IDB.get(PL_KEY).then(v=>{PL.d=v&&v.v===1&&v.ts instanceof Uint32Array&&v.sr instanceof Uint8Array?v:plEmpty()},()=>{PL.d=plEmpty()}).then(()=>{PL.loading=null;return PL.d}));
+}
+/* plays from Spotify as they happen (the Worker's saved list, or this device's own check) */
+function plFeed(plays){
+  const d=PL.d;if(!d||!Array.isArray(plays)||!plays.length)return 0;
+  const B=plBatch(),cur0=d.cur||0;let hi=cur0;
+  for(const x of plays){
+    if(!x||!x.p||!x.t||!Array.isArray(x.a)||!x.a[0])continue;
+    if(x.p>hi)hi=x.p;
+    const s=Math.floor(x.p/1000);if(s<=(d.exp||0))continue;   /* inside what a data export already covers */
+    plPush(d,B,x.a[0],x.t,x.al||'',s,0);
+  }
+  d.cur=hi;
+  const r=plCommit(d,B,1);if(r.added||hi!==cur0)plSaveSoon();
+  return r.added;
+}
+/* song counts into the log: each song in the log gets its total plays and last play from the history.
+   Returns the songs in the log that have plays but are not checked off as heard. */
+function plResync(){
+  const d=PL.d;if(!d||!d.ts.length||!S.music.length)return{changed:0,songs:0,heard:[]};
+  const idx=spIndex(),T=d.tk.length,cnt=new Uint32Array(T),last=new Uint32Array(T),lal=new Int32Array(T).fill(-1);
+  for(let i=0;i<d.ts.length;i++){const t=d.ti[i];cnt[t]++;last[t]=d.ts[i];lal[t]=d.ai[i]}
+  const ok=d.ar.map(a=>idx.has(nArtist(a.n))),by=new Map();
+  for(let j=0;j<T;j++){
+    if(!cnt[j]||!ok[d.tk[j].a])continue;
+    const f=spFind(idx,{t:d.tk[j].t,a:[d.ar[d.tk[j].a].n],al:lal[j]>=0?d.al[lal[j]].n:''});
+    if(!f.id)continue;
+    const e=by.get(f.id)||{n:0,l:0};e.n+=cnt[j];e.l=Math.max(e.l,last[j]);by.set(f.id,e);
+  }
+  let changed=0;const heard=[];
+  for(const [id,e] of by){
+    const m=S.marks[id]||{},pc=Math.max(m.pc||0,e.n),pl=Math.max(m.pl||0,e.l*1000);
+    if(pc!==m.pc||pl!==m.pl){S.marks[id]={...m,pc,pl};changed++}
+    if(!isDone(id))heard.push(id);
+  }
+  return{changed,songs:by.size,heard};
+}
+const plSig=()=>{let n=S.music.length;for(const a of S.music)for(const g of a.groups)n+=g.items.length;return n};
+/* when the log gains songs (an artist imported or updated), their old plays are counted */
+function plSoon(){
+  if(!PL.d||!PL.d.ts.length)return;
+  clearTimeout(PL.tmr);
+  PL.tmr=setTimeout(()=>{const s=plSig();if(s===PL.sig)return;PL.sig=s;const r=plResync();PL.sync=r;if(r.changed){touch();render()}},2500);
+}
+/* ---- Spotify's data export (zip, or the json files from inside it) ---- */
+const plErr=m=>Object.assign(new Error(m),{pl:true});
+async function plZipList(file){
+  const sz=file.size,tailN=Math.min(sz,65600),tail=new DataView(await file.slice(sz-tailN).arrayBuffer());
+  let p=-1;for(let i=tail.byteLength-22;i>=0;i--){if(tail.getUint32(i,true)===0x06054b50){p=i;break}}
+  if(p<0)throw plErr('That zip file looks damaged or is not a zip.');
+  const cnt=tail.getUint16(p+10,true),cdSize=tail.getUint32(p+12,true),cdOff=tail.getUint32(p+16,true);
+  if(cdOff===0xFFFFFFFF||cnt===0xFFFF)throw plErr('That zip is too big to open here. Unzip it on your computer and choose the Streaming_History_Audio files inside.');
+  const cd=new DataView(await file.slice(cdOff,cdOff+cdSize).arrayBuffer()),dec=new TextDecoder(),out=[];let o=0;
+  for(let i=0;i<cnt;i++){
+    if(o+46>cd.byteLength||cd.getUint32(o,true)!==0x02014b50)break;
+    const method=cd.getUint16(o+10,true),csz=cd.getUint32(o+20,true),nl=cd.getUint16(o+28,true),el=cd.getUint16(o+30,true),cl=cd.getUint16(o+32,true),lho=cd.getUint32(o+42,true);
+    const name=dec.decode(new Uint8Array(cd.buffer,cd.byteOffset+o+46,nl));o+=46+nl+el+cl;
+    if(/(^|\/)(streaming_history_audio[^\/]*|endsong[^\/]*|streaminghistory\d*)\.json$/i.test(name))out.push({name,method,csz,lho});
+  }
+  return out;
+}
+async function plZipText(file,e){
+  if(e.csz===0xFFFFFFFF)throw plErr('A file inside that zip is too big to open here. Unzip it and choose the files inside.');
+  const h=new DataView(await file.slice(e.lho,e.lho+30).arrayBuffer());
+  if(h.getUint32(0,true)!==0x04034b50)throw plErr('That zip file looks damaged.');
+  const at=e.lho+30+h.getUint16(26,true)+h.getUint16(28,true),blob=file.slice(at,at+e.csz);
+  if(e.method===0)return blob.text();
+  if(e.method!==8||typeof DecompressionStream==='undefined')throw plErr('This browser cannot open that zip. Unzip it on your computer and choose the Streaming_History_Audio files inside.');
+  return new Response(blob.stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+}
+/* one file's plays into the batch. Counts a play like Spotify does: 30 seconds or more, or the whole of a short track. */
+function plRecords(d,B,arr,st){
+  for(const r of arr){
+    if(!r||typeof r!=='object')continue;st.rec++;
+    let t,a,al,sec,ms,done=false;
+    if(r.master_metadata_track_name!==undefined||r.ts!==undefined){t=r.master_metadata_track_name;a=r.master_metadata_album_artist_name;al=r.master_metadata_album_album_name;sec=Date.parse(r.ts);ms=r.ms_played;done=r.reason_end==='trackdone'}
+    else if(r.trackName!==undefined){t=r.trackName;a=r.artistName;al='';sec=Date.parse(String(r.endTime).replace(' ','T')+'Z');ms=r.msPlayed}
+    else{st.other++;continue}
+    if(!t||!a||!(sec>0)){st.other++;continue}   /* podcasts, audiobooks and videos have no song name */
+    ms=+ms||0;if(ms<PL_MIN&&!done){st.short++;continue}
+    sec=Math.floor(sec/1000);plPush(d,B,String(a),String(t),al?String(al):'',sec,ms);st.used++;
+    if(sec<st.min)st.min=sec;if(sec>st.max)st.max=sec;
+  }
+}
+async function plReadAll(d,files,onProg){
+  const B=plBatch(),st={files:0,rec:0,used:0,short:0,other:0,min:Infinity,max:0};
+  const tick=()=>new Promise(r=>setTimeout(r,0));
+  for(const f of files){
+    const nm=String(f.name||'');
+    if(/\.zip$/i.test(nm)){
+      const es=await plZipList(f);
+      if(!es.length)throw plErr('No listening history files in that zip. It needs the Extended streaming history (files named Streaming_History_Audio…).');
+      for(const e of es){onProg&&onProg('Reading '+e.name.split('/').pop()+'…');await tick();const txt=await plZipText(f,e);let j;try{j=JSON.parse(txt)}catch(x){throw plErr(e.name.split('/').pop()+' is not readable.')}if(Array.isArray(j)){plRecords(d,B,j,st);st.files++}}
+    }else if(/\.json$/i.test(nm)){
+      onProg&&onProg('Reading '+nm+'…');await tick();
+      let j;try{j=JSON.parse(await f.text())}catch(x){throw plErr(nm+' is not readable.')}
+      if(Array.isArray(j)){plRecords(d,B,j,st);st.files++}
+    }
+  }
+  return{B,st};
+}
+async function plImport(files){
+  if(PL.busy||!files||!files.length)return;
+  PL.busy=true;PL.msg='';PL.err='';PL.prog='Starting…';render();
+  const prog=t=>{PL.prog=t;render()};
+  try{
+    const d=await plLoad();
+    const {B,st}=await plReadAll(d,files,prog);
+    if(!st.used)throw plErr(st.files?'Those files have no plays of 30 seconds or more.':'Nothing to read in those files. Choose the zip from Spotify, or the Streaming_History_Audio files inside it.');
+    prog('Adding '+st.used.toLocaleString()+' plays…');await new Promise(r=>setTimeout(r,0));
+    const r=plCommit(d,B,0);
+    d.exp=Math.max(d.exp||0,st.max);d.imp.push({at:Date.now(),from:st.min,to:st.max,n:st.used});
+    await plSaveNow();
+    try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+    const s=plResync();PL.sync=s;PL.sig=plSig();
+    if(s.changed){touch()}
+    PL.msg=`Added ${r.added.toLocaleString()} plays from ${new Date(st.min*1000).toLocaleDateString([],{month:'short',year:'numeric'})} to ${new Date(st.max*1000).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'})}.`+(st.short?` Skipped ${st.short.toLocaleString()} play${st.short===1?'':'s'} under 30 seconds.`:'')+(r.removed?` Replaced ${r.removed.toLocaleString()} plays already saved for those dates.`:'');
+    UI.stR=null;UI.stAnim=true;
+  }catch(e){PL.err=e&&e.pl?e.message:'Could not read those files. Try the zip straight from Spotify.'}
+  finally{PL.busy=false;PL.prog=null;render()}
+}
+/* ---- made-up listening, to see the page before the real history arrives (never saved) ---- */
+function plDemo(){
+  let seed=20261118;const rnd=()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+  const pick=a=>a[Math.floor(rnd()*a.length)];
+  const W1=['Velvet','Neon','Paper','Glass','Hollow','Static','Golden','Midnight','Coral','Lunar','Quiet','Wild','Silver','Amber','Faded','Electric','Slow','Brass','Pale','Northern'];
+  const W2=['Harbor','Parade','Orchard','Signal','Garden','Engine','Tides','Canyon','Society','Lanterns','Mirrors','Animals','Season','Echoes','Cartel','Radio','Station','Bloom','Choir','Machine'];
+  const A1=['Afterglow','Daylight','Northbound','Undertow','Paper Moons','Small Hours','Weather','Postcards','Low Light','Salt','Open Water','Slow Fire','Heirloom','Static Bloom','Good Mornings','The Long Way','Wildflower Hours','Night Shift'];
+  const T1=['Run','Stay','Burn','Falling','Letters','Home','Summer','Ghost','Gold','Honest','Blue','Static','Wait','Underwater','Satellite','Heavy','Tonight','Reasons','Dreaming','Wires','Lights Out','Coming Down','Kerosene','Sunday','Overgrown','Daylight Saving','Wake Me','Slow Burn'];
+  const used=new Set(),arts=[];
+  for(let i=0;i<38;i++){let n;do{n=(rnd()<.2?'The ':'')+pick(W1)+' '+pick(W2)}while(used.has(n));used.add(n);
+    const albs=[],na=2+Math.floor(rnd()*3);
+    for(let a=0;a<na;a++){const title=pick(A1)+(a&&rnd()<.3?' II':''),nt=8+Math.floor(rnd()*6),trs=[],seen=new Set();
+      for(let t=0;t<nt;t++){let s;do{s=pick(T1)+(rnd()<.3?' '+pick(['Again','Alone','(Interlude)','Pt. 2','Tonight']):'')}while(seen.has(s));seen.add(s);trs.push({t:s,len:(140+rnd()*170)*1000,w:1/Math.pow(t+1,.55)*(.6+rnd()*.8)})}
+      albs.push({n:title,w:a===0?1:.55,trs})}
+    const rank=i,peak=-Math.floor(rnd()*1150),width=50+rnd()*230;
+    arts.push({n,albs,w:1/Math.pow(rank+1,.45),peak,width,base:.15+rnd()*.2});
+  }
+  const d=plEmpty(),B=plBatch(),now=Math.floor(Date.now()/1000),DAYS=1180,nd=new Date();
+  const hour=()=>{const u=rnd();let h=u<.22?8+(rnd()+rnd()-1)*2.2:u<.5?13+(rnd()+rnd()+rnd()-1.5)*4:21+(rnd()+rnd()-1)*3.4;return Math.min(23.99,Math.max(0,h))};
+  for(let dd=-DAYS;dd<=0;dd++){
+    const day=new Date(nd.getFullYear(),nd.getMonth(),nd.getDate()+dd),wd=day.getDay();
+    if(rnd()<.07)continue;
+    let cnt=Math.round((20+rnd()*38)*(wd===0||wd===6?1.12:1)*(1+.2*Math.sin(dd/58)));
+    const ws=arts.map(a=>a.w*(a.base+1.5*Math.exp(-Math.pow((dd-a.peak)/a.width,2)))),tot=ws.reduce((x,y)=>x+y,0);
+    for(let c=0;c<cnt;c++){
+      let u=rnd()*tot,ai=0;while(ai<arts.length-1&&(u-=ws[ai])>0)ai++;
+      const A=arts[ai];let ab=rnd()*A.albs.reduce((x,y)=>x+y.w,0),al=0;while(al<A.albs.length-1&&(ab-=A.albs[al].w)>0)al++;
+      const AL=A.albs[al];let tu=rnd()*AL.trs.reduce((x,y)=>x+y.w,0),ti=0;while(ti<AL.trs.length-1&&(tu-=AL.trs[ti].w)>0)ti++;
+      const T=AL.trs[ti],h=hour(),sec=Math.floor(new Date(day.getFullYear(),day.getMonth(),day.getDate(),Math.floor(h),Math.floor((h%1)*60),Math.floor(rnd()*60)).getTime()/1000);
+      if(sec>=now)continue;
+      plPush(d,B,A.n,T.t,AL.n,sec,rnd()<.88?T.len:30000+rnd()*(T.len-30000));
+    }
+  }
+  plCommit(d,B,0);
+  d.demo=true;return d;
+}
+
+/* ---------- STATS PAGE (Music menu › Stats) ---------- */
+const stN=n=>Math.round(n).toLocaleString();
+const stHrs=ms=>{const h=ms/36e5;return(h>=100?Math.round(h).toLocaleString():h>=10?String(Math.round(h)):h.toFixed(1))+' h'};
+const stDay=dk=>new Date(Math.floor(dk/10000),Math.floor(dk/100)%100-1,dk%100).toLocaleDateString([],{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+const stHour=h=>(h%12||12)+(h<12?' AM':' PM');
+/* covers and links for what is in the log: artist and album pictures, and which artist page to open */
+function stImgs(){
+  const sig=plSig();if(PL.img&&PL.imgSig===sig)return PL.img;
+  const m={ar:new Map(),al:new Map()};
+  for(const a of S.music){const k=nArtist(a.name);m.ar.set(k,{img:a.img||'',id:a.id});
+    for(const g of a.groups){const lk=k+'|'+plAlbKey(g.title);if(!m.al.has(lk)||(g.img&&!m.al.get(lk)))m.al.set(lk,g.img||'')}}
+  PL.img=m;PL.imgSig=sig;return m;
+}
+function stQ(d,r){
+  const key=(d.demo?'d':'r')+'|'+PL.ver+'|'+r.k+'|'+Math.floor(Date.now()/60000);
+  let q=PL.q.get(key);
+  if(!q){q=plQuery(d,r.from,r.to);if(PL.q.size>7)PL.q.delete(PL.q.keys().next().value);PL.q.set(key,q)}
+  return q;
+}
+const stCv=(img,name)=>`<span class="st-cv" style="--h:${accHue(name)}"><b aria-hidden="true">${accIni(name)}</b>${img?`<img src="${esc(img)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span>`;
+function stList(d,q,kind,limit){
+  const top=plTop(q,kind,0),I=stImgs();if(!top.length)return '<p class="note">Nothing played in this time.</p>';
+  const c=kind==='t'?q.cT:kind==='r'?q.cR:q.cA,m=kind==='t'?q.mT:kind==='r'?q.mR:q.mA,mx=c[top[0]],rows=[];
+  for(let n=0;n<Math.min(limit,top.length);n++){
+    const i=top[n];let name,sub,img='',aid='';
+    if(kind==='r'){const a=d.ar[i],e=I.ar.get(a.k);name=a.n;sub=stHrs(m[i])+' listened';img=e?e.img:'';aid=e?e.id:''}
+    else if(kind==='t'){const t=d.tk[i],a=d.ar[t.a],e=I.ar.get(a.k),la=q.lastAl[i],al=la>=0?d.al[la]:null;name=t.t;sub=a.n+(al&&al.n?' · '+al.n:'');img=al?(I.al.get(al.k)||''):'';aid=e?e.id:''}
+    else{const al=d.al[i],a=d.ar[al.a],e=I.ar.get(a.k);name=al.n;sub=a.n;img=I.al.get(al.k)||'';aid=e?e.id:''}
+    const w=Math.max(3,Math.round(c[i]/mx*100));
+    rows.push(`<li class="st-row" style="--i:${Math.min(n,18)};--w:${w}%"><span class="st-rk">${n+1}</span>${stCv(img,name)}<span class="st-m">${aid?`<button type="button" class="link st-t" data-act="splgo" data-a="${esc(aid)}">${esc(name)}</button>`:`<span class="st-t">${esc(name)}</span>`}<small>${esc(sub)}</small></span><span class="st-n"><b>${stN(c[i])}</b><small>${kind==='r'?'plays':stHrs(m[i])}</small></span><i class="st-fill" aria-hidden="true"></i></li>`);
+  }
+  return `<ol class="st-list">${rows.join('')}</ol>${top.length>limit?`<div class="tools"><button type="button" class="btn" data-act="stmore">Show ${Math.min(25,top.length-limit)} more</button><span class="note">${stN(limit)} of ${stN(top.length)}</span></div>`:''}`;
+}
+function stBars(vals,labels,cls){
+  const mx=Math.max(1,...vals);
+  return `<div class="st-cols ${cls||''}">${vals.map((v,i)=>`<span class="st-col" style="--i:${i};--h:${Math.round(v/mx*100)}%" title="${esc(labels[i])}: ${stN(v)} plays"><i></i></span>`).join('')}</div>`;
+}
+function stActivity(q,r){
+  const b=plBuckets(q.days,r);if(!b.length)return '';
+  const mx=Math.max(1,...b.map(x=>x.n)),W=600,H=170,gap=b.length>45?1.5:b.length>24?3:6,bw=Math.max(1,(W-gap*(b.length-1))/b.length);
+  const bars=b.map((x,i)=>{const h=x.n?Math.max(3,Math.round(x.n/mx*H)):0;return `<rect x="${(i*(bw+gap)).toFixed(1)}" y="${H-h}" width="${bw.toFixed(1)}" height="${h}" rx="${Math.min(3,bw/2).toFixed(1)}" style="--i:${Math.min(i,60)}"><title>${esc(x.t)}: ${stN(x.n)} plays</title></rect>`}).join('');
+  const k=Math.min(5,b.length),ticks=[];for(let i=0;i<k;i++)ticks.push(b[k===1?0:Math.round(i*(b.length-1)/(k-1))].l);
+  const pk=b.reduce((p,x)=>x.n>p.n?x:p,b[0]);
+  return `<svg class="st-chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Plays over time. Busiest: ${esc(pk.t)}, ${stN(pk.n)} plays.">${bars}</svg><div class="st-ax" aria-hidden="true">${ticks.map(t=>`<span>${esc(t)}</span>`).join('')}</div>`;
+}
+function stManage(d,demo){
+  const real=PL.d,n=real?real.ts.length:0,sy=PL.sync,live=!!spCid();
+  const when=t=>new Date(t*1000).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'});
+  let h=`<div class="setcard st-manage"><h3>Your Spotify history</h3>`;
+  h+=`<p class="note">${n?`<b>${stN(n)}</b> plays kept on this device, from ${when(real.ts[0])} to ${when(real.ts[n-1])}. Every song is counted, even from artists you have not added to Playback yet; add the artist later and its plays show up on its songs.`:'Nothing kept yet. Playback counts every play from now on, and a Spotify data export fills in everything before it.'} ${live?'New plays are added as Spotify reports them.':'Connect Spotify in Settings so new plays are added as they happen.'}</p>`;
+  if(PL.prog)h+=`<p class="note st-prog" role="status" aria-live="polite">${esc(PL.prog)}</p>`;
+  if(PL.msg&&!PL.prog)h+=`<p class="note st-ok" role="status">${esc(PL.msg)}</p>`;
+  if(PL.err)h+=`<p class="mberr" role="alert">${esc(PL.err)}</p>`;
+  if(sy&&sy.songs&&!PL.prog){
+    h+=`<p class="note">${stN(sy.songs)} song${sy.songs===1?'':'s'} in your log now show how often you have played ${sy.songs===1?'it':'them'}.</p>`;
+    if(sy.heard&&sy.heard.length){const c=sy.heard.length;
+      h+=`<div class="tools"><button type="button" class="btn${PL.arm==='check'?' primary':''}" data-act="plcheck">${PL.arm==='check'?'Tap again: check off '+stN(c)+' song'+(c===1?'':'s'):'Check off '+stN(c)+' played song'+(c===1?'':'s')+' as heard'}</button></div><p class="note">${stN(c)} song${c===1?' you have':'s you have'} played but not checked off. This is optional, and it changes the heard percentage on your artists.</p>`}
+    if(PL.checked&&PL.checked.length)h+=`<div class="tools"><button type="button" class="btn" data-act="plundo">Undo: uncheck ${stN(PL.checked.length)}</button></div>`;
+  }
+  h+=`<div class="tools"><input type="file" id="plfile" class="st-file" accept=".zip,.json,application/zip,application/json" multiple ${PL.busy?'disabled':''}><label for="plfile" class="btn${n?'':' primary'}${PL.busy?' off':''}">${PL.busy?'Working…':n?'Add or update from a Spotify export':'Choose your Spotify export'}</label>${demo?'':`<button type="button" class="btn" data-act="stdemo">Preview with fake stats</button>`}${n&&!PL.busy?`<button type="button" class="btn danger" data-act="plclear">${PL.arm==='clear'?'Tap again to delete all '+stN(n)+' plays':'Delete play history'}</button>`:''}</div>`;
+  h+=`<details><summary class="note">How to get your history from Spotify</summary><ol class="note steps"><li>On a computer, open <a href="https://www.spotify.com/account/privacy/" target="_blank" rel="noopener">spotify.com/account/privacy</a> and scroll to <b>Download your data</b>.</li><li>Tick only <b>Extended streaming history</b> and press <b>Request data</b>. It can take up to 30 days, often just a few.</li><li>Confirm by email, then download the zip from Spotify’s message.</li><li>Choose that zip here, no unzipping needed. Playback counts a play the way Spotify does: 30 seconds or more. It reads the file on this device only.</li></ol><p class="note">Keep the zip. If this device ever forgets the history, importing it again puts everything back. Importing a newer export later replaces the dates it covers, so nothing is counted twice.</p></details></div>`;
+  return h;
+}
+function statsView(){
+  const demo=!!(UI.stDemo&&PL.demo),d=demo?PL.demo:PL.d;
+  if(!d){plLoad().then(()=>{if(UI.view==='stats')render()});return `<section class="colv stv"><p class="note" role="status">Loading your play history…</p></section>`}
+  const anim=UI.stAnim;UI.stAnim=false;
+  if(!d.ts.length)return `<section class="colv stv${anim?' stanim':''}" aria-labelledby="st-h"><div class="col-hero st-hero"><div class="col-hero-t"><span class="sl-kind">Your listening</span><h2 id="st-h">Stats</h2></div></div><div class="setcard"><h3>Nothing to show yet</h3><p class="note">Stats needs your play history. Playback now counts every play Spotify reports, from any artist, and your Spotify data export fills in the past. Want to see what it will look like first?</p><div class="tools"><button type="button" class="btn primary" data-act="stdemo">Preview with fake stats</button></div></div>${stManage(d,false)}</section>`;
+  const now=Math.floor(Date.now()/1000),last=d.ts[d.ts.length-1];
+  const key=UI.stR||(last>now-28*86400?'4w':'all'),r=plRange(d,key,now),q=stQ(d,r);
+  const kind=UI.stK||'t',limit=UI.stN||25,chip=(act,v,t,cur)=>`<button type="button" class="chip" data-act="${act}" data-v="${v}" aria-pressed="${cur===v}">${t}</button>`;
+  const y0=new Date(d.ts[0]*1000).getFullYear(),y1=new Date(last*1000).getFullYear(),yrs=[];for(let y=y1;y>=y0;y--)yrs.push(y);
+  const days=Math.max(1,r.k==='all'?(now-d.ts[0])/86400:Math.min(r.span,(Math.min(r.to,now)-r.from)/86400)),avg=q.n/days;
+  const pkH=q.hrs.indexOf(Math.max(...q.hrs)),dn=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],wk=[1,2,3,4,5,6,0];
+  const pkD=q.dow.indexOf(Math.max(...q.dow));
+  if(anim)setTimeout(rhCount,30);
+  return `<section class="colv stv${anim?' stanim':''}" aria-labelledby="st-h">
+    <div class="col-hero hh-hero st-hero">
+      <div class="col-hero-t"><span class="sl-kind">${esc(r.label)}</span><h2 id="st-h">Stats</h2></div>
+      <div class="col-hero-n"><div><b data-n="${q.n}">${stN(q.n)}</b><span>Plays</span></div><div><b data-n="${Math.round(q.ms/36e5)}">${stN(q.ms/36e5)}</b><span>Hours</span></div><div><b data-n="${q.nT}">${stN(q.nT)}</b><span>Songs</span></div><div><b data-n="${q.nR}">${stN(q.nR)}</b><span>Artists</span></div></div>
+    </div>
+    ${demo?`<div class="st-demo" role="status"><span><b>Fake stats.</b> Made-up listening to show what this page looks like. None of it is yours and none of it is saved.</span><button type="button" class="btn" data-act="stdemooff">Back to my stats</button></div>`:''}
+    <div class="st-ctl"><div class="hchips" role="group" aria-label="Time range">${[['4w','4 weeks'],['6m','6 months'],['12m','12 months'],['ytd','This year'],['all','All time']].map(x=>chip('strange',x[0],x[1],r.k)).join('')}</div>${yrs.length>1?`<select id="styr" class="st-sel" aria-label="Pick a year"><option value="">Year…</option>${yrs.map(y=>`<option value="${y}"${r.k==='y'+y?' selected':''}>${y}</option>`).join('')}</select>`:''}</div>
+    ${q.n?`<div class="st-grid">
+      <div class="setcard st-main"><div class="hchips" role="group" aria-label="What to rank">${chip('stkind','t','Songs',kind)}${chip('stkind','r','Artists',kind)}${chip('stkind','a','Albums',kind)}</div>${stList(d,q,kind,limit)}</div>
+      <div class="st-side">
+        <div class="setcard"><h3>Plays over time</h3>${stActivity(q,r)}</div>
+        <div class="setcard st-hi"><h3>Highlights</h3><dl>
+          <div><dt>Per day</dt><dd>${avg>=10?stN(avg):avg.toFixed(1)}<small> plays on average</small></dd></div>
+          ${q.best?`<div><dt>Busiest day</dt><dd>${stN(q.best.n)}<small> plays · ${esc(stDay(q.best.dk))}</small></dd></div>`:''}
+          <div><dt>Longest streak</dt><dd>${stN(q.streak)}<small> day${q.streak===1?'':'s'} in a row${q.streakEnd?' · ended '+esc(stDay(q.streakEnd)):''}</small></dd></div>
+          ${r.k!=='all'?`<div><dt>New to you</dt><dd>${stN(q.newT)}<small> songs from ${stN(q.newR)} new artist${q.newR===1?'':'s'}</small></dd></div>`:`<div><dt>Albums</dt><dd>${stN(q.nA)}<small> played</small></dd></div>`}
+        </dl></div>
+        <div class="setcard"><h3>Time of day</h3>${stBars(q.hrs,q.hrs.map((_,h)=>stHour(h)),'st-hrs')}<div class="st-ax" aria-hidden="true"><span>12 AM</span><span>6 AM</span><span>12 PM</span><span>6 PM</span><span>11 PM</span></div><p class="note">Mostly around <b>${stHour(pkH)}</b>.</p></div>
+        <div class="setcard"><h3>Day of the week</h3>${stBars(wk.map(i=>q.dow[i]),wk.map(i=>dn[i]),'st-dow')}<div class="st-ax st-ax7" aria-hidden="true">${wk.map(i=>`<span>${dn[i]}</span>`).join('')}</div><p class="note">Most plays on <b>${['Sundays','Mondays','Tuesdays','Wednesdays','Thursdays','Fridays','Saturdays'][pkD]}</b>.</p></div>
+      </div></div>
+      ${q.est&&!demo?`<p class="note">Plays Playback saw live come without a length, so ${stN(q.est)} of these use the song’s usual length for hours.</p>`:''}`:`<div class="setcard"><p class="note">Nothing played in ${esc(r.label.toLowerCase())}. Try a longer range.</p></div>`}
+    ${stManage(d,demo)}
+  </section>`;
+}
+function plSetHtml(){
+  const n=PL.d?PL.d.ts.length:0;
+  return `<div class="plset"><p class="note">${n?`Stats keeps <b>${stN(n)}</b> plays, including songs from artists you have not added yet.`:'Stats keeps every play, even from artists you have not added. Import your Spotify history to fill in the past.'}</p><div class="tools"><button type="button" class="btn" data-act="mmgo" data-v="stats">Open Stats</button></div></div>`;
+}
+/* the Stats page's buttons. Returns true when it handled the tap. */
+function stAct(act,b){
+  if(act==='stdemo'){if(!PL.demo)PL.demo=plDemo();UI.stDemo=true;UI.stR=null;UI.stN=25;UI.stAnim=true;UI.tab='music';UI.view='stats';window.scrollTo({top:0});return true}
+  if(act==='stdemooff'){UI.stDemo=false;UI.stR=null;UI.stN=25;UI.stAnim=true;return true}
+  if(act==='strange'){UI.stR=b.dataset.v;UI.stN=25;UI.stAnim=true;return true}
+  if(act==='stkind'){UI.stK=b.dataset.v;UI.stN=25;UI.stAnim=true;return true}
+  if(act==='stmore'){UI.stN=(UI.stN||25)+25;return true}
+  if(act==='plcheck'){
+    const ids=PL.sync&&PL.sync.heard||[];if(!ids.length)return true;
+    if(PL.arm!=='check'){PL.arm='check';return true}
+    PL.arm='';for(const id of ids)S.marks[id]={...(S.marks[id]||{}),done:true};PL.checked=ids.slice();PL.sync={...PL.sync,heard:[]};touch();return true}
+  if(act==='plundo'){
+    for(const id of PL.checked||[]){const m=S.marks[id];if(m&&m.done&&!m.r){const {done,...rest}=m;S.marks[id]=rest}}
+    PL.checked=null;PL.sync=plResync();touch();return true}
+  if(act==='plclear'){
+    if(PL.arm!=='clear'){PL.arm='clear';return true}
+    PL.arm='';PL.d=plEmpty();PL.ver++;PL.msg='';PL.err='';PL.sync=null;plSaveNow().then(()=>render());return true}
+  return false;
+}
+/* PLAYS:END */
 function lsSongDelta(g,iid){
   const id=g.id,l=lsRaw(id);if(!l.length)return '';const k=lsIdx(id);if(k<1)return '';
   if(lsCar(g,iid))return '';
@@ -4255,7 +4765,8 @@ function spFind(idx,x){
   return{id:(hits.find(h=>h.g===al)||hits[0]).id};
 }
 /* the Worker is asked for its whole saved history once, so old plays can be counted; after that only what is new */
-const spQ=()=>'after='+((S.sp&&S.sp.cnt&&S.sp.after)||0);
+/* ask the Worker from the older of the log's cursor and the play history's, so a device whose history is behind catches up */
+const spQ=()=>{const a=(S.sp&&S.sp.cnt&&S.sp.after)||0;return 'after='+(PL.d?Math.min(a,PL.d.cur||0):a)};
 function spBump(id,p){const m=S.marks[id]||{};S.marks[id]={...m,pc:(m.pc||0)+1,pl:Math.max(m.pl||0,p||0)}}
 function spApply(plays){
   SPX.checked=Date.now();S.sp=S.sp||{after:0,miss:[]};
@@ -4291,19 +4802,21 @@ async function spPoll(force){
   try{
     if(viaW&&SPL.rt)await spHandOff({cid:SPL.cid||spCid(),rt:SPL.rt,at:SPL.at||'',exp:SPL.exp||0});   /* the Worker was just updated: it takes over */
     let plays;
+    await plLoad();
     if(viaW){const j=await wkSp('GET',null,spQ());SPX.wk=j;plays=j&&j.connected?j.plays||[]:[]}
     else plays=await spLocalPlays();
-    SPX.err='';spApply(plays);
+    SPX.err='';plFeed(plays);spApply(plays);
   }catch(e){SPX.err=spMessage(e);if(e.code==='reconnect'&&!viaW){SPL={};splSave()}}
   finally{SPX.busy=false;render()}
 }
 async function spBoot(){
   if(SPX.started)return;SPX.started=true;
   setTimeout(()=>{spImgBackfill()},4000);   /* artist photos: started here so every path through boot gets it */
+  setTimeout(()=>{plLoad().then(()=>{PL.sig=plSig();PL.sync=plResync();if(PL.sync.changed){touch();render()}})},3500);   /* play counts for the songs in the log, from the whole play history */
   if(SP_CB){SPX.busy=true;render();
     try{await spFinish(SP_CB);UI.tab='music'}catch(e){SPX.err=spMessage(e)}
     finally{SPX.busy=false}}
-  if(spViaWorker()&&!SPX.wk&&!SPL.rt){try{SPX.wk=await wkSp('GET',null,spQ());SPX.last=Date.now();spApply(SPX.wk&&SPX.wk.connected?SPX.wk.plays||[]:[])}catch(e){SPX.err=spMessage(e)}render();return}
+  if(spViaWorker()&&!SPX.wk&&!SPL.rt){try{await plLoad();SPX.wk=await wkSp('GET',null,spQ());SPX.last=Date.now();const pp=SPX.wk&&SPX.wk.connected?SPX.wk.plays||[]:[];plFeed(pp);spApply(pp)}catch(e){SPX.err=spMessage(e)}render();return}
   await spPoll(true);
 }
 async function spDisconnect(){
@@ -4351,6 +4864,7 @@ function spSide(){
       <ul>${lg.map(e=>`<li class="${e.n?'':'old'}"><button type="button" class="link" data-act="splgo" data-a="${esc(e.aid)}">${esc(e.t)}</button> <span class="why">\u2013 ${esc(e.a)}${e.g?' \u00b7 '+esc(e.g):''} \u00b7 ${esc(when(e.p))}${e.c>1?' \u00b7 '+e.c+' plays':''}${e.n?'':' \u00b7 already heard'}</span>${e.n&&isDone(e.id)?` <button type="button" class="link" data-act="spundo" data-id="${esc(e.id)}">Uncheck</button>`:e.n?' <span class="why">(unchecked)</span>':''}</li>`).join('')}</ul>
       <div><button type="button" class="link" data-act="splogclear">Clear this list</button></div></details>`}
   h+=plHtml();
+  h+=plSetHtml();
   const m=S.sp&&S.sp.miss||[];
   if(m.length){const why={artist:'artist not here yet',song:'song not in the list',version:'that version is not in the list'};
     h+=`<details class="spmiss"><summary class="note">${m.length} song${m.length===1?'':'s'} you played that are not in Playback</summary>
@@ -4681,7 +5195,7 @@ function syncLabel(){
   if(SY.at)return 'Synced '+new Date(SY.at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
   return 'Sync ready';
 }
-function touch(){S.mtime=Date.now();save();try{accSoon()}catch(e){}if(syncOn()&&SYS.status!=='conflict'){clearTimeout(pushTimer);pushTimer=setTimeout(()=>push(false),ownSync()?1500:20000)}   /* account sync waits longer so a burst of ratings is one save */}
+function touch(){S.mtime=Date.now();save();try{accSoon()}catch(e){}try{plSoon()}catch(e){}if(syncOn()&&SYS.status!=='conflict'){clearTimeout(pushTimer);pushTimer=setTimeout(()=>push(false),ownSync()?1500:20000)}   /* account sync waits longer so a burst of ratings is one save */}
 /* Compressed sync: a Worker from 2026.11.03 on answers with x-pb-worker: 2 and
    takes the log gzipped (about 5x smaller, up to 20 MB after compression).
    Until the Worker is updated, plain JSON still works under its old 1 MB cap. */
@@ -5073,7 +5587,7 @@ function slObserve(){
 
 /* ---------- render ---------- */
 /* switching between the big sections (Music, Screen, Collection, Settings, Account): the new page slides in from the side it sits on in the top bar and fades up */
-const VORD={music:0,history:0,screen:1,collection:2,settings:3,account:4,friends:4,friend:4};
+const VORD={music:0,history:0,stats:0,screen:1,collection:2,settings:3,account:4,friends:4,friend:4};
 function pageIn(dir){
   for(const el of document.querySelectorAll('#app>*')){
     if(el.matches('header.top,.llover,.banner,.updin,script,style'))continue;
@@ -6518,16 +7032,16 @@ function renderMain(){
   if(!READY){document.getElementById('app').innerHTML='<p class="empty">Loading your log\u2026</p>';return}
   const e=current();
   LIBIN=!!UI.libAnim;UI.libAnim=false;
-  if(UI.mm&&(UI.tab!=='music'||(UI.view&&UI.view!=='history')))UI.mm=false;   /* the Music menu only belongs to Music */   /* the menu's opening animation plays on the one draw that opens it */
+  if(UI.mm&&(UI.tab!=='music'||(UI.view&&UI.view!=='history'&&UI.view!=='stats')))UI.mm=false;   /* the Music menu only belongs to Music */   /* the menu's opening animation plays on the one draw that opens it */
   const list=S[UI.tab];
   document.getElementById('app').innerHTML=`
   <header class="top">
       <nav class="tabs" aria-label="Section">
-        <button data-act="tab" data-v="music" aria-pressed="${(!UI.view&&UI.tab==='music')||UI.view==='history'}" aria-haspopup="menu" aria-expanded="${!!UI.mm}">${ICO.music}<span>Music</span><i class="caret" aria-hidden="true"></i></button>
+        <button data-act="tab" data-v="music" aria-pressed="${(!UI.view&&UI.tab==='music')||UI.view==='history'||UI.view==='stats'}" aria-haspopup="menu" aria-expanded="${!!UI.mm}">${ICO.music}<span>Music</span><i class="caret" aria-hidden="true"></i></button>
         <button data-act="tab" data-v="screen" aria-pressed="${!UI.view&&UI.tab==='screen'}">${ICO.screen}<span>Screen</span></button>
         <button data-act="view" data-v="collection" aria-pressed="${UI.view==='collection'}">${ICO.collection}<span>Collection</span></button>
         <button data-act="view" data-v="settings" aria-pressed="${UI.view==='settings'}">${ICO.settings}<span>Settings</span></button>
-        ${UI.mm?`<div class="mmenu${UI.mmAnim?' mm-in':''}" role="menu" aria-label="Music"><button role="menuitem" data-act="mmgo" data-v="artists"${UI.view!=='history'?' aria-current="true"':''}>${ICO.grid}<span>Artists</span></button><button role="menuitem" data-act="mmgo" data-v="history"${UI.view==='history'?' aria-current="true"':''}>${ICO.history}<span>History</span></button></div>`:''}
+        ${UI.mm?`<div class="mmenu${UI.mmAnim?' mm-in':''}" role="menu" aria-label="Music"><button role="menuitem" data-act="mmgo" data-v="artists"${UI.view!=='history'&&UI.view!=='stats'?' aria-current="true"':''}>${ICO.grid}<span>Artists</span></button><button role="menuitem" data-act="mmgo" data-v="history"${UI.view==='history'?' aria-current="true"':''}>${ICO.history}<span>History</span></button><button role="menuitem" data-act="mmgo" data-v="stats"${UI.view==='stats'?' aria-current="true"':''}>${ICO.stats}<span>Stats</span></button></div>`:''}
       </nav>
     <div class="topr">
       <button class="sync" data-act="opensync" data-s="${SYS.status}"><i></i>${esc(syncLabel())}</button>
@@ -6542,7 +7056,7 @@ function renderMain(){
   ${SYS.status==='conflict'?conflictBanner():''}
   ${bkNudge()}
 
-${UI.view==='settings'?settingsView():UI.view==='account'?accountView():UI.view==='friends'?friendsView():UI.view==='friend'?friendView():UI.view==='collection'?collectionView():UI.view==='history'?historyView():mainView(e,list)}
+${UI.view==='settings'?settingsView():UI.view==='account'?accountView():UI.view==='friends'?friendsView():UI.view==='friend'?friendView():UI.view==='collection'?collectionView():UI.view==='history'?historyView():UI.view==='stats'?statsView():mainView(e,list)}
   <footer>
     <p class="buildid">Build ${esc(BUILD)}</p>
   </footer>`;
@@ -6874,6 +7388,7 @@ const ICO={
   screen:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v12H3zM8 21h8M12 17v4"/></svg>',
   collection:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16v11H4zM6 5.5h12M8 2.5h8M8.5 14.5h7"/></svg>',
   history:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.7-6.2M3.5 4v4.6h4.6M12 7.6V12l3 2"/></svg>',
+  stats:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V4M19 20v-6"/></svg>',
   settings:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M14 4v4M8 10v4M16 16v4"/></svg>',
   list:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>',
   listOn:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z" fill="currentColor"/></svg>',
@@ -7658,6 +8173,7 @@ document.addEventListener('click',ev=>{
   if(['tog','ropen','rclear','dedit','rvedit','rvdel','grpall','lsnew','lltog'].includes(act)&&b.closest('.lsold'))return;   /* an earlier listen is view only */
   if(act!=='del'&&act!=='delg'&&act!=='lsrm')UI.armed=null;
   if(act!=='mbundo')UI.undoArm=null;
+  if(act!=='plcheck'&&act!=='plclear')PL.arm='';
   if(act!=='sugclear')UI.sugArm=false;
   if(act!=='accdel'&&ACX.arm){ACX.arm=false}
   if(act!=='accsyncdel'&&ACX.armSync){ACX.armSync=false;ACX.syncMsg=''}
@@ -7764,10 +8280,10 @@ document.addEventListener('click',ev=>{
   else if(act==='ropen'){const prev=UI.rOpen,fly=prev&&prev!==id?rtFlyPrep(prev):null;UI.rOpen=UI.rOpen===id?null:id;UI.rAnim=UI.rOpen;if(fly){UI.rLand=prev;UI.rFly=fly}}
   else if(act==='rclose'){UI.rOpen=null}
   else if(act==='tab'){
-    if(b.dataset.v==='music'&&UI.tab==='music'&&(!UI.view||UI.view==='history')){UI.mm=!mmWas;UI.mmAnim=UI.mm}   /* already on Music: tapping it again opens the menu with History */
+    if(b.dataset.v==='music'&&UI.tab==='music'&&(!UI.view||UI.view==='history'||UI.view==='stats')){UI.mm=!mmWas;UI.mmAnim=UI.mm}   /* already on Music: tapping it again opens the menu with History */
     else{UI.view=null;UI.rOpen=null;UI.tab=b.dataset.v;try{localStorage.setItem(KEY+'_tab',UI.tab)}catch(e){}}}
   else if(act==='mmgo'){UI.tab='music';UI.rOpen=null;
-    if(b.dataset.v==='history'){UI.view='history';UI.hAnim=true;UI.hEdit=null}else UI.view=null;
+    if(b.dataset.v==='history'){UI.view='history';UI.hAnim=true;UI.hEdit=null}else if(b.dataset.v==='stats'){UI.view='stats';UI.stAnim=true;UI.stR=null;UI.stN=25}else UI.view=null;
     try{localStorage.setItem(KEY+'_tab','music')}catch(e){}window.scrollTo({top:0})}
   else if(act==='sel'){if(UI.tab==='music'&&!UI.view)flyAsk(b,id);UI.sel[UI.tab]=id;UI.libOpen=false;UI.rOpen=null;
     if(matchMedia('(max-width:760px)').matches)UI.toSheet=true}
@@ -7802,6 +8318,7 @@ document.addEventListener('click',ev=>{
   else if(act==='splgo'){UI.spLogOpen=true;if(b.dataset.a){UI.view=null;UI.tab='music';UI.sel.music=b.dataset.a;UI.filter='all'}}
   else if(act==='spcopy'){const t=SP_REDIRECT;if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>{SPX.copied=true;render()},()=>{});return}
   else if(act==='rdimp'){rdRun();return}
+  else if(stAct(act,b)){}
   else if(act==='hsort'){UI.hs=b.dataset.v;UI.hAnim=true}
   else if(act==='lsnew'){const g=lsGrp(b.dataset.g);if(g)lsNew(g)}
   else if(act==='lsgo'){const g=lsGrp(b.dataset.g);if(g)lsGo(g,+b.dataset.k)}
@@ -7950,6 +8467,8 @@ document.addEventListener('keydown',ev=>{
 document.addEventListener('change',ev=>{
   if(ev.target.dataset&&ev.target.dataset.rate){rateCommit(ev.target);return}
   if(ev.target.id==='acc-share'){accSetShare(!!ev.target.checked);return}
+  if(ev.target.id==='plfile'){const fs=[...ev.target.files];ev.target.value='';if(fs.length)plImport(fs);return}
+  if(ev.target.id==='styr'){if(ev.target.value){UI.stR='y'+ev.target.value;UI.stN=25;UI.stAnim=true;render()}return}
   if(ev.target.id==='acc-pic'){accPicPick(ev.target);return}
   if(ev.target.id==='acc-hue'){accSetHue(+ev.target.value);return}
   if(ev.target.id==='acc-sync'){accSyncSet(!!ev.target.checked);return}
