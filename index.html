@@ -1074,6 +1074,7 @@ button.pf-row{padding:8px 10px}button.pf-row:hover{border-color:var(--accent)}bu
 .vl-lab .t2{font:800 13px Archivo,var(--display)}
 .vl-lab .t3{font:800 30px var(--mono)}
 .vl-lab .t4{font-size:9px;letter-spacing:.1em;text-transform:uppercase;opacity:.82}
+.vl-sort{justify-content:center;max-width:100%}
 .vl-cap{margin:0;max-width:520px;text-align:center}
 .vl-more{display:block;text-align:center}
 @keyframes vlpop{from{opacity:0;transform:scale(.15)}to{opacity:1;transform:none}}
@@ -2282,6 +2283,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.18-p', note:'SORT THE BIG RECORD: under the big record on an account page there is a row of orders: Highest (the usual, best at the outer edge), Lowest, Newest rated, Oldest rated and A–Z by artist. Pick one and the covers pop back onto the groove in the new order, with the caption telling you which end is the outer edge. It works on your page and on friends\' pages, and goes back to Highest when you leave.'},
   {v:'2026.11.18-o', note:'ALBUM PAGES FOLLOW THE ALBUM COLOR: the pop-up you get from a cover on the big record and the Song ratings sheet are redesigned like the Music page\'s sleeves. The whole top takes the album\'s own color (the same one the Music page uses, or read from the cover for albums not in your log), the cover sits with a record sliding out from behind it, the rating bar and buttons use the banner\'s ink, and the song ratings sit on a wash of the album color with white bars. The record slides out when the page opens.'},
   {v:'2026.11.18-n', note:'ALBUM COLORS ON THE BIG RECORD: on account pages, each cover on the big record now has a ring in that album\'s own color, the same color the Music page gives it, instead of the same teal on every cover. Albums not in your log get their color read from the cover. The ring is still thicker for higher ratings, and turns white when you hover or pick a cover.'},
   {v:'2026.11.18-m', note:'RECENTLY PLAYED AND ARTIST PHOTOS ON STATS: the Stats page now starts with a Recently played card: your latest plays, newest first, each with its cover, artist and album and how long ago you played it (3 min ago, 2 h ago, 5 days ago; hover for the exact time, and the times keep ticking while the page is open). Show 10 more reaches further back. Artists in Stats now show their Spotify photo instead of a letter: it was reading the wrong picture field before, so even artists in your log showed letters. For artists not in your log, Playback looks their photo up on Spotify a few at a time (12 per visit, saved on this device, and it stops quietly if Spotify says quota).'},
@@ -6809,7 +6811,7 @@ function accStatsHtml(st,P){
     <div class="pf-hist${an}" role="group" aria-label="How often each rating from 1 to 10 was given. Tap a bar for details.">${st.hist.map((c,i)=>`<button data-act="psc" data-v="${i+1}" aria-pressed="${sel===i+1}" aria-label="Score ${i+1}: ${c} rating${c===1?'':'s'}" style="--i:${i};--v:${(c/mx*100).toFixed(0)}%"><em>${c||''}</em><i></i><span>${i+1}</span></button>`).join('')}</div>${info}`;
 }
 /* ---------- the sections of an account page: Overview (stats, activity, top artists, the record), Albums (a wall of covers you can sort and filter) and Shows & films ---------- */
-function pReset(){UI.pAlb='';UI.pTab='o';UI.pKind='a';UI.pLim=60;UI.pSort='hi';UI.pMin=0;UI.pYear='';UI.pMon=0;UI.pView='g';UI.pFilter='all';UI.pFOpen=false;UI.pAnimL=false;UI.pAnimF=false;UI.pAnimI=false;UI.pBucket=0;UI.pSelSc=0;UI.pSelMon=''}
+function pReset(){UI.pAlb='';UI.pTab='o';UI.pKind='a';UI.pLim=60;UI.pSort='hi';UI.vlSort='hi';UI.pMin=0;UI.pYear='';UI.pMon=0;UI.pView='g';UI.pFilter='all';UI.pFOpen=false;UI.pAnimL=false;UI.pAnimF=false;UI.pAnimI=false;UI.pBucket=0;UI.pSelSc=0;UI.pSelMon=''}
 const pfHintIn=k=>UI.pHintIn===k?' pf-hfade':'';   /* the hint fades in once, on the redraw right after a detail panel folds away */
 const pfAn=()=>UI.pAnim||UI.pAnimL?' pf-in':'';
 const pMonthName=(k,short)=>{const[y,m]=k.split('-');return new Date(+y,+m-1,1).toLocaleDateString([],short?{month:'short'}:{month:'long',year:'numeric'})};
@@ -6939,12 +6941,15 @@ function vlLayout(n){
   }
   return{d:9,pts:[]};
 }
+/* how each order reads: [short, caption] */
+const VLS={hi:['best at the outer edge','best at the outer edge spiralling in to the lowest'],lo:['lowest at the outer edge','lowest at the outer edge spiralling in to the best'],new:['most recently rated at the outer edge','most recently rated at the outer edge spiralling in to the oldest (albums with no rated-on date go last)'],old:['oldest rated at the outer edge','oldest rated at the outer edge spiralling in to the newest (albums with no rated-on date go last)'],az:['A to Z by artist from the outer edge','A to Z by artist from the outer edge in']};
 function accVinylHtml(P){
   const all=accBase(P.items).filter(x=>x.kind==='a').slice().sort((a,b)=>b.r-a.r||String(a.n).localeCompare(String(b.n)));
   if(!all.length){VL.items=[];return ''}
-  const items=all.slice(0,600),{d,pts}=vlLayout(items.length);
+  const sort=ACC_SORTS.some(x=>x[0]===UI.vlSort)?UI.vlSort:'hi',quick=!!UI.vlAnim;UI.vlAnim=false;
+  const items=all.slice(0,600).sort(accSortFn(sort)),{d,pts}=vlLayout(items.length);   /* the 600 best are kept, then put in the chosen order from the outer edge in */
   VL.items=items;VL.pin=-1;VL.def=vlLabel(null,P);
-  const anim=pfAn(),h=accHueOf(P),big=d>=22;
+  const anim=pfAn()||(quick?' pf-in':''),h=accHueOf(P),big=d>=22;
   let grooves='';for(let r=104;r<=288;r+=3.6)grooves+=`<circle cx="300" cy="300" r="${r.toFixed(1)}"/>`;
   /* each album's ring wears the color the Music page gives that album: the same saved color when the album is in this device's log (so it matches exactly), otherwise read from its cover the same way */
   const gid=new Map();for(const a of S.music||[]){if(a.example)continue;for(const g of a.groups||[]){if(!RATEABLE.includes(g.kind))continue;const k=accKeys(a,g);if(k.k&&!gid.has(k.k))gid.set(k.k,g.id);if(!gid.has(k.t))gid.set(k.t,g.id)}}
@@ -6952,8 +6957,8 @@ function accVinylHtml(P){
     const[px,py]=pts[i]||[300,300],u=accCover(x),ring=(1+x.r*.22).toFixed(2),op=(.55+x.r*.045).toFixed(2);
     const ck=gid.get(x.k)||gid.get(x.t)||'v'+accHash(String(x.t||x.k||x.n||i)),ac=ACOL[ck];
     if(!ac&&ac!==''&&u)acolLazy(ck,u);
-    return `<g transform="translate(${px.toFixed(1)} ${py.toFixed(1)})"><g class="vl-b" data-i="${i}" data-acol="${esc(ck)}" style="--ac:${ac||acolFallback({title:x.n,id:ck})};--d:${Math.round(450+i*Math.min(16,1300/items.length))}ms" tabindex="0" role="button" aria-label="${esc(x.n||'Untitled')}${accArtText(x)?' by '+esc(accArtText(x)):''}, rated ${fmt(x.r)}"><circle r="${(d/2).toFixed(1)}" fill="hsl(${accHue(x.n)} 45% 32%)"/>${big?`<text y="${(d*.16).toFixed(1)}" text-anchor="middle" style="font:800 ${(d*.45).toFixed(0)}px Archivo,var(--display);fill:rgb(255 255 255 / .8);pointer-events:none">${accIni(x.n)}</text>`:''}${u?`<image href="${esc(u)}" x="${(-d/2).toFixed(1)}" y="${(-d/2).toFixed(1)}" width="${d.toFixed(1)}" height="${d.toFixed(1)}" preserveAspectRatio="xMidYMid slice" clip-path="url(#vlc)"/>`:''}<circle class="vl-ring" r="${(d/2).toFixed(1)}" stroke-width="${ring}" stroke-opacity="${op}"/></g></g>`}).join('');
-  return `<div class="vl${anim}" style="--h:${h}"><div class="vl-wrap"><svg class="vl-svg" viewBox="0 0 600 600" role="group" aria-label="Every album ${esc(P.name)} rated, best at the outer edge">
+    return `<g transform="translate(${px.toFixed(1)} ${py.toFixed(1)})"><g class="vl-b" data-i="${i}" data-acol="${esc(ck)}" style="--ac:${ac||acolFallback({title:x.n,id:ck})};--d:${Math.round((quick?0:450)+i*Math.min(quick?8:16,1300/items.length))}ms" tabindex="0" role="button" aria-label="${esc(x.n||'Untitled')}${accArtText(x)?' by '+esc(accArtText(x)):''}, rated ${fmt(x.r)}"><circle r="${(d/2).toFixed(1)}" fill="hsl(${accHue(x.n)} 45% 32%)"/>${big?`<text y="${(d*.16).toFixed(1)}" text-anchor="middle" style="font:800 ${(d*.45).toFixed(0)}px Archivo,var(--display);fill:rgb(255 255 255 / .8);pointer-events:none">${accIni(x.n)}</text>`:''}${u?`<image href="${esc(u)}" x="${(-d/2).toFixed(1)}" y="${(-d/2).toFixed(1)}" width="${d.toFixed(1)}" height="${d.toFixed(1)}" preserveAspectRatio="xMidYMid slice" clip-path="url(#vlc)"/>`:''}<circle class="vl-ring" r="${(d/2).toFixed(1)}" stroke-width="${ring}" stroke-opacity="${op}"/></g></g>`}).join('');
+  return `<div class="vl${anim}" style="--h:${h}"><div class="vl-wrap"><svg class="vl-svg" viewBox="0 0 600 600" role="group" aria-label="Every album ${esc(P.name)} rated, ${esc(VLS[sort][0])}">
     <defs><clipPath id="vlc" clipPathUnits="objectBoundingBox"><circle cx=".5" cy=".5" r=".5"/></clipPath></defs>
     <circle cx="300" cy="300" r="296" fill="#0c0c0f"/><circle cx="300" cy="300" r="296" fill="none" stroke="rgb(255 255 255 / .14)" stroke-width="1.5"/>
     <g fill="none" stroke="rgb(255 255 255 / .05)" stroke-width="1.2">${grooves}</g>
@@ -6961,7 +6966,8 @@ function accVinylHtml(P){
     <circle cx="300" cy="300" r="94" fill="hsl(${h} 55% 36%)"/><circle cx="300" cy="300" r="94" fill="none" stroke="rgb(0 0 0 / .35)" stroke-width="3"/><circle cx="300" cy="300" r="82" fill="none" stroke="rgb(255 255 255 / .16)" stroke-width="1"/>
     <g class="vl-lab" aria-live="polite">${VL.def}</g><circle cx="300" cy="300" r="5.5" fill="#0c0c0f" stroke="rgb(255 255 255 / .3)" stroke-width="1"/>
   </svg></div>
-  <p class="note vl-cap">Every album ${P.self?'you have':esc(P.name)+' has'} rated, best at the outer edge spiralling in to the lowest.${all.length>items.length?` Showing the top ${items.length} of ${all.length}.`:''}</p></div>`;
+  <div class="pf-tabs sm vl-sort" role="group" aria-label="Order of the record">${ACC_SORTS.map(([v,l])=>`<button data-act="vlsort" data-v="${v}" aria-pressed="${sort===v}">${l}</button>`).join('')}</div>
+  <p class="note vl-cap">Every album ${P.self?'you have':esc(P.name)+' has'} rated, ${VLS[sort][1]}.${all.length>items.length?` Showing the top ${items.length} of ${all.length}.`:''}</p></div>`;
 }
 function vlShow(i){
   const g=document.querySelector('.vl .vl-lab');if(!g)return;
@@ -8547,6 +8553,7 @@ document.addEventListener('click',ev=>{
   else if(act==='ptab'){UI.pTab=b.dataset.v;UI.pKind=UI.pTab==='s'?'s':'a';UI.pLim=60;UI.pMin=0;UI.pBucket=0;UI.pYear='';UI.pMon=0;UI.pAnimL=true}
   else if(act==='pfilter'){UI.pFilter=b.dataset.v;UI.pLim=60;UI.pAnimL=true}
   else if(act==='psort'){UI.pSort=b.dataset.v;UI.pLim=60;UI.pAnimL=true}
+  else if(act==='vlsort'){UI.vlSort=b.dataset.v;UI.vlAnim=true}
   else if(act==='pmin'){UI.pMin=+b.dataset.v;UI.pLim=60;UI.pAnimL=true}
   else if(act==='pyear'){UI.pYear=b.dataset.v;UI.pMon=0;UI.pLim=60;UI.pAnimL=true;if(UI.pYear&&UI.pSort!=='new'&&UI.pSort!=='old')UI.pSort='new'}   /* a year opens as a month-by-month diary, newest first */
   else if(act==='pmon'){UI.pMon=UI.pMon===+b.dataset.v?0:+b.dataset.v;UI.pLim=60;UI.pAnimL=true}
