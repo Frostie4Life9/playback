@@ -992,6 +992,45 @@ button.pf-row{padding:8px 10px}button.pf-row:hover{border-color:var(--accent)}bu
 @media (max-width:480px){.alb-top{flex-wrap:wrap}.alb-cv{width:42%}.alb-top .tact{position:absolute;top:14px;right:14px}.alb-meta{flex-basis:100%}.alb-tr{grid-template-columns:22px minmax(0,1fr) 54px 32px;gap:8px}}
 @media (prefers-reduced-motion:no-preference){.albsheet{animation:pfup .35s cubic-bezier(.2,.8,.2,1) both}.albover .llbk{animation:albfade .25s both}.alb-cv{animation:pfpop .45s cubic-bezier(.3,1.35,.5,1) .08s both}.alb-r .vl-seg u{animation:albg .6s cubic-bezier(.2,.8,.2,1) .15s both;transform-origin:left}.alb-tr{animation:pfup .35s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*22ms + 120ms)}.alb-tr .bar i{animation:albg .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*22ms + 200ms)}}
 @keyframes albg{from{transform:scaleX(0)}}@keyframes albfade{from{opacity:0}}
+/* album pages (the record's pop-up and the song sheet) follow the album's color, laid out like the Music page's sleeves: a colored banner, the cover with its record sliding out, songs on a color wash */
+.acx{--ac:#7a3a24;--acb:var(--ac);--acsw:var(--ac);--hi:#fff}
+@supports (color:oklch(from red l c h)){
+  .acx{--hi:oklch(from var(--ac) clamp(.14,calc((.66 - l) * 1000),.985) 0 h);--acb:oklch(from var(--ac) calc(min(l,.57) + clamp(0,calc((l - .66) * 1000),1) * (l - min(l,.57))) c h);--acsw:oklch(from var(--ac) min(l,.46) c h)}
+  :root[data-theme="dark"] .acx{--acsw:oklch(from var(--ac) .5 c h)}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .acx{--acsw:oklch(from var(--ac) .5 c h)}}
+}
+.vl-pop.acx,.albsheet .alb-top{background:linear-gradient(160deg,color-mix(in srgb,var(--acb) 94%,#fff),color-mix(in srgb,var(--acb) 82%,#000));color:var(--hi)}
+.ac-pack{position:relative;width:100%;aspect-ratio:1.5}
+.ac-pack .alb-cv,.ac-pack .vl-pc{position:absolute;left:0;top:0;width:66%;aspect-ratio:1;border-radius:10px;overflow:hidden;z-index:1;box-shadow:0 14px 28px rgb(0 0 0 / .35)}
+.ac-disc{position:absolute;left:30%;top:2%;width:64%;aspect-ratio:1;border-radius:50%;box-shadow:0 10px 22px rgb(0 0 0 / .35);
+  background:radial-gradient(circle,var(--acb) 0 15%,#0c0909 15% 17.5%,transparent 17.5%),repeating-radial-gradient(circle,#1b1717 0 2px,#100d0d 2px 4px)}
+.vl-pop.acx{border:0;box-shadow:0 30px 60px -20px rgb(0 0 0 / .75)}
+.vl-pop .ac-pack{width:auto;margin:16px 16px 0}
+.vl-pop .vl-pm{padding:8px 16px 16px}
+.vl-pop .vl-pm small{color:inherit;opacity:.78}
+.vl-pop .vl-seg i,.albsheet .vl-seg i{background:color-mix(in srgb,var(--hi) 24%,transparent)}
+.vl-pop .vl-seg u,.albsheet .vl-seg u{background:var(--hi)}
+.vl-pop .vl-songs{background:color-mix(in srgb,var(--hi) 16%,transparent);border:1px solid color-mix(in srgb,var(--hi) 38%,transparent);color:var(--hi)}
+.llsheet.albsheet{padding:0;gap:0;overflow:auto}
+.albsheet .alb-top{align-items:center;padding:22px 18px 24px}
+.albsheet .ac-pack{width:min(48%,250px);flex:none}
+.albsheet .alb-meta h2{padding-right:44px}
+.albsheet .alb-meta small{color:inherit;opacity:.8}
+.albsheet .alb-meta .note{color:inherit;opacity:.8}
+.albsheet .alb-top .tact{position:absolute;top:14px;right:14px;width:42px;height:42px;background:color-mix(in srgb,var(--hi) 14%,transparent);border-color:color-mix(in srgb,var(--hi) 32%,transparent);color:var(--hi)}
+.alb-body{padding:16px 18px calc(24px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+.alb-body .alb-rv{margin:0}
+.albsheet .alb-tl{gap:0;padding:4px 14px;border-radius:18px;background:var(--acsw);color:#fff}
+.albsheet .alb-tr{border-bottom-color:rgb(255 255 255 / .14)}
+.albsheet .alb-tr:last-child{border-bottom:0}
+.albsheet .alb-tr .n{color:rgb(255 255 255 / .62)}
+.albsheet .alb-tr .bar{background:rgb(255 255 255 / .22)}
+.albsheet .alb-tr .bar i{background:#fff}
+.albsheet .alb-tr b{color:#fff}
+@media (max-width:480px){.albsheet .ac-pack{width:min(78%,260px);margin:0 auto}.albsheet .alb-meta h2{padding-right:0}.albsheet .alb-top{gap:14px}}
+@keyframes acdisc{from{transform:translateX(-42%) rotate(-140deg)}to{transform:none}}
+@media (prefers-reduced-motion:no-preference){.ac-disc{animation:acdisc .8s cubic-bezier(.2,.8,.2,1) .25s both}.albsheet .alb-tl{animation:pfup .4s cubic-bezier(.2,.8,.2,1) .1s both}}
+
 /* account Overview layout: the cards rearrange as the window grows (phone: one column, tablet: two, desktop: record beside the cards, ultra-wide: record plus two card columns) */
 .settings.pf{grid-template-columns:minmax(0,1fr)}
 @media (min-width:1000px){.settings.pf{grid-template-columns:repeat(2,minmax(0,1fr))}.settings.pf>.setcard,.settings.pf>.frwrap{grid-column:auto}}
@@ -2243,6 +2282,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.18-o', note:'ALBUM PAGES FOLLOW THE ALBUM COLOR: the pop-up you get from a cover on the big record and the Song ratings sheet are redesigned like the Music page\'s sleeves. The whole top takes the album\'s own color (the same one the Music page uses, or read from the cover for albums not in your log), the cover sits with a record sliding out from behind it, the rating bar and buttons use the banner\'s ink, and the song ratings sit on a wash of the album color with white bars. The record slides out when the page opens.'},
   {v:'2026.11.18-n', note:'ALBUM COLORS ON THE BIG RECORD: on account pages, each cover on the big record now has a ring in that album\'s own color, the same color the Music page gives it, instead of the same teal on every cover. Albums not in your log get their color read from the cover. The ring is still thicker for higher ratings, and turns white when you hover or pick a cover.'},
   {v:'2026.11.18-m', note:'RECENTLY PLAYED AND ARTIST PHOTOS ON STATS: the Stats page now starts with a Recently played card: your latest plays, newest first, each with its cover, artist and album and how long ago you played it (3 min ago, 2 h ago, 5 days ago; hover for the exact time, and the times keep ticking while the page is open). Show 10 more reaches further back. Artists in Stats now show their Spotify photo instead of a letter: it was reading the wrong picture field before, so even artists in your log showed letters. For artists not in your log, Playback looks their photo up on Spotify a few at a time (12 per visit, saved on this device, and it stops quietly if Spotify says quota).'},
   {v:'2026.11.18-l', note:'PLAY COUNT COLOR: the ▶ play count on song rows now uses the album color, the same as the rating ring beside it, instead of white.'},
@@ -6933,10 +6973,19 @@ function vlShow(i){
 document.addEventListener('pointerover',ev=>{if(ev.pointerType==='touch')return;const b=ev.target.closest&&ev.target.closest('.vl-b');if(b)vlShow(+b.dataset.i)});
 document.addEventListener('pointerout',ev=>{if(ev.pointerType==='touch')return;const v=ev.target.closest&&ev.target.closest('.vl');if(v&&!(ev.relatedTarget&&ev.relatedTarget.closest&&ev.relatedTarget.closest('.vl-b')))vlShow(VL.pin)});
 /* click a cover on the record: it lifts off the groove and grows into the middle so you can see it; click anywhere or press Escape to put it back */
+/* an album's color on account pages: the Music page's own saved color when the album is in this log, otherwise read from its cover (the same key the record's rings use) */
+function accColOf(x){
+  let id='';
+  for(const a of S.music||[]){if(a.example)continue;for(const g of a.groups||[]){if(!RATEABLE.includes(g.kind))continue;const k=accKeys(a,g);if((x.k&&k.k===x.k)||(x.t&&k.t===x.t)){id=g.id;break}}if(id)break}
+  const key=id||'v'+accHash(String(x.t||x.k||x.n||'')),u=accCover(x),c=ACOL[key];
+  if(!c&&c!==''&&u)acolLazy(key,u);
+  return{key,col:c||acolFallback({title:x.n,id:key})};
+}
 function vlPopHtml(x){
   const u=accCover(x),big=u.replace(/\/front-250$/,'/front-500'),when=x.d&&fmtRd(x.d)?'Rated '+fmtRd(x.d):'';
   const segs=Array.from({length:10},(_,i)=>`<i><u style="width:${Math.round(Math.max(0,Math.min(1,x.r-i))*100)}%"></u></i>`).join('');
-  return `<div class="vl-bk"></div><div class="vl-pop" role="dialog" aria-label="${esc(x.n||'Untitled')}" tabindex="-1"><div class="vl-pc" style="--c:${accHue(x.n)}"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(big)}" data-s="${esc(u)}" alt="" decoding="async" onerror="if(this.src!==this.dataset.s){this.src=this.dataset.s}else{this.remove()}">`:''}</div><div class="vl-pm"><h4>${esc(x.n||'Untitled')}</h4><small>${esc(accArtText(x))}</small><div class="vl-pr"><b>${fmt(x.r)}</b><span class="vl-seg" role="img" aria-label="Rated ${fmt(x.r)} out of 10">${segs}</span></div>${when?`<small class="vl-w">${esc(when)}</small>`:''}${(UI.view==='account'?!!accLocalAlbum(x):Array.isArray(x.tr)&&x.tr.length)?`<button class="btn vl-songs" data-act="palb" data-key="${esc(accPk(x))}">Song ratings</button>`:''}</div></div>`;
+  const ac=accColOf(x);
+  return `<div class="vl-bk"></div><div class="vl-pop acx" data-acol="${esc(ac.key)}" style="--ac:${ac.col}" role="dialog" aria-label="${esc(x.n||'Untitled')}" tabindex="-1"><div class="ac-pack"><span class="ac-disc" aria-hidden="true"></span><div class="vl-pc" style="--c:${accHue(x.n)}"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(big)}" data-s="${esc(u)}" alt="" decoding="async" onerror="if(this.src!==this.dataset.s){this.src=this.dataset.s}else{this.remove()}">`:''}</div></div><div class="vl-pm"><h4>${esc(x.n||'Untitled')}</h4><small>${esc(accArtText(x))}</small><div class="vl-pr"><b>${fmt(x.r)}</b><span class="vl-seg" role="img" aria-label="Rated ${fmt(x.r)} out of 10">${segs}</span></div>${when?`<small class="vl-w">${esc(when)}</small>`:''}${(UI.view==='account'?!!accLocalAlbum(x):Array.isArray(x.tr)&&x.tr.length)?`<button class="btn vl-songs" data-act="palb" data-key="${esc(accPk(x))}">Song ratings</button>`:''}</div></div>`;
 }
 function vlClose(quick){
   const v=document.querySelector('.vl');if(!v)return;
@@ -7005,14 +7054,15 @@ function albumSheet(){
     else trk=`<p class="note">This album’s songs are not in your log on this device.</p>`;
   }else if(Array.isArray(x.tr)&&x.tr.length)trk=albTracksHtml(x.tr,x.r);
   else trk=`<p class="note">${esc(who)} hasn’t rated the songs on this album yet, or their Playback hasn’t shared them yet.</p>`;
-  return `<div class="llover albover"><button class="llbk" data-act="palbx" aria-label="Close album"></button><section class="llsheet albsheet" role="dialog" aria-modal="true" aria-label="${esc(x.n||'Untitled')}">
-    <div class="alb-top"><div class="alb-cv" style="--c:${accHue(x.n)}"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(big)}" data-s="${esc(u)}" alt="" decoding="async" onerror="if(this.src!==this.dataset.s){this.src=this.dataset.s}else{this.remove()}">`:''}</div>
+  const ac=accColOf(x);
+  return `<div class="llover albover"><button class="llbk" data-act="palbx" aria-label="Close album"></button><section class="llsheet albsheet acx" data-acol="${esc(ac.key)}" style="--ac:${ac.col}" role="dialog" aria-modal="true" aria-label="${esc(x.n||'Untitled')}">
+    <div class="alb-top"><div class="ac-pack"><span class="ac-disc" aria-hidden="true"></span><div class="alb-cv" style="--c:${accHue(x.n)}"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(big)}" data-s="${esc(u)}" alt="" decoding="async" onerror="if(this.src!==this.dataset.s){this.src=this.dataset.s}else{this.remove()}">`:''}</div></div>
     <div class="alb-meta"><h2>${esc(x.n||'Untitled')}</h2><small>${esc(accArtText(x))}</small>
       <div class="alb-r"><b>${fmt(x.r)}</b><span class="vl-seg" aria-hidden="true">${segs}</span></div>
       <p class="note">${when?'Rated '+esc(when):'No rated-on date'}${m!=null?` · you gave it <b>${fmt(m)}</b>`:''}</p></div>
     <button class="tact" data-act="palbx" aria-label="Close album">${ICO.close}</button></div>
-    ${x.rv?`<figure class="rvw alb-rv rv-in"><blockquote>${esc(x.rv)}</blockquote><figcaption>${self?'Your review':esc(who)+'\u2019s review'}</figcaption></figure>`:''}
-    ${trk}</section></div>`;
+    <div class="alb-body">${x.rv?`<figure class="rvw alb-rv rv-in"><blockquote>${esc(x.rv)}</blockquote><figcaption>${self?'Your review':esc(who)+'\u2019s review'}</figcaption></figure>`:''}
+    ${trk}</div></section></div>`;
 }
 /* the Friends shortcut in the top bar: one tap to the friends list, with a count of requests waiting for you */
 function friendsBtn(){
