@@ -2283,6 +2283,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+   {v:'2026.11.18-r', note:'SETTINGS SPOTIFY CARD FIXED: the Spotify card in Settings failed to load (\u201cCannot read properties of undefined\u201d) because two parts of the play counting shared a name, so the older Most played list broke once the Stats page was added. It works again. You can also still reach your counts on the Stats page.'},
    {v:'2026.11.18-q', note:'SETTINGS CAN NO LONGER GO BLANK: if one card in Settings fails to load, the page still opens and that card shows a short message saying what went wrong, instead of the Settings button doing nothing.'},
   {v:'2026.11.18-p', note:'SORT THE BIG RECORD: under the big record on an account page there is a row of orders: Highest (the usual, best at the outer edge), Lowest, Newest rated, Oldest rated and A–Z by artist. Pick one and the covers pop back onto the groove in the new order, with the caption telling you which end is the outer edge. It works on your page and on friends\' pages, and goes back to Highest when you leave.'},
   {v:'2026.11.18-o', note:'ALBUM PAGES FOLLOW THE ALBUM COLOR: the pop-up you get from a cover on the big record and the Song ratings sheet are redesigned like the Music page\'s sleeves. The whole top takes the album\'s own color (the same one the Music page uses, or read from the cover for albums not in your log), the cover sits with a record sliding out from behind it, the rating bar and buttons use the banner\'s ink, and the song ratings sit on a wash of the album color with white bars. The record slides out when the page opens.'},
@@ -2744,11 +2745,11 @@ function lsDiff(g){
 const plN=id=>(S.marks[id]&&S.marks[id].pc)||0;
 function plBadge(id){const n=plN(id);if(!n)return '';const l=S.marks[id].pl;
   return `<span class="plc" title="Played ${n} time${n===1?'':'s'} on Spotify${l?', last '+esc(new Date(l).toLocaleDateString([],{month:'short',day:'numeric'})):''}">\u25b6 ${n}</span>`}
-function plTop(){const so=[],al=new Map();
+function plTopOld(){const so=[],al=new Map();
   for(const a of S.music)for(const g of a.groups)for(const i of g.items){const n=plN(i.id);if(!n)continue;
     so.push({id:i.id,t:i.title,a:a.name,aid:a.id,n});const k=g.id;const e=al.get(k)||{t:g.title,a:a.name,aid:a.id,n:0};e.n+=n;al.set(k,e)}
   so.sort((x,y)=>y.n-x.n);return {so:so.slice(0,10),al:[...al.values()].sort((x,y)=>y.n-x.n).slice(0,5),tot:so.reduce((t,x)=>t+x.n,0)}}
-function plHtml(){const T=plTop();if(!T.so.length)return '';
+function plHtml(){const T=plTopOld();if(!T.so.length)return '';
   const mx=T.so[0].n,bar=x=>`<i style="--w:${Math.max(6,Math.round(x.n/mx*100))}%"></i>`;
   const amx=T.al[0].n,abar=x=>`<i style="--w:${Math.max(6,Math.round(x.n/amx*100))}%"></i>`;
   return `<details class="spmiss plays" ${UI.plOpen?'open':''}><summary class="note">Most played: ${T.tot} play${T.tot===1?'':'s'} counted</summary>
