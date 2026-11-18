@@ -2101,6 +2101,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-ay', note:'LISTEN LIST OPENS THE ALBUM: tapping Open on a Listen list entry now takes you to that album on the artist\u2019s page (scrolled into view with a little ripple) instead of just to the artist, and the Listen list closes behind you. If an entry is not in your log yet, Open still goes to the artist.'},
   {v:'2026.11.17-ax', note:'FRIENDS CAN SEE YOUR SONG RATINGS: opening one of your albums on your page (from the Albums wall, or the new Song ratings button when you tap an album on the big record) now shows its songs and their ratings to friends, the same list you see, with how many songs are rated and the song average. Each album now carries its song ratings when it is shared, so they show up after your next sync; a friend\u2019s page fills in as that friend updates Playback. Anyone you share your page with can see them, like the album rating itself.'},
   {v:'2026.11.17-aw', note:'FRIEND PAGES ANIMATE AGAIN: opening a friend\u2019s page the first time showed a \u201cLoading\u2026\u201d card, and that first draw used up the page\u2019s entrance animations, so when the friend\u2019s ratings arrived a moment later the hero, covers, record and cards just appeared. The animations are now saved until the page has really been drawn.'},
   {v:'2026.11.17-av', note:'FRIENDS CODE STAYS PUT: your friend code no longer pops in a second time when the Friends list finishes loading (it had its own entrance animation that replayed on every redraw); the sheet\u2019s slide-up is the only entrance now. The same goes for the code on the Account Settings tab.'},
@@ -7363,7 +7364,7 @@ function listenSide(){
     return `<li class="${r.heard?'heard':''}"><span class="wl-art" ${r.art?`style="background:var(--sunk) url('${esc(r.art)}') center/cover"`:''} aria-hidden="true"></span>
       <span class="wl-meta"><b>${esc(x.title)}</b><span>${sub}</span></span>
       <span class="wl-st">${st}${r.g&&r.n&&!r.heard?`<span class="bar" aria-hidden="true"><i style="width:${r.d/r.n*100}%"></i></span>`:''}</span>
-      <span class="wl-act">${r.a?`<button class="link" data-act="llgo" data-a="${r.a.id}">Open</button>`:''}<button class="link" data-act="lldel" data-id="${x.id}" aria-label="Remove ${esc(x.title)} from the listen list">Remove</button></span></li>`};
+      <span class="wl-act">${r.a?`<button class="link" data-act="llgo" data-a="${r.a.id}"${r.g?` data-g="${r.g.id}"`:''}>Open</button>`:''}<button class="link" data-act="lldel" data-id="${x.id}" aria-label="Remove ${esc(x.title)} from the listen list">Remove</button></span></li>`};
   return `<div class="llsheet" id="listenpanel" role="dialog" aria-modal="true" aria-label="Listen list">
     <div class="llhead"><h2>Listen list</h2><span class="mono">${todo.length} to hear${done.length?' · '+done.length+' heard':''}</span><button class="tact" data-act="llclose" aria-label="Close">${ICO.close}</button></div>
     <div class="wl">
@@ -7681,7 +7682,8 @@ document.addEventListener('click',ev=>{
     if(llOn(a.name,g.title)){const lid=llId(a.name,g.title);S.listen=listenAll().filter(x=>x.id!==lid)}else llAdd(a.name,g.title,g.year);touch()}
   else if(act==='lldel'){S.listen=listenAll().filter(x=>x.id!==id);touch()}
   else if(act==='llclear'){S.listen=listenAll().filter(x=>!llResolve(x).heard);touch()}
-  else if(act==='llgo'){UI.view=null;UI.tab='music';UI.sel.music=b.dataset.a;UI.filter='all';UI.toSheet=true}
+  else if(act==='llgo'){UI.view=null;UI.rel=null;UI.tab='music';UI.sel.music=b.dataset.a;UI.libOpen=false;UI.rOpen=null;UI.llOpen=false;UI.filter='all';
+    if(b.dataset.g)UI.toAlb=b.dataset.g;else UI.toSheet=true}   /* a listen-list album opens that album; Collection's Open in Music has no album, so it still goes to the artist */
   else if(act==='rtimport'){rtImport()}
   else if(act==='spgo'){spConnect().catch(()=>{SPX.err='This browser could not start the Spotify sign-in.';render()});return}
   else if(act==='spnow'){spPoll(true);return}
