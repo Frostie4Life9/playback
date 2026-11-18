@@ -1027,7 +1027,7 @@ button.pf-row{padding:8px 10px}button.pf-row:hover{border-color:var(--accent)}bu
 .vl{position:relative}
 .vl-b{cursor:pointer;outline:none}
 .vl-b.lift{visibility:hidden}
-.vl-b .vl-ring{fill:none;stroke:var(--accent);transition:stroke-width .15s,stroke .15s}
+.vl-b .vl-ring{fill:none;stroke:color-mix(in srgb,var(--ac,var(--accent)) 58%,#fff);transition:stroke-width .15s,stroke .15s}
 .vl-b:hover .vl-ring,.vl-b:focus-visible .vl-ring,.vl-b.sel .vl-ring{stroke:#fff;stroke-width:3.2}
 .vl-b.sel{filter:drop-shadow(0 0 5px rgb(255 255 255 / .65))}
 .vl-lab text{font-family:var(--mono);fill:#fff;text-anchor:middle;pointer-events:none}
@@ -2243,6 +2243,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.18-n', note:'ALBUM COLORS ON THE BIG RECORD: on account pages, each cover on the big record now has a ring in that album\'s own color, the same color the Music page gives it, instead of the same teal on every cover. Albums not in your log get their color read from the cover. The ring is still thicker for higher ratings, and turns white when you hover or pick a cover.'},
   {v:'2026.11.18-m', note:'RECENTLY PLAYED AND ARTIST PHOTOS ON STATS: the Stats page now starts with a Recently played card: your latest plays, newest first, each with its cover, artist and album and how long ago you played it (3 min ago, 2 h ago, 5 days ago; hover for the exact time, and the times keep ticking while the page is open). Show 10 more reaches further back. Artists in Stats now show their Spotify photo instead of a letter: it was reading the wrong picture field before, so even artists in your log showed letters. For artists not in your log, Playback looks their photo up on Spotify a few at a time (12 per visit, saved on this device, and it stops quietly if Spotify says quota).'},
   {v:'2026.11.18-l', note:'PLAY COUNT COLOR: the ▶ play count on song rows now uses the album color, the same as the rating ring beside it, instead of white.'},
   {v:'2026.11.18-k', note:'TRACK ROW LAYOUT: on song rows the rating ring now sits at the far right, with the play count (▶ and number) right beside it on its left in the same color as the song title. Before, the play count wrapped onto its own line and pushed the rating down.'},
@@ -6905,9 +6906,13 @@ function accVinylHtml(P){
   VL.items=items;VL.pin=-1;VL.def=vlLabel(null,P);
   const anim=pfAn(),h=accHueOf(P),big=d>=22;
   let grooves='';for(let r=104;r<=288;r+=3.6)grooves+=`<circle cx="300" cy="300" r="${r.toFixed(1)}"/>`;
+  /* each album's ring wears the color the Music page gives that album: the same saved color when the album is in this device's log (so it matches exactly), otherwise read from its cover the same way */
+  const gid=new Map();for(const a of S.music||[]){if(a.example)continue;for(const g of a.groups||[]){if(!RATEABLE.includes(g.kind))continue;const k=accKeys(a,g);if(k.k&&!gid.has(k.k))gid.set(k.k,g.id);if(!gid.has(k.t))gid.set(k.t,g.id)}}
   const beads=items.map((x,i)=>{
-    const[px,py]=pts[i]||[300,300],u=accCover(x),ring=(1+x.r*.22).toFixed(2),op=(.3+x.r*.07).toFixed(2);
-    return `<g transform="translate(${px.toFixed(1)} ${py.toFixed(1)})"><g class="vl-b" data-i="${i}" style="--d:${Math.round(450+i*Math.min(16,1300/items.length))}ms" tabindex="0" role="button" aria-label="${esc(x.n||'Untitled')}${accArtText(x)?' by '+esc(accArtText(x)):''}, rated ${fmt(x.r)}"><circle r="${(d/2).toFixed(1)}" fill="hsl(${accHue(x.n)} 45% 32%)"/>${big?`<text y="${(d*.16).toFixed(1)}" text-anchor="middle" style="font:800 ${(d*.45).toFixed(0)}px Archivo,var(--display);fill:rgb(255 255 255 / .8);pointer-events:none">${accIni(x.n)}</text>`:''}${u?`<image href="${esc(u)}" x="${(-d/2).toFixed(1)}" y="${(-d/2).toFixed(1)}" width="${d.toFixed(1)}" height="${d.toFixed(1)}" preserveAspectRatio="xMidYMid slice" clip-path="url(#vlc)"/>`:''}<circle class="vl-ring" r="${(d/2).toFixed(1)}" stroke-width="${ring}" stroke-opacity="${op}"/></g></g>`}).join('');
+    const[px,py]=pts[i]||[300,300],u=accCover(x),ring=(1+x.r*.22).toFixed(2),op=(.55+x.r*.045).toFixed(2);
+    const ck=gid.get(x.k)||gid.get(x.t)||'v'+accHash(String(x.t||x.k||x.n||i)),ac=ACOL[ck];
+    if(!ac&&ac!==''&&u)acolLazy(ck,u);
+    return `<g transform="translate(${px.toFixed(1)} ${py.toFixed(1)})"><g class="vl-b" data-i="${i}" data-acol="${esc(ck)}" style="--ac:${ac||acolFallback({title:x.n,id:ck})};--d:${Math.round(450+i*Math.min(16,1300/items.length))}ms" tabindex="0" role="button" aria-label="${esc(x.n||'Untitled')}${accArtText(x)?' by '+esc(accArtText(x)):''}, rated ${fmt(x.r)}"><circle r="${(d/2).toFixed(1)}" fill="hsl(${accHue(x.n)} 45% 32%)"/>${big?`<text y="${(d*.16).toFixed(1)}" text-anchor="middle" style="font:800 ${(d*.45).toFixed(0)}px Archivo,var(--display);fill:rgb(255 255 255 / .8);pointer-events:none">${accIni(x.n)}</text>`:''}${u?`<image href="${esc(u)}" x="${(-d/2).toFixed(1)}" y="${(-d/2).toFixed(1)}" width="${d.toFixed(1)}" height="${d.toFixed(1)}" preserveAspectRatio="xMidYMid slice" clip-path="url(#vlc)"/>`:''}<circle class="vl-ring" r="${(d/2).toFixed(1)}" stroke-width="${ring}" stroke-opacity="${op}"/></g></g>`}).join('');
   return `<div class="vl${anim}" style="--h:${h}"><div class="vl-wrap"><svg class="vl-svg" viewBox="0 0 600 600" role="group" aria-label="Every album ${esc(P.name)} rated, best at the outer edge">
     <defs><clipPath id="vlc" clipPathUnits="objectBoundingBox"><circle cx=".5" cy=".5" r=".5"/></clipPath></defs>
     <circle cx="300" cy="300" r="296" fill="#0c0c0f"/><circle cx="300" cy="300" r="296" fill="none" stroke="rgb(255 255 255 / .14)" stroke-width="1.5"/>
