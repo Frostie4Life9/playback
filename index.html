@@ -1130,7 +1130,6 @@ body{overflow-x:clip}
   .frs.fresh .frp .fbar i{animation:frfill .85s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*70ms + 260ms)}
   .acc-row.acc-in{animation:accrow .4s cubic-bezier(.2,.8,.2,1) both}
   .acc-row.acc-in:nth-of-type(2){animation-delay:.05s}.acc-row.acc-in:nth-of-type(3){animation-delay:.1s}.acc-row.acc-in:nth-of-type(n+4){animation-delay:.15s}
-  .acc-code{animation:accrow .5s cubic-bezier(.2,.8,.2,1) both}
 }
 .setcard>.add:first-of-type{border-top:0;padding-top:0}
 .setcard details{border-top:1px solid var(--line);padding-top:10px}
@@ -2101,6 +2100,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-av', note:'FRIENDS CODE STAYS PUT: your friend code no longer pops in a second time when the Friends list finishes loading (it had its own entrance animation that replayed on every redraw); the sheet\u2019s slide-up is the only entrance now. The same goes for the code on the Account Settings tab.'},
   {v:'2026.11.17-au', note:'FIX: closing the month panel no longer makes the score hint above it flash; only the hint that belongs to the panel you closed fades in.'},
   {v:'2026.11.17-at', note:'SMOOTHER FOLD: when a score or month detail panel closes, it now shrinks to exactly the size of the \u201cTap a bar\u2026\u201d line that replaces it and that line fades in, so the cards below no longer rise too far and then snap back down.'},
   {v:'2026.11.17-as', note:'DETAIL PANEL CLOSES SMOOTHLY: tapping the selected bar again (a score under the tiles, or a month in Albums rated per month) now folds the detail panel away, shrinking and fading, with the cards below sliding up into the gap, instead of vanishing at once.'},
