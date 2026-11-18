@@ -478,7 +478,7 @@ async function sugOwner(request, env, url) {
 /* a rated-on day: exactly YYYY-MM-DD, a real date, not in the future; anything else is dropped */
 const cleanDay = v => { if (typeof v !== 'string' || !/^\d{4}-\d\d-\d\d$/.test(v)) return null; const t = Date.parse(v + 'T00:00:00Z'); return Number.isFinite(t) && new Date(t).toISOString().slice(0, 10) === v && t <= Date.now() + 86400000 ? v : null; };
 const GOOGLE_ISS = ['https://accounts.google.com', 'accounts.google.com'];
-const ACCT_MAX_BODY = 400 * 1024, ACCT_MAX_ROWS = 4000;
+const ACCT_MAX_BODY = 1536 * 1024, ACCT_MAX_ROWS = 4000;
 const ACCT_LOG_MAX = 1400000, ACCT_LOG_USERS = 200, ACCT_LOG_PER_HOUR = 120;   /* base64 text (about 1 MB gzipped), people with a saved copy, saves per person per hour */
 let acctReady = false, gKeys = null, gKeysAt = 0;
 
@@ -497,6 +497,7 @@ async function acctInit(env) {
   ]);
   /* the table first shipped without the cover column: add it once (the error just means it is already there) */
   try { await env.CATALOG.prepare('ALTER TABLE acct_ratings ADD COLUMN img TEXT').run(); } catch (e) { /* already there */ }
+  try { await env.CATALOG.prepare('ALTER TABLE acct_ratings ADD COLUMN trk TEXT').run(); } catch (e) { /* already there */ }   /* an album's songs and their ratings, JSON [[title, rating], ...] (version 17) */
   try { await env.CATALOG.prepare('ALTER TABLE acct_users ADD COLUMN songs INTEGER').run(); } catch (e) { /* already there */ }   /* how many songs they have rated, shown on their page */
   try { await env.CATALOG.prepare('ALTER TABLE acct_users ADD COLUMN savg REAL').run(); } catch (e) { /* already there */ }
   try { await env.CATALOG.prepare('ALTER TABLE acct_ratings ADD COLUMN day TEXT').run(); } catch (e) { /* already there */ }   /* the day it was rated, YYYY-MM-DD (version 16) */
@@ -730,12 +731,18 @@ async function acct(request, env, url) {
       if (!x || (x.kind !== 'a' && x.kind !== 's') || typeof x.t !== 'string' || !x.t) continue;
       const r = Number(x.r); if (!(r > 0 && r <= 10)) continue;
       const t = x.t.slice(0, 200), id = x.kind + '|' + t; if (seen.has(id)) continue; seen.add(id);
-      items.push({ kind: x.kind, k: typeof x.k === 'string' ? x.k.slice(0, 80) : '', t, r: Math.round(r * 2) / 2, n: String(x.n || '').slice(0, 120), a: String(x.a || '').slice(0, 160), i: cleanImg(x.i), d: cleanDay(x.d) });
+      let trk = null;
+      if (x.kind === 'a' && Array.isArray(x.tr)) {
+        const tr = x.tr.slice(0, 80).map(q => Array.isArray(q) && typeof q[0] === 'string' ? [q[0].slice(0, 120), Math.round(Math.min(10, Math.max(0, Number(q[1]) || 0)) * 2) / 2] : null).filter(Boolean);
+        if (tr.some(q => q[1] > 0)) trk = JSON.stringify(tr).slice(0, 12000);
+        if (trk && !trk.endsWith(']')) trk = null;   /* never keep a cut-off list */
+      }
+      items.push({ kind: x.kind, k: typeof x.k === 'string' ? x.k.slice(0, 80) : '', t, r: Math.round(r * 2) / 2, n: String(x.n || '').slice(0, 120), a: String(x.a || '').slice(0, 160), i: cleanImg(x.i), d: cleanDay(x.d), trk });
     }
     const songs = Math.min(1000000, Math.max(0, Math.floor(Number(j.songs) || 0))), sa = Number(j.savg), savg = songs > 0 && sa > 0 && sa <= 10 ? Math.round(sa * 100) / 100 : null;
     await env.CATALOG.batch([
       env.CATALOG.prepare('DELETE FROM acct_ratings WHERE uid = ?1').bind(me.uid),
-      env.CATALOG.prepare("INSERT OR REPLACE INTO acct_ratings (uid, kind, k, t, r, ttl, art, img, day) SELECT ?1, json_extract(value,'$.kind'), json_extract(value,'$.k'), json_extract(value,'$.t'), json_extract(value,'$.r'), json_extract(value,'$.n'), json_extract(value,'$.a'), json_extract(value,'$.i'), json_extract(value,'$.d') FROM json_each(?2)").bind(me.uid, JSON.stringify(items)),
+      env.CATALOG.prepare("INSERT OR REPLACE INTO acct_ratings (uid, kind, k, t, r, ttl, art, img, day, trk) SELECT ?1, json_extract(value,'$.kind'), json_extract(value,'$.k'), json_extract(value,'$.t'), json_extract(value,'$.r'), json_extract(value,'$.n'), json_extract(value,'$.a'), json_extract(value,'$.i'), json_extract(value,'$.d'), json_extract(value,'$.trk') FROM json_each(?2)").bind(me.uid, JSON.stringify(items)),
       env.CATALOG.prepare('UPDATE acct_users SET rated = ?2, seen = ?3, songs = ?4, savg = ?5 WHERE uid = ?1').bind(me.uid, items.length, now, songs, savg)
     ]);
     return reply({ ok: true, rows: items.length });
@@ -797,7 +804,8 @@ async function acct(request, env, url) {
     const u = await env.CATALOG.prepare('SELECT uid, name, share, made, hue, pic, songs, savg FROM acct_users WHERE uid = ?1').bind(uid).first();
     if (!u) return reply({ error: 'That account is gone.' }, 404);
     if (uid !== me.uid && !u.share) return reply({ error: u.name + ' is not sharing their ratings right now.' }, 403);
-    const items = (await env.CATALOG.prepare('SELECT kind, k, t, r, ttl AS n, art AS a, img AS i, day AS d FROM acct_ratings WHERE uid = ?1 ORDER BY r DESC, ttl COLLATE NOCASE LIMIT 4000').bind(uid).all()).results || [];
+    const items = (await env.CATALOG.prepare('SELECT kind, k, t, r, ttl AS n, art AS a, img AS i, day AS d, trk FROM acct_ratings WHERE uid = ?1 ORDER BY r DESC, ttl COLLATE NOCASE LIMIT 4000').bind(uid).all()).results || [];
+    for (const x of items) { if (x.trk) { try { x.tr = JSON.parse(x.trk); } catch (e) { /* skip a bad list */ } } delete x.trk; }
     const fc = await env.CATALOG.prepare("SELECT COUNT(*) AS c FROM acct_friends WHERE st = 'ok' AND (a = ?1 OR b = ?1)").bind(uid).first('c');
     return reply({ profile: { uid, name: u.name, since: u.made, friends: fc || 0, hue: u.hue == null ? null : u.hue, pic: u.pic || '', songs: u.songs || 0, savg: u.savg || 0, items } });
   }

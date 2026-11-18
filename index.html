@@ -895,6 +895,7 @@ details.addart .add{border-top:1px solid var(--line)}
 .vl-pm h4{margin:0;font:800 19px/1.1 Archivo,var(--display)}
 .vl-pm small{color:var(--muted);font-size:13px}
 .vl-pm .vl-w{font:500 11px var(--mono)}
+.vl-pm .vl-songs{margin-top:8px;align-self:flex-start;padding:6px 12px;font-size:13px}
 .vl-pr{display:flex;align-items:center;gap:10px;margin-top:4px}
 .vl-pr b{font:800 26px var(--mono)}
 .vl-seg{flex:1;display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:3px}
@@ -2100,6 +2101,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-ax', note:'FRIENDS CAN SEE YOUR SONG RATINGS: opening one of your albums on your page (from the Albums wall, or the new Song ratings button when you tap an album on the big record) now shows its songs and their ratings to friends, the same list you see, with how many songs are rated and the song average. Each album now carries its song ratings when it is shared, so they show up after your next sync; a friend\u2019s page fills in as that friend updates Playback. Anyone you share your page with can see them, like the album rating itself.'},
   {v:'2026.11.17-aw', note:'FRIEND PAGES ANIMATE AGAIN: opening a friend\u2019s page the first time showed a \u201cLoading\u2026\u201d card, and that first draw used up the page\u2019s entrance animations, so when the friend\u2019s ratings arrived a moment later the hero, covers, record and cards just appeared. The animations are now saved until the page has really been drawn.'},
   {v:'2026.11.17-av', note:'FRIENDS CODE STAYS PUT: your friend code no longer pops in a second time when the Friends list finishes loading (it had its own entrance animation that replayed on every redraw); the sheet\u2019s slide-up is the only entrance now. The same goes for the code on the Account Settings tab.'},
   {v:'2026.11.17-au', note:'FIX: closing the month panel no longer makes the score hint above it flash; only the hint that belongs to the panel you closed fades in.'},
@@ -5881,6 +5883,8 @@ function accSongStats(){
     if(!i||!i.id)continue;const ck=canonK(i.id);if(seen.has(ck))continue;const r=rating(i.id);if(r){seen.add(ck);n++;sum+=r}}}
   return{n,avg:n?sum/n:0};
 }
+/* an album's songs and their ratings (0 = not rated), published with the album so friends can open it and see them; nothing when no song on it is rated */
+function accTr(g){const its=stdItems(g);if(!its.some(i=>rating(i.id)))return undefined;return its.slice(0,80).map(i=>[songShow(i).t.slice(0,90),Math.round((rating(i.id)||0)*2)/2])}
 function accItems(){
   const out=[];
   /* an album on several artists' pages (twins share one rating) is one row, with every artist on it */
@@ -5888,7 +5892,7 @@ function accItems(){
   const put=(id,row,names)=>{const ck=canonK(id);let e=twin.get(ck);if(!e){e={row,names:[]};twin.set(ck,e);out.push(row)}else if(!e.row.i&&row.i)e.row.i=row.i;addN(e,names)};
   for(const a of S.music){if(a.example)continue;
     for(const g of a.groups||[]){if(!RATEABLE.includes(g.kind))continue;const{k,t}=accKeys(a,g),nm=[a.name,...(g.w||[])];
-      const r=rating(g.id);if(r)put(g.id,{kind:'a',k,t,r,n:g.title,a:a.name,i:accImg(g),...accDay(g.id)},nm);
+      const r=rating(g.id);if(r)put(g.id,{kind:'a',k,t,r,n:g.title,a:a.name,i:accImg(g),tr:accTr(g),...accDay(g.id)},nm);
       const d=rating(dxId(g));if(d)put(dxId(g),{kind:'a',k:k?k+'~dx':'',t:t+'~dx',r:d,n:dxName(g),a:a.name,...accDay(dxId(g))},nm)}}
   for(const e of twin.values())e.row.a=e.names.join(' \u00b7 ');
   for(const s of S.screen){if(s.example)continue;const r=rating(s.id);if(r){const{k,t}=accScreenKeys(s);out.push({kind:'s',k,t,r,n:s.title,a:'',...accDay(s.id)})}}
@@ -6298,7 +6302,7 @@ document.addEventListener('pointerout',ev=>{if(ev.pointerType==='touch')return;c
 function vlPopHtml(x){
   const u=accCover(x),big=u.replace(/\/front-250$/,'/front-500'),when=x.d&&fmtRd(x.d)?'Rated '+fmtRd(x.d):'';
   const segs=Array.from({length:10},(_,i)=>`<i><u style="width:${Math.round(Math.max(0,Math.min(1,x.r-i))*100)}%"></u></i>`).join('');
-  return `<div class="vl-bk"></div><div class="vl-pop" role="dialog" aria-label="${esc(x.n||'Untitled')}" tabindex="-1"><div class="vl-pc" style="--c:${accHue(x.n)}"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(big)}" data-s="${esc(u)}" alt="" decoding="async" onerror="if(this.src!==this.dataset.s){this.src=this.dataset.s}else{this.remove()}">`:''}</div><div class="vl-pm"><h4>${esc(x.n||'Untitled')}</h4><small>${esc(accArtText(x))}</small><div class="vl-pr"><b>${fmt(x.r)}</b><span class="vl-seg" role="img" aria-label="Rated ${fmt(x.r)} out of 10">${segs}</span></div>${when?`<small class="vl-w">${esc(when)}</small>`:''}</div></div>`;
+  return `<div class="vl-bk"></div><div class="vl-pop" role="dialog" aria-label="${esc(x.n||'Untitled')}" tabindex="-1"><div class="vl-pc" style="--c:${accHue(x.n)}"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(big)}" data-s="${esc(u)}" alt="" decoding="async" onerror="if(this.src!==this.dataset.s){this.src=this.dataset.s}else{this.remove()}">`:''}</div><div class="vl-pm"><h4>${esc(x.n||'Untitled')}</h4><small>${esc(accArtText(x))}</small><div class="vl-pr"><b>${fmt(x.r)}</b><span class="vl-seg" role="img" aria-label="Rated ${fmt(x.r)} out of 10">${segs}</span></div>${when?`<small class="vl-w">${esc(when)}</small>`:''}${(UI.view==='account'?!!accLocalAlbum(x):Array.isArray(x.tr)&&x.tr.length)?`<button class="btn vl-songs" data-act="palb" data-key="${esc(accPk(x))}">Song ratings</button>`:''}</div></div>`;
 }
 function vlClose(quick){
   const v=document.querySelector('.vl');if(!v)return;
@@ -6345,6 +6349,12 @@ function accLocalAlbum(x){
   for(const a of S.music||[]){if(a.example)continue;for(const g of a.groups||[]){if(!RATEABLE.includes(g.kind))continue;const k=accKeys(a,g);if((x.k&&k.k===x.k)||(x.t&&k.t===x.t))return g}}
   return null;
 }
+/* the song list on an album sheet: rows are [title, rating] (0 = not rated) */
+function albTracksHtml(rows,albumR){
+  const rated=rows.filter(p=>p[1]>0),av=rated.length?rated.reduce((t,p)=>t+p[1],0)/rated.length:0;
+  return `<div class="alb-sum"><span>${rated.length} of ${rows.length} songs rated</span>${rated.length?`<span>song average <b>${av.toFixed(1)}</b> · album <b>${fmt(albumR)}</b></span>`:''}</div>
+    <div class="alb-tl">${rows.map((p,k)=>`<div class="alb-tr${p[1]>0?'':' none'}" style="--i:${k}"><span class="n">${k+1}</span><span class="tt">${esc(p[0])}</span><span class="bar"><i style="width:${p[1]*10}%"></i></span><b>${p[1]>0?fmt(p[1]):'\u2013'}</b></div>`).join('')}</div>`;
+}
 function albumSheet(){
   const self=UI.view==='account',fr=UI.view==='friend'?(ACX.prof[UI.fid]||{}).data:null;
   if(!UI.pAlb||(!self&&!fr))return '';
@@ -6356,13 +6366,11 @@ function albumSheet(){
   let trk='';
   if(x.kind!=='a')trk='';
   else if(self){
-    const g=accLocalAlbum(x),its=g?stdItems(g):[],rated=its.filter(i=>rating(i.id));
-    if(its.length){
-      const av=rated.length?rated.reduce((t,i)=>t+rating(i.id),0)/rated.length:0;
-      trk=`<div class="alb-sum"><span>${rated.length} of ${its.length} songs rated</span>${rated.length?`<span>song average <b>${av.toFixed(1)}</b> · album <b>${fmt(x.r)}</b></span>`:''}</div>
-        <div class="alb-tl">${its.map((i,k)=>{const r=rating(i.id),t=songShow(i).t;return `<div class="alb-tr${r?'':' none'}" style="--i:${k}"><span class="n">${k+1}</span><span class="tt">${esc(t)}</span><span class="bar"><i style="width:${r*10}%"></i></span><b>${r?fmt(r):'–'}</b></div>`}).join('')}</div>`;
-    }else trk=`<p class="note">This album’s songs are not in your log on this device.</p>`;
-  }else if(x.kind==='a')trk=`<p class="note">${esc(who)}’s song ratings stay on their own page. Only the album rating and the day it was rated are shared.</p>`;
+    const g=accLocalAlbum(x),its=g?stdItems(g):[];
+    if(its.length)trk=albTracksHtml(its.map(i=>[songShow(i).t,rating(i.id)||0]),x.r);
+    else trk=`<p class="note">This album’s songs are not in your log on this device.</p>`;
+  }else if(Array.isArray(x.tr)&&x.tr.length)trk=albTracksHtml(x.tr,x.r);
+  else trk=`<p class="note">${esc(who)} hasn’t rated the songs on this album yet, or their Playback hasn’t shared them yet.</p>`;
   return `<div class="llover albover"><button class="llbk" data-act="palbx" aria-label="Close album"></button><section class="llsheet albsheet" role="dialog" aria-modal="true" aria-label="${esc(x.n||'Untitled')}">
     <div class="alb-top"><div class="alb-cv" style="--c:${accHue(x.n)}"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(big)}" data-s="${esc(u)}" alt="" decoding="async" onerror="if(this.src!==this.dataset.s){this.src=this.dataset.s}else{this.remove()}">`:''}</div>
     <div class="alb-meta"><h2>${esc(x.n||'Untitled')}</h2><small>${esc(accArtText(x))}</small>
