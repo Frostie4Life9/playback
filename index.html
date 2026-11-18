@@ -952,6 +952,36 @@ details.addart .add{border-top:1px solid var(--line)}
 .set-gh{margin:0 0 -2px 4px;font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 @media (min-width:760px){.settings.set{grid-template-columns:repeat(2,minmax(0,1fr))}.set-lib{grid-column:1;grid-row:3/span 2}.set-acct{grid-column:2;grid-row:3}.set-data{grid-column:2;grid-row:4}}
 @media (min-width:1300px){.settings.set{grid-template-columns:repeat(3,minmax(0,1fr))}.set-lib,.set-acct,.set-data{grid-row:3}.set-lib{grid-column:1}.set-acct{grid-column:2}.set-data{grid-column:3}}
+.pf-grid{grid-template-columns:repeat(auto-fill,minmax(clamp(104px,6vw,150px),1fr))}
+button.pf-cv,button.pf-row{font:inherit;color:inherit;text-align:left;cursor:pointer;padding:0}
+button.pf-cv{display:block;width:100%;border:0;transition:transform .18s,box-shadow .18s}
+button.pf-cv:hover,button.pf-cv:focus-visible{transform:translateY(-3px) scale(1.03);box-shadow:0 12px 24px -10px rgb(0 0 0 / .6);z-index:1}
+button.pf-cv:active{transform:scale(.97)}
+button.pf-row{width:100%;transition:transform .15s,border-color .2s}
+button.pf-row{padding:8px 10px}button.pf-row:hover{border-color:var(--accent)}button.pf-row:active{transform:scale(.985)}
+.pf-mr b{font:800 22px Archivo,var(--display);color:var(--accent)}
+.albsheet{max-width:560px;gap:16px}
+.alb-top{display:flex;gap:16px;align-items:flex-start}
+.alb-cv{position:relative;width:min(38%,170px);flex:none;aspect-ratio:1;border-radius:14px;overflow:hidden;background:hsl(var(--c,180) 40% 30%);color:#fff;box-shadow:0 18px 30px -16px rgb(0 0 0 / .7)}
+.alb-cv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.alb-cv b{position:absolute;inset:0;display:grid;place-items:center;font:800 54px Archivo,var(--display);opacity:.5}
+.alb-meta{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+.alb-meta h2{margin:0;font:800 24px/1.05 Archivo,var(--display);overflow-wrap:anywhere}
+.alb-meta small{color:var(--muted);font-size:14px}
+.alb-r{display:flex;align-items:center;gap:10px;margin-top:2px}.alb-r>b{font:800 34px/1 var(--mono)}.alb-r .vl-seg{flex:1}
+.alb-meta .note{margin:0}
+.alb-sum{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font:500 12px var(--mono);color:var(--muted)}.alb-sum b{color:var(--ink)}
+.alb-tl{display:flex;flex-direction:column;gap:2px}
+.alb-tr{display:grid;grid-template-columns:26px minmax(0,1fr) minmax(60px,28%) 34px;gap:10px;align-items:center;padding:7px 4px;border-bottom:1px solid var(--line)}
+.alb-tr .n{font:500 12px var(--mono);color:var(--muted);text-align:right}
+.alb-tr .tt{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.alb-tr .bar{display:block;height:5px;border-radius:3px;background:var(--line);overflow:hidden}
+.alb-tr .bar i{display:block;height:100%;border-radius:3px;background:var(--accent);transform-origin:left}
+.alb-tr b{font:800 14px var(--mono);text-align:right}
+.alb-tr.none{opacity:.55}
+@media (max-width:480px){.alb-top{flex-wrap:wrap}.alb-cv{width:42%}.alb-top .tact{position:absolute;top:14px;right:14px}.alb-meta{flex-basis:100%}.alb-tr{grid-template-columns:22px minmax(0,1fr) 54px 32px;gap:8px}}
+@media (prefers-reduced-motion:no-preference){.albsheet{animation:pfup .35s cubic-bezier(.2,.8,.2,1) both}.albover .llbk{animation:albfade .25s both}.alb-cv{animation:pfpop .45s cubic-bezier(.3,1.35,.5,1) .08s both}.alb-r .vl-seg u{animation:albg .6s cubic-bezier(.2,.8,.2,1) .15s both;transform-origin:left}.alb-tr{animation:pfup .35s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*22ms + 120ms)}.alb-tr .bar i{animation:albg .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*22ms + 200ms)}}
+@keyframes albg{from{transform:scaleX(0)}}@keyframes albfade{from{opacity:0}}
 /* account Overview layout: the cards rearrange as the window grows (phone: one column, tablet: two, desktop: record beside the cards, ultra-wide: record plus two card columns) */
 .settings.pf{grid-template-columns:minmax(0,1fr)}
 @media (min-width:1000px){.settings.pf{grid-template-columns:repeat(2,minmax(0,1fr))}.settings.pf>.setcard,.settings.pf>.frwrap{grid-column:auto}}
@@ -2070,6 +2100,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-ap', note:'ALBUMS WALL: EVERYTHING, GROUPED BY SCORE, TAP FOR DETAILS. The Albums tab no longer stops at 60 and has no Show more button: every album is on the wall and the covers grow to use the width of your screen. Sorted by Highest or Lowest, the wall is split into rows headed by the exact score (10, 9.5, 9 and so on) with how many albums got it. Tap any cover (or a row in the list view) and a pop-up opens with the big cover, the rating, the day it was rated, and on your own page every song with its rating bar, how many songs you rated and the song average next to the album rating. On a friend\u2019s page it shows their rating and date and, if you rated it too, yours; their song ratings stay private. Close with the X, by tapping outside, or Escape.'},
   {v:'2026.11.17-ao', note:'ACCOUNT SETTINGS TAB AND A TIDIER SETTINGS PAGE: your Account page has a fourth tab, Settings, that holds Friends (your code, add by code, requests) and Your account (photo, color, name, sharing, owner login, sync, sign out, delete), so they no longer sit under Overview, Albums and Shows & films. A friend\u2019s page does not show it. The regular Settings page is now grouped under three headings: Library & imports (import source, Spotify, Rate Your Music, rating dates), Account & community (the account shortcut, friend suggestions, people using Playback) and Your data (sync, numbers, export, backup). The groups sit side by side on a wide monitor, in two columns on a tablet and stacked on a phone. The Account card in Settings now has an Account settings button that opens straight to the new tab.'},
   {v:'2026.11.17-an', note:'OVERVIEW REARRANGES WITH THE WINDOW: the account Overview now lays its cards out by screen size instead of letting them fall wherever. On a phone everything stacks in one column (months, scoring habits, top artists, then the record). On a tablet the months card spans the top, scoring habits and top artists sit side by side, and the record is centered below. On a desktop the big record sits on the left, staying in view as you scroll, with the months, scoring habits and top artists stacked beside it so there are no empty gaps. On a very wide monitor the record takes the left, the months card spans the top and scoring habits and top artists sit side by side under it. Friends and Your account sit side by side on wide screens and stack on narrow ones.'},
   {v:'2026.11.17-am', note:'FIXES AND FULL-WIDTH PAGES: tapping a month bar used to replay the animation on the score covers above it (and the reverse); now only the panel you opened animates. Every page now uses the whole window instead of a centered column about 1100px wide: Settings flows into columns, your page lays its cards side by side, and everything folds back to one column as the window shrinks. The cover previews are fitted to the space they have, so they stay correct inside the narrower cards and refit on resize without redrawing.'},
@@ -4874,7 +4905,7 @@ async function push(force){
 }
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pull();else if(accSync()&&!ownSync()&&pushTimer&&SYS.status!=='conflict'){clearTimeout(pushTimer);pushTimer=null;push(false)}});   /* leaving the app sends a waiting account save right away */
 window.addEventListener('online',()=>pull());
-document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&UI.frOpen){UI.frOpen=false;render()}else if(ev.key==='Escape'&&UI.llOpen){UI.llOpen=false;render()}else if(ev.key==='Escape'&&UI.mm){UI.mm=false;UI.mmAnim=false;render()}});
+document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&UI.pAlb){UI.pAlb='';render()}else if(ev.key==='Escape'&&UI.frOpen){UI.frOpen=false;render()}else if(ev.key==='Escape'&&UI.llOpen){UI.llOpen=false;render()}else if(ev.key==='Escape'&&UI.mm){UI.mm=false;UI.mmAnim=false;render()}});
 document.addEventListener('toggle',ev=>{if(ev.target.id==='syncpanel')UI.syncOpen=ev.target.open;else if(ev.target.id==='syncguide')UI.guideOpen=ev.target.open;else if(ev.target.id==='backup')UI.bkOpen=ev.target.open;else if(ev.target.id==='addart')UI.addOpen=ev.target.open;else if(ev.target.id==='listenpanel')UI.llOpen=ev.target.open;else if(ev.target.id==='coladd')UI.colAdd=ev.target.open;else if(ev.target.id==='colhand')UI.colHand=ev.target.open;else if(ev.target.id==='coltok')UI.colTok=ev.target.open;else if(ev.target.classList&&ev.target.classList.contains('splog'))UI.spLogOpen=ev.target.open},true);
 const UI={view:null,libOpen:false,addOpen:false,rOpen:null,lq:{music:'',screen:''},tab:'music',sel:{music:null,screen:null},filter:'all',armed:null,addType:'show',copied:false,epOpen:{},dxOpen:{},wEdit:null,dEdit:null};
 
@@ -6085,7 +6116,7 @@ function accStatsHtml(st,P){
     <div class="pf-hist${an}" role="group" aria-label="How often each rating from 1 to 10 was given. Tap a bar for details.">${st.hist.map((c,i)=>`<button data-act="psc" data-v="${i+1}" aria-pressed="${sel===i+1}" aria-label="Score ${i+1}: ${c} rating${c===1?'':'s'}" style="--i:${i};--v:${(c/mx*100).toFixed(0)}%"><em>${c||''}</em><i></i><span>${i+1}</span></button>`).join('')}</div>${info}`;
 }
 /* ---------- the sections of an account page: Overview (stats, activity, top artists, the record), Albums (a wall of covers you can sort and filter) and Shows & films ---------- */
-function pReset(){UI.pTab='o';UI.pKind='a';UI.pLim=60;UI.pSort='hi';UI.pMin=0;UI.pYear='';UI.pMon=0;UI.pView='g';UI.pFilter='all';UI.pFOpen=false;UI.pAnimL=false;UI.pAnimF=false;UI.pAnimI=false;UI.pBucket=0;UI.pSelSc=0;UI.pSelMon=''}
+function pReset(){UI.pAlb='';UI.pTab='o';UI.pKind='a';UI.pLim=60;UI.pSort='hi';UI.pMin=0;UI.pYear='';UI.pMon=0;UI.pView='g';UI.pFilter='all';UI.pFOpen=false;UI.pAnimL=false;UI.pAnimF=false;UI.pAnimI=false;UI.pBucket=0;UI.pSelSc=0;UI.pSelMon=''}
 const pfAn=()=>UI.pAnim||UI.pAnimL?' pf-in':'';
 const pMonthName=(k,short)=>{const[y,m]=k.split('-');return new Date(+y,+m-1,1).toLocaleDateString([],short?{month:'short'}:{month:'long',year:'numeric'})};
 const accAvg=l=>l.length?l.reduce((t,x)=>t+x.r,0)/l.length:0;
@@ -6154,9 +6185,9 @@ function accListHtml(P,match){
   const inMon=inYear.filter(x=>!mon||(x.d&&+x.d.slice(5,7)===mon));
   const list=inMon.filter(x=>accPassMin(x.r,mn)&&(!bk||accBucket(x.r)===bk)).sort(accSortFn(sort));
   const noun=kind==='a'?['album','albums']:['title','titles'];
-  const grp=(sort==='new'||sort==='old')&&list.some(x=>x.d);
-  const gs={};if(grp)for(const x of list){const k=x.d?x.d.slice(0,7):'';const g=gs[k]||(gs[k]={n:0,s:0});g.n++;g.s+=x.r}
-  const lim=UI.pLim||60,rows=list.slice(0,lim),step=Math.min(24,1100/Math.max(1,Math.min(list.length,lim))),nAct=(mn?1:0)+(bk?1:0)+(yr?1:0)+(mon?1:0),fopen=!!UI.pFOpen;
+  const byR=(sort==='hi'||sort==='lo'),grp=byR||((sort==='new'||sort==='old')&&list.some(x=>x.d));const gk=x=>byR?String(x.r):(x.d?x.d.slice(0,7):'');
+  const gs={};if(grp)for(const x of list){const k=gk(x);const g=gs[k]||(gs[k]={n:0,s:0});g.n++;g.s+=x.r}
+  const rows=list,step=Math.min(24,1100/Math.max(1,list.length)),nAct=(mn?1:0)+(bk?1:0)+(yr?1:0)+(mon?1:0),fopen=!!UI.pFOpen;
   const an=(UI.pAnim||UI.pAnimL)?' pf-an':'';
   const chip=(act,v,label,c,on)=>`<button data-act="${act}" data-v="${v}" aria-pressed="${on}">${label}${c==null?'':`<span class="c">${c}</span>`}</button>`;
   const minCt=v=>inMon.filter(x=>accPassMin(x.r,v)).length,bcnt=Array(11).fill(0);for(const x of inMon)bcnt[accBucket(x.r)]++;
@@ -6171,17 +6202,17 @@ function accListHtml(P,match){
   const sum=`<div class="pf-sum"><span>${list.length} ${noun[list.length===1?0:1]}${list.length?' · avg '+avg.toFixed(1):''}</span><span class="tg"><button class="btn pf-fb" data-act="pfopen" aria-expanded="${fopen}">Filters${nAct?`<span class="c">${nAct}</span>`:''}</button>${kind==='a'?`<span class="pf-vt" role="group" aria-label="View"><button data-act="pview" data-v="g" aria-pressed="${grid}" aria-label="Cover grid">${icoG}</button><button data-act="pview" data-v="l" aria-pressed="${!grid}" aria-label="List">${icoL}</button></span>`:''}</span></div>`;
   let last=null,body='';
   rows.forEach((x,i)=>{
-    if(grp){const k=x.d?x.d.slice(0,7):'';if(k!==last){last=k;const g=gs[k];body+=`<div class="pf-mh"><b>${k?esc(pMonthName(k)):'No date'}</b><span>${g.n} ${noun[g.n===1?0:1]} · avg ${(g.s/g.n).toFixed(1)}</span></div>`}}
+    if(grp){const k=gk(x);if(k!==last){last=k;const g=gs[k];body+=byR?`<div class="pf-mh pf-mr"><b>${fmt(x.r)}</b><span>${g.n} ${noun[g.n===1?0:1]}</span></div>`:`<div class="pf-mh"><b>${k?esc(pMonthName(k)):'No date'}</b><span>${g.n} ${noun[g.n===1?0:1]} · avg ${(g.s/g.n).toFixed(1)}</span></div>`}}
     const m=self?null:mine(x),u=accCover(x),when=x.d&&fmtRd(x.d)?'Rated '+fmtRd(x.d):'';
-    if(grid)body+=`<div class="pf-cv" style="--d:${Math.round(i*step)}ms;--c:${accHue(x.n)}" title="${esc([x.n||'Untitled',accArtText(x),when].filter(Boolean).join(' · '))}"><b class="ltr" aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}<span class="sc">${fmt(x.r)}</span>${m!=null?`<span class="me" title="Your rating">you ${fmt(m)}</span>`:''}<span class="tt"><b>${esc(x.n||'Untitled')}</b><small>${esc(accArtText(x))}</small></span></div>`;
-    else body+=`<div class="pf-row" style="--d:${Math.round(i*step)}ms"><span class="pcv"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span><span class="pt"><b>${esc(x.n||'Untitled')}</b><small>${esc([accArtText(x),when].filter(Boolean).join(' · '))}</small></span><span class="pr">${m!=null?`<span class="pme" title="Your rating">you ${fmt(m)}</span>`:''}<b class="pn">${fmt(x.r)}</b></span></div>`;
+    if(grid)body+=`<button class="pf-cv" data-act="palb" data-key="${esc(accPk(x))}" style="--d:${Math.round(i*step)}ms;--c:${accHue(x.n)}" title="${esc([x.n||'Untitled',accArtText(x),when].filter(Boolean).join(' · '))}"><b class="ltr" aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}<span class="sc">${fmt(x.r)}</span>${m!=null?`<span class="me" title="Your rating">you ${fmt(m)}</span>`:''}<span class="tt"><b>${esc(x.n||'Untitled')}</b><small>${esc(accArtText(x))}</small></span></button>`;
+    else body+=`<button class="pf-row" data-act="palb" data-key="${esc(accPk(x))}" style="--d:${Math.round(i*step)}ms"><span class="pcv"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span><span class="pt"><b>${esc(x.n||'Untitled')}</b><small>${esc([accArtText(x),when].filter(Boolean).join(' · '))}</small></span><span class="pr">${m!=null?`<span class="pme" title="Your rating">you ${fmt(m)}</span>`:''}<b class="pn">${fmt(x.r)}</b></span></button>`;
   });
   return `<div class="pf-list${an}">
     ${self?'':`<div class="pf-tabs sm" role="group" aria-label="Filter"><button data-act="pfilter" data-v="all" aria-pressed="${fl==='all'}">All<span class="c">${all.length}</span></button><button data-act="pfilter" data-v="shared" aria-pressed="${fl==='shared'}">You both rated<span class="c">${sh}</span></button><button data-act="pfilter" data-v="only" aria-pressed="${fl==='only'}">Not rated by you<span class="c">${only}</span></button></div>`}
     <div class="pf-ctl"><span class="pf-lab" id="pf-sl">Sort</span><div class="pf-tabs sm" role="group" aria-labelledby="pf-sl">${ACC_SORTS.map(([v,l])=>chip('psort',v,l,null,sort===v)).join('')}</div></div>
     ${sum}${panel}
     ${rows.length?`<div class="${grid?'pf-grid':'pf-rows'}">${body}</div>`:`<p class="note">${all.length?'Nothing here with those filters.':'Nothing rated here yet.'}</p>`}
-    ${list.length>lim?`<div class="tools"><button class="btn" data-act="pmore">Show ${Math.min(60,list.length-lim)} more</button></div>`:''}</div>`;
+    </div>`;
 }
 /* the big record: every album this person rated, one cover per spot on a single spiral groove, highest rated at the outer edge and lowest at the label.
    Hover (or tap) a cover to read it on the label; tap again to keep it there. */
@@ -6286,6 +6317,38 @@ function profileHtml(P,mine){
   const st=accStats(P.items),match=P.self?null:accMatch(P.items,mine);
   const sec=P.self&&UI.pTab==='c'?accManageHtml(P):UI.pTab==='a'||UI.pTab==='s'?accListHtml(P,match):accStatsHtml(st,P)+`<div class="pf-ov">${accInsightsHtml(P)}${accVinylHtml(P)}</div>`;
   return accHeroHtml(Object.assign({},P,{n:accBase(P.items).length}),st,match,P.extra)+accTabsHtml(P)+sec;
+}
+/* the album pop-up on an account page: tap a cover to see its rating, the day it was rated and, on your own page, every song's rating */
+const accPk=x=>(x.k||x.t||x.n||'')+'|'+(x.d||'');
+function accLocalAlbum(x){
+  for(const a of S.music||[]){if(a.example)continue;for(const g of a.groups||[]){if(!RATEABLE.includes(g.kind))continue;const k=accKeys(a,g);if((x.k&&k.k===x.k)||(x.t&&k.t===x.t))return g}}
+  return null;
+}
+function albumSheet(){
+  const self=UI.view==='account',fr=UI.view==='friend'?(ACX.prof[UI.fid]||{}).data:null;
+  if(!UI.pAlb||(!self&&!fr))return '';
+  const items=self?accItems():fr.items,base=accBase(items),x=base.find(y=>accPk(y)===UI.pAlb);
+  if(!x)return '';
+  const who=self?'':fr.name,m=self?null:accMatch(items,accItems()).mine(x);
+  const u=accCover(x),big=u.replace(/\/front-250$/,'/front-500'),when=x.d&&fmtRd(x.d)?fmtRd(x.d):'';
+  const segs=Array.from({length:10},(_,i)=>`<i><u style="width:${Math.round(Math.max(0,Math.min(1,x.r-i))*100)}%"></u></i>`).join('');
+  let trk='';
+  if(x.kind!=='a')trk='';
+  else if(self){
+    const g=accLocalAlbum(x),its=g?stdItems(g):[],rated=its.filter(i=>rating(i.id));
+    if(its.length){
+      const av=rated.length?rated.reduce((t,i)=>t+rating(i.id),0)/rated.length:0;
+      trk=`<div class="alb-sum"><span>${rated.length} of ${its.length} songs rated</span>${rated.length?`<span>song average <b>${av.toFixed(1)}</b> · album <b>${fmt(x.r)}</b></span>`:''}</div>
+        <div class="alb-tl">${its.map((i,k)=>{const r=rating(i.id),t=songShow(i).t;return `<div class="alb-tr${r?'':' none'}" style="--i:${k}"><span class="n">${k+1}</span><span class="tt">${esc(t)}</span><span class="bar"><i style="width:${r*10}%"></i></span><b>${r?fmt(r):'–'}</b></div>`}).join('')}</div>`;
+    }else trk=`<p class="note">This album’s songs are not in your log on this device.</p>`;
+  }else if(x.kind==='a')trk=`<p class="note">${esc(who)}’s song ratings stay on their own page. Only the album rating and the day it was rated are shared.</p>`;
+  return `<div class="llover albover"><button class="llbk" data-act="palbx" aria-label="Close album"></button><section class="llsheet albsheet" role="dialog" aria-modal="true" aria-label="${esc(x.n||'Untitled')}">
+    <div class="alb-top"><div class="alb-cv" style="--c:${accHue(x.n)}"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(big)}" data-s="${esc(u)}" alt="" decoding="async" onerror="if(this.src!==this.dataset.s){this.src=this.dataset.s}else{this.remove()}">`:''}</div>
+    <div class="alb-meta"><h2>${esc(x.n||'Untitled')}</h2><small>${esc(accArtText(x))}</small>
+      <div class="alb-r"><b>${fmt(x.r)}</b><span class="vl-seg" aria-hidden="true">${segs}</span></div>
+      <p class="note">${when?'Rated '+esc(when):'No rated-on date'}${m!=null?` · you gave it <b>${fmt(m)}</b>`:''}</p></div>
+    <button class="tact" data-act="palbx" aria-label="Close album">${ICO.close}</button></div>
+    ${trk}</section></div>`;
 }
 /* the Friends shortcut in the top bar: one tap to the friends list, with a count of requests waiting for you */
 function friendsBtn(){
@@ -6512,6 +6575,7 @@ function renderMain(){
     </div>
   </header>
   ${UI.frOpen&&GCID?friendsSheet():''}
+  ${UI.pAlb?albumSheet():''}
   ${UI.llOpen&&!UI.view&&UI.tab==='music'?`<div class="llover"><button class="llbk" data-act="llclose" aria-label="Close Listen list"></button>${listenSide()}</div>`:''}
   ${SV.err?`<div class="banner" role="alert"><p>This browser would not save your last change. It is still on screen, but it will be gone if you close the app. ${syncOn()?'Tap Upload now in Sync at the bottom so it is safe on your Worker, or copy a backup.':'Copy a backup at the bottom to keep it safe.'}</p></div>`:''}
   ${SYS.status==='conflict'?conflictBanner():''}
@@ -7516,7 +7580,8 @@ document.addEventListener('click',ev=>{
   else if(act==='pmo'){UI.pSelMon=UI.pSelMon===b.dataset.v?'':b.dataset.v;UI.pAnimI=UI.pSelMon?'mo':false}
   else if(act==='pgosc'){UI.pTab=b.dataset.k==='s'?'s':'a';UI.pKind=UI.pTab;UI.pBucket=+b.dataset.v;UI.pMin=0;UI.pYear='';UI.pMon=0;UI.pSort='new';UI.pLim=60;UI.pFOpen=true;UI.pAnimL=true;UI.pAnimF=true;window.scrollTo({top:0})}   /* from a score bar to the albums with exactly that score */
   else if(act==='pgomon'){const[yy,mm]=String(b.dataset.v).split('-');UI.pTab='a';UI.pKind='a';UI.pYear=yy;UI.pMon=+mm;UI.pMin=0;UI.pBucket=0;UI.pSort='new';UI.pLim=60;UI.pFOpen=true;UI.pAnimL=true;UI.pAnimF=true;window.scrollTo({top:0})}   /* from a month bar to that month's albums */
-  else if(act==='pmore'){UI.pLim=(UI.pLim||60)+60}
+  else if(act==='palb'){UI.pAlb=b.dataset.key}
+  else if(act==='palbx'){UI.pAlb=''}
   else if(act==='accout'){accOut('Signed out.');ACX.ok=true;render();return}
   else if(act==='accdel'){accDelete();return}
   else if(act==='acchue'){accSetHue(b.dataset.h==='auto'?null:+b.dataset.h);return}
