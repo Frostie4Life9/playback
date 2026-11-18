@@ -2100,6 +2100,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-as', note:'DETAIL PANEL CLOSES SMOOTHLY: tapping the selected bar again (a score under the tiles, or a month in Albums rated per month) now folds the detail panel away, shrinking and fading, with the cards below sliding up into the gap, instead of vanishing at once.'},
   {v:'2026.11.17-ar', note:'STEADY RECORD: tapping a bar under Overview (a score or a month) no longer makes the big rated-albums record jump. Every tap redrew the page, which started the record\u2019s slow spin over from its first angle; it now keeps turning from wherever it was.'},
   {v:'2026.11.17-aq', note:'PAGE TRANSITIONS AND A STEADIER FRIENDS SHEET: switching between Music, Screen, Collection, Settings and Account now slides the new page in from the side it sits on in the top bar while it fades up (going back toward Music slides the other way). Opening Friends no longer plays twice: the sheet used to slide up, then slide up again a moment later when the list finished loading; now it slides up once and the list fills in without moving.'},
   {v:'2026.11.17-ap', note:'ALBUMS WALL: EVERYTHING, GROUPED BY SCORE, TAP FOR DETAILS. The Albums tab no longer stops at 60 and has no Show more button: every album is on the wall and the covers grow to use the width of your screen. Sorted by Highest or Lowest, the wall is split into rows headed by the exact score (10, 9.5, 9 and so on) with how many albums got it. Tap any cover (or a row in the list view) and a pop-up opens with the big cover, the rating, the day it was rated, and on your own page every song with its rating bar, how many songs you rated and the song average next to the album rating. On a friend\u2019s page it shows their rating and date and, if you rated it too, yours; their song ratings stay private. Close with the X, by tapping outside, or Escape.'},
@@ -7550,6 +7551,15 @@ document.addEventListener('click',ev=>{
   if(act!=='accownerrelease'&&ACX.armOwn){ACX.armOwn=false;ACX.ownMsg=''}
   if(act!=='copy')UI.copied=false;
   if(act!=='coldel')UI.colDel=null;
+  /* tapping the selected score or month bar again: the detail panel folds away first, then the page redraws */
+  if(!UI.pClosing&&((act==='psc'&&UI.pSelSc&&UI.pSelSc===+b.dataset.v)||(act==='pmo'&&UI.pSelMon&&UI.pSelMon===b.dataset.v))){
+    const inMo=act==='pmo',box=inMo?b.closest('.pf-card'):b.closest('.pf-hist'),info=box&&(inMo?box.querySelector('.pf-info'):box.nextElementSibling);
+    if(info&&info.classList.contains('pf-info')&&info.animate&&!matchMedia('(prefers-reduced-motion:reduce)').matches){
+      UI.pClosing=true;const h=info.offsetHeight,gap=inMo?12:14;
+      info.style.overflow='hidden';
+      const an=info.animate([{height:h+'px',opacity:1,transform:'none',marginBottom:'0px'},{height:'0px',opacity:0,transform:'translateY(-8px)',paddingTop:'0px',paddingBottom:'0px',borderWidth:'0px',marginBottom:(-gap)+'px'}],{duration:260,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});
+      an.onfinish=()=>{UI.pClosing=false;if(inMo)UI.pSelMon='';else UI.pSelSc=0;UI.pAnimI=false;render()};
+      return}}
   /* closing a rater: let it fold away first, then redraw */
   if((act==='rclose'||(act==='ropen'&&UI.rOpen===id))&&!UI.rClosing){
     const rt=document.querySelector('.rater');
