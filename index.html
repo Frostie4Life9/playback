@@ -1052,8 +1052,8 @@ button.pf-row{padding:8px 10px}button.pf-row:hover{border-color:var(--accent)}bu
 .frover{z-index:95}
 .frsheet .setcard{border:0;padding:0;background:none;box-shadow:none;margin:0}
 @media (prefers-reduced-motion:no-preference){
-  .frover .llbk{animation:frfade .25s ease both}
-  .frover .llsheet{animation:frup .38s cubic-bezier(.2,.9,.25,1) both}
+  .frover.fr-in .llbk{animation:frfade .25s ease both}
+  .frover.fr-in .llsheet{animation:frup .38s cubic-bezier(.2,.9,.25,1) both}
 }
 @keyframes frfade{from{opacity:0}to{opacity:1}}
 @keyframes frup{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
@@ -2100,6 +2100,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-aq', note:'PAGE TRANSITIONS AND A STEADIER FRIENDS SHEET: switching between Music, Screen, Collection, Settings and Account now slides the new page in from the side it sits on in the top bar while it fades up (going back toward Music slides the other way). Opening Friends no longer plays twice: the sheet used to slide up, then slide up again a moment later when the list finished loading; now it slides up once and the list fills in without moving.'},
   {v:'2026.11.17-ap', note:'ALBUMS WALL: EVERYTHING, GROUPED BY SCORE, TAP FOR DETAILS. The Albums tab no longer stops at 60 and has no Show more button: every album is on the wall and the covers grow to use the width of your screen. Sorted by Highest or Lowest, the wall is split into rows headed by the exact score (10, 9.5, 9 and so on) with how many albums got it. Tap any cover (or a row in the list view) and a pop-up opens with the big cover, the rating, the day it was rated, and on your own page every song with its rating bar, how many songs you rated and the song average next to the album rating. On a friend\u2019s page it shows their rating and date and, if you rated it too, yours; their song ratings stay private. Close with the X, by tapping outside, or Escape.'},
   {v:'2026.11.17-ao', note:'ACCOUNT SETTINGS TAB AND A TIDIER SETTINGS PAGE: your Account page has a fourth tab, Settings, that holds Friends (your code, add by code, requests) and Your account (photo, color, name, sharing, owner login, sync, sign out, delete), so they no longer sit under Overview, Albums and Shows & films. A friend\u2019s page does not show it. The regular Settings page is now grouped under three headings: Library & imports (import source, Spotify, Rate Your Music, rating dates), Account & community (the account shortcut, friend suggestions, people using Playback) and Your data (sync, numbers, export, backup). The groups sit side by side on a wide monitor, in two columns on a tablet and stacked on a phone. The Account card in Settings now has an Account settings button that opens straight to the new tab.'},
   {v:'2026.11.17-an', note:'OVERVIEW REARRANGES WITH THE WINDOW: the account Overview now lays its cards out by screen size instead of letting them fall wherever. On a phone everything stacks in one column (months, scoring habits, top artists, then the record). On a tablet the months card spans the top, scoring habits and top artists sit side by side, and the record is centered below. On a desktop the big record sits on the left, staying in view as you scroll, with the months, scoring habits and top artists stacked beside it so there are no empty gaps. On a very wide monitor the record takes the left, the months card spans the top and scoring habits and top artists sit side by side under it. Friends and Your account sit side by side on wide screens and stack on narrow ones.'},
@@ -5168,8 +5169,18 @@ function slObserve(){
   slIO.disconnect();document.querySelectorAll('.group.sleeve[data-acol] .sl-hero').forEach(el=>slIO.observe(el))}
 
 /* ---------- render ---------- */
+/* switching between the big sections (Music, Screen, Collection, Settings, Account): the new page slides in from the side it sits on in the top bar and fades up */
+const VORD={music:0,history:0,screen:1,collection:2,settings:3,account:4,friends:4,friend:4};
+function pageIn(dir){
+  for(const el of document.querySelectorAll('#app>*')){
+    if(el.matches('header.top,.llover,.banner,.updin,script,style'))continue;
+    const x=dir>0?34:dir<0?-34:0,y=dir?0:18;
+    try{el.animate([{opacity:0,transform:`translate(${x}px,${y}px)`},{opacity:1,transform:'none'}],{duration:340,easing:'cubic-bezier(.2,.8,.2,1)'})}catch(e){}
+  }
+}
 function render(){
   lsHeal();
+  const vk=UI.view||UI.tab,vPrev=UI.vKey;UI.vKey=vk;
   const ll=document.getElementById('llist'),llTop=ll?ll.scrollTop:0,llTab=UI.llTab;UI.llTab=UI.tab;
   let ohg=null;{const oh=document.querySelector('.hero[data-aid]'),m=oh&&oh.querySelector('.hmesh');   /* the old artist's colors, to fade out from */
     if(m){const g=m.cloneNode(true);g.classList.add('hghost');g.dataset.aid=oh.dataset.aid;
@@ -5184,6 +5195,7 @@ function render(){
   if(flipOn)SX.flip(document.body,'#llist .tile,.sheet .group.sleeve',()=>keepImgs(renderMain),{dur:420,key:el=>el.dataset.acol?'g'+el.dataset.acol:el.dataset.g?'a'+el.dataset.g:el.dataset.id?'t'+el.dataset.id:null});
   else keepImgs(renderMain);
   slObserve();slPulseNow();UI.rAnim=null;accAfter();pfFit();
+  if(vPrev&&vPrev!==vk&&!noMotion())pageIn(Math.sign((VORD[vk]??0)-(VORD[vPrev]??0)));
   if(swGo&&!UI.toAlb&&!UI.toSheet)window.scrollTo({top:0,behavior:noMotion()?'auto':'smooth'});   /* a different artist or title: start at the top, not wherever the last one was scrolled */
   if(swGo&&ohg&&!noMotion()){const nh=document.querySelector('.hero[data-aid]');
     if(nh&&nh.dataset.aid!==ohg.dataset.aid){nh.insertBefore(ohg,nh.firstChild);ohg.addEventListener('animationend',e=>{if(e.target===ohg)ohg.remove()})}}
@@ -5894,7 +5906,7 @@ async function accFriends(force){
   if(!accOn()||ACX.loading)return;
   if(!force&&Date.now()-ACX.frAt<30000)return;
   ACX.loading=true;
-  try{const{status,j}=await accApi('GET','/friends');if(status===200){ACX.fr=j;ACX.anim=true}}catch(e){}
+  try{const{status,j}=await accApi('GET','/friends');if(status===200){if(!ACX.fr)ACX.anim=true;ACX.fr=j}}catch(e){}
   ACX.frAt=Date.now();ACX.loading=false;render();
 }
 /* what friends rated, for the artist or title on screen; asked for once every five minutes */
@@ -6360,7 +6372,8 @@ function friendsBtn(){
 function friendsSheet(){
   const body=accOn()?accFriendsCardHtml(true,true):`<p class="note">Sign in to add friends and open their pages.</p><div class="tools"><button class="btn primary" data-act="frgo">Sign in</button></div>`;
   ACX.anim=false;
-  return `<div class="llover frover"><button class="llbk" data-act="frclose" aria-label="Close friends"></button><section class="llsheet frsheet" role="dialog" aria-modal="true" aria-labelledby="fr-h"><div class="llhead"><h2 id="fr-h">Friends</h2><button class="tact" data-act="frclose" aria-label="Close friends">${ICO.close}</button></div>${body}</section></div>`;
+  const fin=UI.frAnim?' fr-in':'';UI.frAnim=false;
+  return `<div class="llover frover${fin}"><button class="llbk" data-act="frclose" aria-label="Close friends"></button><section class="llsheet frsheet" role="dialog" aria-modal="true" aria-labelledby="fr-h"><div class="llhead"><h2 id="fr-h">Friends</h2><button class="tact" data-act="frclose" aria-label="Close friends">${ICO.close}</button></div>${body}</section></div>`;
 }
 /* (old full-page version, no longer reachable) the Friends page: just the friends list (requests, friends, add by code), no scrolling past your own stats */
 function friendsView(){
@@ -7541,10 +7554,10 @@ document.addEventListener('click',ev=>{
       setTimeout(()=>{UI.rClosing=false;UI.rOpen=null;if(fly)UI.rLand=cid;render()},230);rtFlyGo(fly);return}}
   if(act==='view'){UI.view=b.dataset.v;UI.rOpen=null;if(UI.view==='account'){pReset();if(b.dataset.tab==='c')UI.pTab='c';UI.pAnim=true}if(UI.view==='friends'){UI.pAnim=true;ACX.anim=true}if(UI.view==='history'){UI.hAnim=true;UI.hEdit=null}window.scrollTo({top:0})}
   else if(act==='lib'){UI.libOpen=!UI.libOpen;UI.libAnim=UI.libOpen}
-  else if(act==='fropen'){UI.frOpen=true;UI.llOpen=false;ACX.anim=true;if(accOn())accFriends(true)}
+  else if(act==='fropen'){UI.frOpen=true;UI.frAnim=true;UI.llOpen=false;ACX.anim=!!ACX.fr;if(accOn())accFriends(true)}
   else if(act==='frclose'){UI.frOpen=false}
   else if(act==='frgo'){UI.frOpen=false;UI.view='account';pReset();UI.pAnim=true;window.scrollTo({top:0})}
-  else if(act==='frback'){UI.view=UI.fPrev||null;UI.frOpen=true;ACX.anim=true}
+  else if(act==='frback'){UI.view=UI.fPrev||null;UI.frOpen=true;UI.frAnim=true;ACX.anim=true}
   else if(act==='llopen'){UI.llOpen=true}
   else if(act==='llclose'){UI.llOpen=false}
   else if(act==='addart'){UI.libOpen=false;UI.addOpen=true;UI.toAdd=true}
