@@ -1412,8 +1412,7 @@ body{overflow-x:clip}
 .track.sl-t:not(.done):not(.rated) .ttl{color:color-mix(in srgb,var(--ink) 70%,var(--bg))}
 .track.sl-t>.num{grid-column:1}
 .track.sl-t>.ttl{grid-column:2}
-.track.sl-t>.plc{grid-column:3;margin:0;justify-self:end;font-size:13px;font-weight:450;font-family:Archivo,var(--display);color:var(--ink)}
-.track.sl-t:not(.done):not(.rated)>.plc{color:color-mix(in srgb,var(--ink) 70%,var(--bg))}
+.track.sl-t>.plc{grid-column:3;margin:0;justify-self:end;font-size:13px;font-weight:600;font-family:Archivo,var(--display);color:var(--rcl)}
 .track.sl-t>.check{grid-column:4}
 .track.sl-t:has(>.plc)>.ls-sd{right:104px}
 .track.sl-t .check{width:44px;height:44px;border:0;border-radius:50%;background:transparent;padding:0;display:grid;place-items:center;position:relative}
@@ -2240,6 +2239,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.18-l', note:'PLAY COUNT COLOR: the ▶ play count on song rows now uses the album color, the same as the rating ring beside it, instead of white.'},
   {v:'2026.11.18-k', note:'TRACK ROW LAYOUT: on song rows the rating ring now sits at the far right, with the play count (▶ and number) right beside it on its left in the same color as the song title. Before, the play count wrapped onto its own line and pushed the rating down.'},
   {v:'2026.11.18-j', note:'APPLE MUSIC IMPORT: Stats now reads Apple Music history too. Request your data at privacy.apple.com (Apple Media Services information), then choose the zip, or Apple Music Play Activity.csv, in the Stats import box. Apple plays count next to Spotify ones, songs match across services, and re-importing never double counts. An Apple import only replaces older Apple plays, never Spotify ones. Apple does not offer a free way to read plays as they happen (it needs a $99 a year developer account), so Apple plays come from the export.'},
   {v:'2026.11.18-i', note:'SONG LENGTHS FOR LIVE PLAYS: plays Spotify reports as they happen now come with the song\'s length, so Stats hours for them use the real length instead of an estimate. Spotify does not say how much of a live play you heard, so each counts as played in full; a Spotify data export (which has the exact time) replaces them for the dates it covers. Plays saved before this update have no length and are still estimated. Your Worker needs the new playback-sync.js (it takes it from GitHub on its own).'},
