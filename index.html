@@ -37,7 +37,7 @@ body{margin:0}
 img{max-width:100%}
 [hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--body)}
-.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:20px;
+.wrap{max-width:min(97vw,2800px);margin:0 auto;display:flex;flex-direction:column;gap:20px;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
@@ -931,6 +931,19 @@ details.addart .add{border-top:1px solid var(--line)}
 .pf-more:hover{border-color:var(--accent)}
 .pf-more:active{transform:scale(.94)}
 .pf-go{display:flex;gap:8px;flex-wrap:wrap}
+
+/* wide screens: every page uses the room it has and folds back to one column when the window shrinks */
+.settings:not(.pf){display:block;max-width:none;column-width:440px;column-gap:14px}
+.settings:not(.pf)>*{break-inside:avoid;margin-top:0;margin-bottom:14px}
+.settings:not(.pf)>h2,.settings:not(.pf)>p:first-of-type{column-span:all}
+.settings.pf{max-width:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:14px;align-items:start}
+.settings.pf>*{min-width:0;margin:0}
+.settings.pf>h2,.settings.pf>.sr,.settings.pf>.pf-hero,.settings.pf>.pf-main,.settings.pf>.pf-tiles,.settings.pf>.pf-hist,.settings.pf>.pf-info,.settings.pf>.pf-hint,.settings.pf>.pf-list,.settings.pf>.pf-sum,.settings.pf>.pf-fil,.settings.pf>.pf-back,.settings.pf>.setcard,.settings.pf>.frwrap{grid-column:1/-1}
+@media (min-width:1800px){.settings.pf>.setcard{grid-column:span 2}}
+.pf-tiles{grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr))}
+.pf-tiles>div:last-child:nth-child(odd){grid-column:auto}
+.vl{display:flex;flex-direction:column;align-items:center}
+.pf-rows{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr))}
 @media (prefers-reduced-motion:no-preference){.pf-info.pf-opn{animation:pfup .3s cubic-bezier(.2,.8,.2,1) both}.pf-info.pf-opn .pf-mc{animation:pfpop .35s cubic-bezier(.3,1.35,.5,1) both;animation-delay:var(--d,0ms)}}
 @keyframes pfpop{from{opacity:0;transform:scale(.86) translateY(8px)}to{opacity:1;transform:none}}
 @keyframes pfwide{from{transform:scaleX(0)}to{transform:scaleX(1)}}
@@ -2035,6 +2048,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-am', note:'FIXES AND FULL-WIDTH PAGES: tapping a month bar used to replay the animation on the score covers above it (and the reverse); now only the panel you opened animates. Every page now uses the whole window instead of a centered column about 1100px wide: Settings flows into columns, your page lays its cards side by side, and everything folds back to one column as the window shrinks. The cover previews are fitted to the space they have, so they stay correct inside the narrower cards and refit on resize without redrawing.'},
   {v:'2026.11.17-al', note:'COVER PREVIEWS FILL THE PANEL: the score and month details on Overview used to show just the first eight covers. They now fill two rows on a phone and three on a wider screen, with more columns the wider the window (it refits when you resize), and when there are more albums than fit the last tile says how many more (+33 more) and opens them in the Albums tab. The covers also fade in at an even pace.'},
   {v:'2026.11.17-ak', note:'OVERVIEW: TAP THE BARS. Your stat tiles now also show Songs rated (with its average) and Albums rated in this year (with how it compares to last year); on a friend\u2019s page the songs tile appears once their copy has published it. Tap any score bar under the tiles to see how many ratings got that score, the albums and shows & films among them, and their covers, then See the albums takes you to the Albums tab filtered to exactly that score. Tap any bar in Albums rated per month to see that month: how many albums, their average, the best one and their covers, step to the previous or next month with the arrows, and See them in Albums opens the Albums tab on that month, newest first. The Albums tab\u2019s Filters panel has a new Exact score row (1 to 10, with counts). The Worker needs the new playback-sync.js (it takes it from GitHub on its own) to keep your song count for friends to see.'},
   {v:'2026.11.17-aj', note:'ONE ALBUM, ONE RATING: an album made by several artists (like An Evening With Silk Sonic on Bruno Mars and Silk Sonic) now counts once in your album total, averages, score bars, record and Albums wall, and lists every artist on it (Bruno Mars, Anderson .Paak, Silk Sonic) instead of showing up once per artist. It is published once now, and a friend whose copy still sends one row per artist is merged the same way, so the counts match either way. Taste match still lines up albums whichever of the artists you each have. EVEN FADE-IN: the cover wall, list and the big record used to fade in one by one and then the rest all at once after about the 15th to 70th; every cover now fades in at the same steady pace, whatever the count. POP-OUT COVERS: tap an album on the big record and it lifts off the groove and grows into the middle, showing a big cover, the title, every artist, the exact score as a bar and the day you rated it. Tap anywhere or press Escape to put it back. The Worker needs the new playback-sync.js (it takes it from GitHub on its own) so a list of several artists is not cut short.'},
@@ -5114,7 +5128,7 @@ function render(){
   const flipOn=UI.flip&&!noMotion()&&window.SX&&typeof SX.flip==='function';UI.flip=false;
   if(flipOn)SX.flip(document.body,'#llist .tile,.sheet .group.sleeve',()=>keepImgs(renderMain),{dur:420,key:el=>el.dataset.acol?'g'+el.dataset.acol:el.dataset.g?'a'+el.dataset.g:el.dataset.id?'t'+el.dataset.id:null});
   else keepImgs(renderMain);
-  slObserve();slPulseNow();UI.rAnim=null;accAfter();
+  slObserve();slPulseNow();UI.rAnim=null;accAfter();pfFit();
   if(swGo&&!UI.toAlb&&!UI.toSheet)window.scrollTo({top:0,behavior:noMotion()?'auto':'smooth'});   /* a different artist or title: start at the top, not wherever the last one was scrolled */
   if(swGo&&ohg&&!noMotion()){const nh=document.querySelector('.hero[data-aid]');
     if(nh&&nh.dataset.aid!==ohg.dataset.aid){nh.insertBefore(ohg,nh.firstChild);ohg.addEventListener('animationend',e=>{if(e.target===ohg)ohg.remove()})}}
@@ -6012,12 +6026,20 @@ function accHeroHtml(P,stats,match,extra){
 const accBucket=r=>Math.min(10,Math.max(1,Math.round(r)));
 const pfMini=(x,d)=>{const u=accCover(x);return `<span class="pcv pf-mc" style="--d:${Math.round(d||0)}ms" title="${esc((x.n||'Untitled')+' · '+fmt(x.r))}"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span>`};
 /* how many covers fit in the details panels: 2 rows on a phone, 3 on a wider screen, and more columns the wider the window */
-function pfCap(){const w=Math.min(window.innerWidth||390,760),cols=Math.max(4,Math.round((w-76)/62));return{cols,rows:w<520?2:3}}
-/* a block of covers that fills those rows; when there are more albums than fit, the last tile says how many more and opens them (attrs = the button that opens the full list) */
+/* a block of covers that fills 2-3 rows of whatever width it has; pfFit() (after every draw and on resize, no redraw) shows as many as fit and turns the last tile into "+N more" that opens the full list (attrs = the button that opens it) */
 function pfCovs(list,attrs){
-  const c=pfCap(),cap=c.cols*c.rows;UI.pCols=c.cols;UI.pRows=c.rows;
-  const more=list.length>cap,show=more?list.slice(0,cap-1):list,step=Math.min(30,500/Math.max(1,cap));
-  return `<div class="pf-covs" style="--cols:${c.cols}">${show.map((x,i)=>pfMini(x,i*step)).join('')}${more?`<button class="pcv pf-mc pf-more" ${attrs} style="--d:${Math.round((cap-1)*step)}ms" aria-label="${list.length-show.length} more albums. Open them in Albums"><b>+${list.length-show.length}</b><small>more</small></button>`:''}</div>`;
+  const show=list.slice(0,90),step=Math.min(30,500/Math.max(1,Math.min(show.length,24)));
+  return `<div class="pf-covs" data-n="${list.length}">${show.map((x,i)=>pfMini(x,i*step)).join('')}<button class="pcv pf-mc pf-more" ${attrs} hidden></button></div>`;
+}
+function pfFit(){
+  document.querySelectorAll('.pf-covs').forEach(el=>{
+    const w=el.clientWidth;if(!w)return;
+    const n=+el.dataset.n,cols=Math.max(4,Math.round((w+8)/70)),rows=w<460?2:3,cap=cols*rows,more=n>cap,keep=more?cap-1:n;
+    el.style.setProperty('--cols',cols);
+    const minis=el.querySelectorAll('.pf-mc:not(.pf-more)'),mb=el.querySelector('.pf-more');
+    minis.forEach((m,i)=>{m.hidden=i>=keep});
+    if(mb){mb.hidden=!more;if(more){mb.innerHTML='<b>+'+(n-keep)+'</b><small>more</small>';mb.setAttribute('aria-label',(n-keep)+' more albums. Open them in Albums');mb.style.setProperty('--d',Math.round(keep*Math.min(30,500/Math.max(1,Math.min(keep,24))))+'ms')}}
+  });
 }
 function accStatsHtml(st,P){
   const f=v=>v?v.toFixed(1):'–',mx=Math.max(1,...st.hist),an=pfAn(),b=accBase(P.items),yr=new Date().getFullYear();
@@ -6030,7 +6052,7 @@ function accStatsHtml(st,P){
   let info;
   if(sel){
     const all=b.filter(x=>accBucket(x.r)===sel),al=all.filter(x=>x.kind==='a').sort((p,q)=>String(q.d||'').localeCompare(String(p.d||''))||q.r-p.r),nS=all.length-al.length;
-    info=`<div class="pf-info${UI.pAnimI?' pf-opn':''}"><div class="pf-ih"><b>${who} gave ${all.length} rating${all.length===1?'':'s'} a ${sel}</b><span>${fmt(sel===1?0.5:sel-.5)}–${sel}</span></div>
+    info=`<div class="pf-info${UI.pAnimI==='sc'?' pf-opn':''}"><div class="pf-ih"><b>${who} gave ${all.length} rating${all.length===1?'':'s'} a ${sel}</b><span>${fmt(sel===1?0.5:sel-.5)}–${sel}</span></div>
       <p class="note">${al.length} album${al.length===1?'':'s'} · ${nS} show${nS===1?'':'s'} or film${nS===1?'':'s'} · ${Math.round(100*all.length/Math.max(1,b.length))}% of all ratings</p>
       ${al.length?pfCovs(al,`data-act="pgosc" data-v="${sel}" data-k="a"`):''}
       <div class="pf-go">${al.length?`<button class="btn" data-act="pgosc" data-v="${sel}" data-k="a">See the albums →</button>`:''}${nS?`<button class="btn" data-act="pgosc" data-v="${sel}" data-k="s">See shows &amp; films →</button>`:''}</div></div>`;
@@ -6081,7 +6103,7 @@ function accInsightsHtml(P){
     const sk=UI.pSelMon,si=shown.findIndex(x=>x.k===sk);let monInfo;
     if(si>=0){
       const mk=shown[si],ls=dated.filter(x=>x.d.slice(0,7)===mk.k).sort((p,q)=>q.r-p.r||String(p.n).localeCompare(String(q.n))),pv=shown[si-1],nx=shown[si+1];
-      monInfo=`<div class="pf-info${UI.pAnimI?' pf-opn':''}"><div class="pf-ih"><button class="pf-st" data-act="pmo" data-v="${pv?pv.k:''}" aria-label="Previous month"${pv?'':' disabled'}>‹</button><b>${esc(pMonthName(mk.k))}</b><button class="pf-st" data-act="pmo" data-v="${nx?nx.k:''}" aria-label="Next month"${nx?'':' disabled'}>›</button></div>
+      monInfo=`<div class="pf-info${UI.pAnimI==='mo'?' pf-opn':''}"><div class="pf-ih"><button class="pf-st" data-act="pmo" data-v="${pv?pv.k:''}" aria-label="Previous month"${pv?'':' disabled'}>‹</button><b>${esc(pMonthName(mk.k))}</b><button class="pf-st" data-act="pmo" data-v="${nx?nx.k:''}" aria-label="Next month"${nx?'':' disabled'}>›</button></div>
         ${ls.length?`<p class="note">${ls.length} album${ls.length===1?'':'s'} · avg ${accAvg(ls).toFixed(1)} · best: ${esc(ls[0].n||'Untitled')} (${fmt(ls[0].r)})</p>${pfCovs(ls,`data-act="pgomon" data-v="${mk.k}"`)}<div class="pf-go"><button class="btn" data-act="pgomon" data-v="${mk.k}">See ${ls.length===1?'it':'them'} in Albums →</button></div>`:`<p class="note">Nothing rated this month.</p>`}</div>`;
     }else monInfo=`<p class="note pf-hint">Tap a bar to see that month.</p>`;
     h+=`<div class="pf-card${an}" style="--i:${n++}"><h3>Albums rated per month<small>${esc(lab(shown[0].k))} → ${esc(lab(shown[shown.length-1].k))}</small></h3>
@@ -6234,7 +6256,7 @@ document.addEventListener('click',ev=>{
 });
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&document.querySelector('.vl-pop'))vlClose()});
 let pfRz=null;
-window.addEventListener('resize',()=>{clearTimeout(pfRz);pfRz=setTimeout(()=>{if(document.querySelector('.pf-covs')){const c=pfCap();if(c.cols!==UI.pCols||c.rows!==UI.pRows)render()}},200)});
+window.addEventListener('resize',()=>{clearTimeout(pfRz);pfRz=setTimeout(pfFit,80)});
 document.addEventListener('keydown',ev=>{if((ev.key==='Enter'||ev.key===' ')&&ev.target.classList&&ev.target.classList.contains('vl-b')){ev.preventDefault();ev.target.dispatchEvent(new MouseEvent('click',{bubbles:true}))}});
 function profileHtml(P,mine){
   const st=accStats(P.items),match=P.self?null:accMatch(P.items,mine);
@@ -7462,8 +7484,8 @@ document.addEventListener('click',ev=>{
   else if(act==='pfopen'){UI.pFOpen=!UI.pFOpen;UI.pAnimF=UI.pFOpen}
   else if(act==='pclear'){UI.pMin=0;UI.pBucket=0;UI.pYear='';UI.pMon=0;UI.pLim=60;UI.pAnimL=true}
   else if(act==='pbk'){UI.pBucket=UI.pBucket===+b.dataset.v?0:+b.dataset.v;UI.pLim=60;UI.pAnimL=true}
-  else if(act==='psc'){UI.pSelSc=UI.pSelSc===+b.dataset.v?0:+b.dataset.v;UI.pAnimI=!!UI.pSelSc}
-  else if(act==='pmo'){UI.pSelMon=UI.pSelMon===b.dataset.v?'':b.dataset.v;UI.pAnimI=!!UI.pSelMon}
+  else if(act==='psc'){UI.pSelSc=UI.pSelSc===+b.dataset.v?0:+b.dataset.v;UI.pAnimI=UI.pSelSc?'sc':false}
+  else if(act==='pmo'){UI.pSelMon=UI.pSelMon===b.dataset.v?'':b.dataset.v;UI.pAnimI=UI.pSelMon?'mo':false}
   else if(act==='pgosc'){UI.pTab=b.dataset.k==='s'?'s':'a';UI.pKind=UI.pTab;UI.pBucket=+b.dataset.v;UI.pMin=0;UI.pYear='';UI.pMon=0;UI.pSort='new';UI.pLim=60;UI.pFOpen=true;UI.pAnimL=true;UI.pAnimF=true;window.scrollTo({top:0})}   /* from a score bar to the albums with exactly that score */
   else if(act==='pgomon'){const[yy,mm]=String(b.dataset.v).split('-');UI.pTab='a';UI.pKind='a';UI.pYear=yy;UI.pMon=+mm;UI.pMin=0;UI.pBucket=0;UI.pSort='new';UI.pLim=60;UI.pFOpen=true;UI.pAnimL=true;UI.pAnimF=true;window.scrollTo({top:0})}   /* from a month bar to that month's albums */
   else if(act==='pmore'){UI.pLim=(UI.pLim||60)+60}
