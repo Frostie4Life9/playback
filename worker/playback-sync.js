@@ -398,7 +398,7 @@ async function spCheck(env, mayRefresh, fromCron) {
   }
   if (r.status !== 200 && r.status !== 204) { meta.err = 'spotify ' + r.status; return done(); }
   const items = r.status === 204 ? [] : ((await r.json().catch(() => ({}))).items || []);
-  const fresh = items.map(x => { const t = x.track || {}; return { p: Date.parse(x.played_at) || 0, t: t.name || '', a: (t.artists || []).map(a => a.name).filter(Boolean), al: (t.album && t.album.name) || '' }; }).filter(x => x.p && x.t);
+  const fresh = items.map(x => { const t = x.track || {}; return { p: Date.parse(x.played_at) || 0, t: t.name || '', a: (t.artists || []).map(a => a.name).filter(Boolean), al: (t.album && t.album.name) || '', d: t.duration_ms || 0 }; }).filter(x => x.p && x.t);
   if (fresh.length) {
     const plays = (await getJSON(env, SP_PLAYS)) || [];
     const have = new Set(plays.map(x => x.p));

@@ -2234,6 +2234,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.18-i', note:'SONG LENGTHS FOR LIVE PLAYS: plays Spotify reports as they happen now come with the song\'s length, so Stats hours for them use the real length instead of an estimate. Spotify does not say how much of a live play you heard, so each counts as played in full; a Spotify data export (which has the exact time) replaces them for the dates it covers. Plays saved before this update have no length and are still estimated. Your Worker needs the new playback-sync.js (it takes it from GitHub on its own).'},
   {v:'2026.11.18-h', note:'SIMILAR MUSIC: every artist page has a Similar artists section (tap to open, nothing loads until you do) and every song you open to rate has Similar songs, both from Last.fm listening data. Each match shows a match bar and where you stand with it: % heard, Rated, Heard, or Not in your log; Open jumps to that artist, Add starts the Add an artist search for them. Rows rise in one after another and the match bars fill. Answers are saved on the Worker for 30 days, so looking again is free, and fresh lookups are capped per person per day. Needs Worker 19 and the LASTFM_KEY secret (a free Last.fm API key).'},
   {v:'2026.11.18-g', note:'STATS PAGE AND A PLAY HISTORY FOR EVERY SONG: Music menu › Stats is a stats.fm-style page: your top songs, artists and albums for the last 4 weeks, 6 months, 12 months, this year, any year or all time, plus plays over time, busiest day, longest streak, songs new to you, time of day and day of the week. Every play Spotify reports is now kept in a separate play history on this device, including songs from artists you have not added to Playback; add the artist later and its old plays show up as counts on its songs. To fill in the past, request Extended streaming history from Spotify (spotify.com/account/privacy) and choose the zip on the Stats page, no unzipping; it counts plays of 30 seconds or more like Spotify does, and importing a newer export later replaces the dates it covers so nothing is counted twice. Preview with fake stats shows the page with made-up listening that is never saved. Songs you have played are not checked off as heard on their own: after an import there is an optional button for that, with Undo. The history is kept on the device it was imported on (not synced), so keep the Spotify zip.'},
   {v:'2026.11.18-f', note:'PLAY COUNTS: every Spotify play of a song in your log is now counted. Song rows show a small ▶ number (hover for the last play date), and Settings › Spotify has a Most played list of your top songs and albums. The first time it runs it counts everything your Worker has saved (up to its last 3,000 plays); after that it adds each new play. Plays of songs not in Playback are not counted, and Spotify leaves out private-session plays.'},
@@ -2872,7 +2873,7 @@ function plFeed(plays){
     if(!x||!x.p||!x.t||!Array.isArray(x.a)||!x.a[0])continue;
     if(x.p>hi)hi=x.p;
     const s=Math.floor(x.p/1000);if(s<=(d.exp||0))continue;   /* inside what a data export already covers */
-    plPush(d,B,x.a[0],x.t,x.al||'',s,0);
+    plPush(d,B,x.a[0],x.t,x.al||'',s,+x.d||0);   /* the song's length, when Spotify gave it (plays are counted as played in full; older saved plays have none and are estimated) */
   }
   d.cur=hi;
   const r=plCommit(d,B,1);if(r.added||hi!==cur0)plSaveSoon();
@@ -4379,7 +4380,7 @@ async function spFinish(cb){
   const tok={cid:p.cid,rt:j.refresh_token,at:j.access_token,exp:Date.now()+(j.expires_in||3600)*1000};
   if(spViaWorker())await spHandOff(tok);else{SPL=tok;splSave()}
 }
-const spSlim=items=>items.map(x=>{const t=x.track||{};return{p:Date.parse(x.played_at)||0,t:t.name||'',a:(t.artists||[]).map(a=>a.name).filter(Boolean),al:(t.album&&t.album.name)||''}}).filter(x=>x.p&&x.t);
+const spSlim=items=>items.map(x=>{const t=x.track||{};return{p:Date.parse(x.played_at)||0,t:t.name||'',a:(t.artists||[]).map(a=>a.name).filter(Boolean),al:(t.album&&t.album.name)||'',d:t.duration_ms||0}}).filter(x=>x.p&&x.t);
 async function spLocalToken(){
   if(!SPL.at||Date.now()>(SPL.exp||0)-60e3){
     const j=await spToken({grant_type:'refresh_token',refresh_token:SPL.rt,client_id:SPL.cid||spCid()});
