@@ -841,8 +841,7 @@ details.addart .add{border-top:1px solid var(--line)}
 .pf-mini>div{background:var(--sunk);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
 .pf-mini b{font:800 18px Archivo,var(--display)}
 .pf-mini span{font-size:11px;line-height:1.25;color:var(--muted)}
-.pf-act{display:flex;align-items:flex-end;gap:3px;height:96px}
-.pf-act>div{flex:1;min-width:0;height:100%;display:flex;align-items:flex-end}
+.pf-act{display:flex;align-items:flex-end;height:96px}
 .pf-act i{display:block;width:100%;height:var(--v);min-height:2px;border-radius:3px 3px 1px 1px;background:var(--accent);opacity:.45;transform-origin:bottom}
 .pf-act i.top{opacity:1}
 .pf-ta{display:flex;align-items:center;gap:12px}
@@ -910,6 +909,24 @@ details.addart .add{border-top:1px solid var(--line)}
   .vl-bk{animation:frfade .25s ease both}
   .vl-bk.out{animation:vlfadeout .26s ease both}
 }
+.pf-hist>button{border:0;background:transparent;padding:0;font:inherit;color:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:3px;min-width:0}
+.pf-hist button[aria-pressed="true"] i{background:var(--ink)}
+.pf-hist button[aria-pressed="true"] span,.pf-hist button[aria-pressed="true"] em{color:var(--ink);font-weight:800}
+.pf-tiles>div:last-child:nth-child(odd){grid-column:1/-1}
+.pf-act>button{flex:1;min-width:0;height:100%;border:0;background:transparent;padding:0 1.5px;display:flex;align-items:flex-end;cursor:pointer}
+.pf-act button[aria-pressed="true"] i{opacity:1;background:var(--ink)}
+.pf-info{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border:1px solid var(--line);background:var(--sunk);border-radius:14px}
+.pf-ih{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pf-ih b{font:800 16px Archivo,var(--display)}
+.pf-ih span{font:500 11px var(--mono);color:var(--muted)}
+.pf-info .note,.pf-hint{margin:0}
+.pf-st{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);font:700 22px/1 var(--display);transition:transform .15s}
+.pf-st:active{transform:scale(.92)}
+.pf-st:disabled{opacity:.3}
+.pf-covs{display:flex;gap:8px;overflow:hidden}
+.pf-mc{width:56px;height:56px;flex:none;border-radius:9px}
+.pf-go{display:flex;gap:8px;flex-wrap:wrap}
+@media (prefers-reduced-motion:no-preference){.pf-info.pf-opn{animation:pfup .3s cubic-bezier(.2,.8,.2,1) both}.pf-info.pf-opn .pf-mc{animation:pfpop .35s cubic-bezier(.3,1.35,.5,1) both}.pf-info.pf-opn .pf-mc:nth-child(2){animation-delay:.04s}.pf-info.pf-opn .pf-mc:nth-child(3){animation-delay:.08s}.pf-info.pf-opn .pf-mc:nth-child(4){animation-delay:.12s}.pf-info.pf-opn .pf-mc:nth-child(n+5){animation-delay:.16s}}
 @keyframes pfpop{from{opacity:0;transform:scale(.86) translateY(8px)}to{opacity:1;transform:none}}
 @keyframes pfwide{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 @media (prefers-reduced-motion:no-preference){
@@ -2013,6 +2030,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-ak', note:'OVERVIEW: TAP THE BARS. Your stat tiles now also show Songs rated (with its average) and Albums rated in this year (with how it compares to last year); on a friend\u2019s page the songs tile appears once their copy has published it. Tap any score bar under the tiles to see how many ratings got that score, the albums and shows & films among them, and their covers, then See the albums takes you to the Albums tab filtered to exactly that score. Tap any bar in Albums rated per month to see that month: how many albums, their average, the best one and their covers, step to the previous or next month with the arrows, and See them in Albums opens the Albums tab on that month, newest first. The Albums tab\u2019s Filters panel has a new Exact score row (1 to 10, with counts). The Worker needs the new playback-sync.js (it takes it from GitHub on its own) to keep your song count for friends to see.'},
   {v:'2026.11.17-aj', note:'ONE ALBUM, ONE RATING: an album made by several artists (like An Evening With Silk Sonic on Bruno Mars and Silk Sonic) now counts once in your album total, averages, score bars, record and Albums wall, and lists every artist on it (Bruno Mars, Anderson .Paak, Silk Sonic) instead of showing up once per artist. It is published once now, and a friend whose copy still sends one row per artist is merged the same way, so the counts match either way. Taste match still lines up albums whichever of the artists you each have. EVEN FADE-IN: the cover wall, list and the big record used to fade in one by one and then the rest all at once after about the 15th to 70th; every cover now fades in at the same steady pace, whatever the count. POP-OUT COVERS: tap an album on the big record and it lifts off the groove and grows into the middle, showing a big cover, the title, every artist, the exact score as a bar and the day you rated it. Tap anywhere or press Escape to put it back. The Worker needs the new playback-sync.js (it takes it from GitHub on its own) so a list of several artists is not cut short.'},
   {v:'2026.11.17-ai', note:'ACCOUNT PAGE SECTIONS AND A BETTER ALBUMS VIEW: your Account page (and a friend\u2019s page) now has three tabs under the top card: Overview, Albums and Shows & films, so the page is no longer one very long list. OVERVIEW keeps the stat tiles, the score bars and the big rated-albums record and adds three cards: Scoring habits (your most common score, how many perfect 10s, and the share rated 8 or higher), Albums rated per month (a bar for every month since your first dated rating, with your busiest month and how many months you rated something) and Top artists (your five highest-averaging artists with two or more albums). ALBUMS is a wall of covers with the exact rating on each one (on a friend\u2019s page your own rating sits in the corner of the albums you both rated). Sort by Highest, Lowest, Newest rated, Oldest rated or A\u2013Z; the Filters button opens a score filter (10, 9+, 8+, 7+, Under 7) and a Year rated filter, and picking a year shows twelve month tiles you can tap to see just that month, with the albums grouped under month headings (the count and average for each month) whenever you sort by date. A switch beside Filters flips between the cover wall and the old list. Shows & films keeps the list with the same sorting and filters. The wall, the month tiles and the new cards all animate in. Nothing about what is published changed, so this works on friends\u2019 pages straight away.'},
   {v:'2026.11.17-ah', note:'RATED DATES ON ACCOUNT PAGES: every album, show and film on your Account page (and on a friend\u2019s page) now says the day it was rated, under the title (Rated Nov 14, 2026). The dates come from the days already on your ratings and are published with them, so a friend only sees them if you accept each other and sharing is on. Nobody can change them: only your own signed-in account can save your published ratings, and the private rating-dates list itself stays on your Worker, readable only with your sync key or owner login, with no way for anyone to write to it. The Worker needs the new playback-sync.js (it takes it from GitHub on its own).'},
@@ -5761,6 +5779,13 @@ const accKeys=(a,g)=>({k:g.mbid&&!/^sp:/.test(g.mbid)?'mb:'+g.mbid:'',t:'ta:'+nA
 const accScreenKeys=s=>({k:s.tmdb?'tm:'+s.type+':'+s.tmdb:'',t:'ts:'+nTitle(s.title)+'|'+(s.year||'')});
 /* the day an item was rated, published with the rating so account pages can show it (nothing when there is none) */
 const accDay=id=>{const d=ratedDate(id);return /^\d{4}-\d\d-\d\d$/.test(d)?{d}:{}};
+/* how many songs you have rated (a song shared by twin albums counts once) and their average */
+function accSongStats(){
+  const seen=new Set();let n=0,sum=0;
+  for(const a of S.music||[]){if(a.example)continue;for(const g of a.groups||[])for(const i of g.items||[]){
+    if(!i||!i.id)continue;const ck=canonK(i.id);if(seen.has(ck))continue;const r=rating(i.id);if(r){seen.add(ck);n++;sum+=r}}}
+  return{n,avg:n?sum/n:0};
+}
 function accItems(){
   const out=[];
   /* an album on several artists' pages (twins share one rating) is one row, with every artist on it */
@@ -5779,10 +5804,10 @@ let accT=null,accPubBusy=false;
 function accSoon(){if(!accOn())return;clearTimeout(accT);accT=setTimeout(()=>accPublish(false),20000)}
 async function accPublish(force){
   if(!accOn()||accPubBusy)return;
-  const items=accItems(),sig=items.length+':'+accHash(JSON.stringify(items));
+  const items=accItems(),ss=accSongStats(),sig=items.length+':'+accHash(JSON.stringify(items))+':'+ss.n+':'+ss.avg.toFixed(2);
   if(!force&&sig===ACC.pubSig)return;
   accPubBusy=true;
-  try{const{status,j}=await accApi('PUT','/ratings',{items});if(status===200){ACC.pubSig=sig;ACC.pubAt=Date.now();if(ACC.me)ACC.me.rated=j.rows;saveAcc()}}catch(e){}
+  try{const{status,j}=await accApi('PUT','/ratings',{items,songs:ss.n,savg:+ss.avg.toFixed(2)});if(status===200){ACC.pubSig=sig;ACC.pubAt=Date.now();if(ACC.me)ACC.me.rated=j.rows;saveAcc()}}catch(e){}
   accPubBusy=false;
 }
 function accBoot(){
@@ -5978,13 +6003,29 @@ function accHeroHtml(P,stats,match,extra){
   return `<div class="pf-hero${anim}" style="--h:${h}"><div class="pf-av${accPicOf(P)?' pic':''}${P.pop?' pop':''}" aria-hidden="true">${accFace(P)}</div>
     <div class="pf-who"><h2>${esc(P.name)}</h2><span class="pf-sub">${P.n} rating${P.n===1?'':'s'} shared · ${P.friends} friend${P.friends===1?'':'s'}${match&&match.n&&match.n<3?` · ${match.n} in common`:''}</span>${extra||''}</div>${ring}</div>`;
 }
-function accStatsHtml(st){
-  const f=v=>v?v.toFixed(1):'–',mx=Math.max(1,...st.hist);
-  return `<div class="pf-tiles${pfAn()}"><div><b>${st.al}</b><span>albums rated</span><i>${st.al?'avg '+f(st.aAvg):''}</i></div><div><b>${st.sc}</b><span>shows &amp; films</span><i>${st.sc?'avg '+f(st.sAvg):''}</i></div></div>
-    <div class="pf-hist${pfAn()}" role="img" aria-label="How often each rating from 1 to 10 was given">${st.hist.map((c,i)=>`<div style="--i:${i};--v:${(c/mx*100).toFixed(0)}%"><em>${c||''}</em><i></i><span>${i+1}</span></div>`).join('')}</div>`;
+const accBucket=r=>Math.min(10,Math.max(1,Math.round(r)));
+const pfMini=x=>{const u=accCover(x);return `<span class="pcv pf-mc" title="${esc((x.n||'Untitled')+' · '+fmt(x.r))}"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span>`};
+function accStatsHtml(st,P){
+  const f=v=>v?v.toFixed(1):'–',mx=Math.max(1,...st.hist),an=pfAn(),b=accBase(P.items),yr=new Date().getFullYear();
+  const inY=y=>b.filter(x=>x.kind==='a'&&x.d&&x.d.slice(0,4)===String(y)).length,ny=inY(yr),py=inY(yr-1);
+  const tile=(big,lab,sub)=>`<div><b>${big}</b><span>${lab}</span><i>${sub||''}</i></div>`;
+  let tiles=tile(st.al,'albums rated',st.al?'avg '+f(st.aAvg):'')+tile(st.sc,'shows &amp; films',st.sc?'avg '+f(st.sAvg):'');
+  if(P.songs>0)tiles+=tile(Number(P.songs).toLocaleString(),'songs rated',P.savg?'avg '+f(P.savg):'');
+  if(ny||py)tiles+=tile(ny,'albums rated in '+yr,py?(ny>py?(ny-py)+' more than '+(yr-1):ny<py?(py-ny)+' fewer than '+(yr-1):'same as '+(yr-1)):'');
+  const sel=UI.pSelSc>=1&&UI.pSelSc<=10?UI.pSelSc|0:0,who=P.self?'You':esc(P.name);
+  let info;
+  if(sel){
+    const all=b.filter(x=>accBucket(x.r)===sel),al=all.filter(x=>x.kind==='a').sort((p,q)=>String(q.d||'').localeCompare(String(p.d||''))||q.r-p.r),nS=all.length-al.length;
+    info=`<div class="pf-info${UI.pAnimI?' pf-opn':''}"><div class="pf-ih"><b>${who} gave ${all.length} rating${all.length===1?'':'s'} a ${sel}</b><span>${fmt(sel===1?0.5:sel-.5)}–${sel}</span></div>
+      <p class="note">${al.length} album${al.length===1?'':'s'} · ${nS} show${nS===1?'':'s'} or film${nS===1?'':'s'} · ${Math.round(100*all.length/Math.max(1,b.length))}% of all ratings</p>
+      ${al.length?`<div class="pf-covs">${al.slice(0,8).map(pfMini).join('')}</div>`:''}
+      <div class="pf-go">${al.length?`<button class="btn" data-act="pgosc" data-v="${sel}" data-k="a">See the albums →</button>`:''}${nS?`<button class="btn" data-act="pgosc" data-v="${sel}" data-k="s">See shows &amp; films →</button>`:''}</div></div>`;
+  }else info=`<p class="note pf-hint">Tap a bar to see what ${P.self?'you':esc(P.name)} gave that score.</p>`;
+  return `<div class="pf-tiles${an}">${tiles}</div>
+    <div class="pf-hist${an}" role="group" aria-label="How often each rating from 1 to 10 was given. Tap a bar for details.">${st.hist.map((c,i)=>`<button data-act="psc" data-v="${i+1}" aria-pressed="${sel===i+1}" aria-label="Score ${i+1}: ${c} rating${c===1?'':'s'}" style="--i:${i};--v:${(c/mx*100).toFixed(0)}%"><em>${c||''}</em><i></i><span>${i+1}</span></button>`).join('')}</div>${info}`;
 }
 /* ---------- the sections of an account page: Overview (stats, activity, top artists, the record), Albums (a wall of covers you can sort and filter) and Shows & films ---------- */
-function pReset(){UI.pTab='o';UI.pKind='a';UI.pLim=60;UI.pSort='hi';UI.pMin=0;UI.pYear='';UI.pMon=0;UI.pView='g';UI.pFilter='all';UI.pFOpen=false;UI.pAnimL=false;UI.pAnimF=false}
+function pReset(){UI.pTab='o';UI.pKind='a';UI.pLim=60;UI.pSort='hi';UI.pMin=0;UI.pYear='';UI.pMon=0;UI.pView='g';UI.pFilter='all';UI.pFOpen=false;UI.pAnimL=false;UI.pAnimF=false;UI.pAnimI=false;UI.pBucket=0;UI.pSelSc=0;UI.pSelMon=''}
 const pfAn=()=>UI.pAnim||UI.pAnimL?' pf-in':'';
 const pMonthName=(k,short)=>{const[y,m]=k.split('-');return new Date(+y,+m-1,1).toLocaleDateString([],short?{month:'short'}:{month:'long',year:'numeric'})};
 const accAvg=l=>l.length?l.reduce((t,x)=>t+x.r,0)/l.length:0;
@@ -6023,8 +6064,15 @@ function accInsightsHtml(P){
     while(y<y1||(y===y1&&m<=m1)){const k=y+'-'+String(m).padStart(2,'0');mo.push({k,n:by[k]||0});m++;if(m>12){m=1;y++}}
     const shown=mo.slice(-30),mx=Math.max(1,...shown.map(x=>x.n)),best=mo.reduce((p,q)=>q.n>p.n?q:p),act=mo.filter(x=>x.n).length;
     const lab=k=>pMonthName(k,true)+' ’'+k.slice(2,4);
+    const sk=UI.pSelMon,si=shown.findIndex(x=>x.k===sk);let monInfo;
+    if(si>=0){
+      const mk=shown[si],ls=dated.filter(x=>x.d.slice(0,7)===mk.k).sort((p,q)=>q.r-p.r||String(p.n).localeCompare(String(q.n))),pv=shown[si-1],nx=shown[si+1];
+      monInfo=`<div class="pf-info${UI.pAnimI?' pf-opn':''}"><div class="pf-ih"><button class="pf-st" data-act="pmo" data-v="${pv?pv.k:''}" aria-label="Previous month"${pv?'':' disabled'}>‹</button><b>${esc(pMonthName(mk.k))}</b><button class="pf-st" data-act="pmo" data-v="${nx?nx.k:''}" aria-label="Next month"${nx?'':' disabled'}>›</button></div>
+        ${ls.length?`<p class="note">${ls.length} album${ls.length===1?'':'s'} · avg ${accAvg(ls).toFixed(1)} · best: ${esc(ls[0].n||'Untitled')} (${fmt(ls[0].r)})</p><div class="pf-covs">${ls.slice(0,8).map(pfMini).join('')}</div><div class="pf-go"><button class="btn" data-act="pgomon" data-v="${mk.k}">See ${ls.length===1?'it':'them'} in Albums →</button></div>`:`<p class="note">Nothing rated this month.</p>`}</div>`;
+    }else monInfo=`<p class="note pf-hint">Tap a bar to see that month.</p>`;
     h+=`<div class="pf-card${an}" style="--i:${n++}"><h3>Albums rated per month<small>${esc(lab(shown[0].k))} → ${esc(lab(shown[shown.length-1].k))}</small></h3>
-      <div class="pf-act${an}" role="img" aria-label="Albums rated each month, busiest ${esc(pMonthName(best.k))} with ${best.n}">${shown.map((x,i)=>`<div style="--i:${i}"><i style="--v:${(x.n/mx*100).toFixed(0)}%" class="${x.k===best.k?'top':''}"></i></div>`).join('')}</div>
+      <div class="pf-act${an}" role="group" aria-label="Albums rated each month. Tap a bar for details.">${shown.map((x,i)=>`<button data-act="pmo" data-v="${x.k}" aria-pressed="${x.k===sk}" aria-label="${esc(pMonthName(x.k))}: ${x.n} album${x.n===1?'':'s'}" style="--i:${i}"><i style="--v:${(x.n/mx*100).toFixed(0)}%" class="${x.k===best.k?'top':''}"></i></button>`).join('')}</div>
+      ${monInfo}
       <div class="pf-mini"><div><b>${best.n}</b><span>busiest month (${esc(lab(best.k))})</span></div><div><b>${act} of ${mo.length}</b><span>months with a rating</span></div><div><b>${(dated.length/mo.length).toFixed(1)}</b><span>albums a month</span></div></div></div>`;
   }
   const ga={};for(const x of al)for(const nm of accArts(x))(ga[nm]=ga[nm]||[]).push(x)
@@ -6040,23 +6088,23 @@ function accListHtml(P,match){
   const fl=self?'all':(UI.pFilter||'all');
   const base=all.filter(x=>fl==='all'||(fl==='shared'?mine(x)!=null:mine(x)==null));
   const years=[...new Set(base.filter(x=>x.d).map(x=>x.d.slice(0,4)))].sort().reverse();
-  const yr=years.includes(UI.pYear)?UI.pYear:'',mon=yr&&UI.pMon>=1&&UI.pMon<=12?UI.pMon:0,mn=UI.pMin|0;
+  const yr=years.includes(UI.pYear)?UI.pYear:'',mon=yr&&UI.pMon>=1&&UI.pMon<=12?UI.pMon:0,mn=UI.pMin|0,bk=UI.pBucket>=1&&UI.pBucket<=10?UI.pBucket|0:0;
   const sort=ACC_SORTS.some(x=>x[0]===UI.pSort)?UI.pSort:'hi',grid=kind==='a'&&UI.pView!=='l';
   const inYear=base.filter(x=>!yr||(x.d&&x.d.slice(0,4)===yr));
   const inMon=inYear.filter(x=>!mon||(x.d&&+x.d.slice(5,7)===mon));
-  const list=inMon.filter(x=>accPassMin(x.r,mn)).sort(accSortFn(sort));
+  const list=inMon.filter(x=>accPassMin(x.r,mn)&&(!bk||accBucket(x.r)===bk)).sort(accSortFn(sort));
   const noun=kind==='a'?['album','albums']:['title','titles'];
   const grp=(sort==='new'||sort==='old')&&list.some(x=>x.d);
   const gs={};if(grp)for(const x of list){const k=x.d?x.d.slice(0,7):'';const g=gs[k]||(gs[k]={n:0,s:0});g.n++;g.s+=x.r}
-  const lim=UI.pLim||60,rows=list.slice(0,lim),step=Math.min(24,1100/Math.max(1,Math.min(list.length,lim))),nAct=(mn?1:0)+(yr?1:0)+(mon?1:0),fopen=!!UI.pFOpen;
+  const lim=UI.pLim||60,rows=list.slice(0,lim),step=Math.min(24,1100/Math.max(1,Math.min(list.length,lim))),nAct=(mn?1:0)+(bk?1:0)+(yr?1:0)+(mon?1:0),fopen=!!UI.pFOpen;
   const an=(UI.pAnim||UI.pAnimL)?' pf-an':'';
   const chip=(act,v,label,c,on)=>`<button data-act="${act}" data-v="${v}" aria-pressed="${on}">${label}${c==null?'':`<span class="c">${c}</span>`}</button>`;
-  const minCt=v=>inMon.filter(x=>accPassMin(x.r,v)).length;
+  const minCt=v=>inMon.filter(x=>accPassMin(x.r,v)).length,bcnt=Array(11).fill(0);for(const x of inMon)bcnt[accBucket(x.r)]++;
   const MON=Array.from({length:12},(_,i)=>new Date(2000,i,1).toLocaleDateString([],{month:'short'}));
   const mc=Array(13).fill(0);for(const x of inYear)if(x.d)mc[+x.d.slice(5,7)]++;
   const mxm=Math.max(1,...mc);
   const monStrip=yr?`<div class="pf-mon" role="group" aria-label="Month rated in ${yr}">${MON.map((nm,i)=>`<button data-act="pmon" data-v="${i+1}" aria-pressed="${mon===i+1}"${mc[i+1]?'':' disabled'} aria-label="${nm} ${yr}, ${mc[i+1]} ${noun[1]}"><i style="--a:${(mc[i+1]/mxm).toFixed(2)}"></i><span>${nm}</span><b>${mc[i+1]||'–'}</b></button>`).join('')}</div>`:'';
-  const panel=fopen?`<div class="pf-fil${UI.pAnimF?' pf-opn':''}"><div class="pf-ctl"><span class="pf-lab">Score</span><div class="pf-tabs sm" role="group" aria-label="Score">${ACC_MINS.map(([v,l])=>chip('pmin',v,l,minCt(v),mn===v)).join('')}</div></div>${years.length?`<div class="pf-ctl"><span class="pf-lab">Year rated</span><div class="pf-tabs sm" role="group" aria-label="Year rated">${chip('pyear','','All',base.length,!yr)}${years.map(y=>chip('pyear',y,y,base.filter(x=>x.d&&x.d.slice(0,4)===y).length,yr===y)).join('')}</div></div>${monStrip}`:''}${nAct?`<button class="linkish" data-act="pclear">Clear filters</button>`:''}</div>`:'';
+  const panel=fopen?`<div class="pf-fil${UI.pAnimF?' pf-opn':''}"><div class="pf-ctl"><span class="pf-lab">Score</span><div class="pf-tabs sm" role="group" aria-label="Score">${ACC_MINS.map(([v,l])=>chip('pmin',v,l,minCt(v),mn===v)).join('')}</div></div><div class="pf-ctl"><span class="pf-lab">Exact score</span><div class="pf-tabs sm" role="group" aria-label="Exact score">${[1,2,3,4,5,6,7,8,9,10].map(v=>chip('pbk',v,v,bcnt[v],bk===v)).join('')}</div></div>${years.length?`<div class="pf-ctl"><span class="pf-lab">Year rated</span><div class="pf-tabs sm" role="group" aria-label="Year rated">${chip('pyear','','All',base.length,!yr)}${years.map(y=>chip('pyear',y,y,base.filter(x=>x.d&&x.d.slice(0,4)===y).length,yr===y)).join('')}</div></div>${monStrip}`:''}${nAct?`<button class="linkish" data-act="pclear">Clear filters</button>`:''}</div>`:'';
   const avg=accAvg(list);
   const icoG='<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>';
   const icoL='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>';
@@ -6174,7 +6222,7 @@ document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&document.querySel
 document.addEventListener('keydown',ev=>{if((ev.key==='Enter'||ev.key===' ')&&ev.target.classList&&ev.target.classList.contains('vl-b')){ev.preventDefault();ev.target.dispatchEvent(new MouseEvent('click',{bubbles:true}))}});
 function profileHtml(P,mine){
   const st=accStats(P.items),match=P.self?null:accMatch(P.items,mine);
-  const sec=UI.pTab==='a'||UI.pTab==='s'?accListHtml(P,match):accStatsHtml(st)+accInsightsHtml(P)+accVinylHtml(P);
+  const sec=UI.pTab==='a'||UI.pTab==='s'?accListHtml(P,match):accStatsHtml(st,P)+accInsightsHtml(P)+accVinylHtml(P);
   return accHeroHtml(Object.assign({},P,{n:accBase(P.items).length}),st,match,P.extra)+accTabsHtml(P)+sec;
 }
 /* the Friends shortcut in the top bar: one tap to the friends list, with a count of requests waiting for you */
@@ -6304,10 +6352,10 @@ function accountView(){
       <div id="g-btn" class="gbtn" aria-label="Sign in with Google"></div>${ACX.busy==='in'?'<span class="note">Signing in…</span>':''}${ACX.msg?`<span class="msg ${ACX.ok?'ok':'err'}" role="status">${esc(ACX.msg)}</span>`:''}
       <p class="note">Playback keeps your Google name and a private id, never your email address. <a href="privacy.html" target="_blank" rel="noopener">Privacy policy</a></p></div></section>`;
   }else{
-    const items=accItems(),F=ACX.fr,P={self:true,name:ACC.me.name,hue:ACC.me.hue,pic:ACC.me.pic,pop:ACX.popAv,friends:F?F.friends.length:0,items,extra:`<span class="pf-code">Code <b>${esc(ACC.me.code)}</b></span>`};
+    const items=accItems(),ss=accSongStats(),F=ACX.fr,P={self:true,songs:ss.n,savg:ss.avg,name:ACC.me.name,hue:ACC.me.hue,pic:ACC.me.pic,pop:ACX.popAv,friends:F?F.friends.length:0,items,extra:`<span class="pf-code">Code <b>${esc(ACC.me.code)}</b></span>`};
     h=`<section class="settings pf" aria-labelledby="ac-h"><h2 id="ac-h" class="sr">Your page</h2>${profileHtml(P,null)}${accManageHtml()}</section>`;
   }
-  UI.pAnim=false;UI.pAnimL=false;UI.pAnimF=false;ACX.popAv=false;return h;
+  UI.pAnim=false;UI.pAnimL=false;UI.pAnimF=false;UI.pAnimI=false;ACX.popAv=false;return h;
 }
 function friendView(){
   const uid=UI.fid,c=ACX.prof[uid]||{},F=ACX.fr,known=F&&[].concat(F.friends,F.incoming,F.outgoing).find(x=>x.uid===uid);
@@ -6315,11 +6363,11 @@ function friendView(){
   let h;
   if(!accOn())h=`<section class="settings pf">${back}<p class="note">Sign in to see friends’ pages.</p></section>`;
   else if(c.data){
-    const d=c.data,P={self:false,name:d.name,hue:d.hue,pic:d.pic,friends:d.friends,items:d.items};
+    const d=c.data,P={self:false,name:d.name,hue:d.hue,pic:d.pic,friends:d.friends,items:d.items,songs:d.songs,savg:d.savg};
     h=`<section class="settings pf" aria-label="${esc(d.name)}’s page">${back}${profileHtml(P,accItems())}</section>`;
   }else if(c.err)h=`<section class="settings pf">${back}<div class="setcard"><h3>${esc(known?known.name:'Friend')}</h3><p class="note">${esc(c.err)}</p></div></section>`;
   else h=`<section class="settings pf">${back}<div class="pf-hero" style="--h:${accHueOf(known||{})}"><div class="pf-av${accPicOf(known)?' pic':''}" aria-hidden="true">${accFace(known||{})}</div><div class="pf-who"><h2>${esc(known?known.name:'Friend')}</h2><span class="pf-sub">Loading…</span></div></div></section>`;
-  UI.pAnim=false;UI.pAnimL=false;UI.pAnimF=false;return h;
+  UI.pAnim=false;UI.pAnimL=false;UI.pAnimF=false;UI.pAnimI=false;return h;
 }
 /* a small card in Settings that points at the Account page */
 function accCard(){
@@ -7388,7 +7436,7 @@ document.addEventListener('click',ev=>{
   else if(act==='usload'){usLoad();return}
   else if(act==='sugdel'){sugChange('?id='+encodeURIComponent(id));return}
   else if(act==='friendopen'){if(UI.frOpen){UI.fFrom='sheet';UI.fPrev=UI.view==='friend'?null:UI.view;UI.frOpen=false}else UI.fFrom='account';UI.view='friend';UI.fid=b.dataset.u;pReset();UI.pAnim=true;UI.rOpen=null;window.scrollTo({top:0});if(ACX.prof[UI.fid])ACX.prof[UI.fid].at=0}
-  else if(act==='ptab'){UI.pTab=b.dataset.v;UI.pKind=UI.pTab==='s'?'s':'a';UI.pLim=60;UI.pMin=0;UI.pYear='';UI.pMon=0;UI.pAnimL=true}
+  else if(act==='ptab'){UI.pTab=b.dataset.v;UI.pKind=UI.pTab==='s'?'s':'a';UI.pLim=60;UI.pMin=0;UI.pBucket=0;UI.pYear='';UI.pMon=0;UI.pAnimL=true}
   else if(act==='pfilter'){UI.pFilter=b.dataset.v;UI.pLim=60;UI.pAnimL=true}
   else if(act==='psort'){UI.pSort=b.dataset.v;UI.pLim=60;UI.pAnimL=true}
   else if(act==='pmin'){UI.pMin=+b.dataset.v;UI.pLim=60;UI.pAnimL=true}
@@ -7396,7 +7444,12 @@ document.addEventListener('click',ev=>{
   else if(act==='pmon'){UI.pMon=UI.pMon===+b.dataset.v?0:+b.dataset.v;UI.pLim=60;UI.pAnimL=true}
   else if(act==='pview'){UI.pView=b.dataset.v;UI.pAnimL=true}
   else if(act==='pfopen'){UI.pFOpen=!UI.pFOpen;UI.pAnimF=UI.pFOpen}
-  else if(act==='pclear'){UI.pMin=0;UI.pYear='';UI.pMon=0;UI.pLim=60;UI.pAnimL=true}
+  else if(act==='pclear'){UI.pMin=0;UI.pBucket=0;UI.pYear='';UI.pMon=0;UI.pLim=60;UI.pAnimL=true}
+  else if(act==='pbk'){UI.pBucket=UI.pBucket===+b.dataset.v?0:+b.dataset.v;UI.pLim=60;UI.pAnimL=true}
+  else if(act==='psc'){UI.pSelSc=UI.pSelSc===+b.dataset.v?0:+b.dataset.v;UI.pAnimI=!!UI.pSelSc}
+  else if(act==='pmo'){UI.pSelMon=UI.pSelMon===b.dataset.v?'':b.dataset.v;UI.pAnimI=!!UI.pSelMon}
+  else if(act==='pgosc'){UI.pTab=b.dataset.k==='s'?'s':'a';UI.pKind=UI.pTab;UI.pBucket=+b.dataset.v;UI.pMin=0;UI.pYear='';UI.pMon=0;UI.pSort='new';UI.pLim=60;UI.pFOpen=true;UI.pAnimL=true;UI.pAnimF=true;window.scrollTo({top:0})}   /* from a score bar to the albums with exactly that score */
+  else if(act==='pgomon'){const[yy,mm]=String(b.dataset.v).split('-');UI.pTab='a';UI.pKind='a';UI.pYear=yy;UI.pMon=+mm;UI.pMin=0;UI.pBucket=0;UI.pSort='new';UI.pLim=60;UI.pFOpen=true;UI.pAnimL=true;UI.pAnimF=true;window.scrollTo({top:0})}   /* from a month bar to that month's albums */
   else if(act==='pmore'){UI.pLim=(UI.pLim||60)+60}
   else if(act==='accout'){accOut('Signed out.');ACX.ok=true;render();return}
   else if(act==='accdel'){accDelete();return}

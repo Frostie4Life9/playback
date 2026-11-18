@@ -497,6 +497,8 @@ async function acctInit(env) {
   ]);
   /* the table first shipped without the cover column: add it once (the error just means it is already there) */
   try { await env.CATALOG.prepare('ALTER TABLE acct_ratings ADD COLUMN img TEXT').run(); } catch (e) { /* already there */ }
+  try { await env.CATALOG.prepare('ALTER TABLE acct_users ADD COLUMN songs INTEGER').run(); } catch (e) { /* already there */ }   /* how many songs they have rated, shown on their page */
+  try { await env.CATALOG.prepare('ALTER TABLE acct_users ADD COLUMN savg REAL').run(); } catch (e) { /* already there */ }
   try { await env.CATALOG.prepare('ALTER TABLE acct_ratings ADD COLUMN day TEXT').run(); } catch (e) { /* already there */ }   /* the day it was rated, YYYY-MM-DD (version 16) */
   /* profile picture and account color (version 14): hue 0-359 or NULL for the automatic color, pic a small JPEG data URL or empty */
   for (const col of ['hue INTEGER', 'pic TEXT']) { try { await env.CATALOG.prepare('ALTER TABLE acct_users ADD COLUMN ' + col).run(); } catch (e) { /* already there */ } }
@@ -730,10 +732,11 @@ async function acct(request, env, url) {
       const t = x.t.slice(0, 200), id = x.kind + '|' + t; if (seen.has(id)) continue; seen.add(id);
       items.push({ kind: x.kind, k: typeof x.k === 'string' ? x.k.slice(0, 80) : '', t, r: Math.round(r * 2) / 2, n: String(x.n || '').slice(0, 120), a: String(x.a || '').slice(0, 160), i: cleanImg(x.i), d: cleanDay(x.d) });
     }
+    const songs = Math.min(1000000, Math.max(0, Math.floor(Number(j.songs) || 0))), sa = Number(j.savg), savg = songs > 0 && sa > 0 && sa <= 10 ? Math.round(sa * 100) / 100 : null;
     await env.CATALOG.batch([
       env.CATALOG.prepare('DELETE FROM acct_ratings WHERE uid = ?1').bind(me.uid),
       env.CATALOG.prepare("INSERT OR REPLACE INTO acct_ratings (uid, kind, k, t, r, ttl, art, img, day) SELECT ?1, json_extract(value,'$.kind'), json_extract(value,'$.k'), json_extract(value,'$.t'), json_extract(value,'$.r'), json_extract(value,'$.n'), json_extract(value,'$.a'), json_extract(value,'$.i'), json_extract(value,'$.d') FROM json_each(?2)").bind(me.uid, JSON.stringify(items)),
-      env.CATALOG.prepare('UPDATE acct_users SET rated = ?2, seen = ?3 WHERE uid = ?1').bind(me.uid, items.length, now)
+      env.CATALOG.prepare('UPDATE acct_users SET rated = ?2, seen = ?3, songs = ?4, savg = ?5 WHERE uid = ?1').bind(me.uid, items.length, now, songs, savg)
     ]);
     return reply({ ok: true, rows: items.length });
   }
@@ -791,12 +794,12 @@ async function acct(request, env, url) {
       const f = await env.CATALOG.prepare("SELECT 1 AS x FROM acct_friends WHERE st = 'ok' AND ((a = ?1 AND b = ?2) OR (a = ?2 AND b = ?1))").bind(me.uid, uid).first();
       if (!f) return reply({ error: 'You are not friends with this person.' }, 404);
     }
-    const u = await env.CATALOG.prepare('SELECT uid, name, share, made, hue, pic FROM acct_users WHERE uid = ?1').bind(uid).first();
+    const u = await env.CATALOG.prepare('SELECT uid, name, share, made, hue, pic, songs, savg FROM acct_users WHERE uid = ?1').bind(uid).first();
     if (!u) return reply({ error: 'That account is gone.' }, 404);
     if (uid !== me.uid && !u.share) return reply({ error: u.name + ' is not sharing their ratings right now.' }, 403);
     const items = (await env.CATALOG.prepare('SELECT kind, k, t, r, ttl AS n, art AS a, img AS i, day AS d FROM acct_ratings WHERE uid = ?1 ORDER BY r DESC, ttl COLLATE NOCASE LIMIT 4000').bind(uid).all()).results || [];
     const fc = await env.CATALOG.prepare("SELECT COUNT(*) AS c FROM acct_friends WHERE st = 'ok' AND (a = ?1 OR b = ?1)").bind(uid).first('c');
-    return reply({ profile: { uid, name: u.name, since: u.made, friends: fc || 0, hue: u.hue == null ? null : u.hue, pic: u.pic || '', items } });
+    return reply({ profile: { uid, name: u.name, since: u.made, friends: fc || 0, hue: u.hue == null ? null : u.hue, pic: u.pic || '', songs: u.songs || 0, savg: u.savg || 0, items } });
   }
 
   if (path === '/friends/ratings' && M === 'POST') {
