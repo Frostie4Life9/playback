@@ -1270,19 +1270,22 @@ body{overflow-x:clip}
 /* fluid fill: a soft base of every color, then big pools of color (one per album color, as large as its albums are rated high)
    that each circle the tile at their own speed and wobble, so the colors flow into one another and the tile stays covered */
 .hbase{position:absolute;inset:0;background:var(--hgb)}
-.fl{position:absolute;inset:0;animation:flSpin var(--du) linear infinite var(--dir);animation-delay:var(--dl);will-change:transform}
+.fl{position:absolute;inset:0;animation:flSpin var(--du) linear infinite var(--dir);will-change:transform}
 .fl>.fb{position:absolute;translate:-50% -50%;border-radius:50%;will-change:transform;
   background:radial-gradient(closest-side,color-mix(in srgb,var(--c) 96%,transparent) 0,color-mix(in srgb,var(--c) 72%,transparent) 52%,transparent 100%);
   animation:flWob var(--wd) ease-in-out infinite alternate;animation-delay:var(--dl)}
-.fl0{--du:34s;--dl:-3s;--dir:normal}.fl0>.fb{--c:var(--hc0);--x:68%;left:68%;top:38%;width:calc(var(--hs0)*1%);height:calc(var(--hs0)*1.3%);--wd:9s}
-.fl1{--du:41s;--dl:-10s;--dir:reverse}.fl1>.fb{--c:var(--hc1);--x:30%;left:30%;top:66%;width:calc(var(--hs1)*1%);height:calc(var(--hs1)*1.3%);--wd:11s}
-.fl2{--du:29s;--dl:-17s;--dir:normal}.fl2>.fb{--c:var(--hc2);--x:50%;left:50%;top:22%;width:calc(var(--hs2)*1%);height:calc(var(--hs2)*1.3%);--wd:13s}
-.fl3{--du:47s;--dl:-24s;--dir:reverse}.fl3>.fb{--c:var(--hc3);--x:22%;left:22%;top:34%;width:calc(var(--hs3)*1%);height:calc(var(--hs3)*1.3%);--wd:15s}
-.fl4{--du:37s;--dl:-31s;--dir:normal}.fl4>.fb{--c:var(--hc4);--x:78%;left:78%;top:72%;width:calc(var(--hs4)*1%);height:calc(var(--hs4)*1.3%);--wd:17s}
-.fl5{--du:53s;--dl:-38s;--dir:reverse}.fl5>.fb{--c:var(--hc5);--x:46%;left:46%;top:80%;width:calc(var(--hs5)*1%);height:calc(var(--hs5)*1.3%);--wd:19s}
+/* three layers, two color pools each (picked far apart so the tile stays covered); was six layers, which cost a lot of GPU on laptops */
+.fl0{--du:34s;--dir:normal;animation-delay:-3s}.fl1{--du:41s;--dir:reverse;animation-delay:-10s}.fl2{--du:29s;--dir:normal;animation-delay:-17s}
+.b0{--c:var(--hc0);--x:68%;left:68%;top:38%;width:calc(var(--hs0)*1%);height:calc(var(--hs0)*1.3%);--wd:9s;--dl:-3s}
+.b1{--c:var(--hc1);--x:30%;left:30%;top:66%;width:calc(var(--hs1)*1%);height:calc(var(--hs1)*1.3%);--wd:11s;--dl:-10s}
+.b2{--c:var(--hc2);--x:50%;left:50%;top:22%;width:calc(var(--hs2)*1%);height:calc(var(--hs2)*1.3%);--wd:13s;--dl:-17s}
+.b3{--c:var(--hc3);--x:22%;left:22%;top:34%;width:calc(var(--hs3)*1%);height:calc(var(--hs3)*1.3%);--wd:15s;--dl:-24s}
+.b4{--c:var(--hc4);--x:78%;left:78%;top:72%;width:calc(var(--hs4)*1%);height:calc(var(--hs4)*1.3%);--wd:17s;--dl:-31s}
+.b5{--c:var(--hc5);--x:46%;left:46%;top:80%;width:calc(var(--hs5)*1%);height:calc(var(--hs5)*1.3%);--wd:19s;--dl:-38s}
 .head.hero .hmesh::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 20%,color-mix(in srgb,var(--bg) 30%,transparent))}
 @keyframes flSpin{to{rotate:360deg}}
 @keyframes flWob{0%{scale:.88 1.08}50%{scale:1.05 .95}100%{scale:1.18 .86}}
+.hoff .fl,.hoff .fl>.fb{animation-play-state:paused}
 @media (prefers-reduced-motion:reduce){.fl,.fl>.fb{animation:none}}
 .hrec{position:relative;width:220px;height:220px;flex:0 0 auto}
 .hring{width:220px;height:220px;border-radius:50%;display:grid;place-items:center;
@@ -1344,7 +1347,7 @@ body{overflow-x:clip}
   body{padding-bottom:calc(104px + env(safe-area-inset-bottom,0px))}
   .tabs{left:16px;right:16px;bottom:calc(18px + env(safe-area-inset-bottom,0px));height:64px;border-radius:32px;padding:0 8px;gap:4px;
     display:flex;align-items:center;grid-template-columns:none;border:1px solid var(--line);border-top:1px solid var(--line);
-    background:color-mix(in srgb,var(--surface) 92%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 10px 30px rgb(0 0 0 / .45)}
+    background:color-mix(in srgb,var(--surface) 92%,transparent);box-shadow:0 10px 30px rgb(0 0 0 / .45)}
   .tabs button{flex:1;flex-direction:row;justify-content:center;gap:8px;min-height:48px;height:48px;padding:0;border-radius:999px;font-size:14px;color:var(--muted)}
   .tabs button span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
   .tabs button[aria-pressed="true"]{flex:1.9;background:var(--accent);color:var(--accent-ink);box-shadow:none}
@@ -1796,8 +1799,7 @@ button.st-t:hover{color:var(--accent);text-decoration:underline}
 .sx-t[aria-current="page"]{background:var(--c);border-color:var(--c);color:var(--sx-on)}
 .sx-t[aria-current="page"] svg{color:inherit}
 @media (min-width:900px){
-  .sx-bar{position:sticky;top:0;z-index:70;background:color-mix(in srgb,var(--sx-paper) 88%,transparent);
-    -webkit-backdrop-filter:saturate(1.4) blur(14px);backdrop-filter:saturate(1.4) blur(14px)}
+  .sx-bar{position:sticky;top:0;z-index:70;background:color-mix(in srgb,var(--sx-paper) 88%,transparent);}
   .sx-in{min-height:var(--sx-barh)}
   .sx-tabs{display:flex;gap:6px;margin-left:auto;flex:0 1 auto;min-width:0}
   .sx-gbtn,.sx-menu{display:none!important}
@@ -2283,6 +2285,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.18-s', note:'SMOOTHER ON LAPTOPS: the top bar and the floating dock no longer blur what scrolls behind them (they were already almost solid, so they look the same, but the blur was re-done every scroll frame). The artist page background colors now run on three moving layers instead of six, two colors each, with every album color still there and still sized by your ratings, and they stop drifting while the artist card is scrolled out of view. The spinning liquid vinyl is unchanged.'},
    {v:'2026.11.18-r', note:'SETTINGS SPOTIFY CARD FIXED: the Spotify card in Settings failed to load (\u201cCannot read properties of undefined\u201d) because two parts of the play counting shared a name, so the older Most played list broke once the Stats page was added. It works again. You can also still reach your counts on the Stats page.'},
    {v:'2026.11.18-q', note:'SETTINGS CAN NO LONGER GO BLANK: if one card in Settings fails to load, the page still opens and that card shows a short message saying what went wrong, instead of the Settings button doing nothing.'},
   {v:'2026.11.18-p', note:'SORT THE BIG RECORD: under the big record on an account page there is a row of orders: Highest (the usual, best at the outer edge), Lowest, Newest rated, Oldest rated and A–Z by artist. Pick one and the covers pop back onto the groove in the new order, with the caption telling you which end is the outer edge. It works on your page and on friends\' pages, and goes back to Highest when you leave.'},
@@ -7629,9 +7632,16 @@ function flyBack(O){
     else{w.remove();const dc=T.querySelector('.tdisc');void dc.offsetWidth;dc.classList.remove('tuck');return}
     requestAnimationFrame(step)};
   requestAnimationFrame(step)}
+let heroIO=null,heroWatched=null;
+function heroWatch(el){   /* stop the color drift while the artist card is scrolled out of view */
+  if(!('IntersectionObserver' in window))return;
+  if(!heroIO)heroIO=new IntersectionObserver(es=>{for(const e of es)e.target.classList.toggle('hoff',!e.isIntersecting)});
+  if(heroWatched&&heroWatched!==el)heroIO.unobserve(heroWatched);
+  if(heroWatched!==el){heroWatched=el;heroIO.observe(el)}}
 function heroStart(){
   const el=document.querySelector('.hero[data-aid]');
   if(!el){HERO.aid=null;HERO.el=null;HERO.spd=0;HSTY.aid=null;return}
+  heroWatch(el);
   const spin=el.querySelector('.hspin');if(!spin)return;
   if(HSTY.aid!==el.dataset.aid){const prev=HSTY.aid;HSTY.aid=el.dataset.aid;HSTY.n=hLook(HSTY.aid);
     if(prev){const o=HSTY.list.filter(x=>x!==HLOOK[prev]);HLOOK[prev]=o[Math.floor(Math.random()*o.length)];TD.lv++}   /* the artist you left gets a new look for next time */
@@ -8375,7 +8385,7 @@ function artistView(a){
       <div class="sl-foot">${shareBtn(g,a)}<details class="gmore"${UI.armed===g.id?' open':''}><summary aria-label="More for this album">\u22ef</summary>${moreBtns(g,dx)}${delGBtn(g,a)}</details></div>
     </div>`})).join('');
   UI.dxAnim=null;                                    /* the switch animation plays once, on the draw it was asked for */
-  return `<div class="head hero${hClear()?' hclear':''}" data-aid="${esc(a.id)}" style="${esc(heroStyle(a))}"><i class="hg" aria-hidden="true"></i><div class="hmesh" aria-hidden="true"><i class="hbase"></i><i class="fl fl0"><i class="fb"></i></i><i class="fl fl1"><i class="fb"></i></i><i class="fl fl2"><i class="fb"></i></i><i class="fl fl3"><i class="fb"></i></i><i class="fl fl4"><i class="fb"></i></i><i class="fl fl5"><i class="fb"></i></i></div>
+  return `<div class="head hero${hClear()?' hclear':''}" data-aid="${esc(a.id)}" style="${esc(heroStyle(a))}"><i class="hg" aria-hidden="true"></i><div class="hmesh" aria-hidden="true"><i class="hbase"></i><i class="fl fl0"><i class="fb b0"></i><i class="fb b3"></i></i><i class="fl fl1"><i class="fb b1"></i><i class="fb b4"></i></i><i class="fl fl2"><i class="fb b2"></i><i class="fb b5"></i></i></div>
     <div class="hrec"><div class="hring" style="--p:${p}"><div class="hdisc"><div class="hspin"></div><div class="hlab"><b${p>=100?' class="s"':''}>${p}%</b><span>heard</span></div></div></div>${HARM}</div>
     <div class="hbody">
       <div class="meta"><h2>${esc(a.name)}</h2>${a.aka&&a.aka.length?`<span class="note">also ${esc(a.aka.slice(0,3).join(' · '))}</span>`:''}</div>
