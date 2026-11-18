@@ -887,11 +887,34 @@ details.addart .add{border-top:1px solid var(--line)}
 .pf-cv .tt{position:absolute;left:0;right:0;bottom:0;padding:18px 7px 6px;background:linear-gradient(transparent,rgb(0 0 0 / .78));display:flex;flex-direction:column;gap:1px}
 .pf-cv .tt b{font:800 11px/1.1 Archivo,var(--display);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .pf-cv .tt small{font-size:10px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vl-bk{position:absolute;inset:0;border-radius:20px;background:rgb(0 0 0 / .55);z-index:3;cursor:pointer}
+.vl-pop{position:absolute;z-index:4;width:var(--w,280px);transform:translate(-50%,-50%);border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:0 30px 60px -20px rgb(0 0 0 / .7);overflow:hidden;cursor:pointer;outline:none}
+.vl-pc{position:relative;aspect-ratio:1;background:hsl(var(--c,180) 40% 30%);color:#fff}
+.vl-pc img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.vl-pc b{position:absolute;inset:0;display:grid;place-items:center;font:800 72px Archivo,var(--display);opacity:.5}
+.vl-pm{padding:12px 14px 14px;display:flex;flex-direction:column;gap:3px}
+.vl-pm h4{margin:0;font:800 19px/1.1 Archivo,var(--display)}
+.vl-pm small{color:var(--muted);font-size:13px}
+.vl-pm .vl-w{font:500 11px var(--mono)}
+.vl-pr{display:flex;align-items:center;gap:10px;margin-top:4px}
+.vl-pr b{font:800 26px var(--mono)}
+.vl-seg{flex:1;display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:3px}
+.vl-seg i{display:block;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.vl-seg u{display:block;height:100%;background:var(--accent);text-decoration:none}
+@keyframes vlout{from{opacity:.2;transform:translate(calc(-50% + var(--fx)),calc(-50% + var(--fy))) scale(var(--fs))}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@keyframes vlback{from{opacity:1;transform:translate(-50%,-50%) scale(1)}to{opacity:0;transform:translate(calc(-50% + var(--fx)),calc(-50% + var(--fy))) scale(var(--fs))}}
+@keyframes vlfadeout{to{opacity:0}}
+@media (prefers-reduced-motion:no-preference){
+  .vl-pop{animation:vlout .5s cubic-bezier(.2,.9,.25,1.12) both}
+  .vl-pop.out{animation:vlback .26s cubic-bezier(.4,0,.8,.4) both}
+  .vl-bk{animation:frfade .25s ease both}
+  .vl-bk.out{animation:vlfadeout .26s ease both}
+}
 @keyframes pfpop{from{opacity:0;transform:scale(.86) translateY(8px)}to{opacity:1;transform:none}}
 @keyframes pfwide{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 @media (prefers-reduced-motion:no-preference){
-  .pf-list.pf-an .pf-cv{animation:pfpop .42s cubic-bezier(.3,1.35,.5,1) both;animation-delay:calc(var(--i)*24ms)}
-  .pf-list.pf-an .pf-row{animation:pfup .4s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*30ms)}
+  .pf-list.pf-an .pf-cv{animation:pfpop .42s cubic-bezier(.3,1.35,.5,1) both;animation-delay:var(--d,0ms)}
+  .pf-list.pf-an .pf-row{animation:pfup .4s cubic-bezier(.2,.8,.2,1) both;animation-delay:var(--d,0ms)}
   .pf-list.pf-an .pf-mh{animation:pfup .4s cubic-bezier(.2,.8,.2,1) both}
   .pf-fil.pf-opn{animation:pfup .3s cubic-bezier(.2,.8,.2,1) both}
   .pf-card.pf-in{animation:pfup .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*70ms + 150ms)}
@@ -904,7 +927,9 @@ details.addart .add{border-top:1px solid var(--line)}
 .vl-wrap{position:relative;width:100%;max-width:560px;aspect-ratio:1;border-radius:50%;box-shadow:0 26px 50px -26px hsl(var(--h,200) 60% 40% / .6),0 0 0 1px rgb(255 255 255 / .06)}
 .vl-wrap::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;mix-blend-mode:screen;background:conic-gradient(from 20deg,rgb(255 255 255 / 0),rgb(255 255 255 / .16) 12%,rgb(255 255 255 / 0) 26%,rgb(255 255 255 / 0) 50%,rgb(255 255 255 / .12) 62%,rgb(255 255 255 / 0) 76%)}
 .vl-svg{display:block;width:100%;height:100%;overflow:visible}
+.vl{position:relative}
 .vl-b{cursor:pointer;outline:none}
+.vl-b.lift{visibility:hidden}
 .vl-b .vl-ring{fill:none;stroke:var(--accent);transition:stroke-width .15s,stroke .15s}
 .vl-b:hover .vl-ring,.vl-b:focus-visible .vl-ring,.vl-b.sel .vl-ring{stroke:#fff;stroke-width:3.2}
 .vl-b.sel{filter:drop-shadow(0 0 5px rgb(255 255 255 / .65))}
@@ -922,7 +947,7 @@ details.addart .add{border-top:1px solid var(--line)}
   .vl-spin{animation:vlspin 240s linear infinite;transform-origin:300px 300px}
   .vl:hover .vl-spin,.vl.hold .vl-spin,.vl:focus-within .vl-spin{animation-play-state:paused}
   .vl.pf-in .vl-wrap{animation:vlin .8s .1s cubic-bezier(.2,.8,.2,1) both}
-  .vl.pf-in .vl-b{animation:vlpop .45s cubic-bezier(.3,1.35,.5,1) both;animation-delay:calc(var(--i)*16ms + 450ms);transform-box:fill-box;transform-origin:center}
+  .vl.pf-in .vl-b{animation:vlpop .45s cubic-bezier(.3,1.35,.5,1) both;animation-delay:var(--d,450ms);transform-box:fill-box;transform-origin:center}
 }
 @media (prefers-reduced-motion:no-preference){
   .pf-hero.pf-in{animation:pfup .55s cubic-bezier(.2,.8,.2,1) both}
@@ -1988,6 +2013,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-aj', note:'ONE ALBUM, ONE RATING: an album made by several artists (like An Evening With Silk Sonic on Bruno Mars and Silk Sonic) now counts once in your album total, averages, score bars, record and Albums wall, and lists every artist on it (Bruno Mars, Anderson .Paak, Silk Sonic) instead of showing up once per artist. It is published once now, and a friend whose copy still sends one row per artist is merged the same way, so the counts match either way. Taste match still lines up albums whichever of the artists you each have. EVEN FADE-IN: the cover wall, list and the big record used to fade in one by one and then the rest all at once after about the 15th to 70th; every cover now fades in at the same steady pace, whatever the count. POP-OUT COVERS: tap an album on the big record and it lifts off the groove and grows into the middle, showing a big cover, the title, every artist, the exact score as a bar and the day you rated it. Tap anywhere or press Escape to put it back. The Worker needs the new playback-sync.js (it takes it from GitHub on its own) so a list of several artists is not cut short.'},
   {v:'2026.11.17-ai', note:'ACCOUNT PAGE SECTIONS AND A BETTER ALBUMS VIEW: your Account page (and a friend\u2019s page) now has three tabs under the top card: Overview, Albums and Shows & films, so the page is no longer one very long list. OVERVIEW keeps the stat tiles, the score bars and the big rated-albums record and adds three cards: Scoring habits (your most common score, how many perfect 10s, and the share rated 8 or higher), Albums rated per month (a bar for every month since your first dated rating, with your busiest month and how many months you rated something) and Top artists (your five highest-averaging artists with two or more albums). ALBUMS is a wall of covers with the exact rating on each one (on a friend\u2019s page your own rating sits in the corner of the albums you both rated). Sort by Highest, Lowest, Newest rated, Oldest rated or A\u2013Z; the Filters button opens a score filter (10, 9+, 8+, 7+, Under 7) and a Year rated filter, and picking a year shows twelve month tiles you can tap to see just that month, with the albums grouped under month headings (the count and average for each month) whenever you sort by date. A switch beside Filters flips between the cover wall and the old list. Shows & films keeps the list with the same sorting and filters. The wall, the month tiles and the new cards all animate in. Nothing about what is published changed, so this works on friends\u2019 pages straight away.'},
   {v:'2026.11.17-ah', note:'RATED DATES ON ACCOUNT PAGES: every album, show and film on your Account page (and on a friend\u2019s page) now says the day it was rated, under the title (Rated Nov 14, 2026). The dates come from the days already on your ratings and are published with them, so a friend only sees them if you accept each other and sharing is on. Nobody can change them: only your own signed-in account can save your published ratings, and the private rating-dates list itself stays on your Worker, readable only with your sync key or owner login, with no way for anyone to write to it. The Worker needs the new playback-sync.js (it takes it from GitHub on its own).'},
   {v:'2026.11.17-ag', note:'THE RATED-ALBUMS RECORD: your Account page (and a friend\u2019s page) now has a big vinyl under the stats with every album rated, each one a cover on a single spiral groove: the highest rated sit on the outer edge and it winds in to the lowest at the label. Hover a cover (or tap it on a phone) to read its title, artist and rating on the label, and tap again to keep it there. The record turns slowly, stops when you point at it, and pops in cover by cover when the page opens. A brighter ring means a higher rating. Deluxe editions rated on their own are not drawn, matching the albums count.'},
@@ -5737,10 +5763,14 @@ const accScreenKeys=s=>({k:s.tmdb?'tm:'+s.type+':'+s.tmdb:'',t:'ts:'+nTitle(s.ti
 const accDay=id=>{const d=ratedDate(id);return /^\d{4}-\d\d-\d\d$/.test(d)?{d}:{}};
 function accItems(){
   const out=[];
+  /* an album on several artists' pages (twins share one rating) is one row, with every artist on it */
+  const twin=new Map(),addN=(e,names)=>{for(const nm of names){const nk=nArtist(nm);if(nk&&!e.names.some(y=>nArtist(y)===nk))e.names.push(nm)}};
+  const put=(id,row,names)=>{const ck=canonK(id);let e=twin.get(ck);if(!e){e={row,names:[]};twin.set(ck,e);out.push(row)}else if(!e.row.i&&row.i)e.row.i=row.i;addN(e,names)};
   for(const a of S.music){if(a.example)continue;
-    for(const g of a.groups||[]){if(!RATEABLE.includes(g.kind))continue;const{k,t}=accKeys(a,g);
-      const r=rating(g.id);if(r)out.push({kind:'a',k,t,r,n:g.title,a:a.name,i:accImg(g),...accDay(g.id)});
-      const d=rating(dxId(g));if(d)out.push({kind:'a',k:k?k+'~dx':'',t:t+'~dx',r:d,n:dxName(g),a:a.name,...accDay(dxId(g))})}}
+    for(const g of a.groups||[]){if(!RATEABLE.includes(g.kind))continue;const{k,t}=accKeys(a,g),nm=[a.name,...(g.w||[])];
+      const r=rating(g.id);if(r)put(g.id,{kind:'a',k,t,r,n:g.title,a:a.name,i:accImg(g),...accDay(g.id)},nm);
+      const d=rating(dxId(g));if(d)put(dxId(g),{kind:'a',k:k?k+'~dx':'',t:t+'~dx',r:d,n:dxName(g),a:a.name,...accDay(dxId(g))},nm)}}
+  for(const e of twin.values())e.row.a=e.names.join(' \u00b7 ');
   for(const s of S.screen){if(s.example)continue;const r=rating(s.id);if(r){const{k,t}=accScreenKeys(s);out.push({kind:'s',k,t,r,n:s.title,a:'',...accDay(s.id)})}}
   return out.slice(0,2000);
 }
@@ -5907,7 +5937,26 @@ function accProfile(uid,force){
   }).catch(()=>{ACX.prof[uid]={at:Date.now(),loading:false,data:null,err:'Could not reach Playback’s server. Check your connection.'};render()});
 }
 const accCover=x=>{if(x.kind!=='a')return '';if(x.i&&/^https:\/\//.test(x.i))return x.i;const m=/^mb:([0-9a-f-]{36})$/.exec(x.k||'');return m?'https://coverartarchive.org/release-group/'+m[1]+'/front-250':''};
-const accBase=items=>items.filter(x=>!/~dx$/.test(x.t));
+/* one album made by several artists (Silk Sonic, Bruno Mars and Anderson .Paak) is ONE rating that lists all its artists. Newer copies publish it once with the artists joined by a dot;
+   older copies published one row per artist, so rows that are clearly the same album (same MusicBrainz id, or same title, score and day) are merged here too. */
+const accArts=x=>x&&Array.isArray(x.as)&&x.as.length?x.as:String(x&&x.a||'').split(' \u00b7 ').map(t=>t.trim()).filter(Boolean);
+const accArtText=x=>accArts(x).join(', ');
+function accBase(items){
+  const out=[],idx=new Map();
+  for(const x of items){
+    if(/~dx$/.test(x.t))continue;
+    if(x.kind!=='a'){out.push(x);continue}
+    const key=x.k?'k:'+x.k:'n:'+nTitle(x.n)+'|'+x.r+'|'+(x.d||''),ex=idx.get(key);
+    if(!ex){const c=Object.assign({},x,{as:accArts(x)});idx.set(key,c);out.push(c);continue}
+    for(const nm of accArts(x))if(!ex.as.some(y=>nArtist(y)===nArtist(nm)))ex.as.push(nm);
+    if(!ex.i&&x.i)ex.i=x.i;if(!ex.d&&x.d)ex.d=x.d;
+  }
+  for(const c of out)if(c.as)c.a=c.as.join(' \u00b7 ');
+  return out;
+}
+/* every way an item can be recognised on someone else's page: its MusicBrainz id, its own key, and title plus each of its artists */
+const accKeysOf=x=>{const o=[];if(x.k)o.push('k:'+x.k);if(x.t)o.push('t:'+x.t);
+  if(x.kind==='a'&&x.n&&!/~dx$/.test(x.t||'')){const tt=nTitle(x.n);for(const a of accArts(x)){const na=nArtist(a);if(na)o.push('a:'+na+'|'+tt)}}return o};
 function accStats(items){
   const b=accBase(items),al=b.filter(x=>x.kind==='a'),sc=b.filter(x=>x.kind==='s');
   const avg=l=>l.length?l.reduce((s,x)=>s+x.r,0)/l.length:0,hist=Array(10).fill(0);
@@ -5916,11 +5965,12 @@ function accStats(items){
 }
 /* how alike two people's ratings are, over what both rated: 100 means identical, about 0 means opposite ends of the scale */
 function accMatch(theirs,mine){
-  const mk=new Map(),mt=new Map();
-  for(const x of mine){if(x.k)mk.set(x.kind+x.k,x.r);mt.set(x.kind+x.t,x.r)}
-  let n=0,d=0;const seen=new Map();
-  for(const x of accBase(theirs)){const m=(x.k?mk.get(x.kind+x.k):undefined)??mt.get(x.kind+x.t);if(m!=null){n++;d+=Math.abs(x.r-m);seen.set(x.kind+x.t,m)}}
-  return{n,pct:n?Math.round(100*(1-d/n/9)):0,mine:(x)=>(x.k?mk.get(x.kind+x.k):undefined)??mt.get(x.kind+x.t)};
+  const idx=new Map();
+  for(const x of mine)for(const k of accKeysOf(x))idx.set(x.kind+'|'+k,x.r);
+  const find=x=>{for(const k of accKeysOf(x)){const v=idx.get(x.kind+'|'+k);if(v!=null)return v}};
+  let n=0,d=0;
+  for(const x of accBase(theirs)){const m=find(x);if(m!=null){n++;d+=Math.abs(x.r-m)}}
+  return{n,pct:n?Math.round(100*(1-d/n/9)):0,mine:find};
 }
 function accHeroHtml(P,stats,match,extra){
   const h=accHueOf(P),anim=UI.pAnim?' pf-in':'';
@@ -5942,7 +5992,7 @@ const ACC_SORTS=[['hi','Highest'],['lo','Lowest'],['new','Newest rated'],['old',
 const ACC_MINS=[[0,'All'],[10,'10'],[9,'9+'],[8,'8+'],[7,'7+'],[-7,'Under 7']];
 const accPassMin=(r,m)=>!m||(m===10?r>=10:m<0?r<-m:r>=m);
 function accSortFn(sort){
-  const nm=x=>String(x.n||''),ar=x=>String(x.a||'');
+  const nm=x=>String(x.n||''),ar=x=>accArtText(x);
   switch(sort){
     case 'lo':return(x,y)=>x.r-y.r||nm(x).localeCompare(nm(y));
     case 'new':return(x,y)=>(!x.d)-(!y.d)||String(y.d||'').localeCompare(String(x.d||''))||y.r-x.r;
@@ -5977,7 +6027,7 @@ function accInsightsHtml(P){
       <div class="pf-act${an}" role="img" aria-label="Albums rated each month, busiest ${esc(pMonthName(best.k))} with ${best.n}">${shown.map((x,i)=>`<div style="--i:${i}"><i style="--v:${(x.n/mx*100).toFixed(0)}%" class="${x.k===best.k?'top':''}"></i></div>`).join('')}</div>
       <div class="pf-mini"><div><b>${best.n}</b><span>busiest month (${esc(lab(best.k))})</span></div><div><b>${act} of ${mo.length}</b><span>months with a rating</span></div><div><b>${(dated.length/mo.length).toFixed(1)}</b><span>albums a month</span></div></div></div>`;
   }
-  const ga={};for(const x of al){if(x.a)(ga[x.a]=ga[x.a]||[]).push(x)}
+  const ga={};for(const x of al)for(const nm of accArts(x))(ga[nm]=ga[nm]||[]).push(x)
   const ta=Object.entries(ga).filter(([,l])=>l.length>=2).map(([name,l])=>({name,l:l.slice().sort((p,q)=>q.r-p.r),avg:accAvg(l)})).sort((p,q)=>q.avg-p.avg||q.l.length-p.l.length||p.name.localeCompare(q.name)).slice(0,5);
   if(ta.length)h+=`<div class="pf-card${an}" style="--i:${n++}"><h3>Top artists<small>by average · 2+ albums</small></h3>${ta.map((a,i)=>`<div class="pf-ta" style="--i:${i}"><span class="pf-fan">${a.l.slice(0,3).map(x=>{const u=accCover(x);return `<span class="pcv"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span>`}).join('')}</span><span class="pt"><b>${esc(a.name)}</b><small>${a.l.length} albums</small></span><span class="pf-tar"><b class="pn">${a.avg.toFixed(1)}</b><span class="bar"><i style="width:${(a.avg*10).toFixed(0)}%"></i></span></span></div>`).join('')}</div>`;
   return h;
@@ -5998,7 +6048,7 @@ function accListHtml(P,match){
   const noun=kind==='a'?['album','albums']:['title','titles'];
   const grp=(sort==='new'||sort==='old')&&list.some(x=>x.d);
   const gs={};if(grp)for(const x of list){const k=x.d?x.d.slice(0,7):'';const g=gs[k]||(gs[k]={n:0,s:0});g.n++;g.s+=x.r}
-  const lim=UI.pLim||60,rows=list.slice(0,lim),nAct=(mn?1:0)+(yr?1:0)+(mon?1:0),fopen=!!UI.pFOpen;
+  const lim=UI.pLim||60,rows=list.slice(0,lim),step=Math.min(24,1100/Math.max(1,Math.min(list.length,lim))),nAct=(mn?1:0)+(yr?1:0)+(mon?1:0),fopen=!!UI.pFOpen;
   const an=(UI.pAnim||UI.pAnimL)?' pf-an':'';
   const chip=(act,v,label,c,on)=>`<button data-act="${act}" data-v="${v}" aria-pressed="${on}">${label}${c==null?'':`<span class="c">${c}</span>`}</button>`;
   const minCt=v=>inMon.filter(x=>accPassMin(x.r,v)).length;
@@ -6015,8 +6065,8 @@ function accListHtml(P,match){
   rows.forEach((x,i)=>{
     if(grp){const k=x.d?x.d.slice(0,7):'';if(k!==last){last=k;const g=gs[k];body+=`<div class="pf-mh"><b>${k?esc(pMonthName(k)):'No date'}</b><span>${g.n} ${noun[g.n===1?0:1]} · avg ${(g.s/g.n).toFixed(1)}</span></div>`}}
     const m=self?null:mine(x),u=accCover(x),when=x.d&&fmtRd(x.d)?'Rated '+fmtRd(x.d):'';
-    if(grid)body+=`<div class="pf-cv" style="--i:${Math.min(i,20)};--c:${accHue(x.n)}" title="${esc([x.n||'Untitled',x.a,when].filter(Boolean).join(' · '))}"><b class="ltr" aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}<span class="sc">${fmt(x.r)}</span>${m!=null?`<span class="me" title="Your rating">you ${fmt(m)}</span>`:''}<span class="tt"><b>${esc(x.n||'Untitled')}</b><small>${esc(x.a||'')}</small></span></div>`;
-    else body+=`<div class="pf-row" style="--i:${Math.min(i,12)}"><span class="pcv"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span><span class="pt"><b>${esc(x.n||'Untitled')}</b><small>${esc([x.a,when].filter(Boolean).join(' · '))}</small></span><span class="pr">${m!=null?`<span class="pme" title="Your rating">you ${fmt(m)}</span>`:''}<b class="pn">${fmt(x.r)}</b></span></div>`;
+    if(grid)body+=`<div class="pf-cv" style="--d:${Math.round(i*step)}ms;--c:${accHue(x.n)}" title="${esc([x.n||'Untitled',accArtText(x),when].filter(Boolean).join(' · '))}"><b class="ltr" aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}<span class="sc">${fmt(x.r)}</span>${m!=null?`<span class="me" title="Your rating">you ${fmt(m)}</span>`:''}<span class="tt"><b>${esc(x.n||'Untitled')}</b><small>${esc(accArtText(x))}</small></span></div>`;
+    else body+=`<div class="pf-row" style="--d:${Math.round(i*step)}ms"><span class="pcv"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span><span class="pt"><b>${esc(x.n||'Untitled')}</b><small>${esc([accArtText(x),when].filter(Boolean).join(' · '))}</small></span><span class="pr">${m!=null?`<span class="pme" title="Your rating">you ${fmt(m)}</span>`:''}<b class="pn">${fmt(x.r)}</b></span></div>`;
   });
   return `<div class="pf-list${an}">
     ${self?'':`<div class="pf-tabs sm" role="group" aria-label="Filter"><button data-act="pfilter" data-v="all" aria-pressed="${fl==='all'}">All<span class="c">${all.length}</span></button><button data-act="pfilter" data-v="shared" aria-pressed="${fl==='shared'}">You both rated<span class="c">${sh}</span></button><button data-act="pfilter" data-v="only" aria-pressed="${fl==='only'}">Not rated by you<span class="c">${only}</span></button></div>`}
@@ -6033,7 +6083,7 @@ const vlWrap=(s,n)=>{const w=String(s||'').split(/\s+/),out=[''];for(const x of 
 function vlLabel(it,P){
   if(!it)return `<text class="t1" x="300" y="242">${esc(vlWrap(P.name,18)[0])}</text><text class="t2" x="300" y="264">Rated albums</text><text class="t3" x="300" y="338">${VL.items.length}</text><text class="t4" x="300" y="355">tap a cover</text>`;
   const L=vlWrap(it.n||'Untitled',17);
-  return `<text class="t1" x="300" y="236">${esc((it.a||'').slice(0,22))}</text>`+L.map((l,i)=>`<text class="t2" x="300" y="${254+i*15}">${esc(l)}</text>`).join('')+`<text class="t3" x="300" y="338">${fmt(it.r)}</text><text class="t4" x="300" y="355">out of 10</text>`;
+  return `<text class="t1" x="300" y="236">${esc(accArtText(it).slice(0,22))}</text>`+L.map((l,i)=>`<text class="t2" x="300" y="${254+i*15}">${esc(l)}</text>`).join('')+`<text class="t3" x="300" y="338">${fmt(it.r)}</text><text class="t4" x="300" y="355">out of 10</text>`;
 }
 function vlLayout(n){
   const R1=284,R0=100,cx=300,cy=300,at=(r,th)=>[cx+r*Math.cos(th-Math.PI/2),cy+r*Math.sin(th-Math.PI/2)];
@@ -6064,7 +6114,7 @@ function accVinylHtml(P){
   let grooves='';for(let r=104;r<=288;r+=3.6)grooves+=`<circle cx="300" cy="300" r="${r.toFixed(1)}"/>`;
   const beads=items.map((x,i)=>{
     const[px,py]=pts[i]||[300,300],u=accCover(x),ring=(1+x.r*.22).toFixed(2),op=(.3+x.r*.07).toFixed(2);
-    return `<g transform="translate(${px.toFixed(1)} ${py.toFixed(1)})"><g class="vl-b" data-i="${i}" style="--i:${Math.min(i,70)}" tabindex="0" role="button" aria-label="${esc(x.n||'Untitled')}${x.a?' by '+esc(x.a):''}, rated ${fmt(x.r)}"><circle r="${(d/2).toFixed(1)}" fill="hsl(${accHue(x.n)} 45% 32%)"/>${big?`<text y="${(d*.16).toFixed(1)}" text-anchor="middle" style="font:800 ${(d*.45).toFixed(0)}px Archivo,var(--display);fill:rgb(255 255 255 / .8);pointer-events:none">${accIni(x.n)}</text>`:''}${u?`<image href="${esc(u)}" x="${(-d/2).toFixed(1)}" y="${(-d/2).toFixed(1)}" width="${d.toFixed(1)}" height="${d.toFixed(1)}" preserveAspectRatio="xMidYMid slice" clip-path="url(#vlc)"/>`:''}<circle class="vl-ring" r="${(d/2).toFixed(1)}" stroke-width="${ring}" stroke-opacity="${op}"/></g></g>`}).join('');
+    return `<g transform="translate(${px.toFixed(1)} ${py.toFixed(1)})"><g class="vl-b" data-i="${i}" style="--d:${Math.round(450+i*Math.min(16,1300/items.length))}ms" tabindex="0" role="button" aria-label="${esc(x.n||'Untitled')}${accArtText(x)?' by '+esc(accArtText(x)):''}, rated ${fmt(x.r)}"><circle r="${(d/2).toFixed(1)}" fill="hsl(${accHue(x.n)} 45% 32%)"/>${big?`<text y="${(d*.16).toFixed(1)}" text-anchor="middle" style="font:800 ${(d*.45).toFixed(0)}px Archivo,var(--display);fill:rgb(255 255 255 / .8);pointer-events:none">${accIni(x.n)}</text>`:''}${u?`<image href="${esc(u)}" x="${(-d/2).toFixed(1)}" y="${(-d/2).toFixed(1)}" width="${d.toFixed(1)}" height="${d.toFixed(1)}" preserveAspectRatio="xMidYMid slice" clip-path="url(#vlc)"/>`:''}<circle class="vl-ring" r="${(d/2).toFixed(1)}" stroke-width="${ring}" stroke-opacity="${op}"/></g></g>`}).join('');
   return `<div class="vl${anim}" style="--h:${h}"><div class="vl-wrap"><svg class="vl-svg" viewBox="0 0 600 600" role="group" aria-label="Every album ${esc(P.name)} rated, best at the outer edge">
     <defs><clipPath id="vlc" clipPathUnits="objectBoundingBox"><circle cx=".5" cy=".5" r=".5"/></clipPath></defs>
     <circle cx="300" cy="300" r="296" fill="#0c0c0f"/><circle cx="300" cy="300" r="296" fill="none" stroke="rgb(255 255 255 / .14)" stroke-width="1.5"/>
@@ -6084,7 +6134,43 @@ function vlShow(i){
 }
 document.addEventListener('pointerover',ev=>{if(ev.pointerType==='touch')return;const b=ev.target.closest&&ev.target.closest('.vl-b');if(b)vlShow(+b.dataset.i)});
 document.addEventListener('pointerout',ev=>{if(ev.pointerType==='touch')return;const v=ev.target.closest&&ev.target.closest('.vl');if(v&&!(ev.relatedTarget&&ev.relatedTarget.closest&&ev.relatedTarget.closest('.vl-b')))vlShow(VL.pin)});
-document.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('.vl-b');if(!b)return;const i=+b.dataset.i;VL.pin=VL.pin===i?-1:i;const v=b.closest('.vl');if(v)v.classList.toggle('hold',VL.pin>=0);vlShow(VL.pin)});
+/* click a cover on the record: it lifts off the groove and grows into the middle so you can see it; click anywhere or press Escape to put it back */
+function vlPopHtml(x){
+  const u=accCover(x),big=u.replace(/\/front-250$/,'/front-500'),when=x.d&&fmtRd(x.d)?'Rated '+fmtRd(x.d):'';
+  const segs=Array.from({length:10},(_,i)=>`<i><u style="width:${Math.round(Math.max(0,Math.min(1,x.r-i))*100)}%"></u></i>`).join('');
+  return `<div class="vl-bk"></div><div class="vl-pop" role="dialog" aria-label="${esc(x.n||'Untitled')}" tabindex="-1"><div class="vl-pc" style="--c:${accHue(x.n)}"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(big)}" data-s="${esc(u)}" alt="" decoding="async" onerror="if(this.src!==this.dataset.s){this.src=this.dataset.s}else{this.remove()}">`:''}</div><div class="vl-pm"><h4>${esc(x.n||'Untitled')}</h4><small>${esc(accArtText(x))}</small><div class="vl-pr"><b>${fmt(x.r)}</b><span class="vl-seg" role="img" aria-label="Rated ${fmt(x.r)} out of 10">${segs}</span></div>${when?`<small class="vl-w">${esc(when)}</small>`:''}</div></div>`;
+}
+function vlClose(quick){
+  const v=document.querySelector('.vl');if(!v)return;
+  const pop=v.querySelector('.vl-pop'),bk=v.querySelector('.vl-bk'),lifted=v.querySelector('.vl-b.lift');
+  v.classList.remove('hold');
+  const done=()=>{if(pop)pop.remove();if(bk)bk.remove();if(lifted)lifted.classList.remove('lift')};
+  if(!pop||quick||matchMedia('(prefers-reduced-motion:reduce)').matches){done();return}
+  pop.classList.add('out');if(bk)bk.classList.add('out');setTimeout(done,260);
+  if(lifted){try{lifted.focus({preventScroll:true})}catch(e){}}
+}
+function vlOpen(b){
+  const v=b.closest('.vl'),it=VL.items[+b.dataset.i];if(!v||!it)return;
+  vlClose(true);
+  const vr=v.getBoundingClientRect(),wr=v.querySelector('.vl-wrap').getBoundingClientRect(),br=b.getBoundingClientRect(),W=Math.round(Math.min(300,vr.width*.78));
+  v.insertAdjacentHTML('beforeend',vlPopHtml(it));
+  const pop=v.querySelector('.vl-pop');
+  pop.style.setProperty('--w',W+'px');
+  pop.style.left=Math.round(wr.left+wr.width/2-vr.left)+'px';pop.style.top=Math.round(wr.top+wr.height/2-vr.top)+'px';
+  pop.style.setProperty('--fx',Math.round(br.left+br.width/2-(wr.left+wr.width/2))+'px');
+  pop.style.setProperty('--fy',Math.round(br.top+br.height/2-(wr.top+wr.height/2))+'px');
+  pop.style.setProperty('--fs',(br.width/W||.15).toFixed(3));
+  b.classList.add('lift');v.classList.add('hold');
+  try{pop.focus({preventScroll:true})}catch(e){}
+}
+document.addEventListener('click',ev=>{
+  const t=ev.target;if(!t||!t.closest)return;
+  if(t.closest('.vl-pop,.vl-bk')){vlClose();return}
+  const b=t.closest('.vl-b');
+  if(!b){if(document.querySelector('.vl-pop'))vlClose();return}
+  vlOpen(b);
+});
+document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&document.querySelector('.vl-pop'))vlClose()});
 document.addEventListener('keydown',ev=>{if((ev.key==='Enter'||ev.key===' ')&&ev.target.classList&&ev.target.classList.contains('vl-b')){ev.preventDefault();ev.target.dispatchEvent(new MouseEvent('click',{bubbles:true}))}});
 function profileHtml(P,mine){
   const st=accStats(P.items),match=P.self?null:accMatch(P.items,mine);

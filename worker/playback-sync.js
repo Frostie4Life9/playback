@@ -728,7 +728,7 @@ async function acct(request, env, url) {
       if (!x || (x.kind !== 'a' && x.kind !== 's') || typeof x.t !== 'string' || !x.t) continue;
       const r = Number(x.r); if (!(r > 0 && r <= 10)) continue;
       const t = x.t.slice(0, 200), id = x.kind + '|' + t; if (seen.has(id)) continue; seen.add(id);
-      items.push({ kind: x.kind, k: typeof x.k === 'string' ? x.k.slice(0, 80) : '', t, r: Math.round(r * 2) / 2, n: String(x.n || '').slice(0, 120), a: String(x.a || '').slice(0, 80), i: cleanImg(x.i), d: cleanDay(x.d) });
+      items.push({ kind: x.kind, k: typeof x.k === 'string' ? x.k.slice(0, 80) : '', t, r: Math.round(r * 2) / 2, n: String(x.n || '').slice(0, 120), a: String(x.a || '').slice(0, 160), i: cleanImg(x.i), d: cleanDay(x.d) });
     }
     await env.CATALOG.batch([
       env.CATALOG.prepare('DELETE FROM acct_ratings WHERE uid = ?1').bind(me.uid),
