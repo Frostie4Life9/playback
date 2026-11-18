@@ -2283,6 +2283,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+   {v:'2026.11.18-q', note:'SETTINGS CAN NO LONGER GO BLANK: if one card in Settings fails to load, the page still opens and that card shows a short message saying what went wrong, instead of the Settings button doing nothing.'},
   {v:'2026.11.18-p', note:'SORT THE BIG RECORD: under the big record on an account page there is a row of orders: Highest (the usual, best at the outer edge), Lowest, Newest rated, Oldest rated and A–Z by artist. Pick one and the covers pop back onto the groove in the new order, with the caption telling you which end is the outer edge. It works on your page and on friends\' pages, and goes back to Highest when you leave.'},
   {v:'2026.11.18-o', note:'ALBUM PAGES FOLLOW THE ALBUM COLOR: the pop-up you get from a cover on the big record and the Song ratings sheet are redesigned like the Music page\'s sleeves. The whole top takes the album\'s own color (the same one the Music page uses, or read from the cover for albums not in your log), the cover sits with a record sliding out from behind it, the rating bar and buttons use the banner\'s ink, and the song ratings sit on a wash of the album color with white bars. The record slides out when the page opens.'},
   {v:'2026.11.18-n', note:'ALBUM COLORS ON THE BIG RECORD: on account pages, each cover on the big record now has a ring in that album\'s own color, the same color the Music page gives it, instead of the same teal on every cover. Albums not in your log get their color read from the cover. The ring is still thicker for higher ratings, and turns white when you hover or pick a cover.'},
@@ -7249,24 +7250,27 @@ function accCard(){
   return `<div class="setcard"><h3>Account</h3><p class="note">${accOn()?'Signed in as '+esc(ACC.me.name)+'. Your page and ratings are on the Account page; your photo, color, friends, sharing and sign-in options are in its Settings tab.':'Sign in with Google to get a page, add friends and see their ratings.'}</p><div class="tools"><button class="btn primary" data-act="view" data-v="account">Open Account</button>${accOn()?'<button class="btn" data-act="view" data-v="account" data-tab="c">Account settings</button>':''}</div></div>`;
 }
 
+/* one Settings card that throws must not blank the whole page: show what failed in its place */
+function sfe(name,fn){try{return fn()}catch(e){try{console.error('Settings card '+name,e)}catch(_){}
+  return '<p class="note" role="alert">This part of Settings could not load ('+esc(name)+': '+esc(String(e&&e.message||e))+'). The rest of Settings still works.</p>'}}
 function settingsView(){
-  const acct=accCard()+sugCard()+usersCard();
+  const acct=sfe('accCard',accCard)+sfe('sugCard',sugCard)+sfe('usersCard',usersCard);
   return `
   <section class="settings set" aria-labelledby="set-h">
     <h2 id="set-h">Settings</h2>
     <p class="note">Setup and housekeeping. Everything here syncs with the rest of your log.</p>
     <div class="set-col set-lib"><h3 class="set-gh">Library &amp; imports</h3>
-    <div class="setcard"><h3>Import source</h3>${srcSide()}</div>
-    <div class="setcard"><h3>Spotify</h3>${spSide()}</div>
-    <div class="setcard"><h3>Rate Your Music</h3>${rymSide()}${rtSide()}</div>
-    ${window.PB_OWNER?`<div class="setcard"><h3>Rating dates</h3>${rdSide()}</div>`:''}
+    <div class="setcard"><h3>Import source</h3>${sfe('srcSide',srcSide)}</div>
+    <div class="setcard"><h3>Spotify</h3>${sfe('spSide',spSide)}</div>
+    <div class="setcard"><h3>Rate Your Music</h3>${sfe('rymSide',rymSide)}${sfe('rtSide',rtSide)}</div>
+    ${window.PB_OWNER?`<div class="setcard"><h3>Rating dates</h3>${sfe('rdSide',rdSide)}</div>`:''}
     </div>
     ${acct.trim()?`<div class="set-col set-acct"><h3 class="set-gh">Account &amp; community</h3>${acct}</div>`:''}
     <div class="set-col set-data"><h3 class="set-gh">Your data</h3>
     <div class="setcard"><h3>Sync &amp; data</h3>
     <details id="syncpanel" ${UI.syncOpen?'open':''}>
       <summary class="label" style="cursor:pointer">Sync</summary>
-      ${syncGuide()}
+      ${sfe('syncGuide',syncGuide)}
       <form class="panel" data-form="sync">
         <p class="note">Connect your playback-sync Worker so your phone and PC share one log. Changes upload a moment after you make them, and the app checks for newer data whenever you open it.</p>
         <label class="label" for="sync-url">Worker URL</label>
@@ -7277,8 +7281,8 @@ function settingsView(){
         <span class="msg ${SYS.status==='error'?'err':''}">${esc(SYS.msg||'')}</span>
       </form>
     </details>
-    ${statSide()}
-    ${expSide()}
+    ${sfe('statSide',statSide)}
+    ${sfe('expSide',expSide)}
     <details id="backup" ${UI.bkOpen?'open':''}>
       <summary class="label" style="cursor:pointer">Backup &amp; restore</summary>
       <p class="note">Your log${SV.bytes?' ('+mb(SV.bytes)+')':''} is saved in this browser${SV.idb?'\u2019s database':''}${ownSync()?' and on your Worker':accSync()?' and under your account':' only'}. ${syncOn()?'':'Download a backup file now and then and keep it somewhere safe, like your email or a cloud drive. '}Paste or load a backup to restore it.${bkGet().last?' Last backup from this device: '+esc(new Date(bkGet().last).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}))+'.':''}</p>
