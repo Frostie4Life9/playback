@@ -2100,6 +2100,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-ar', note:'STEADY RECORD: tapping a bar under Overview (a score or a month) no longer makes the big rated-albums record jump. Every tap redrew the page, which started the record\u2019s slow spin over from its first angle; it now keeps turning from wherever it was.'},
   {v:'2026.11.17-aq', note:'PAGE TRANSITIONS AND A STEADIER FRIENDS SHEET: switching between Music, Screen, Collection, Settings and Account now slides the new page in from the side it sits on in the top bar while it fades up (going back toward Music slides the other way). Opening Friends no longer plays twice: the sheet used to slide up, then slide up again a moment later when the list finished loading; now it slides up once and the list fills in without moving.'},
   {v:'2026.11.17-ap', note:'ALBUMS WALL: EVERYTHING, GROUPED BY SCORE, TAP FOR DETAILS. The Albums tab no longer stops at 60 and has no Show more button: every album is on the wall and the covers grow to use the width of your screen. Sorted by Highest or Lowest, the wall is split into rows headed by the exact score (10, 9.5, 9 and so on) with how many albums got it. Tap any cover (or a row in the list view) and a pop-up opens with the big cover, the rating, the day it was rated, and on your own page every song with its rating bar, how many songs you rated and the song average next to the album rating. On a friend\u2019s page it shows their rating and date and, if you rated it too, yours; their song ratings stay private. Close with the X, by tapping outside, or Escape.'},
   {v:'2026.11.17-ao', note:'ACCOUNT SETTINGS TAB AND A TIDIER SETTINGS PAGE: your Account page has a fourth tab, Settings, that holds Friends (your code, add by code, requests) and Your account (photo, color, name, sharing, owner login, sync, sign out, delete), so they no longer sit under Overview, Albums and Shows & films. A friend\u2019s page does not show it. The regular Settings page is now grouped under three headings: Library & imports (import source, Spotify, Rate Your Music, rating dates), Account & community (the account shortcut, friend suggestions, people using Playback) and Your data (sync, numbers, export, backup). The groups sit side by side on a wide monitor, in two columns on a tablet and stacked on a phone. The Account card in Settings now has an Account settings button that opens straight to the new tab.'},
@@ -5181,6 +5182,7 @@ function pageIn(dir){
 function render(){
   lsHeal();
   const vk=UI.view||UI.tab,vPrev=UI.vKey;UI.vKey=vk;
+  const vlT=(()=>{const el=document.querySelector('.vl-spin'),an=el&&el.getAnimations&&el.getAnimations()[0];return an?an.currentTime:null})();   /* where the record is in its slow spin, so a redraw does not snap it back to the start */
   const ll=document.getElementById('llist'),llTop=ll?ll.scrollTop:0,llTab=UI.llTab;UI.llTab=UI.tab;
   let ohg=null;{const oh=document.querySelector('.hero[data-aid]'),m=oh&&oh.querySelector('.hmesh');   /* the old artist's colors, to fade out from */
     if(m){const g=m.cloneNode(true);g.classList.add('hghost');g.dataset.aid=oh.dataset.aid;
@@ -5195,6 +5197,7 @@ function render(){
   if(flipOn)SX.flip(document.body,'#llist .tile,.sheet .group.sleeve',()=>keepImgs(renderMain),{dur:420,key:el=>el.dataset.acol?'g'+el.dataset.acol:el.dataset.g?'a'+el.dataset.g:el.dataset.id?'t'+el.dataset.id:null});
   else keepImgs(renderMain);
   slObserve();slPulseNow();UI.rAnim=null;accAfter();pfFit();
+  if(vlT!=null&&vPrev===vk){const el=document.querySelector('.vl-spin'),an=el&&el.getAnimations&&el.getAnimations()[0];if(an)an.currentTime=vlT}
   if(vPrev&&vPrev!==vk&&!noMotion())pageIn(Math.sign((VORD[vk]??0)-(VORD[vPrev]??0)));
   if(swGo&&!UI.toAlb&&!UI.toSheet)window.scrollTo({top:0,behavior:noMotion()?'auto':'smooth'});   /* a different artist or title: start at the top, not wherever the last one was scrolled */
   if(swGo&&ohg&&!noMotion()){const nh=document.querySelector('.hero[data-aid]');
