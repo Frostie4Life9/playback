@@ -2100,6 +2100,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-aw', note:'FRIEND PAGES ANIMATE AGAIN: opening a friend\u2019s page the first time showed a \u201cLoading\u2026\u201d card, and that first draw used up the page\u2019s entrance animations, so when the friend\u2019s ratings arrived a moment later the hero, covers, record and cards just appeared. The animations are now saved until the page has really been drawn.'},
   {v:'2026.11.17-av', note:'FRIENDS CODE STAYS PUT: your friend code no longer pops in a second time when the Friends list finishes loading (it had its own entrance animation that replayed on every redraw); the sheet\u2019s slide-up is the only entrance now. The same goes for the code on the Account Settings tab.'},
   {v:'2026.11.17-au', note:'FIX: closing the month panel no longer makes the score hint above it flash; only the hint that belongs to the panel you closed fades in.'},
   {v:'2026.11.17-at', note:'SMOOTHER FOLD: when a score or month detail panel closes, it now shrinks to exactly the size of the \u201cTap a bar\u2026\u201d line that replaces it and that line fades in, so the cards below no longer rise too far and then snap back down.'},
@@ -6513,7 +6514,9 @@ function friendView(){
     h=`<section class="settings pf" aria-label="${esc(d.name)}’s page">${back}${profileHtml(P,accItems())}</section>`;
   }else if(c.err)h=`<section class="settings pf">${back}<div class="setcard"><h3>${esc(known?known.name:'Friend')}</h3><p class="note">${esc(c.err)}</p></div></section>`;
   else h=`<section class="settings pf">${back}<div class="pf-hero" style="--h:${accHueOf(known||{})}"><div class="pf-av${accPicOf(known)?' pic':''}" aria-hidden="true">${accFace(known||{})}</div><div class="pf-who"><h2>${esc(known?known.name:'Friend')}</h2><span class="pf-sub">Loading…</span></div></div></section>`;
-  UI.pAnim=false;UI.pAnimL=false;UI.pAnimF=false;UI.pAnimI=false;UI.pHintIn='';return h;
+  /* while the friend's page is still loading (nothing but the "Loading…" hero was drawn) keep the entrance flags, so the real page animates in when its data arrives; clearing them here is why nothing animated on a friend's page the first time you opened it */
+  if(c.data||c.err||!accOn()){UI.pAnim=false;UI.pAnimL=false;UI.pAnimF=false;UI.pAnimI=false;UI.pHintIn=''}
+  return h;
 }
 /* a small card in Settings that points at the Account page */
 function accCard(){
