@@ -923,10 +923,15 @@ details.addart .add{border-top:1px solid var(--line)}
 .pf-st{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);font:700 22px/1 var(--display);transition:transform .15s}
 .pf-st:active{transform:scale(.92)}
 .pf-st:disabled{opacity:.3}
-.pf-covs{display:flex;gap:8px;overflow:hidden}
-.pf-mc{width:56px;height:56px;flex:none;border-radius:9px}
+.pf-covs{display:grid;grid-template-columns:repeat(var(--cols,6),minmax(0,1fr));gap:8px}
+.pf-covs .pf-mc{width:100%;height:auto;aspect-ratio:1;border-radius:9px}
+.pf-more{border:1px dashed var(--line);background:transparent;color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0;cursor:pointer;transition:border-color .2s,transform .15s}
+.pf-more b{font:800 15px var(--mono);color:var(--ink)}
+.pf-more small{font:500 10px var(--mono);color:var(--muted)}
+.pf-more:hover{border-color:var(--accent)}
+.pf-more:active{transform:scale(.94)}
 .pf-go{display:flex;gap:8px;flex-wrap:wrap}
-@media (prefers-reduced-motion:no-preference){.pf-info.pf-opn{animation:pfup .3s cubic-bezier(.2,.8,.2,1) both}.pf-info.pf-opn .pf-mc{animation:pfpop .35s cubic-bezier(.3,1.35,.5,1) both}.pf-info.pf-opn .pf-mc:nth-child(2){animation-delay:.04s}.pf-info.pf-opn .pf-mc:nth-child(3){animation-delay:.08s}.pf-info.pf-opn .pf-mc:nth-child(4){animation-delay:.12s}.pf-info.pf-opn .pf-mc:nth-child(n+5){animation-delay:.16s}}
+@media (prefers-reduced-motion:no-preference){.pf-info.pf-opn{animation:pfup .3s cubic-bezier(.2,.8,.2,1) both}.pf-info.pf-opn .pf-mc{animation:pfpop .35s cubic-bezier(.3,1.35,.5,1) both;animation-delay:var(--d,0ms)}}
 @keyframes pfpop{from{opacity:0;transform:scale(.86) translateY(8px)}to{opacity:1;transform:none}}
 @keyframes pfwide{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 @media (prefers-reduced-motion:no-preference){
@@ -2030,6 +2035,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-al', note:'COVER PREVIEWS FILL THE PANEL: the score and month details on Overview used to show just the first eight covers. They now fill two rows on a phone and three on a wider screen, with more columns the wider the window (it refits when you resize), and when there are more albums than fit the last tile says how many more (+33 more) and opens them in the Albums tab. The covers also fade in at an even pace.'},
   {v:'2026.11.17-ak', note:'OVERVIEW: TAP THE BARS. Your stat tiles now also show Songs rated (with its average) and Albums rated in this year (with how it compares to last year); on a friend\u2019s page the songs tile appears once their copy has published it. Tap any score bar under the tiles to see how many ratings got that score, the albums and shows & films among them, and their covers, then See the albums takes you to the Albums tab filtered to exactly that score. Tap any bar in Albums rated per month to see that month: how many albums, their average, the best one and their covers, step to the previous or next month with the arrows, and See them in Albums opens the Albums tab on that month, newest first. The Albums tab\u2019s Filters panel has a new Exact score row (1 to 10, with counts). The Worker needs the new playback-sync.js (it takes it from GitHub on its own) to keep your song count for friends to see.'},
   {v:'2026.11.17-aj', note:'ONE ALBUM, ONE RATING: an album made by several artists (like An Evening With Silk Sonic on Bruno Mars and Silk Sonic) now counts once in your album total, averages, score bars, record and Albums wall, and lists every artist on it (Bruno Mars, Anderson .Paak, Silk Sonic) instead of showing up once per artist. It is published once now, and a friend whose copy still sends one row per artist is merged the same way, so the counts match either way. Taste match still lines up albums whichever of the artists you each have. EVEN FADE-IN: the cover wall, list and the big record used to fade in one by one and then the rest all at once after about the 15th to 70th; every cover now fades in at the same steady pace, whatever the count. POP-OUT COVERS: tap an album on the big record and it lifts off the groove and grows into the middle, showing a big cover, the title, every artist, the exact score as a bar and the day you rated it. Tap anywhere or press Escape to put it back. The Worker needs the new playback-sync.js (it takes it from GitHub on its own) so a list of several artists is not cut short.'},
   {v:'2026.11.17-ai', note:'ACCOUNT PAGE SECTIONS AND A BETTER ALBUMS VIEW: your Account page (and a friend\u2019s page) now has three tabs under the top card: Overview, Albums and Shows & films, so the page is no longer one very long list. OVERVIEW keeps the stat tiles, the score bars and the big rated-albums record and adds three cards: Scoring habits (your most common score, how many perfect 10s, and the share rated 8 or higher), Albums rated per month (a bar for every month since your first dated rating, with your busiest month and how many months you rated something) and Top artists (your five highest-averaging artists with two or more albums). ALBUMS is a wall of covers with the exact rating on each one (on a friend\u2019s page your own rating sits in the corner of the albums you both rated). Sort by Highest, Lowest, Newest rated, Oldest rated or A\u2013Z; the Filters button opens a score filter (10, 9+, 8+, 7+, Under 7) and a Year rated filter, and picking a year shows twelve month tiles you can tap to see just that month, with the albums grouped under month headings (the count and average for each month) whenever you sort by date. A switch beside Filters flips between the cover wall and the old list. Shows & films keeps the list with the same sorting and filters. The wall, the month tiles and the new cards all animate in. Nothing about what is published changed, so this works on friends\u2019 pages straight away.'},
@@ -6004,7 +6010,15 @@ function accHeroHtml(P,stats,match,extra){
     <div class="pf-who"><h2>${esc(P.name)}</h2><span class="pf-sub">${P.n} rating${P.n===1?'':'s'} shared · ${P.friends} friend${P.friends===1?'':'s'}${match&&match.n&&match.n<3?` · ${match.n} in common`:''}</span>${extra||''}</div>${ring}</div>`;
 }
 const accBucket=r=>Math.min(10,Math.max(1,Math.round(r)));
-const pfMini=x=>{const u=accCover(x);return `<span class="pcv pf-mc" title="${esc((x.n||'Untitled')+' · '+fmt(x.r))}"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span>`};
+const pfMini=(x,d)=>{const u=accCover(x);return `<span class="pcv pf-mc" style="--d:${Math.round(d||0)}ms" title="${esc((x.n||'Untitled')+' · '+fmt(x.r))}"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span>`};
+/* how many covers fit in the details panels: 2 rows on a phone, 3 on a wider screen, and more columns the wider the window */
+function pfCap(){const w=Math.min(window.innerWidth||390,760),cols=Math.max(4,Math.round((w-76)/62));return{cols,rows:w<520?2:3}}
+/* a block of covers that fills those rows; when there are more albums than fit, the last tile says how many more and opens them (attrs = the button that opens the full list) */
+function pfCovs(list,attrs){
+  const c=pfCap(),cap=c.cols*c.rows;UI.pCols=c.cols;UI.pRows=c.rows;
+  const more=list.length>cap,show=more?list.slice(0,cap-1):list,step=Math.min(30,500/Math.max(1,cap));
+  return `<div class="pf-covs" style="--cols:${c.cols}">${show.map((x,i)=>pfMini(x,i*step)).join('')}${more?`<button class="pcv pf-mc pf-more" ${attrs} style="--d:${Math.round((cap-1)*step)}ms" aria-label="${list.length-show.length} more albums. Open them in Albums"><b>+${list.length-show.length}</b><small>more</small></button>`:''}</div>`;
+}
 function accStatsHtml(st,P){
   const f=v=>v?v.toFixed(1):'–',mx=Math.max(1,...st.hist),an=pfAn(),b=accBase(P.items),yr=new Date().getFullYear();
   const inY=y=>b.filter(x=>x.kind==='a'&&x.d&&x.d.slice(0,4)===String(y)).length,ny=inY(yr),py=inY(yr-1);
@@ -6018,7 +6032,7 @@ function accStatsHtml(st,P){
     const all=b.filter(x=>accBucket(x.r)===sel),al=all.filter(x=>x.kind==='a').sort((p,q)=>String(q.d||'').localeCompare(String(p.d||''))||q.r-p.r),nS=all.length-al.length;
     info=`<div class="pf-info${UI.pAnimI?' pf-opn':''}"><div class="pf-ih"><b>${who} gave ${all.length} rating${all.length===1?'':'s'} a ${sel}</b><span>${fmt(sel===1?0.5:sel-.5)}–${sel}</span></div>
       <p class="note">${al.length} album${al.length===1?'':'s'} · ${nS} show${nS===1?'':'s'} or film${nS===1?'':'s'} · ${Math.round(100*all.length/Math.max(1,b.length))}% of all ratings</p>
-      ${al.length?`<div class="pf-covs">${al.slice(0,8).map(pfMini).join('')}</div>`:''}
+      ${al.length?pfCovs(al,`data-act="pgosc" data-v="${sel}" data-k="a"`):''}
       <div class="pf-go">${al.length?`<button class="btn" data-act="pgosc" data-v="${sel}" data-k="a">See the albums →</button>`:''}${nS?`<button class="btn" data-act="pgosc" data-v="${sel}" data-k="s">See shows &amp; films →</button>`:''}</div></div>`;
   }else info=`<p class="note pf-hint">Tap a bar to see what ${P.self?'you':esc(P.name)} gave that score.</p>`;
   return `<div class="pf-tiles${an}">${tiles}</div>
@@ -6068,7 +6082,7 @@ function accInsightsHtml(P){
     if(si>=0){
       const mk=shown[si],ls=dated.filter(x=>x.d.slice(0,7)===mk.k).sort((p,q)=>q.r-p.r||String(p.n).localeCompare(String(q.n))),pv=shown[si-1],nx=shown[si+1];
       monInfo=`<div class="pf-info${UI.pAnimI?' pf-opn':''}"><div class="pf-ih"><button class="pf-st" data-act="pmo" data-v="${pv?pv.k:''}" aria-label="Previous month"${pv?'':' disabled'}>‹</button><b>${esc(pMonthName(mk.k))}</b><button class="pf-st" data-act="pmo" data-v="${nx?nx.k:''}" aria-label="Next month"${nx?'':' disabled'}>›</button></div>
-        ${ls.length?`<p class="note">${ls.length} album${ls.length===1?'':'s'} · avg ${accAvg(ls).toFixed(1)} · best: ${esc(ls[0].n||'Untitled')} (${fmt(ls[0].r)})</p><div class="pf-covs">${ls.slice(0,8).map(pfMini).join('')}</div><div class="pf-go"><button class="btn" data-act="pgomon" data-v="${mk.k}">See ${ls.length===1?'it':'them'} in Albums →</button></div>`:`<p class="note">Nothing rated this month.</p>`}</div>`;
+        ${ls.length?`<p class="note">${ls.length} album${ls.length===1?'':'s'} · avg ${accAvg(ls).toFixed(1)} · best: ${esc(ls[0].n||'Untitled')} (${fmt(ls[0].r)})</p>${pfCovs(ls,`data-act="pgomon" data-v="${mk.k}"`)}<div class="pf-go"><button class="btn" data-act="pgomon" data-v="${mk.k}">See ${ls.length===1?'it':'them'} in Albums →</button></div>`:`<p class="note">Nothing rated this month.</p>`}</div>`;
     }else monInfo=`<p class="note pf-hint">Tap a bar to see that month.</p>`;
     h+=`<div class="pf-card${an}" style="--i:${n++}"><h3>Albums rated per month<small>${esc(lab(shown[0].k))} → ${esc(lab(shown[shown.length-1].k))}</small></h3>
       <div class="pf-act${an}" role="group" aria-label="Albums rated each month. Tap a bar for details.">${shown.map((x,i)=>`<button data-act="pmo" data-v="${x.k}" aria-pressed="${x.k===sk}" aria-label="${esc(pMonthName(x.k))}: ${x.n} album${x.n===1?'':'s'}" style="--i:${i}"><i style="--v:${(x.n/mx*100).toFixed(0)}%" class="${x.k===best.k?'top':''}"></i></button>`).join('')}</div>
@@ -6219,6 +6233,8 @@ document.addEventListener('click',ev=>{
   vlOpen(b);
 });
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&document.querySelector('.vl-pop'))vlClose()});
+let pfRz=null;
+window.addEventListener('resize',()=>{clearTimeout(pfRz);pfRz=setTimeout(()=>{if(document.querySelector('.pf-covs')){const c=pfCap();if(c.cols!==UI.pCols||c.rows!==UI.pRows)render()}},200)});
 document.addEventListener('keydown',ev=>{if((ev.key==='Enter'||ev.key===' ')&&ev.target.classList&&ev.target.classList.contains('vl-b')){ev.preventDefault();ev.target.dispatchEvent(new MouseEvent('click',{bubbles:true}))}});
 function profileHtml(P,mine){
   const st=accStats(P.items),match=P.self?null:accMatch(P.items,mine);
