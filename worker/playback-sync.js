@@ -1,5 +1,5 @@
 /* =========================================================
-   Playback — sync  (worker version 18, 2026.11.18)
+   Playback — sync  (worker version 19, 2026.11.18)
    Cloudflare Worker + KV. Same setup pattern as protocol-sync
    and gamelog-sync.
 
@@ -256,6 +256,43 @@ async function spCatalog(env, url) {
   return new Response(body, { status: r.status, headers: h });
 }
 
+/* Similar artists and songs (version 19). Last.fm's listening-based matches, read-only, with the key kept in the
+   LASTFM_KEY secret. Answers are saved in the same D1 catalog table for 30 days (an empty answer for 1 day), so a
+   repeat lookup by anyone costs no Last.fm call and no daily-cap count. Only a fresh lookup counts toward the cap. */
+const SIM_TTL = 30 * 86400, SIM_EMPTY_TTL = 86400, SIM_CAP = 150;
+async function similarGet(env, url, who) {
+  if (!env.LASTFM_KEY) return reply({ error: 'no lastfm key' }, 409);
+  if (!env.CATALOG) return reply({ error: 'similar needs the CATALOG database' }, 409);
+  const g = k => (url.searchParams.get(k) || '').replace(/[\u0000-\u001f]/g, '').trim().slice(0, 120);
+  const type = url.searchParams.get('type') === 'track' ? 'track' : 'artist';
+  const artist = g('artist'), track = g('track');
+  if (!artist || (type === 'track' && !track)) return reply({ error: 'nothing to look up' }, 400);
+  const ckey = 'lfm:' + type + ':' + artist.toLowerCase() + (type === 'track' ? '|' + track.toLowerCase() : '');
+  const hit = await env.CATALOG.prepare('SELECT v FROM catalog WHERE k = ?1 AND exp > ?2').bind(ckey, Date.now()).first('v').catch(() => null);
+  if (hit) return new Response(hit, { status: 200, headers: Object.assign({ 'x-pb-cache': 'hit' }, JSON_H) });
+  await acctInit(env);
+  if (!(await rlHit(env, 'sim:' + who, SIM_CAP, 86400))) return reply({ error: 'daily limit' }, 429);
+  const q = new URLSearchParams({ method: type + '.getsimilar', artist, api_key: String(env.LASTFM_KEY).trim(), format: 'json', autocorrect: '1', limit: type === 'track' ? '40' : '30' });
+  if (type === 'track') q.set('track', track);
+  let r;
+  try { r = await fetch('https://ws.audioscrobbler.com/2.0/?' + q, { headers: { 'user-agent': 'PlaybackApp/1.0 (+https://frostie4life9.github.io/playback/)' } }); } catch (e) { return reply({ error: 'lastfm unreachable' }, 502); }
+  const j = await r.json().catch(() => null);
+  if (!j) return reply({ error: 'lastfm sent something unreadable' }, 502);
+  let rows = [];
+  if (j.error) {
+    if (j.error === 29) return reply({ error: 'lastfm rate limit' }, 429);
+    if (j.error !== 6) return reply({ error: 'lastfm error ' + j.error }, 502);   /* 6 = no such artist or song: saved as an empty answer */
+  } else if (type === 'artist') {
+    rows = ((j.similarartists || {}).artist || []).map(x => ({ n: String(x.name || '').slice(0, 120), m: Math.round(Number(x.match) * 1000) / 1000 || 0 })).filter(x => x.n);
+  } else {
+    rows = ((j.similartracks || {}).track || []).map(x => ({ t: String(x.name || '').slice(0, 120), a: String((x.artist || {}).name || '').slice(0, 120), m: Math.round(Number(x.match) * 1000) / 1000 || 0 })).filter(x => x.t && x.a);
+  }
+  const body = JSON.stringify({ rows });
+  /* a failed save only means the next lookup asks Last.fm again */
+  try { await env.CATALOG.prepare('INSERT OR REPLACE INTO catalog (k, v, exp) VALUES (?1, ?2, ?3)').bind(ckey, body, Date.now() + (rows.length ? SIM_TTL : SIM_EMPTY_TTL) * 1000).run(); } catch (e) { /* skip saving */ }
+  return new Response(body, { status: 200, headers: JSON_H });
+}
+
 /* Discogs vinyl pressing search (version 6). Read-only: it only ever calls the database
    search, with the token kept in the DISCOGS_TOKEN secret, and hands the answer back. */
 async function discogsSearch(env, url) {
@@ -467,6 +504,7 @@ async function sugOwner(request, env, url) {
    POST   /acct/friends/accept {uid}
    DELETE /acct/friends?uid=  removes a friend, declines a request or cancels one
    GET    /acct/feed          -> {rows:[{uid,name,hue,kind,k,t,r,n,a,i,d,rv}]}  the 60 newest ratings from friends who are sharing (version 18)
+   GET    /acct/similar?type=artist&artist=X  (or type=track&artist=X&track=Y) -> {rows:[{n,m}] or [{t,a,m}]}  similar artists or songs from Last.fm, saved 30 days, capped per person per day (version 19; the owner's sync key uses GET /similar the same way). Needs the LASTFM_KEY secret.
    GET    /acct/profile?uid=  -> {profile:{name, friends, items}}  your own page, or a friend's who is sharing
    POST   /acct/friends/ratings {kind, ks:[], ts:[]} -> {rows:[{uid,name,k,t,r}]}  accepted friends only
    GET    /acct/sync          -> {mtime, b64} (a person's own gzipped log, base64) or null   (version 12)
@@ -803,6 +841,9 @@ async function acct(request, env, url) {
     return r.meta && r.meta.changes ? reply({ ok: true }) : reply({ error: 'That request is gone.' }, 404);
   }
 
+  /* similar artists or songs from Last.fm (version 19); any signed-in account, saved answers are free, fresh ones are capped per person */
+  if (path === '/similar' && M === 'GET') return similarGet(env, url, me.uid);
+
   /* what friends rated lately: newest rating days first, only friends who are sharing, only ratings that have a day (version 18) */
   if (path === '/feed' && M === 'GET') {
     const rows = (await env.CATALOG.prepare(
@@ -883,6 +924,7 @@ export default {
     }
     if (url.pathname === '/discogs/release') return request.method === 'GET' ? discogsRelease(env, url) : reply({ error: 'method not allowed' }, 405);
     if (url.pathname === '/discogs') return request.method === 'GET' ? discogsSearch(env, url) : reply({ error: 'method not allowed' }, 405);
+    if (url.pathname === '/similar') return request.method === 'GET' ? similarGet(env, url, 'owner') : reply({ error: 'method not allowed' }, 405);
     if (url.pathname === '/spotify') return spotify(request, env, url);
     if (url.pathname === '/brief') return request.method === 'PUT' ? briefPut(request, env) : reply({ error: 'method not allowed' }, 405);
     if (url.pathname !== '/') return reply({ error: 'not found' }, 404);

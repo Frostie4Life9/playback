@@ -1137,6 +1137,28 @@ body{overflow-x:clip}
 .wl-nr li:first-child{border-top:0}
 .nrbox .wl-foot{display:flex;gap:14px;margin-top:8px}
 @media (prefers-reduced-motion:no-preference){@keyframes nrin{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}.wl-nr li.nr-in{animation:nrin .45s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*60ms)}}
+/* Similar artists and songs */
+.simbox{margin:0 0 14px;border:1px solid var(--line);border-radius:16px;background:color-mix(in srgb,var(--surface) 72%,transparent)}
+.simhead{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:44px;padding:0 14px;border:0;background:none;color:var(--ink);font:inherit;font-weight:600;cursor:pointer;text-align:left}
+.simhead i{width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg) translate(-2px,-2px);transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.simbox.open .simhead i{transform:rotate(-135deg) translate(-2px,-2px)}
+.simbody{padding:0 14px 12px}
+.simsong{margin-top:6px}.simsong>.link{min-height:40px}.simsong .simbody{padding:0 0 6px}
+.sim-l{list-style:none;margin:0;padding:0}
+.sim-l li{display:grid;grid-template-columns:minmax(0,1fr) 52px auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.sim-t{display:flex;flex-direction:column;gap:1px;min-width:0}
+.sim-t b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sim-t span{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sim-m{height:6px;border-radius:3px;background:var(--sunk);overflow:hidden}
+.sim-m i{display:block;height:100%;border-radius:3px;background:var(--accent)}
+.sim-a .link{min-height:36px;padding:0 4px}
+.sim-load i{display:inline-block;width:4px;height:4px;margin-left:3px;border-radius:50%;background:currentColor;opacity:.3}
+.sim-src{margin:8px 0 0;font-size:11px}
+@media (prefers-reduced-motion:no-preference){@keyframes simin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes simbar{from{width:0}}@keyframes simopen{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@keyframes simdot{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.sim-l.sim-in li{animation:simin .4s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*45ms)}
+.sim-l.sim-in .sim-m i{animation:simbar .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*45ms + 150ms)}
+.simbody.sim-opening{animation:simopen .3s cubic-bezier(.2,.8,.2,1) both}
+.sim-load i{animation:simdot 1.1s infinite}.sim-load i:nth-child(2){animation-delay:.15s}.sim-load i:nth-child(3){animation-delay:.3s}}
 .shr-prev .yr-img{display:block;width:100%;height:auto;border-radius:12px}
 @media (prefers-reduced-motion:no-preference){.shr-prev .yr-img{animation:rvin .6s cubic-bezier(.2,.8,.2,1) both}}
 .fd-l{display:flex;flex-direction:column;gap:8px}
@@ -2212,6 +2234,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.18-h', note:'SIMILAR MUSIC: every artist page has a Similar artists section (tap to open, nothing loads until you do) and every song you open to rate has Similar songs, both from Last.fm listening data. Each match shows a match bar and where you stand with it: % heard, Rated, Heard, or Not in your log; Open jumps to that artist, Add starts the Add an artist search for them. Rows rise in one after another and the match bars fill. Answers are saved on the Worker for 30 days, so looking again is free, and fresh lookups are capped per person per day. Needs Worker 19 and the LASTFM_KEY secret (a free Last.fm API key).'},
   {v:'2026.11.18-g', note:'STATS PAGE AND A PLAY HISTORY FOR EVERY SONG: Music menu › Stats is a stats.fm-style page: your top songs, artists and albums for the last 4 weeks, 6 months, 12 months, this year, any year or all time, plus plays over time, busiest day, longest streak, songs new to you, time of day and day of the week. Every play Spotify reports is now kept in a separate play history on this device, including songs from artists you have not added to Playback; add the artist later and its old plays show up as counts on its songs. To fill in the past, request Extended streaming history from Spotify (spotify.com/account/privacy) and choose the zip on the Stats page, no unzipping; it counts plays of 30 seconds or more like Spotify does, and importing a newer export later replaces the dates it covers so nothing is counted twice. Preview with fake stats shows the page with made-up listening that is never saved. Songs you have played are not checked off as heard on their own: after an import there is an optional button for that, with Undo. The history is kept on the device it was imported on (not synced), so keep the Spotify zip.'},
   {v:'2026.11.18-f', note:'PLAY COUNTS: every Spotify play of a song in your log is now counted. Song rows show a small ▶ number (hover for the last play date), and Settings › Spotify has a Most played list of your top songs and albums. The first time it runs it counts everything your Worker has saved (up to its last 3,000 plays); after that it adds each new play. Plays of songs not in Playback are not counted, and Spotify leaves out private-session plays.'},
   {v:'2026.11.18-e', note:'NEW RELEASES FROM YOUR ARTISTS: once a day while Playback is open (and on Check now), it asks Apple Music, which needs no key and uses none of your Spotify allowance, for the albums and EPs of up to 25 of your artists at a time, the ones checked longest ago first. Anything out in the last two months, or already announced, that is not in your log lands at the top of the Listen list under New from your artists, with Add to list, Artist and Dismiss, and the bookmark badge counts them. They also go to your morning brief (Worker 18 adds newReleases to /brief). Daily checks can be turned off in that box. It only runs while the app is open, and Apple is sent artist names only.'},
@@ -7520,13 +7543,14 @@ function acolFor(key,url,g){const c=ACOL[key];if(c)return c;if(c!==''&&url)acolR
 /* ---------- the rating slider ----------
    Drag (or tap) along the line: 1 to 10 in half steps. The number follows your finger and the
    rating saves when you let go. Clear removes it; Done closes. */
-function rateMeter(id,label){const r=rating(id);
+function rateMeter(id,label,extra){const r=rating(id);
   return `<div class="rater${UI.rAnim===id?' rt-in':''}" role="group" aria-label="Rate ${esc(label)}" style="--p:${((r||5)-1)/9*100}%">
     <div class="rt-top"><span class="rt-l">${esc(label)}</span><b class="rt-v">${r?fmt(r):'\u2013'}</b></div>
     <div class="rt-wrap"><div class="rt-rail" aria-hidden="true"><i class="rt-fill"></i><i class="rt-thumb"></i></div>
       <input class="rt-s${r?'':' unset'}" type="range" min="1" max="10" step="0.5" value="${r||5}" data-rate="${id}" aria-label="Rating for ${esc(label)}, out of 10"></div>
     <div class="rt-ticks" aria-hidden="true">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<span>${n}</span>`).join('')}</div>
     <div class="rt-foot">${r?`<button class="link" data-act="rclear" data-id="${id}">Clear</button>`:'<span class="rt-hint">Drag or tap to rate</span>'}<button class="link rt-done" data-act="rclose">Done</button></div>
+    ${extra||''}
   </div>`}
 /* The first rating lands in its circle. When a rater is closed on something that had no rating until now, the big
    number is copied, lifted a little, then flown into the song's circle (or the album's rating pill) while the page
@@ -7947,6 +7971,49 @@ async function nrScan(force){
 function nrGo(id){const x=nrList().find(y=>y.id===id);if(!x)return;
   const a=S.music.find(y=>y.id===x.aid)||rtArtist([x.a]);
   if(a){UI.view=null;UI.rel=null;UI.tab='music';UI.sel.music=a.id;UI.llOpen=false;UI.rOpen=null;UI.filter='all'}}
+/* Similar artists and songs: Last.fm's listening-based matches through the sync Worker (route /similar, needs the LASTFM_KEY secret).
+   Nothing loads until you open a section; the Worker saves each answer for 30 days, so looking again costs nothing. */
+const SIM={};
+const simKey=(type,artist,title)=>type==='t'?'t:'+nArtist(artist)+'|'+nTitle(title):'a:'+nArtist(artist);
+async function simLoad(type,artist,title){
+  const k=simKey(type,artist,title),e=SIM[k]||(SIM[k]={});
+  if(e.busy||(e.rows&&!e.err))return;
+  e.busy=true;e.err='';e.rows=null;render();
+  const q='type='+(type==='t'?'track':'artist')+'&artist='+encodeURIComponent(artist)+(type==='t'?'&track='+encodeURIComponent(title):'');
+  try{
+    let status=0,j={};
+    if(accOn()){const x=await accApi('GET','/similar?'+q);status=x.status;j=x.j}
+    else if(SY.key){const r=await fetch(SUG_URL+'/similar?'+q,{cache:'no-store',headers:{'x-sync-key':SY.key}});status=r.status;j=await r.json().catch(()=>({}))}
+    else e.err='Sign in to Playback (the account icon, top right) to find similar music.';
+    if(!e.err){
+      if(status===200&&Array.isArray(j.rows)){e.rows=j.rows;e.anim=true}
+      else e.err=status===409?'Similar music is not switched on for this server yet.':status===429?(j.error==='daily limit'?'You have used today\u2019s fresh lookups. Anything you looked up before still opens; try again tomorrow.':'Last.fm is busy. Try again in a minute.'):status===404?'The sync Worker needs its latest update before this works.':'Could not find similar music right now.'}
+  }catch(er){e.err='Could not reach Playback\u2019s server. Check your connection.'}
+  e.busy=false;render();
+}
+function simRow(x,i,type){
+  const nm=type==='t'?x.a:x.n,a=rtArtist([nm]),pc=Math.round((x.m||0)*100);
+  let name,sub,st;
+  if(type==='t'){
+    const it=a&&artistItems(a).find(y=>nTitle(songShow(y).t)===nTitle(x.t));
+    name=x.t;sub=x.a;
+    st=it?(rating(it.id)?'Rated '+fmt(rating(it.id)):isDone(it.id)?'Heard':'In your log \u00b7 not heard'):a?'Not in your log':'New artist';
+  }else{name=x.n;sub='';st=a?pct(artistItems(a).map(y=>y.id))+'% heard':'Not in your log'}
+  const btn=a?`<button class="link" data-act="llgo" data-a="${a.id}" aria-label="Open ${esc(nm)}">Open</button>`:`<button class="link" data-act="simadd" data-n="${esc(nm)}" aria-label="Add ${esc(nm)}">Add</button>`;
+  return `<li style="--i:${Math.min(i,10)}"><span class="sim-t"><b>${esc(name)}</b><span>${esc(sub?sub+' \u00b7 '+st:st)}</span></span><span class="sim-m" role="img" aria-label="${pc}% match"><i style="width:${pc}%"></i></span><span class="sim-a">${btn}</span></li>`}
+function simBody(e,type,ctx){
+  const what=type==='t'?'songs':'artists';
+  if(!e||e.busy)return `<p class="note sim-load" role="status">Finding similar ${what}<i></i><i></i><i></i></p>`;
+  if(e.err)return `<p class="note" role="alert">${esc(e.err)}</p><button class="link" data-act="simretry" data-type="${type}" data-art="${esc(ctx.artist)}" data-ttl="${esc(ctx.title||'')}">Try again</button>`;
+  if(!e.rows||!e.rows.length)return `<p class="note">Nothing found. Last.fm may not know this ${type==='t'?'song':'artist'} well enough yet.</p>`;
+  const an=e.anim?' sim-in':'';e.anim=false;
+  return `<ul class="sim-l${an}">${e.rows.slice(0,type==='t'?15:20).map((x,i)=>simRow(x,i,type)).join('')}</ul><p class="note sim-src">Matches from Last.fm listening data.</p>`}
+function simBox(a){
+  const open=UI.simOpen===a.id,ao=open&&UI.simAnim?' sim-opening':'';if(open)UI.simAnim=false;
+  return `<div class="simbox${open?' open':''}"><button class="simhead" data-act="simtog" data-a="${a.id}" aria-expanded="${open}"><span>Similar artists</span><i aria-hidden="true"></i></button>${open?`<div class="simbody${ao}">${simBody(SIM[simKey('a',a.name)],'a',{artist:a.name})}</div>`:''}</div>`}
+function simSong(a,i,t){
+  const open=UI.simSong===i.id,ao=open&&UI.simAnim?' sim-opening':'';if(open)UI.simAnim=false;
+  return `<div class="simsong"><button class="link" data-act="simsong" data-id="${i.id}" data-art="${esc(a.name)}" data-ttl="${esc(t)}" aria-expanded="${open}">${open?'Hide similar songs':'Similar songs'}</button>${open?`<div class="simbody${ao}">${simBody(SIM[simKey('t',a.name,t)],'t',{artist:a.name,title:t})}</div>`:''}</div>`}
 function nrHtml(){
   const L=nrList(),loc=nrLoc(),an=NR.anim?' nr-in':'';NR.anim=false;
   const row=(x,i)=>`<li class="nr${an}" style="--i:${Math.min(i,8)}"><span class="wl-art" ${x.img?`style="background:var(--sunk) url('${esc(x.img)}') center/cover"`:''} aria-hidden="true"></span>
@@ -8034,7 +8101,7 @@ function artistView(a){
       return `<div class="track sl-t${lsCar(g,i.id)?' carry':''} ${i.dx?'dx':''} ${dn?'done':''} ${r?'rated':''} ${UI.rOpen===i.id?'ropen':''} ${UI.rAnim===i.id?'opening':''} ${UI.rLand===i.id?'landing':''}" data-act="ropen" data-id="${i.id}" tabindex="0" role="button" aria-expanded="${UI.rOpen===i.id}" aria-label="${esc(s.t)}: ${r?'rated '+fmt(r)+', ':''}${UI.rOpen===i.id?'close rating':'open rating'}"${i.dx&&UI.dxAnim===g.id?` style="animation-delay:${60+Math.min(k,14)*38}ms"`:''}>${r?`<span class="wash" style="width:${pc}%" aria-hidden="true"></span>`:''}${lsSongBar(g,i.id,pc)}<span class="num">${k+1}</span>
         <span class="ttl">${esc(s.t)}${s.f.length?`<span class="feat">feat. ${esc(s.f.join(', '))}</span>`:''}</span>${lsSongDelta(g,i.id)}${plBadge(i.id)}
         <button class="check" data-act="tog" data-id="${i.id}" aria-pressed="${dn}" aria-label="${r?'Rated '+fmt(r)+'. ':''}${dn?'Heard':'Not heard'}: ${esc(i.title)}"><svg viewBox="0 0 44 44" aria-hidden="true"><circle class="rg-t" cx="22" cy="22" r="16"/>${r?`<circle class="rg-v" cx="22" cy="22" r="16" stroke-dasharray="${dash}"/>`:''}</svg>${r?`<span class="rg-n">${fmt(r)}</span>`:dn?'<span class="rg-d"></span>':''}</button></div>
-        ${UI.rOpen===i.id?rateMeter(i.id,s.t):''}`}).join('');
+        ${UI.rOpen===i.id?rateMeter(i.id,s.t,simSong(a,i,s.t)):''}`}).join('');
     return `<div class="group sleeve${lsCls(g)} ${dx?'dxon':''} ${UI.dxAnim===g.id?'dxanim':''} ${SLIN.has(String(g.id))?'in':''}" data-acol="${g.id}" style="--acs:${col};--acd:${colD}">
       <div class="sl-hero">
         ${listBtn(g,a)}${relBtn(g)}
@@ -8060,6 +8127,7 @@ function artistView(a){
       <div class="tools" role="group" aria-label="Show"><button class="chip" data-act="filter" data-v="all" aria-pressed="${UI.filter==='all'}">Everything</button><button class="chip" data-act="filter" data-v="open" aria-pressed="${UI.filter==='open'}">Still to hear</button></div>
       ${mbArtistBar(a)}
     </div></div>
+    ${simBox(a)}
     ${relBar(a)}
     ${groups||`<p class="empty">${relKind(a)!=='all'&&UI.filter==='all'?'No releases of that kind here.':'You have heard every track listed here.'}</p>`}
     <details class="more"><summary>Add a release</summary>
@@ -8305,6 +8373,10 @@ document.addEventListener('click',ev=>{
   else if(act==='llclear'){S.listen=listenAll().filter(x=>!llResolve(x).heard);touch()}
   else if(act==='llgo'){UI.view=null;UI.rel=null;UI.tab='music';UI.sel.music=b.dataset.a;UI.libOpen=false;UI.rOpen=null;UI.llOpen=false;UI.filter='all';
     if(b.dataset.g)UI.toAlb=b.dataset.g;else UI.toSheet=true}   /* a listen-list album opens that album; Collection's Open in Music has no album, so it still goes to the artist */
+  else if(act==='simtog'){UI.simOpen=UI.simOpen===b.dataset.a?null:b.dataset.a;UI.simAnim=!!UI.simOpen;if(UI.simOpen){const ar=S.music.find(x=>x.id===UI.simOpen);if(ar)simLoad('a',ar.name)}}
+  else if(act==='simsong'){UI.simSong=UI.simSong===id?null:id;UI.simAnim=!!UI.simSong;if(UI.simSong)simLoad('t',b.dataset.art,b.dataset.ttl)}
+  else if(act==='simretry'){const t=b.dataset.type;SIM[simKey(t,b.dataset.art,b.dataset.ttl)]=null;simLoad(t,b.dataset.art,b.dataset.ttl)}
+  else if(act==='simadd'){UI.libOpen=false;UI.addOpen=true;UI.toAdd=true;mbSearch(b.dataset.n);return}   /* the same Add an artist search, started for this name */
   else if(act==='rtimport'){rtImport()}
   else if(act==='spgo'){spConnect().catch(()=>{SPX.err='This browser could not start the Spotify sign-in.';render()});return}
   else if(act==='spnow'){spPoll(true);return}
