@@ -943,6 +943,19 @@ details.addart .add{border-top:1px solid var(--line)}
 .pf-tiles{grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr))}
 .pf-tiles>div:last-child:nth-child(odd){grid-column:auto}
 .vl{display:flex;flex-direction:column;align-items:center}
+/* account Overview layout: the cards rearrange as the window grows (phone: one column, tablet: two, desktop: record beside the cards, ultra-wide: record plus two card columns) */
+.settings.pf{grid-template-columns:minmax(0,1fr)}
+@media (min-width:1000px){.settings.pf{grid-template-columns:repeat(2,minmax(0,1fr))}.settings.pf>.setcard,.settings.pf>.frwrap{grid-column:auto}}
+.settings.pf>.pf-ov{grid-column:1/-1;display:grid;gap:14px;align-items:start;grid-template-columns:minmax(0,1fr);grid-template-areas:"hab" "mon" "top" "vl"}
+.pf-ov>.pf-c-hab{grid-area:hab}.pf-ov>.pf-c-mon{grid-area:mon}.pf-ov>.pf-c-top{grid-area:top}.pf-ov>.vl{grid-area:vl;width:100%;max-width:640px;justify-self:center}
+.pf-ov>.pf-card{height:100%}
+@media (min-width:640px){.settings.pf>.pf-ov{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:"mon mon" "hab top" "vl vl"}.pf-ov>.vl{max-width:560px}}
+@media (min-width:1000px){.settings.pf>.pf-ov{grid-template-columns:minmax(320px,.95fr) minmax(0,1.05fr);grid-template-areas:"vl mon" "vl hab" "vl top";grid-template-rows:auto auto 1fr}.pf-ov>.vl{max-width:none;justify-self:stretch;position:sticky;top:12px}.pf-ov>.pf-card{height:auto}.pf-ov .pf-act{height:120px}}
+@media (min-width:1700px){.settings.pf>.pf-ov{grid-template-columns:minmax(380px,.85fr) minmax(0,1fr) minmax(0,1fr);grid-template-areas:"vl mon mon" "vl hab top";grid-template-rows:auto 1fr}.pf-ov>.pf-c-hab,.pf-ov>.pf-c-top{height:100%}.pf-ov .pf-act{height:150px}.pf-ov .pf-mini{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.pf-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (min-width:700px){.pf-tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (min-width:640px) and (max-width:999px),(min-width:1700px){.pf-ov>.pf-c-hab .pf-mini{flex:1;grid-template-columns:minmax(0,1fr);grid-auto-rows:1fr}.pf-ov>.pf-c-hab .pf-mini>div{flex-direction:row;align-items:center;gap:14px}.pf-ov>.pf-c-hab .pf-mini b{font-size:28px;min-width:2.2ch}.pf-ov>.pf-c-hab .pf-mini span{font-size:12px}}
+@media (max-width:420px){.pf-mini{gap:6px}.pf-mini>div{padding:8px 9px}.pf-mini b{font-size:16px}}
 .pf-rows{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr))}
 @media (prefers-reduced-motion:no-preference){.pf-info.pf-opn{animation:pfup .3s cubic-bezier(.2,.8,.2,1) both}.pf-info.pf-opn .pf-mc{animation:pfpop .35s cubic-bezier(.3,1.35,.5,1) both;animation-delay:var(--d,0ms)}}
 @keyframes pfpop{from{opacity:0;transform:scale(.86) translateY(8px)}to{opacity:1;transform:none}}
@@ -2048,6 +2061,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-an', note:'OVERVIEW REARRANGES WITH THE WINDOW: the account Overview now lays its cards out by screen size instead of letting them fall wherever. On a phone everything stacks in one column (months, scoring habits, top artists, then the record). On a tablet the months card spans the top, scoring habits and top artists sit side by side, and the record is centered below. On a desktop the big record sits on the left, staying in view as you scroll, with the months, scoring habits and top artists stacked beside it so there are no empty gaps. On a very wide monitor the record takes the left, the months card spans the top and scoring habits and top artists sit side by side under it. Friends and Your account sit side by side on wide screens and stack on narrow ones.'},
   {v:'2026.11.17-am', note:'FIXES AND FULL-WIDTH PAGES: tapping a month bar used to replay the animation on the score covers above it (and the reverse); now only the panel you opened animates. Every page now uses the whole window instead of a centered column about 1100px wide: Settings flows into columns, your page lays its cards side by side, and everything folds back to one column as the window shrinks. The cover previews are fitted to the space they have, so they stay correct inside the narrower cards and refit on resize without redrawing.'},
   {v:'2026.11.17-al', note:'COVER PREVIEWS FILL THE PANEL: the score and month details on Overview used to show just the first eight covers. They now fill two rows on a phone and three on a wider screen, with more columns the wider the window (it refits when you resize), and when there are more albums than fit the last tile says how many more (+33 more) and opens them in the Albums tab. The covers also fade in at an even pace.'},
   {v:'2026.11.17-ak', note:'OVERVIEW: TAP THE BARS. Your stat tiles now also show Songs rated (with its average) and Albums rated in this year (with how it compares to last year); on a friend\u2019s page the songs tile appears once their copy has published it. Tap any score bar under the tiles to see how many ratings got that score, the albums and shows & films among them, and their covers, then See the albums takes you to the Albums tab filtered to exactly that score. Tap any bar in Albums rated per month to see that month: how many albums, their average, the best one and their covers, step to the previous or next month with the arrows, and See them in Albums opens the Albums tab on that month, newest first. The Albums tab\u2019s Filters panel has a new Exact score row (1 to 10, with counts). The Worker needs the new playback-sync.js (it takes it from GitHub on its own) to keep your song count for friends to see.'},
@@ -6090,7 +6104,7 @@ function accInsightsHtml(P){
     const cnt={};for(const x of b){const k=Math.min(10,Math.max(1,Math.round(x.r)));cnt[k]=(cnt[k]||0)+1}
     const mode=Object.keys(cnt).map(Number).sort((p,q)=>cnt[q]-cnt[p]||q-p)[0];
     const tens=b.filter(x=>x.r>=10).length,hi=Math.round(100*b.filter(x=>x.r>=8).length/b.length);
-    h+=`<div class="pf-card${an}" style="--i:${n++}"><h3>Scoring habits</h3><div class="pf-mini"><div><b>${mode}</b><span>most common score</span></div><div><b>${tens}</b><span>perfect 10${tens===1?'':'s'} given</span></div><div><b>${hi}%</b><span>rated 8 or higher</span></div></div></div>`;
+    h+=`<div class="pf-card pf-c-hab${an}" style="--i:${n++}"><h3>Scoring habits</h3><div class="pf-mini"><div><b>${mode}</b><span>most common score</span></div><div><b>${tens}</b><span>perfect 10${tens===1?'':'s'} given</span></div><div><b>${hi}%</b><span>rated 8 or higher</span></div></div></div>`;
   }
   const dated=al.filter(x=>/^\d{4}-\d\d/.test(x.d||''));
   if(dated.length>=3){
@@ -6106,14 +6120,14 @@ function accInsightsHtml(P){
       monInfo=`<div class="pf-info${UI.pAnimI==='mo'?' pf-opn':''}"><div class="pf-ih"><button class="pf-st" data-act="pmo" data-v="${pv?pv.k:''}" aria-label="Previous month"${pv?'':' disabled'}>‹</button><b>${esc(pMonthName(mk.k))}</b><button class="pf-st" data-act="pmo" data-v="${nx?nx.k:''}" aria-label="Next month"${nx?'':' disabled'}>›</button></div>
         ${ls.length?`<p class="note">${ls.length} album${ls.length===1?'':'s'} · avg ${accAvg(ls).toFixed(1)} · best: ${esc(ls[0].n||'Untitled')} (${fmt(ls[0].r)})</p>${pfCovs(ls,`data-act="pgomon" data-v="${mk.k}"`)}<div class="pf-go"><button class="btn" data-act="pgomon" data-v="${mk.k}">See ${ls.length===1?'it':'them'} in Albums →</button></div>`:`<p class="note">Nothing rated this month.</p>`}</div>`;
     }else monInfo=`<p class="note pf-hint">Tap a bar to see that month.</p>`;
-    h+=`<div class="pf-card${an}" style="--i:${n++}"><h3>Albums rated per month<small>${esc(lab(shown[0].k))} → ${esc(lab(shown[shown.length-1].k))}</small></h3>
+    h+=`<div class="pf-card pf-c-mon${an}" style="--i:${n++}"><h3>Albums rated per month<small>${esc(lab(shown[0].k))} → ${esc(lab(shown[shown.length-1].k))}</small></h3>
       <div class="pf-act${an}" role="group" aria-label="Albums rated each month. Tap a bar for details.">${shown.map((x,i)=>`<button data-act="pmo" data-v="${x.k}" aria-pressed="${x.k===sk}" aria-label="${esc(pMonthName(x.k))}: ${x.n} album${x.n===1?'':'s'}" style="--i:${i}"><i style="--v:${(x.n/mx*100).toFixed(0)}%" class="${x.k===best.k?'top':''}"></i></button>`).join('')}</div>
       ${monInfo}
       <div class="pf-mini"><div><b>${best.n}</b><span>busiest month (${esc(lab(best.k))})</span></div><div><b>${act} of ${mo.length}</b><span>months with a rating</span></div><div><b>${(dated.length/mo.length).toFixed(1)}</b><span>albums a month</span></div></div></div>`;
   }
   const ga={};for(const x of al)for(const nm of accArts(x))(ga[nm]=ga[nm]||[]).push(x)
   const ta=Object.entries(ga).filter(([,l])=>l.length>=2).map(([name,l])=>({name,l:l.slice().sort((p,q)=>q.r-p.r),avg:accAvg(l)})).sort((p,q)=>q.avg-p.avg||q.l.length-p.l.length||p.name.localeCompare(q.name)).slice(0,5);
-  if(ta.length)h+=`<div class="pf-card${an}" style="--i:${n++}"><h3>Top artists<small>by average · 2+ albums</small></h3>${ta.map((a,i)=>`<div class="pf-ta" style="--i:${i}"><span class="pf-fan">${a.l.slice(0,3).map(x=>{const u=accCover(x);return `<span class="pcv"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span>`}).join('')}</span><span class="pt"><b>${esc(a.name)}</b><small>${a.l.length} albums</small></span><span class="pf-tar"><b class="pn">${a.avg.toFixed(1)}</b><span class="bar"><i style="width:${(a.avg*10).toFixed(0)}%"></i></span></span></div>`).join('')}</div>`;
+  if(ta.length)h+=`<div class="pf-card pf-c-top${an}" style="--i:${n++}"><h3>Top artists<small>by average · 2+ albums</small></h3>${ta.map((a,i)=>`<div class="pf-ta" style="--i:${i}"><span class="pf-fan">${a.l.slice(0,3).map(x=>{const u=accCover(x);return `<span class="pcv"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span>`}).join('')}</span><span class="pt"><b>${esc(a.name)}</b><small>${a.l.length} albums</small></span><span class="pf-tar"><b class="pn">${a.avg.toFixed(1)}</b><span class="bar"><i style="width:${(a.avg*10).toFixed(0)}%"></i></span></span></div>`).join('')}</div>`;
   return h;
 }
 /* the list under a page: albums as a wall of covers (or a list) and shows and films, sorted and filtered by score and by the year and month they were rated */
@@ -6260,7 +6274,7 @@ window.addEventListener('resize',()=>{clearTimeout(pfRz);pfRz=setTimeout(pfFit,8
 document.addEventListener('keydown',ev=>{if((ev.key==='Enter'||ev.key===' ')&&ev.target.classList&&ev.target.classList.contains('vl-b')){ev.preventDefault();ev.target.dispatchEvent(new MouseEvent('click',{bubbles:true}))}});
 function profileHtml(P,mine){
   const st=accStats(P.items),match=P.self?null:accMatch(P.items,mine);
-  const sec=UI.pTab==='a'||UI.pTab==='s'?accListHtml(P,match):accStatsHtml(st,P)+accInsightsHtml(P)+accVinylHtml(P);
+  const sec=UI.pTab==='a'||UI.pTab==='s'?accListHtml(P,match):accStatsHtml(st,P)+`<div class="pf-ov">${accInsightsHtml(P)}${accVinylHtml(P)}</div>`;
   return accHeroHtml(Object.assign({},P,{n:accBase(P.items).length}),st,match,P.extra)+accTabsHtml(P)+sec;
 }
 /* the Friends shortcut in the top bar: one tap to the friends list, with a count of requests waiting for you */
