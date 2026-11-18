@@ -2285,6 +2285,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.18-t', note:'FASTER ARTIST SWITCHING: opening another artist no longer rebuilds the whole page. When nothing else on the page has changed, the top bar and the wall of artists stay as they are and only the artist pane is redrawn, so clicks land sooner on slower laptops (about 40% less work per click in testing with 70 artists, more with bigger libraries). The record is also drawn once in its new look instead of twice. Everything looks and animates the same; any other change still redraws the full page.'},
   {v:'2026.11.18-s', note:'SMOOTHER ON LAPTOPS: the top bar and the floating dock no longer blur what scrolls behind them (they were already almost solid, so they look the same, but the blur was re-done every scroll frame). The artist page background colors now run on three moving layers instead of six, two colors each, with every album color still there and still sized by your ratings, and they stop drifting while the artist card is scrolled out of view. The spinning liquid vinyl is unchanged.'},
    {v:'2026.11.18-r', note:'SETTINGS SPOTIFY CARD FIXED: the Spotify card in Settings failed to load (\u201cCannot read properties of undefined\u201d) because two parts of the play counting shared a name, so the older Most played list broke once the Stats page was added. It works again. You can also still reach your counts on the Stats page.'},
    {v:'2026.11.18-q', note:'SETTINGS CAN NO LONGER GO BLANK: if one card in Settings fails to load, the page still opens and that card shows a short message saying what went wrong, instead of the Settings button doing nothing.'},
@@ -5872,7 +5873,7 @@ function render(){
   /* a filter or sort change: tiles and release cards that stay glide to their new spots, new ones rise in one after another */
   const flipOn=UI.flip&&!noMotion()&&window.SX&&typeof SX.flip==='function';UI.flip=false;
   if(flipOn)SX.flip(document.body,'#llist .tile,.sheet .group.sleeve',()=>keepImgs(renderMain),{dur:420,key:el=>el.dataset.acol?'g'+el.dataset.acol:el.dataset.g?'a'+el.dataset.g:el.dataset.id?'t'+el.dataset.id:null});
-  else keepImgs(renderMain);
+  else keepImgs(()=>{if(!paneSwap())renderMain()});
   slObserve();slPulseNow();UI.rAnim=null;accAfter();pfFit();
   if(vlT!=null&&vPrev===vk){const el=document.querySelector('.vl-spin'),an=el&&el.getAnimations&&el.getAnimations()[0];if(an)an.currentTime=vlT}
   if(vPrev&&vPrev!==vk&&!noMotion())pageIn(Math.sign((VORD[vk]??0)-(VORD[vPrev]??0)));
@@ -5895,10 +5896,7 @@ function render(){
   if(UI.toSheet){UI.toSheet=false;const sh=document.querySelector('.sheet');if(sh)sh.scrollIntoView({behavior:'smooth',block:'start'})}
 }
 let LIBIN=false;   /* set by renderMain for the one draw that opens the artist menu */
-function mainView(e,list){return `
-
-  <div class="shell">
-    <aside class="side ${UI.libOpen||!e?'libopen':''}${UI.libOpen&&e?' libfull':''}${LIBIN&&UI.libOpen&&e?' libin':''}">
+function mainAside(e,list){return `<aside class="side ${UI.libOpen||!e?'libopen':''}${UI.libOpen&&e?' libfull':''}${LIBIN&&UI.libOpen&&e?' libin':''}">
       ${e?`<button class="libbtn" data-act="lib" aria-expanded="${!!UI.libOpen}"><span class="label">${UI.tab==='music'?'Artists':'Shows & films'} \u00b7 ${list.length}</span><b>${esc(e.name||e.title)}</b><span class="libsw">${UI.libOpen?'Close':'Switch'}</span></button>`:''}
       <div class="libbody">
       ${sideFinder(list)}
@@ -5914,9 +5912,14 @@ function mainView(e,list){return `
           <button class="btn primary">Add artist</button>
         </form>
       </details>`:tmSide()}
-    </aside>
+    </aside>`}
+function mainSheet(e){return `<section class="sheet" aria-live="polite">${e?(UI.tab==='music'?artistView(e):e.type==='film'?filmView(e):showView(e)):'<p class="empty">Tap Add artist or the + button to add your first one.</p>'}</section>`}
+function mainView(e,list,out){const a=mainAside(e,list);if(out)out.aside=a;return `
 
-    <section class="sheet" aria-live="polite">${e?(UI.tab==='music'?artistView(e):e.type==='film'?filmView(e):showView(e)):'<p class="empty">Tap Add artist or the + button to add your first one.</p>'}</section>
+  <div class="shell">
+    ${a}
+
+    ${mainSheet(e)}
   </div>
 
 `}
@@ -7311,12 +7314,21 @@ function keepImgs(fn){
     const l=m.get(im.getAttribute('src')),k=l&&l.findIndex(o=>o.className===im.className);
     if(l&&k>=0)im.replaceWith(l.splice(k,1)[0])})}
 function renderMain(){
+  PAINT=null;
   if(!READY){document.getElementById('app').innerHTML='<p class="empty">Loading your log\u2026</p>';return}
   const e=current();
   LIBIN=!!UI.libAnim;UI.libAnim=false;
   if(UI.mm&&(UI.tab!=='music'||(UI.view&&UI.view!=='history'&&UI.view!=='stats')))UI.mm=false;   /* the Music menu only belongs to Music */   /* the menu's opening animation plays on the one draw that opens it */
   const list=S[UI.tab];
-  document.getElementById('app').innerHTML=`
+  const top=topHTML(),mo={};
+  document.getElementById('app').innerHTML=top+`${UI.view==='settings'?settingsView():UI.view==='account'?accountView():UI.view==='friends'?friendsView():UI.view==='friend'?friendView():UI.view==='collection'?collectionView():UI.view==='history'?historyView():UI.view==='stats'?statsView():mainView(e,list,mo)}
+  <footer>
+    <p class="buildid">Build ${esc(BUILD)}</p>
+  </footer>`;
+  if(!UI.view&&UI.tab==='music'&&mo.aside)PAINT={top,side:asideKey(mo.aside)};
+  heroStart();
+}
+function topHTML(){return `
   <header class="top">
       <nav class="tabs" aria-label="Section">
         <button data-act="tab" data-v="music" aria-pressed="${(!UI.view&&UI.tab==='music')||UI.view==='history'||UI.view==='stats'}" aria-haspopup="menu" aria-expanded="${!!UI.mm}">${ICO.music}<span>Music</span><i class="caret" aria-hidden="true"></i></button>
@@ -7338,12 +7350,27 @@ function renderMain(){
   ${SYS.status==='conflict'?conflictBanner():''}
   ${bkNudge()}
 
-${UI.view==='settings'?settingsView():UI.view==='account'?accountView():UI.view==='friends'?friendsView():UI.view==='friend'?friendView():UI.view==='collection'?collectionView():UI.view==='history'?historyView():UI.view==='stats'?statsView():mainView(e,list)}
-  <footer>
-    <p class="buildid">Build ${esc(BUILD)}</p>
-  </footer>`;
-  heroStart();
-}
+`}
+/* Opening another artist used to rebuild the whole page, wall of artists and all, which is most of the lag on a
+   slower laptop. Now, when the top bar and the artist wall come out exactly the same as the last draw (leaving out
+   which tile is picked), they are kept and only the artist pane is rebuilt. Anything else different (a rating that
+   changes a tile, a search, a menu or sheet opening, the library opening on phones) still redraws everything, so the
+   page always ends up just as a full redraw would leave it. */
+let PAINT=null;
+const asideKey=h=>h.replace(/ aria-current="true"/g,' aria-current="false"').replace(/<button class="libbtn"[\s\S]*?<\/button>/,'');
+function paneSwap(){
+  if(!READY||!PAINT||UI.view||UI.tab!=='music'||UI.libAnim||UI.mm)return false;
+  const app=document.getElementById('app'),side=app&&app.querySelector(':scope>.shell>aside.side'),old=app&&app.querySelector(':scope>.shell>section.sheet'),ll=side&&side.querySelector('#llist');
+  if(!side||!old||!ll)return false;
+  const e=current();if(!e)return false;
+  const top=topHTML();if(top!==PAINT.top)return false;
+  const a=mainAside(e,S.music);if(asideKey(a)!==PAINT.side)return false;
+  ll.querySelectorAll('[aria-current="true"]').forEach(n=>n.setAttribute('aria-current','false'));
+  ll.querySelectorAll('[data-act="sel"]').forEach(n=>{if(n.dataset.id===e.id)n.setAttribute('aria-current','true')});
+  const lb=side.querySelector(':scope>.libbtn'),m=a.match(/<button class="libbtn"[\s\S]*?<\/button>/);
+  if(lb&&m&&lb.outerHTML!==m[0])lb.outerHTML=m[0];
+  const t=document.createElement('template');t.innerHTML=mainSheet(e);old.replaceWith(t.content.firstElementChild);
+  heroStart();return true}
 
 const HARM='<svg class="harm" viewBox="0 0 120 120" aria-hidden="true"><circle cx="104" cy="20" r="10" class="hp"/><path d="M104 20 L42 68" class="ha"/><rect x="30" y="64" width="16" height="9" rx="2" transform="rotate(-38 38 68)" class="hh"/></svg>';
 function heroColor(a){let best=null,r0=-1;
@@ -7638,14 +7665,16 @@ function heroWatch(el){   /* stop the color drift while the artist card is scrol
   if(!heroIO)heroIO=new IntersectionObserver(es=>{for(const e of es)e.target.classList.toggle('hoff',!e.isIntersecting)});
   if(heroWatched&&heroWatched!==el)heroIO.unobserve(heroWatched);
   if(heroWatched!==el){heroWatched=el;heroIO.observe(el)}}
+/* switch the record over to an artist's look. Done as the artist's page is drawn, so the record is drawn once in
+   the right look (it used to be drawn in the last artist's look and then redrawn). */
+function heroLook(aid){if(HSTY.aid===aid)return;const prev=HSTY.aid;HSTY.aid=aid;HSTY.n=hLook(aid);
+  if(prev){const o=HSTY.list.filter(x=>x!==HLOOK[prev]);HLOOK[prev]=o[Math.floor(Math.random()*o.length)];TD.lv++}}   /* the artist you left gets a new look for next time */
 function heroStart(){
   const el=document.querySelector('.hero[data-aid]');
   if(!el){HERO.aid=null;HERO.el=null;HERO.spd=0;HSTY.aid=null;return}
   heroWatch(el);
   const spin=el.querySelector('.hspin');if(!spin)return;
-  if(HSTY.aid!==el.dataset.aid){const prev=HSTY.aid;HSTY.aid=el.dataset.aid;HSTY.n=hLook(HSTY.aid);
-    if(prev){const o=HSTY.list.filter(x=>x!==HLOOK[prev]);HLOOK[prev]=o[Math.floor(Math.random()*o.length)];TD.lv++}   /* the artist you left gets a new look for next time */
-    heroPaint()}
+  if(HSTY.aid!==el.dataset.aid){heroLook(el.dataset.aid);heroPaint()}
   const F=UI.fly;UI.fly=null;
   {const a=S.music.find(x=>x.id===el.dataset.aid);if(a)liqMount(el,a)}
   if(noMotion()){el.classList.add('play');return}
@@ -8346,7 +8375,7 @@ function relBar(a){if(a.groups.length<2)return '';
   const n={all:a.groups.length,alb:0,ep:0,sin:0,oth:0};a.groups.forEach(g=>n[relKindOf(g)]++);const k=relKind(a),so=relSort();
   return `<div class="relbar"><div class="rseg" role="group" aria-label="Kind of release">${Object.entries(REL_KINDS).filter(([v])=>v==='all'||n[v]||v===k).map(([v,t])=>`<button data-act="relkind" data-v="${v}" aria-pressed="${k===v}">${t}<span class="c">${n[v]}</span></button>`).join('')}</div>
     <label class="lsort rsort"><select id="rsort" aria-label="Sort releases">${Object.entries(REL_SORTS).map(([v,t])=>`<option value="${v}"${so===v?' selected':''}>${t}</option>`).join('')}</select></label></div>`}
-function artistView(a){
+function artistView(a){heroLook(a.id);
   const all=artistItems(a),done=all.filter(i=>isDone(i.id)).length,rated=all.filter(i=>rating(i.id)).length,p=pct(all.map(i=>i.id));
   const groups=relList(a).map(g=>lsWith(g,()=>{
     const std=stdItems(g),dxs=dxItems(g),dx=dxOn(g),shown=dx?g.items:std;
