@@ -272,6 +272,12 @@ a.link{text-decoration:none}
 .spmiss .why{color:var(--muted)}
 .splog li.old>.link{color:var(--muted)}
 .splog li .link{font-size:13px}
+.plc{font:600 11px var(--mono);color:var(--accent);margin-left:6px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pcl{list-style:none;margin:6px 0 10px;padding:0;display:flex;flex-direction:column;gap:8px;font-size:13px}
+.pcl li{display:grid;grid-template-columns:1fr auto;column-gap:8px;align-items:baseline}
+.pcl b{font:600 12px var(--mono);color:var(--accent)}
+.pcl i{grid-column:1/-1;height:4px;border-radius:2px;background:var(--accent);width:var(--w);opacity:.75;transform-origin:left}
+@media (prefers-reduced-motion:no-preference){@keyframes pcgrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}.plays[open] .pcl i{animation:pcgrow .6s cubic-bezier(.2,.8,.2,1) both}}
 code.uri{font:500 12px var(--mono);background:var(--sunk);border-radius:4px;padding:2px 5px;word-break:break-all;user-select:all}
 .track.ep .num,.track.ep .check{margin-top:2px}
 .eptl{all:unset;cursor:pointer;font-weight:500;overflow-wrap:anywhere}
@@ -2144,6 +2150,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.18-f', note:'PLAY COUNTS: every Spotify play of a song in your log is now counted. Song rows show a small ▶ number (hover for the last play date), and Settings › Spotify has a Most played list of your top songs and albums. The first time it runs it counts everything your Worker has saved (up to its last 3,000 plays); after that it adds each new play. Plays of songs not in Playback are not counted, and Spotify leaves out private-session plays.'},
   {v:'2026.11.18-e', note:'NEW RELEASES FROM YOUR ARTISTS: once a day while Playback is open (and on Check now), it asks Apple Music, which needs no key and uses none of your Spotify allowance, for the albums and EPs of up to 25 of your artists at a time, the ones checked longest ago first. Anything out in the last two months, or already announced, that is not in your log lands at the top of the Listen list under New from your artists, with Add to list, Artist and Dismiss, and the bookmark badge counts them. They also go to your morning brief (Worker 18 adds newReleases to /brief). Daily checks can be turned off in that box. It only runs while the app is open, and Apple is sent artist names only.'},
   {v:'2026.11.18-d', note:'YEAR IN REVIEW: Overview on your own account page has a Year in review card. Make my 2026 card builds a picture from your rated-on dates: albums rated, your average, how many artists, your top album big with its score, albums rated each month (busiest month lit) and your next best covers. Share it, copy it or save it like the rating card; switch years when you have rated 3+ albums in more than one.'},
   {v:'2026.11.18-c', note:'FRIENDS ACTIVITY: the Friends sheet opens on a new Activity tab (Friends keeps the list, codes and requests) showing the newest ratings from friends who share their page: cover, who rated, the title, the day, their score and the start of their review. Tap one to open that friend\'s page with the album already open. Rows rise in one after another. Needs Worker 18 (GET /acct/feed).'},
@@ -2590,6 +2597,20 @@ function lsDiff(g){
   const p=l[k-1],ds=[],r=rating(id);
   if(p.s)for(const i of g.items){if(lsCar(g,i.id))continue;const a=p.s[i.id]&&p.s[i.id].r,b=rating(i.id);if(a&&b)ds.push(b-a)}
   return{k,n:l.length,album:r&&p.r&&!lsCar(g,id)?r-p.r:null,songs:ds.length?ds.reduce((x,y)=>x+y,0)/ds.length:null,sn:ds.length}}
+const plN=id=>(S.marks[id]&&S.marks[id].pc)||0;
+function plBadge(id){const n=plN(id);if(!n)return '';const l=S.marks[id].pl;
+  return `<span class="plc" title="Played ${n} time${n===1?'':'s'} on Spotify${l?', last '+esc(new Date(l).toLocaleDateString([],{month:'short',day:'numeric'})):''}">\u25b6 ${n}</span>`}
+function plTop(){const so=[],al=new Map();
+  for(const a of S.music)for(const g of a.groups)for(const i of g.items){const n=plN(i.id);if(!n)continue;
+    so.push({id:i.id,t:i.title,a:a.name,aid:a.id,n});const k=g.id;const e=al.get(k)||{t:g.title,a:a.name,aid:a.id,n:0};e.n+=n;al.set(k,e)}
+  so.sort((x,y)=>y.n-x.n);return {so:so.slice(0,10),al:[...al.values()].sort((x,y)=>y.n-x.n).slice(0,5),tot:so.reduce((t,x)=>t+x.n,0)}}
+function plHtml(){const T=plTop();if(!T.so.length)return '';
+  const mx=T.so[0].n,bar=x=>`<i style="--w:${Math.max(6,Math.round(x.n/mx*100))}%"></i>`;
+  const amx=T.al[0].n,abar=x=>`<i style="--w:${Math.max(6,Math.round(x.n/amx*100))}%"></i>`;
+  return `<details class="spmiss plays" ${UI.plOpen?'open':''}><summary class="note">Most played: ${T.tot} play${T.tot===1?'':'s'} counted</summary>
+    <p class="note">Songs</p><ol class="pcl">${T.so.map(x=>`<li><button type="button" class="link" data-act="splgo" data-a="${esc(x.aid)}">${esc(x.t)}</button> <span class="why">\u2013 ${esc(x.a)}</span><b>${x.n}</b>${bar(x)}</li>`).join('')}</ol>
+    <p class="note">Albums</p><ol class="pcl">${T.al.map(x=>`<li><button type="button" class="link" data-act="splgo" data-a="${esc(x.aid)}">${esc(x.t)}</button> <span class="why">\u2013 ${esc(x.a)}</span><b>${x.n}</b>${abar(x)}</li>`).join('')}</ol>
+    <p class="note">Counts started when Spotify was connected. Private sessions and very short plays are not counted by Spotify.</p></details>`}
 function lsSongDelta(g,iid){
   const id=g.id,l=lsRaw(id);if(!l.length)return '';const k=lsIdx(id);if(k<1)return '';
   if(lsCar(g,iid))return '';
@@ -4233,15 +4254,23 @@ function spFind(idx,x){
   const hits=e.base.get(key);if(!hits)return{why:'song'};
   return{id:(hits.find(h=>h.g===al)||hits[0]).id};
 }
+/* the Worker is asked for its whole saved history once, so old plays can be counted; after that only what is new */
+const spQ=()=>'after='+((S.sp&&S.sp.cnt&&S.sp.after)||0);
+function spBump(id,p){const m=S.marks[id]||{};S.marks[id]={...m,pc:(m.pc||0)+1,pl:Math.max(m.pl||0,p||0)}}
 function spApply(plays){
   SPX.checked=Date.now();S.sp=S.sp||{after:0,miss:[]};
-  const after=S.sp.after||0,fresh=plays.filter(x=>x&&x.p>after&&x.t&&Array.isArray(x.a)).sort((a,b)=>a.p-b.p);
+  const after=S.sp.after||0;
+  if(!S.sp.cnt){   /* one-time: count plays already checked off before play counts existed */
+    if(after){const i0=spIndex();for(const x of plays)if(x&&x.p&&x.p<=after&&x.t&&Array.isArray(x.a)){const f=spFind(i0,x);if(f.id)spBump(f.id,x.p)}}
+    S.sp.cnt=Date.now();touch()}
+  const fresh=plays.filter(x=>x&&x.p>after&&x.t&&Array.isArray(x.a)).sort((a,b)=>a.p-b.p);
   if(!fresh.length)return;
   const idx=spIndex(),miss=S.sp.miss||[],log=S.sp.log||[];let marked=0,matched=0;
   const who=new Map();for(const a of S.music)for(const g of a.groups)for(const i of g.items)if(!who.has(i.id))who.set(i.id,{t:i.title,a:a.name,aid:a.id,g:g.title});
   for(const x of fresh){
     const f=spFind(idx,x);
     if(f.id){matched++;const n=!isDone(f.id);if(n){S.marks[f.id]={...(S.marks[f.id]||{}),done:true};marked++}
+      spBump(f.id,x.p);
       /* the songs it matched, newest first; a song played again moves to the top */
       const i=log.findIndex(e=>e.id===f.id),was=i>=0?log.splice(i,1)[0]:null,w=who.get(f.id)||{};
       log.unshift({id:f.id,t:w.t||x.t,a:w.a||x.a[0]||'',aid:w.aid||'',g:w.g||'',p:x.p,n:n||!!(was&&was.n),c:((was&&was.c)||0)+1});
@@ -4262,7 +4291,7 @@ async function spPoll(force){
   try{
     if(viaW&&SPL.rt)await spHandOff({cid:SPL.cid||spCid(),rt:SPL.rt,at:SPL.at||'',exp:SPL.exp||0});   /* the Worker was just updated: it takes over */
     let plays;
-    if(viaW){const j=await wkSp('GET',null,'after='+((S.sp&&S.sp.after)||0));SPX.wk=j;plays=j&&j.connected?j.plays||[]:[]}
+    if(viaW){const j=await wkSp('GET',null,spQ());SPX.wk=j;plays=j&&j.connected?j.plays||[]:[]}
     else plays=await spLocalPlays();
     SPX.err='';spApply(plays);
   }catch(e){SPX.err=spMessage(e);if(e.code==='reconnect'&&!viaW){SPL={};splSave()}}
@@ -4274,7 +4303,7 @@ async function spBoot(){
   if(SP_CB){SPX.busy=true;render();
     try{await spFinish(SP_CB);UI.tab='music'}catch(e){SPX.err=spMessage(e)}
     finally{SPX.busy=false}}
-  if(spViaWorker()&&!SPX.wk&&!SPL.rt){try{SPX.wk=await wkSp('GET',null,'after='+((S.sp&&S.sp.after)||0));SPX.last=Date.now();spApply(SPX.wk&&SPX.wk.connected?SPX.wk.plays||[]:[])}catch(e){SPX.err=spMessage(e)}render();return}
+  if(spViaWorker()&&!SPX.wk&&!SPL.rt){try{SPX.wk=await wkSp('GET',null,spQ());SPX.last=Date.now();spApply(SPX.wk&&SPX.wk.connected?SPX.wk.plays||[]:[])}catch(e){SPX.err=spMessage(e)}render();return}
   await spPoll(true);
 }
 async function spDisconnect(){
@@ -4321,6 +4350,7 @@ function spSide(){
     h+=`<details class="spmiss splog" ${UI.spLogOpen?'open':''}><summary class="note">Checked off from Spotify: ${nw} new${lg.length>nw?', '+(lg.length-nw)+' already heard':''}</summary>
       <ul>${lg.map(e=>`<li class="${e.n?'':'old'}"><button type="button" class="link" data-act="splgo" data-a="${esc(e.aid)}">${esc(e.t)}</button> <span class="why">\u2013 ${esc(e.a)}${e.g?' \u00b7 '+esc(e.g):''} \u00b7 ${esc(when(e.p))}${e.c>1?' \u00b7 '+e.c+' plays':''}${e.n?'':' \u00b7 already heard'}</span>${e.n&&isDone(e.id)?` <button type="button" class="link" data-act="spundo" data-id="${esc(e.id)}">Uncheck</button>`:e.n?' <span class="why">(unchecked)</span>':''}</li>`).join('')}</ul>
       <div><button type="button" class="link" data-act="splogclear">Clear this list</button></div></details>`}
+  h+=plHtml();
   const m=S.sp&&S.sp.miss||[];
   if(m.length){const why={artist:'artist not here yet',song:'song not in the list',version:'that version is not in the list'};
     h+=`<details class="spmiss"><summary class="note">${m.length} song${m.length===1?'':'s'} you played that are not in Playback</summary>
@@ -4780,7 +4810,7 @@ async function push(force){
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pull();else if(accSync()&&!ownSync()&&pushTimer&&SYS.status!=='conflict'){clearTimeout(pushTimer);pushTimer=null;push(false)}});   /* leaving the app sends a waiting account save right away */
 window.addEventListener('online',()=>pull());
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&UI.pAlb){UI.pAlb='';render()}else if(ev.key==='Escape'&&UI.frOpen){UI.frOpen=false;render()}else if(ev.key==='Escape'&&UI.llOpen){UI.llOpen=false;render()}else if(ev.key==='Escape'&&UI.mm){UI.mm=false;UI.mmAnim=false;render()}});
-document.addEventListener('toggle',ev=>{if(ev.target.id==='syncpanel')UI.syncOpen=ev.target.open;else if(ev.target.id==='syncguide')UI.guideOpen=ev.target.open;else if(ev.target.id==='backup')UI.bkOpen=ev.target.open;else if(ev.target.id==='addart')UI.addOpen=ev.target.open;else if(ev.target.id==='listenpanel')UI.llOpen=ev.target.open;else if(ev.target.id==='coladd')UI.colAdd=ev.target.open;else if(ev.target.id==='colhand')UI.colHand=ev.target.open;else if(ev.target.id==='coltok')UI.colTok=ev.target.open;else if(ev.target.classList&&ev.target.classList.contains('splog'))UI.spLogOpen=ev.target.open},true);
+document.addEventListener('toggle',ev=>{if(ev.target.id==='syncpanel')UI.syncOpen=ev.target.open;else if(ev.target.id==='syncguide')UI.guideOpen=ev.target.open;else if(ev.target.id==='backup')UI.bkOpen=ev.target.open;else if(ev.target.id==='addart')UI.addOpen=ev.target.open;else if(ev.target.id==='listenpanel')UI.llOpen=ev.target.open;else if(ev.target.id==='coladd')UI.colAdd=ev.target.open;else if(ev.target.id==='colhand')UI.colHand=ev.target.open;else if(ev.target.id==='coltok')UI.colTok=ev.target.open;else if(ev.target.classList&&ev.target.classList.contains('splog'))UI.spLogOpen=ev.target.open;else if(ev.target.classList&&ev.target.classList.contains('plays'))UI.plOpen=ev.target.open},true);
 const UI={view:null,libOpen:false,addOpen:false,rOpen:null,lq:{music:'',screen:''},tab:'music',sel:{music:null,screen:null},filter:'all',armed:null,addType:'show',copied:false,epOpen:{},dxOpen:{},wEdit:null,dEdit:null};
 
 /* ---------- rating history ----------
@@ -7487,7 +7517,7 @@ function artistView(a){
     const trackRows=rows.map(({i,k})=>{const s=songShow(i),r=rating(i.id),dn=isDone(i.id);
       const pc=r?r*10:0,dash=(pc*100.53/100).toFixed(2)+' 100.53';
       return `<div class="track sl-t${lsCar(g,i.id)?' carry':''} ${i.dx?'dx':''} ${dn?'done':''} ${r?'rated':''} ${UI.rOpen===i.id?'ropen':''} ${UI.rAnim===i.id?'opening':''} ${UI.rLand===i.id?'landing':''}" data-act="ropen" data-id="${i.id}" tabindex="0" role="button" aria-expanded="${UI.rOpen===i.id}" aria-label="${esc(s.t)}: ${r?'rated '+fmt(r)+', ':''}${UI.rOpen===i.id?'close rating':'open rating'}"${i.dx&&UI.dxAnim===g.id?` style="animation-delay:${60+Math.min(k,14)*38}ms"`:''}>${r?`<span class="wash" style="width:${pc}%" aria-hidden="true"></span>`:''}${lsSongBar(g,i.id,pc)}<span class="num">${k+1}</span>
-        <span class="ttl">${esc(s.t)}${s.f.length?`<span class="feat">feat. ${esc(s.f.join(', '))}</span>`:''}</span>${lsSongDelta(g,i.id)}
+        <span class="ttl">${esc(s.t)}${s.f.length?`<span class="feat">feat. ${esc(s.f.join(', '))}</span>`:''}</span>${lsSongDelta(g,i.id)}${plBadge(i.id)}
         <button class="check" data-act="tog" data-id="${i.id}" aria-pressed="${dn}" aria-label="${r?'Rated '+fmt(r)+'. ':''}${dn?'Heard':'Not heard'}: ${esc(i.title)}"><svg viewBox="0 0 44 44" aria-hidden="true"><circle class="rg-t" cx="22" cy="22" r="16"/>${r?`<circle class="rg-v" cx="22" cy="22" r="16" stroke-dasharray="${dash}"/>`:''}</svg>${r?`<span class="rg-n">${fmt(r)}</span>`:dn?'<span class="rg-d"></span>':''}</button></div>
         ${UI.rOpen===i.id?rateMeter(i.id,s.t):''}`}).join('');
     return `<div class="group sleeve${lsCls(g)} ${dx?'dxon':''} ${UI.dxAnim===g.id?'dxanim':''} ${SLIN.has(String(g.id))?'in':''}" data-acol="${g.id}" style="--acs:${col};--acd:${colD}">
