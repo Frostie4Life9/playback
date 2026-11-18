@@ -1668,6 +1668,9 @@ button.st-t:hover{color:var(--accent);text-decoration:underline}
 .st-manage label.btn.off{opacity:.6;pointer-events:none}
 .st-ok{color:var(--done)}
 .st-prog::before{content:"";display:inline-block;width:10px;height:10px;margin-right:8px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--accent)}
+.st-rl{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));column-gap:28px}
+.st-rc{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:12px;padding:9px 2px;border-top:1px solid var(--line)}
+.st-ago{font:600 12px var(--mono);color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
 .plset{margin-top:10px}
 @media (prefers-reduced-motion:no-preference){
   @keyframes stin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
@@ -1675,6 +1678,7 @@ button.st-t:hover{color:var(--accent);text-decoration:underline}
   @keyframes stup{from{transform:scaleY(0)}to{transform:scaleY(1)}}
   @keyframes stspin{to{transform:rotate(360deg)}}
   .stanim .st-row{animation:stin .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*28ms)}
+  .stanim .st-rc{animation:stin .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*28ms + 100ms)}
   .stanim .st-fill::after{animation:stfillx .8s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*28ms + 120ms)}
   .stanim .st-chart rect{animation:stup .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*14ms)}
   .stanim .st-col i{animation:stup .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*18ms)}
@@ -1683,7 +1687,7 @@ button.st-t:hover{color:var(--accent);text-decoration:underline}
   .st-prog::before{animation:stspin .8s linear infinite}
   .st-col i,.st-chart rect{transition:opacity .15s}
 }
-@media (max-width:560px){.st-row{grid-template-columns:22px 40px minmax(0,1fr) auto;gap:10px}.st-cv{width:40px;height:40px}.st-fill{left:72px}}
+@media (max-width:560px){.st-rl{grid-template-columns:minmax(0,1fr)}.st-rc{grid-template-columns:40px minmax(0,1fr) auto;gap:10px}.st-row{grid-template-columns:22px 40px minmax(0,1fr) auto;gap:10px}.st-cv{width:40px;height:40px}.st-fill{left:72px}}
 </style>
 
 <!-- suite:css v10 · shared by Kitchen, Grocery, Lift, DishLog, Protocol, Rail, Game Log, Playback — edit tools/suite.py in the kitchen repo, not here -->
@@ -2239,6 +2243,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.18-m', note:'RECENTLY PLAYED AND ARTIST PHOTOS ON STATS: the Stats page now starts with a Recently played card: your latest plays, newest first, each with its cover, artist and album and how long ago you played it (3 min ago, 2 h ago, 5 days ago; hover for the exact time, and the times keep ticking while the page is open). Show 10 more reaches further back. Artists in Stats now show their Spotify photo instead of a letter: it was reading the wrong picture field before, so even artists in your log showed letters. For artists not in your log, Playback looks their photo up on Spotify a few at a time (12 per visit, saved on this device, and it stops quietly if Spotify says quota).'},
   {v:'2026.11.18-l', note:'PLAY COUNT COLOR: the ▶ play count on song rows now uses the album color, the same as the rating ring beside it, instead of white.'},
   {v:'2026.11.18-k', note:'TRACK ROW LAYOUT: on song rows the rating ring now sits at the far right, with the play count (▶ and number) right beside it on its left in the same color as the song title. Before, the play count wrapped onto its own line and pushed the rating down.'},
   {v:'2026.11.18-j', note:'APPLE MUSIC IMPORT: Stats now reads Apple Music history too. Request your data at privacy.apple.com (Apple Media Services information), then choose the zip, or Apple Music Play Activity.csv, in the Stats import box. Apple plays count next to Spotify ones, songs match across services, and re-importing never double counts. An Apple import only replaces older Apple plays, never Spotify ones. Apple does not offer a free way to read plays as they happen (it needs a $99 a year developer account), so Apple plays come from the export.'},
@@ -3162,7 +3167,7 @@ const stHour=h=>(h%12||12)+(h<12?' AM':' PM');
 function stImgs(){
   const sig=plSig();if(PL.img&&PL.imgSig===sig)return PL.img;
   const m={ar:new Map(),al:new Map()};
-  for(const a of S.music){const k=nArtist(a.name);m.ar.set(k,{img:a.img||'',id:a.id});
+  for(const a of S.music){const k=nArtist(a.name),g0=a.groups.find(g=>g.img);m.ar.set(k,{img:a.simg||a.img||(g0?g0.img:''),id:a.id});
     for(const g of a.groups){const lk=k+'|'+plAlbKey(g.title);if(!m.al.has(lk)||(g.img&&!m.al.get(lk)))m.al.set(lk,g.img||'')}}
   PL.img=m;PL.imgSig=sig;return m;
 }
@@ -3173,17 +3178,66 @@ function stQ(d,r){
   return q;
 }
 const stCv=(img,name)=>`<span class="st-cv" style="--h:${accHue(name)}"><b aria-hidden="true">${accIni(name)}</b>${img?`<img src="${esc(img)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span>`;
+/* artist photos for artists that are not in the log: looked up on Spotify a few at a time and kept on this device */
+const STP_KEY='pb_stimg';
+let STP=null;
+const stpLoad=()=>{if(!STP){try{STP=JSON.parse(localStorage.getItem(STP_KEY)||'{}')||{}}catch(e){STP={}}}return STP};
+const stArt=(k,e)=>(e&&e.img)||(stpLoad()[k]||[])[0]||'';
+async function stPhotos(list){
+  if(STP_RUN||!READY||!(spViaWorker()||spCid()))return;
+  let cool=0;try{cool=+localStorage.getItem('pb_imgcool')||0}catch(e){}
+  if(cool>Date.now()||MBX.busy)return;                 /* Spotify said quota, or an import is running: leave it alone */
+  const C=stpLoad(),T=Date.now(),todo=list.filter(x=>{const c=C[x[0]];return !c||(!c[0]&&c[1]<T-12096e5)}).slice(0,12);   /* a miss is retried after 2 weeks */
+  if(!todo.length)return;
+  STP_RUN=true;spGap=1200;let got=0;
+  try{
+    for(const [k,name] of todo){
+      if(MBX.busy)break;
+      const j=await spApi('search?'+new URLSearchParams({q:name,type:'artist',limit:10}));
+      const hit=((j.artists&&j.artists.items)||[]).filter(x=>x&&x.id&&nArtist(x.name)===k).sort((x,y)=>(y.popularity||0)-(x.popularity||0))[0];
+      const u=hit?spImg(hit.images):'';C[k]=[u,Date.now()];if(u)got++;
+    }
+  }catch(e){if(e&&(e.code==='quota'||e.code==='limited'||e.code==='busy')){try{localStorage.setItem('pb_imgcool',String(Date.now()+Math.min(Math.max((e.wait||0)*1000,216e5),1728e5)))}catch(_){}}}
+  finally{STP_RUN=false;spGap=250;try{localStorage.setItem(STP_KEY,JSON.stringify(C))}catch(e){}if(got&&UI.view==='stats')render()}
+}
+let STP_RUN=false;
+/* "3 min ago", "2 h ago", "5 days ago" */
+function stAgo(sec){
+  const s=Math.max(0,Math.floor(Date.now()/1000)-sec);
+  if(s<60)return 'just now';
+  if(s<3600)return Math.floor(s/60)+' min ago';
+  if(s<86400){const h=Math.floor(s/3600);return h+' h ago'}
+  if(s<14*86400){const n=Math.floor(s/86400);return n+(n===1?' day':' days')+' ago'}
+  if(s<60*86400){const n=Math.floor(s/604800);return n+' weeks ago'}
+  if(s<730*86400){const n=Math.floor(s/2629800);return n+' months ago'}
+  return Math.floor(s/31557600)+' years ago';
+}
+/* the plays come in time order, so the latest are at the end */
+function stRecent(d,n){
+  const E=d.ts.length;if(!E)return '';
+  const I=stImgs(),rows=[],need=[],lim=Math.min(n,E);
+  for(let j=0;j<lim;j++){
+    const i=E-1-j,t=d.tk[d.ti[i]],a=d.ar[t.a],al=d.al[d.ai[i]],e=I.ar.get(a.k);
+    const aimg=stArt(a.k,e),img=(al&&I.al.get(al.k))||aimg;if(!aimg&&!img)need.push([a.k,a.n]);
+    const when=new Date(d.ts[i]*1000).toLocaleString([],{weekday:'short',month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
+    rows.push(`<li class="st-rc" style="--i:${Math.min(j,14)}">${stCv(img,t.t)}<span class="st-m">${e?`<button type="button" class="link st-t" data-act="splgo" data-a="${esc(e.id)}">${esc(t.t)}</button>`:`<span class="st-t">${esc(t.t)}</span>`}<small>${esc(a.n)}${al&&al.n?' · '+esc(al.n):''}</small></span><time class="st-ago" data-t="${d.ts[i]}" datetime="${new Date(d.ts[i]*1000).toISOString()}" title="${esc(when)}">${stAgo(d.ts[i])}</time></li>`);
+  }
+  if(need.length&&!d.demo)stPhotos(need);
+  return `<div class="setcard st-rec"><h3>Recently played</h3><ol class="st-rl">${rows.join('')}</ol>${E>lim?`<div class="tools"><button type="button" class="btn" data-act="strmore">Show 10 more</button><span class="note">${stN(lim)} of ${stN(E)}</span></div>`:''}</div>`;
+}
+setInterval(()=>{document.querySelectorAll('.st-ago[data-t]').forEach(el=>{const v=stAgo(+el.dataset.t);if(el.textContent!==v)el.textContent=v})},30000);
 function stList(d,q,kind,limit){
   const top=plTop(q,kind,0),I=stImgs();if(!top.length)return '<p class="note">Nothing played in this time.</p>';
-  const c=kind==='t'?q.cT:kind==='r'?q.cR:q.cA,m=kind==='t'?q.mT:kind==='r'?q.mR:q.mA,mx=c[top[0]],rows=[];
+  const c=kind==='t'?q.cT:kind==='r'?q.cR:q.cA,m=kind==='t'?q.mT:kind==='r'?q.mR:q.mA,mx=c[top[0]],rows=[],need=[];
   for(let n=0;n<Math.min(limit,top.length);n++){
     const i=top[n];let name,sub,img='',aid='';
-    if(kind==='r'){const a=d.ar[i],e=I.ar.get(a.k);name=a.n;sub=stHrs(m[i])+' listened';img=e?e.img:'';aid=e?e.id:''}
+    if(kind==='r'){const a=d.ar[i],e=I.ar.get(a.k);name=a.n;sub=stHrs(m[i])+' listened';img=stArt(a.k,e);aid=e?e.id:'';if(!img)need.push([a.k,a.n])}
     else if(kind==='t'){const t=d.tk[i],a=d.ar[t.a],e=I.ar.get(a.k),la=q.lastAl[i],al=la>=0?d.al[la]:null;name=t.t;sub=a.n+(al&&al.n?' · '+al.n:'');img=al?(I.al.get(al.k)||''):'';aid=e?e.id:''}
     else{const al=d.al[i],a=d.ar[al.a],e=I.ar.get(a.k);name=al.n;sub=a.n;img=I.al.get(al.k)||'';aid=e?e.id:''}
     const w=Math.max(3,Math.round(c[i]/mx*100));
     rows.push(`<li class="st-row" style="--i:${Math.min(n,18)};--w:${w}%"><span class="st-rk">${n+1}</span>${stCv(img,name)}<span class="st-m">${aid?`<button type="button" class="link st-t" data-act="splgo" data-a="${esc(aid)}">${esc(name)}</button>`:`<span class="st-t">${esc(name)}</span>`}<small>${esc(sub)}</small></span><span class="st-n"><b>${stN(c[i])}</b><small>${kind==='r'?'plays':stHrs(m[i])}</small></span><i class="st-fill" aria-hidden="true"></i></li>`);
   }
+  if(need.length&&!d.demo)stPhotos(need);
   return `<ol class="st-list">${rows.join('')}</ol>${top.length>limit?`<div class="tools"><button type="button" class="btn" data-act="stmore">Show ${Math.min(25,top.length-limit)} more</button><span class="note">${stN(limit)} of ${stN(top.length)}</span></div>`:''}`;
 }
 function stBars(vals,labels,cls){
@@ -3236,6 +3290,7 @@ function statsView(){
       <div class="col-hero-n"><div><b data-n="${q.n}">${stN(q.n)}</b><span>Plays</span></div><div><b data-n="${Math.round(q.ms/36e5)}">${stN(q.ms/36e5)}</b><span>Hours</span></div><div><b data-n="${q.nT}">${stN(q.nT)}</b><span>Songs</span></div><div><b data-n="${q.nR}">${stN(q.nR)}</b><span>Artists</span></div></div>
     </div>
     ${demo?`<div class="st-demo" role="status"><span><b>Fake stats.</b> Made-up listening to show what this page looks like. None of it is yours and none of it is saved.</span><button type="button" class="btn" data-act="stdemooff">Back to my stats</button></div>`:''}
+    ${stRecent(d,UI.stRN||10)}
     <div class="st-ctl"><div class="hchips" role="group" aria-label="Time range">${[['4w','4 weeks'],['6m','6 months'],['12m','12 months'],['ytd','This year'],['all','All time']].map(x=>chip('strange',x[0],x[1],r.k)).join('')}</div>${yrs.length>1?`<select id="styr" class="st-sel" aria-label="Pick a year"><option value="">Year…</option>${yrs.map(y=>`<option value="${y}"${r.k==='y'+y?' selected':''}>${y}</option>`).join('')}</select>`:''}</div>
     ${q.n?`<div class="st-grid">
       <div class="setcard st-main"><div class="hchips" role="group" aria-label="What to rank">${chip('stkind','t','Songs',kind)}${chip('stkind','r','Artists',kind)}${chip('stkind','a','Albums',kind)}</div>${stList(d,q,kind,limit)}</div>
@@ -3265,6 +3320,7 @@ function stAct(act,b){
   if(act==='strange'){UI.stR=b.dataset.v;UI.stN=25;UI.stAnim=true;return true}
   if(act==='stkind'){UI.stK=b.dataset.v;UI.stN=25;UI.stAnim=true;return true}
   if(act==='stmore'){UI.stN=(UI.stN||25)+25;return true}
+  if(act==='strmore'){UI.stRN=(UI.stRN||10)+10;return true}
   if(act==='plcheck'){
     const ids=PL.sync&&PL.sync.heard||[];if(!ids.length)return true;
     if(PL.arm!=='check'){PL.arm='check';return true}
