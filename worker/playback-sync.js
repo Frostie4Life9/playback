@@ -1,5 +1,5 @@
 /* =========================================================
-   Playback — sync  (worker version 13, 2026.11.17)
+   Playback — sync  (worker version 18, 2026.11.18)
    Cloudflare Worker + KV. Same setup pattern as protocol-sync
    and gamelog-sync.
 
@@ -169,11 +169,17 @@ async function briefPut(request, env) {
     if (!x || typeof x.t !== 'string' || !/^\d{4}-\d\d-\d\d$/.test(String(x.d))) continue;
     shows.push({ t: x.t.slice(0, 200), n: Math.max(0, parseInt(x.n, 10) || 0), e: Math.max(0, parseInt(x.e, 10) || 0), d: x.d, behind: !!x.behind });
   }
+  /* new albums and EPs from the artists you follow (version 18): [{a: artist, t: title, d: day}] */
+  const rel = [];
+  for (const x of (Array.isArray(p.rel) ? p.rel : []).slice(0, 20)) {
+    if (!x || typeof x.a !== 'string' || typeof x.t !== 'string' || !/^\d{4}-\d\d-\d\d$/.test(String(x.d))) continue;
+    rel.push({ a: x.a.slice(0, 120), t: x.t.slice(0, 200), d: x.d });
+  }
   /* the app resends the list every time it opens: only save when it actually changed (a read is free, a write is not) */
   const prev = await getJSON(env, BRIEF);
-  if (prev && JSON.stringify(prev.shows) === JSON.stringify(shows)) return reply({ ok: true, shows: shows.length, unchanged: true });
-  await env.STATE.put(BRIEF, JSON.stringify({ at: Date.now(), shows }));
-  return reply({ ok: true, shows: shows.length });
+  if (prev && JSON.stringify(prev.shows) === JSON.stringify(shows) && JSON.stringify(prev.rel || []) === JSON.stringify(rel)) return reply({ ok: true, shows: shows.length, unchanged: true });
+  await env.STATE.put(BRIEF, JSON.stringify({ at: Date.now(), shows, rel }));
+  return reply({ ok: true, shows: shows.length, releases: rel.length });
 }
 
 async function briefGet(env, url) {
@@ -190,7 +196,8 @@ async function briefGet(env, url) {
     today: t0, tomorrow: t1, timezone: BRIEF_TZ, updated: b.at,
     tonight: shows.filter(x => x.d === t0),
     tomorrowEps: shows.filter(x => x.d === t1),
-    thisWeek: shows.filter(x => x.d > t1 && x.d <= t7)
+    thisWeek: shows.filter(x => x.d > t1 && x.d <= t7),
+    newReleases: b.rel || []
   });
 }
 
@@ -459,6 +466,7 @@ async function sugOwner(request, env, url) {
    POST   /acct/friends       {code}        asks that person to be friends
    POST   /acct/friends/accept {uid}
    DELETE /acct/friends?uid=  removes a friend, declines a request or cancels one
+   GET    /acct/feed          -> {rows:[{uid,name,hue,kind,k,t,r,n,a,i,d,rv}]}  the 60 newest ratings from friends who are sharing (version 18)
    GET    /acct/profile?uid=  -> {profile:{name, friends, items}}  your own page, or a friend's who is sharing
    POST   /acct/friends/ratings {kind, ks:[], ts:[]} -> {rows:[{uid,name,k,t,r}]}  accepted friends only
    GET    /acct/sync          -> {mtime, b64} (a person's own gzipped log, base64) or null   (version 12)
@@ -500,6 +508,7 @@ async function acctInit(env) {
   try { await env.CATALOG.prepare('ALTER TABLE acct_ratings ADD COLUMN trk TEXT').run(); } catch (e) { /* already there */ }   /* an album's songs and their ratings, JSON [[title, rating], ...] (version 17) */
   try { await env.CATALOG.prepare('ALTER TABLE acct_users ADD COLUMN songs INTEGER').run(); } catch (e) { /* already there */ }   /* how many songs they have rated, shown on their page */
   try { await env.CATALOG.prepare('ALTER TABLE acct_users ADD COLUMN savg REAL').run(); } catch (e) { /* already there */ }
+  try { await env.CATALOG.prepare('ALTER TABLE acct_ratings ADD COLUMN rv TEXT').run(); } catch (e) { /* already there */ }   /* a written review of an album, up to 1000 characters (version 18) */
   try { await env.CATALOG.prepare('ALTER TABLE acct_ratings ADD COLUMN day TEXT').run(); } catch (e) { /* already there */ }   /* the day it was rated, YYYY-MM-DD (version 16) */
   /* profile picture and account color (version 14): hue 0-359 or NULL for the automatic color, pic a small JPEG data URL or empty */
   for (const col of ['hue INTEGER', 'pic TEXT']) { try { await env.CATALOG.prepare('ALTER TABLE acct_users ADD COLUMN ' + col).run(); } catch (e) { /* already there */ } }
@@ -600,6 +609,7 @@ function cleanImg(u) {
 const CODE_CH = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const randCode = () => { const b = crypto.getRandomValues(new Uint8Array(8)); return [...b].map(x => CODE_CH[x % CODE_CH.length]).join(''); };
 const randUid = () => [...crypto.getRandomValues(new Uint8Array(8))].map(b => b.toString(16).padStart(2, '0')).join('');
+const cleanReview = s => typeof s === 'string' ? s.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '').replace(/\r\n?/g, '\n').replace(/\n{3,}/g, '\n\n').trim().slice(0, 1000) : '';   /* plain text (a < or > is just a character, like in "<3"); the app escapes every review when it draws it */
 const cleanName = s => String(s || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 40);
 async function readBody(request, max) {
   const t = await request.text();
@@ -737,12 +747,12 @@ async function acct(request, env, url) {
         if (tr.some(q => q[1] > 0)) trk = JSON.stringify(tr).slice(0, 12000);
         if (trk && !trk.endsWith(']')) trk = null;   /* never keep a cut-off list */
       }
-      items.push({ kind: x.kind, k: typeof x.k === 'string' ? x.k.slice(0, 80) : '', t, r: Math.round(r * 2) / 2, n: String(x.n || '').slice(0, 120), a: String(x.a || '').slice(0, 160), i: cleanImg(x.i), d: cleanDay(x.d), trk });
+      items.push({ kind: x.kind, k: typeof x.k === 'string' ? x.k.slice(0, 80) : '', t, r: Math.round(r * 2) / 2, n: String(x.n || '').slice(0, 120), a: String(x.a || '').slice(0, 160), i: cleanImg(x.i), d: cleanDay(x.d), trk, rv: x.kind === 'a' ? cleanReview(x.rv) || null : null });
     }
     const songs = Math.min(1000000, Math.max(0, Math.floor(Number(j.songs) || 0))), sa = Number(j.savg), savg = songs > 0 && sa > 0 && sa <= 10 ? Math.round(sa * 100) / 100 : null;
     await env.CATALOG.batch([
       env.CATALOG.prepare('DELETE FROM acct_ratings WHERE uid = ?1').bind(me.uid),
-      env.CATALOG.prepare("INSERT OR REPLACE INTO acct_ratings (uid, kind, k, t, r, ttl, art, img, day, trk) SELECT ?1, json_extract(value,'$.kind'), json_extract(value,'$.k'), json_extract(value,'$.t'), json_extract(value,'$.r'), json_extract(value,'$.n'), json_extract(value,'$.a'), json_extract(value,'$.i'), json_extract(value,'$.d'), json_extract(value,'$.trk') FROM json_each(?2)").bind(me.uid, JSON.stringify(items)),
+      env.CATALOG.prepare("INSERT OR REPLACE INTO acct_ratings (uid, kind, k, t, r, ttl, art, img, day, trk, rv) SELECT ?1, json_extract(value,'$.kind'), json_extract(value,'$.k'), json_extract(value,'$.t'), json_extract(value,'$.r'), json_extract(value,'$.n'), json_extract(value,'$.a'), json_extract(value,'$.i'), json_extract(value,'$.d'), json_extract(value,'$.trk'), json_extract(value,'$.rv') FROM json_each(?2)").bind(me.uid, JSON.stringify(items)),
       env.CATALOG.prepare('UPDATE acct_users SET rated = ?2, seen = ?3, songs = ?4, savg = ?5 WHERE uid = ?1').bind(me.uid, items.length, now, songs, savg)
     ]);
     return reply({ ok: true, rows: items.length });
@@ -793,6 +803,17 @@ async function acct(request, env, url) {
     return r.meta && r.meta.changes ? reply({ ok: true }) : reply({ error: 'That request is gone.' }, 404);
   }
 
+  /* what friends rated lately: newest rating days first, only friends who are sharing, only ratings that have a day (version 18) */
+  if (path === '/feed' && M === 'GET') {
+    const rows = (await env.CATALOG.prepare(
+      "SELECT r.uid AS uid, u.name AS name, u.hue AS hue, r.kind AS kind, r.k AS k, r.t AS t, r.r AS r, r.ttl AS n, r.art AS a, r.img AS i, r.day AS d, r.rv AS rv FROM acct_ratings r JOIN acct_users u ON u.uid = r.uid " +
+      "WHERE u.share = 1 AND r.day IS NOT NULL AND r.uid IN (SELECT b FROM acct_friends WHERE a = ?1 AND st = 'ok' UNION SELECT a FROM acct_friends WHERE b = ?1 AND st = 'ok') " +
+      "ORDER BY r.day DESC, u.name COLLATE NOCASE, r.ttl COLLATE NOCASE LIMIT 60"
+    ).bind(me.uid).all()).results || [];
+    for (const x of rows) { if (!x.rv) delete x.rv; if (!x.i) delete x.i; }
+    return reply({ rows });
+  }
+
   /* a person's page: their published ratings. Yours always; a friend's only if you are friends and they are sharing. */
   if (path === '/profile' && M === 'GET') {
     const uid = (url.searchParams.get('uid') || '').replace(/[^0-9a-f]/g, '');
@@ -804,8 +825,8 @@ async function acct(request, env, url) {
     const u = await env.CATALOG.prepare('SELECT uid, name, share, made, hue, pic, songs, savg FROM acct_users WHERE uid = ?1').bind(uid).first();
     if (!u) return reply({ error: 'That account is gone.' }, 404);
     if (uid !== me.uid && !u.share) return reply({ error: u.name + ' is not sharing their ratings right now.' }, 403);
-    const items = (await env.CATALOG.prepare('SELECT kind, k, t, r, ttl AS n, art AS a, img AS i, day AS d, trk FROM acct_ratings WHERE uid = ?1 ORDER BY r DESC, ttl COLLATE NOCASE LIMIT 4000').bind(uid).all()).results || [];
-    for (const x of items) { if (x.trk) { try { x.tr = JSON.parse(x.trk); } catch (e) { /* skip a bad list */ } } delete x.trk; }
+    const items = (await env.CATALOG.prepare('SELECT kind, k, t, r, ttl AS n, art AS a, img AS i, day AS d, trk, rv FROM acct_ratings WHERE uid = ?1 ORDER BY r DESC, ttl COLLATE NOCASE LIMIT 4000').bind(uid).all()).results || [];
+    for (const x of items) { if (x.trk) { try { x.tr = JSON.parse(x.trk); } catch (e) { /* skip a bad list */ } } delete x.trk; if (!x.rv) delete x.rv; }
     const fc = await env.CATALOG.prepare("SELECT COUNT(*) AS c FROM acct_friends WHERE st = 'ok' AND (a = ?1 OR b = ?1)").bind(uid).first('c');
     return reply({ profile: { uid, name: u.name, since: u.made, friends: fc || 0, hue: u.hue == null ? null : u.hue, pic: u.pic || '', songs: u.songs || 0, savg: u.savg || 0, items } });
   }
@@ -817,7 +838,7 @@ async function acct(request, env, url) {
     const ts = (Array.isArray(j.ts) ? j.ts : []).filter(x => typeof x === 'string' && x).slice(0, 400).map(x => x.slice(0, 200));
     if (!ks.length && !ts.length) return reply({ rows: [] });
     const rows = (await env.CATALOG.prepare(
-      "SELECT r.uid AS uid, u.name AS name, u.hue AS hue, r.k AS k, r.t AS t, r.r AS r FROM acct_ratings r JOIN acct_users u ON u.uid = r.uid " +
+      "SELECT r.uid AS uid, u.name AS name, u.hue AS hue, r.k AS k, r.t AS t, r.r AS r, r.rv AS rv FROM acct_ratings r JOIN acct_users u ON u.uid = r.uid " +
       "WHERE r.kind = ?1 AND u.share = 1 AND r.uid IN (SELECT b FROM acct_friends WHERE a = ?2 AND st = 'ok' UNION SELECT a FROM acct_friends WHERE b = ?2 AND st = 'ok') " +
       "AND (r.k IN (SELECT value FROM json_each(?3)) OR r.t IN (SELECT value FROM json_each(?4))) LIMIT 1500"
     ).bind(kind, me.uid, JSON.stringify(ks), JSON.stringify(ts)).all()).results || [];
