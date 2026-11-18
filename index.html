@@ -920,6 +920,7 @@ details.addart .add{border-top:1px solid var(--line)}
 .pf-ih b{font:800 16px Archivo,var(--display)}
 .pf-ih span{font:500 11px var(--mono);color:var(--muted)}
 .pf-info .note,.pf-hint{margin:0}
+@media (prefers-reduced-motion:no-preference){.pf-hint.pf-hfade{animation:albfade .28s ease both}}
 .pf-st{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--ink);font:700 22px/1 var(--display);transition:transform .15s}
 .pf-st:active{transform:scale(.92)}
 .pf-st:disabled{opacity:.3}
@@ -2100,6 +2101,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-at', note:'SMOOTHER FOLD: when a score or month detail panel closes, it now shrinks to exactly the size of the \u201cTap a bar\u2026\u201d line that replaces it and that line fades in, so the cards below no longer rise too far and then snap back down.'},
   {v:'2026.11.17-as', note:'DETAIL PANEL CLOSES SMOOTHLY: tapping the selected bar again (a score under the tiles, or a month in Albums rated per month) now folds the detail panel away, shrinking and fading, with the cards below sliding up into the gap, instead of vanishing at once.'},
   {v:'2026.11.17-ar', note:'STEADY RECORD: tapping a bar under Overview (a score or a month) no longer makes the big rated-albums record jump. Every tap redrew the page, which started the record\u2019s slow spin over from its first angle; it now keeps turning from wherever it was.'},
   {v:'2026.11.17-aq', note:'PAGE TRANSITIONS AND A STEADIER FRIENDS SHEET: switching between Music, Screen, Collection, Settings and Account now slides the new page in from the side it sits on in the top bar while it fades up (going back toward Music slides the other way). Opening Friends no longer plays twice: the sheet used to slide up, then slide up again a moment later when the list finished loading; now it slides up once and the list fills in without moving.'},
@@ -6127,12 +6129,13 @@ function accStatsHtml(st,P){
       <p class="note">${al.length} album${al.length===1?'':'s'} · ${nS} show${nS===1?'':'s'} or film${nS===1?'':'s'} · ${Math.round(100*all.length/Math.max(1,b.length))}% of all ratings</p>
       ${al.length?pfCovs(al,`data-act="pgosc" data-v="${sel}" data-k="a"`):''}
       <div class="pf-go">${al.length?`<button class="btn" data-act="pgosc" data-v="${sel}" data-k="a">See the albums →</button>`:''}${nS?`<button class="btn" data-act="pgosc" data-v="${sel}" data-k="s">See shows &amp; films →</button>`:''}</div></div>`;
-  }else info=`<p class="note pf-hint">Tap a bar to see what ${P.self?'you':esc(P.name)} gave that score.</p>`;
+  }else info=`<p class="note pf-hint${pfHintIn()}">Tap a bar to see what ${P.self?'you':esc(P.name)} gave that score.</p>`;
   return `<div class="pf-tiles${an}">${tiles}</div>
     <div class="pf-hist${an}" role="group" aria-label="How often each rating from 1 to 10 was given. Tap a bar for details.">${st.hist.map((c,i)=>`<button data-act="psc" data-v="${i+1}" aria-pressed="${sel===i+1}" aria-label="Score ${i+1}: ${c} rating${c===1?'':'s'}" style="--i:${i};--v:${(c/mx*100).toFixed(0)}%"><em>${c||''}</em><i></i><span>${i+1}</span></button>`).join('')}</div>${info}`;
 }
 /* ---------- the sections of an account page: Overview (stats, activity, top artists, the record), Albums (a wall of covers you can sort and filter) and Shows & films ---------- */
 function pReset(){UI.pAlb='';UI.pTab='o';UI.pKind='a';UI.pLim=60;UI.pSort='hi';UI.pMin=0;UI.pYear='';UI.pMon=0;UI.pView='g';UI.pFilter='all';UI.pFOpen=false;UI.pAnimL=false;UI.pAnimF=false;UI.pAnimI=false;UI.pBucket=0;UI.pSelSc=0;UI.pSelMon=''}
+const pfHintIn=()=>{const f=UI.pHintIn;UI.pHintIn=false;return f?' pf-hfade':''};   /* the hint fades in once, on the redraw right after a detail panel folds away */
 const pfAn=()=>UI.pAnim||UI.pAnimL?' pf-in':'';
 const pMonthName=(k,short)=>{const[y,m]=k.split('-');return new Date(+y,+m-1,1).toLocaleDateString([],short?{month:'short'}:{month:'long',year:'numeric'})};
 const accAvg=l=>l.length?l.reduce((t,x)=>t+x.r,0)/l.length:0;
@@ -6176,7 +6179,7 @@ function accInsightsHtml(P){
       const mk=shown[si],ls=dated.filter(x=>x.d.slice(0,7)===mk.k).sort((p,q)=>q.r-p.r||String(p.n).localeCompare(String(q.n))),pv=shown[si-1],nx=shown[si+1];
       monInfo=`<div class="pf-info${UI.pAnimI==='mo'?' pf-opn':''}"><div class="pf-ih"><button class="pf-st" data-act="pmo" data-v="${pv?pv.k:''}" aria-label="Previous month"${pv?'':' disabled'}>‹</button><b>${esc(pMonthName(mk.k))}</b><button class="pf-st" data-act="pmo" data-v="${nx?nx.k:''}" aria-label="Next month"${nx?'':' disabled'}>›</button></div>
         ${ls.length?`<p class="note">${ls.length} album${ls.length===1?'':'s'} · avg ${accAvg(ls).toFixed(1)} · best: ${esc(ls[0].n||'Untitled')} (${fmt(ls[0].r)})</p>${pfCovs(ls,`data-act="pgomon" data-v="${mk.k}"`)}<div class="pf-go"><button class="btn" data-act="pgomon" data-v="${mk.k}">See ${ls.length===1?'it':'them'} in Albums →</button></div>`:`<p class="note">Nothing rated this month.</p>`}</div>`;
-    }else monInfo=`<p class="note pf-hint">Tap a bar to see that month.</p>`;
+    }else monInfo=`<p class="note pf-hint${pfHintIn()}">Tap a bar to see that month.</p>`;
     h+=`<div class="pf-card pf-c-mon${an}" style="--i:${n++}"><h3>Albums rated per month<small>${esc(lab(shown[0].k))} → ${esc(lab(shown[shown.length-1].k))}</small></h3>
       <div class="pf-act${an}" role="group" aria-label="Albums rated each month. Tap a bar for details.">${shown.map((x,i)=>`<button data-act="pmo" data-v="${x.k}" aria-pressed="${x.k===sk}" aria-label="${esc(pMonthName(x.k))}: ${x.n} album${x.n===1?'':'s'}" style="--i:${i}"><i style="--v:${(x.n/mx*100).toFixed(0)}%" class="${x.k===best.k?'top':''}"></i></button>`).join('')}</div>
       ${monInfo}
@@ -7555,10 +7558,12 @@ document.addEventListener('click',ev=>{
   if(!UI.pClosing&&((act==='psc'&&UI.pSelSc&&UI.pSelSc===+b.dataset.v)||(act==='pmo'&&UI.pSelMon&&UI.pSelMon===b.dataset.v))){
     const inMo=act==='pmo',box=inMo?b.closest('.pf-card'):b.closest('.pf-hist'),info=box&&(inMo?box.querySelector('.pf-info'):box.nextElementSibling);
     if(info&&info.classList.contains('pf-info')&&info.animate&&!matchMedia('(prefers-reduced-motion:reduce)').matches){
-      UI.pClosing=true;const h=info.offsetHeight,gap=inMo?12:14;
+      UI.pClosing=true;const h=info.offsetHeight;
+      /* measure the hint line that takes the panel's place, so the cards below only move by the difference */
+      const ms=document.createElement('p');ms.className='note pf-hint';ms.textContent=inMo?'Tap a bar to see that month.':'Tap a bar to see what you gave that score.';ms.style.cssText='position:absolute;visibility:hidden;width:'+info.offsetWidth+'px';info.parentElement.appendChild(ms);const hh=ms.offsetHeight;ms.remove();
       info.style.overflow='hidden';
-      const an=info.animate([{height:h+'px',opacity:1,transform:'none',marginBottom:'0px'},{height:'0px',opacity:0,transform:'translateY(-8px)',paddingTop:'0px',paddingBottom:'0px',borderWidth:'0px',marginBottom:(-gap)+'px'}],{duration:260,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});
-      an.onfinish=()=>{UI.pClosing=false;if(inMo)UI.pSelMon='';else UI.pSelSc=0;UI.pAnimI=false;render()};
+      const an=info.animate([{height:h+'px',opacity:1,transform:'none',paddingTop:getComputedStyle(info).paddingTop,paddingBottom:getComputedStyle(info).paddingBottom,borderTopWidth:'1px',borderBottomWidth:'1px'},{height:hh+'px',opacity:0,transform:'none',paddingTop:'0px',paddingBottom:'0px',borderTopWidth:'0px',borderBottomWidth:'0px'}],{duration:260,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'});
+      an.onfinish=()=>{UI.pClosing=false;if(inMo)UI.pSelMon='';else UI.pSelSc=0;UI.pAnimI=false;UI.pHintIn=true;render()};
       return}}
   /* closing a rater: let it fold away first, then redraw */
   if((act==='rclose'||(act==='ropen'&&UI.rOpen===id))&&!UI.rClosing){
