@@ -943,6 +943,15 @@ details.addart .add{border-top:1px solid var(--line)}
 .pf-tiles{grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr))}
 .pf-tiles>div:last-child:nth-child(odd){grid-column:auto}
 .vl{display:flex;flex-direction:column;align-items:center}
+/* Settings page: three groups that sit side by side on a wide screen, two columns on a tablet and one on a phone */
+.settings.set{display:grid;column-width:auto;grid-template-columns:minmax(0,1fr);gap:16px 14px;align-items:start;max-width:none}
+.settings.set>*{margin:0;break-inside:auto}
+.settings.set>h2,.settings.set>p{grid-column:1/-1}
+.set-col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.set-col>*{margin:0}
+.set-gh{margin:0 0 -2px 4px;font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+@media (min-width:760px){.settings.set{grid-template-columns:repeat(2,minmax(0,1fr))}.set-lib{grid-column:1;grid-row:3/span 2}.set-acct{grid-column:2;grid-row:3}.set-data{grid-column:2;grid-row:4}}
+@media (min-width:1300px){.settings.set{grid-template-columns:repeat(3,minmax(0,1fr))}.set-lib,.set-acct,.set-data{grid-row:3}.set-lib{grid-column:1}.set-acct{grid-column:2}.set-data{grid-column:3}}
 /* account Overview layout: the cards rearrange as the window grows (phone: one column, tablet: two, desktop: record beside the cards, ultra-wide: record plus two card columns) */
 .settings.pf{grid-template-columns:minmax(0,1fr)}
 @media (min-width:1000px){.settings.pf{grid-template-columns:repeat(2,minmax(0,1fr))}.settings.pf>.setcard,.settings.pf>.frwrap{grid-column:auto}}
@@ -2061,6 +2070,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.17-ao', note:'ACCOUNT SETTINGS TAB AND A TIDIER SETTINGS PAGE: your Account page has a fourth tab, Settings, that holds Friends (your code, add by code, requests) and Your account (photo, color, name, sharing, owner login, sync, sign out, delete), so they no longer sit under Overview, Albums and Shows & films. A friend\u2019s page does not show it. The regular Settings page is now grouped under three headings: Library & imports (import source, Spotify, Rate Your Music, rating dates), Account & community (the account shortcut, friend suggestions, people using Playback) and Your data (sync, numbers, export, backup). The groups sit side by side on a wide monitor, in two columns on a tablet and stacked on a phone. The Account card in Settings now has an Account settings button that opens straight to the new tab.'},
   {v:'2026.11.17-an', note:'OVERVIEW REARRANGES WITH THE WINDOW: the account Overview now lays its cards out by screen size instead of letting them fall wherever. On a phone everything stacks in one column (months, scoring habits, top artists, then the record). On a tablet the months card spans the top, scoring habits and top artists sit side by side, and the record is centered below. On a desktop the big record sits on the left, staying in view as you scroll, with the months, scoring habits and top artists stacked beside it so there are no empty gaps. On a very wide monitor the record takes the left, the months card spans the top and scoring habits and top artists sit side by side under it. Friends and Your account sit side by side on wide screens and stack on narrow ones.'},
   {v:'2026.11.17-am', note:'FIXES AND FULL-WIDTH PAGES: tapping a month bar used to replay the animation on the score covers above it (and the reverse); now only the panel you opened animates. Every page now uses the whole window instead of a centered column about 1100px wide: Settings flows into columns, your page lays its cards side by side, and everything folds back to one column as the window shrinks. The cover previews are fitted to the space they have, so they stay correct inside the narrower cards and refit on resize without redrawing.'},
   {v:'2026.11.17-al', note:'COVER PREVIEWS FILL THE PANEL: the score and month details on Overview used to show just the first eight covers. They now fill two rows on a phone and three on a wider screen, with more columns the wider the window (it refits when you resize), and when there are more albums than fit the last tile says how many more (+33 more) and opens them in the Albums tab. The covers also fade in at an even pace.'},
@@ -6093,9 +6103,9 @@ function accSortFn(sort){
   }
 }
 function accTabsHtml(P){
-  const b=accBase(P.items),nA=b.filter(x=>x.kind==='a').length,nS=b.filter(x=>x.kind==='s').length,t=UI.pTab==='a'||UI.pTab==='s'?UI.pTab:'o';
+  const b=accBase(P.items),nA=b.filter(x=>x.kind==='a').length,nS=b.filter(x=>x.kind==='s').length,t=UI.pTab==='a'||UI.pTab==='s'||(UI.pTab==='c'&&P.self)?UI.pTab:'o';
   const tb=(v,l,n)=>`<button data-act="ptab" data-v="${v}" aria-pressed="${t===v}">${l}${n==null?'':`<span class="c">${n}</span>`}</button>`;
-  return `<div class="pf-tabs pf-main" role="group" aria-label="Page sections">${tb('o','Overview')}${tb('a','Albums',nA)}${tb('s','Shows &amp; films',nS)}</div>`;
+  return `<div class="pf-tabs pf-main" role="group" aria-label="Page sections">${tb('o','Overview')}${tb('a','Albums',nA)}${tb('s','Shows &amp; films',nS)}${P.self?`<button data-act="ptab" data-v="c" aria-pressed="${t==='c'}">Settings</button>`:''}</div>`;
 }
 /* Overview cards under the stats: scoring habits, albums rated per month (from the rated-on dates) and top artists */
 function accInsightsHtml(P){
@@ -6274,7 +6284,7 @@ window.addEventListener('resize',()=>{clearTimeout(pfRz);pfRz=setTimeout(pfFit,8
 document.addEventListener('keydown',ev=>{if((ev.key==='Enter'||ev.key===' ')&&ev.target.classList&&ev.target.classList.contains('vl-b')){ev.preventDefault();ev.target.dispatchEvent(new MouseEvent('click',{bubbles:true}))}});
 function profileHtml(P,mine){
   const st=accStats(P.items),match=P.self?null:accMatch(P.items,mine);
-  const sec=UI.pTab==='a'||UI.pTab==='s'?accListHtml(P,match):accStatsHtml(st,P)+`<div class="pf-ov">${accInsightsHtml(P)}${accVinylHtml(P)}</div>`;
+  const sec=P.self&&UI.pTab==='c'?accManageHtml(P):UI.pTab==='a'||UI.pTab==='s'?accListHtml(P,match):accStatsHtml(st,P)+`<div class="pf-ov">${accInsightsHtml(P)}${accVinylHtml(P)}</div>`;
   return accHeroHtml(Object.assign({},P,{n:accBase(P.items).length}),st,match,P.extra)+accTabsHtml(P)+sec;
 }
 /* the Friends shortcut in the top bar: one tap to the friends list, with a count of requests waiting for you */
@@ -6405,7 +6415,7 @@ function accountView(){
       <p class="note">Playback keeps your Google name and a private id, never your email address. <a href="privacy.html" target="_blank" rel="noopener">Privacy policy</a></p></div></section>`;
   }else{
     const items=accItems(),ss=accSongStats(),F=ACX.fr,P={self:true,songs:ss.n,savg:ss.avg,name:ACC.me.name,hue:ACC.me.hue,pic:ACC.me.pic,pop:ACX.popAv,friends:F?F.friends.length:0,items,extra:`<span class="pf-code">Code <b>${esc(ACC.me.code)}</b></span>`};
-    h=`<section class="settings pf" aria-labelledby="ac-h"><h2 id="ac-h" class="sr">Your page</h2>${profileHtml(P,null)}${accManageHtml()}</section>`;
+    h=`<section class="settings pf" aria-labelledby="ac-h"><h2 id="ac-h" class="sr">Your page</h2>${profileHtml(P,null)}</section>`;
   }
   UI.pAnim=false;UI.pAnimL=false;UI.pAnimF=false;UI.pAnimI=false;ACX.popAv=false;return h;
 }
@@ -6424,19 +6434,23 @@ function friendView(){
 /* a small card in Settings that points at the Account page */
 function accCard(){
   if(!GCID)return '';
-  return `<div class="setcard"><h3>Account</h3><p class="note">${accOn()?'Signed in as '+esc(ACC.me.name)+'. Your page, friends and sharing are on the Account page.':'Sign in with Google to get a page, add friends and see their ratings.'}</p><div class="tools"><button class="btn primary" data-act="view" data-v="account">Open Account</button></div></div>`;
+  return `<div class="setcard"><h3>Account</h3><p class="note">${accOn()?'Signed in as '+esc(ACC.me.name)+'. Your page and ratings are on the Account page; your photo, color, friends, sharing and sign-in options are in its Settings tab.':'Sign in with Google to get a page, add friends and see their ratings.'}</p><div class="tools"><button class="btn primary" data-act="view" data-v="account">Open Account</button>${accOn()?'<button class="btn" data-act="view" data-v="account" data-tab="c">Account settings</button>':''}</div></div>`;
 }
 
-function settingsView(){return `
-  <section class="settings" aria-labelledby="set-h">
+function settingsView(){
+  const acct=accCard()+sugCard()+usersCard();
+  return `
+  <section class="settings set" aria-labelledby="set-h">
     <h2 id="set-h">Settings</h2>
     <p class="note">Setup and housekeeping. Everything here syncs with the rest of your log.</p>
+    <div class="set-col set-lib"><h3 class="set-gh">Library &amp; imports</h3>
     <div class="setcard"><h3>Import source</h3>${srcSide()}</div>
     <div class="setcard"><h3>Spotify</h3>${spSide()}</div>
     <div class="setcard"><h3>Rate Your Music</h3>${rymSide()}${rtSide()}</div>
     ${window.PB_OWNER?`<div class="setcard"><h3>Rating dates</h3>${rdSide()}</div>`:''}
-    ${accCard()}
-    ${sugCard()}${usersCard()}
+    </div>
+    ${acct.trim()?`<div class="set-col set-acct"><h3 class="set-gh">Account &amp; community</h3>${acct}</div>`:''}
+    <div class="set-col set-data"><h3 class="set-gh">Your data</h3>
     <div class="setcard"><h3>Sync &amp; data</h3>
     <details id="syncpanel" ${UI.syncOpen?'open':''}>
       <summary class="label" style="cursor:pointer">Sync</summary>
@@ -6462,7 +6476,7 @@ function settingsView(){return `
       <textarea id="backup-text" aria-label="Backup data"></textarea>
       <div class="tools"><button class="btn" data-act="copy">${UI.copied?'Copied':'Copy backup text'}</button><button class="btn" data-act="restore">Restore from pasted text</button></div>
     </details>
-    </div>
+    </div></div>
   </section>
 `}
 /* Every redraw rebuilds the page, which makes each cover a brand new picture that paints blank for a moment (the flash when you open a rating).
@@ -7461,7 +7475,7 @@ document.addEventListener('click',ev=>{
     const rt=document.querySelector('.rater');
     if(rt&&!matchMedia('(prefers-reduced-motion:reduce)').matches){UI.rClosing=true;const cid=UI.rOpen,fly=rtFlyPrep(cid);rt.classList.remove('rt-in');rt.classList.add('rt-out');
       setTimeout(()=>{UI.rClosing=false;UI.rOpen=null;if(fly)UI.rLand=cid;render()},230);rtFlyGo(fly);return}}
-  if(act==='view'){UI.view=b.dataset.v;UI.rOpen=null;if(UI.view==='account'){pReset();UI.pAnim=true}if(UI.view==='friends'){UI.pAnim=true;ACX.anim=true}if(UI.view==='history'){UI.hAnim=true;UI.hEdit=null}window.scrollTo({top:0})}
+  if(act==='view'){UI.view=b.dataset.v;UI.rOpen=null;if(UI.view==='account'){pReset();if(b.dataset.tab==='c')UI.pTab='c';UI.pAnim=true}if(UI.view==='friends'){UI.pAnim=true;ACX.anim=true}if(UI.view==='history'){UI.hAnim=true;UI.hEdit=null}window.scrollTo({top:0})}
   else if(act==='lib'){UI.libOpen=!UI.libOpen;UI.libAnim=UI.libOpen}
   else if(act==='fropen'){UI.frOpen=true;UI.llOpen=false;ACX.anim=true;if(accOn())accFriends(true)}
   else if(act==='frclose'){UI.frOpen=false}
