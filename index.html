@@ -2234,6 +2234,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.18-j', note:'APPLE MUSIC IMPORT: Stats now reads Apple Music history too. Request your data at privacy.apple.com (Apple Media Services information), then choose the zip, or Apple Music Play Activity.csv, in the Stats import box. Apple plays count next to Spotify ones, songs match across services, and re-importing never double counts. An Apple import only replaces older Apple plays, never Spotify ones. Apple does not offer a free way to read plays as they happen (it needs a $99 a year developer account), so Apple plays come from the export.'},
   {v:'2026.11.18-i', note:'SONG LENGTHS FOR LIVE PLAYS: plays Spotify reports as they happen now come with the song\'s length, so Stats hours for them use the real length instead of an estimate. Spotify does not say how much of a live play you heard, so each counts as played in full; a Spotify data export (which has the exact time) replaces them for the dates it covers. Plays saved before this update have no length and are still estimated. Your Worker needs the new playback-sync.js (it takes it from GitHub on its own).'},
   {v:'2026.11.18-h', note:'SIMILAR MUSIC: every artist page has a Similar artists section (tap to open, nothing loads until you do) and every song you open to rate has Similar songs, both from Last.fm listening data. Each match shows a match bar and where you stand with it: % heard, Rated, Heard, or Not in your log; Open jumps to that artist, Add starts the Add an artist search for them. Rows rise in one after another and the match bars fill. Answers are saved on the Worker for 30 days, so looking again is free, and fresh lookups are capped per person per day. Needs Worker 19 and the LASTFM_KEY secret (a free Last.fm API key).'},
   {v:'2026.11.18-g', note:'STATS PAGE AND A PLAY HISTORY FOR EVERY SONG: Music menu › Stats is a stats.fm-style page: your top songs, artists and albums for the last 4 weeks, 6 months, 12 months, this year, any year or all time, plus plays over time, busiest day, longest streak, songs new to you, time of day and day of the week. Every play Spotify reports is now kept in a separate play history on this device, including songs from artists you have not added to Playback; add the artist later and its old plays show up as counts on its songs. To fill in the past, request Extended streaming history from Spotify (spotify.com/account/privacy) and choose the zip on the Stats page, no unzipping; it counts plays of 30 seconds or more like Spotify does, and importing a newer export later replaces the dates it covers so nothing is counted twice. Preview with fake stats shows the page with made-up listening that is never saved. Songs you have played are not checked off as heard on their own: after an import there is an optional button for that, with Undo. The history is kept on the device it was imported on (not synced), so keep the Spotify zip.'},
@@ -2755,19 +2756,27 @@ function plZip2(A,B){
   return o;
 }
 /* put a batch of plays into the history. src 0 = Spotify's data export: it is complete for the time it
-   covers, so it REPLACES whatever is already there for that time (old export or live plays).
+   covers, so it REPLACES the Spotify plays already there for that time (old export or live plays).
+   src 2 = Apple Music's export: same idea, but it only replaces older Apple plays, never Spotify ones.
    src 1 = plays seen live: added, skipping any the history already has. Returns {added,removed}. */
 function plCommit(d,B,src){
   const n=B.ts.length;if(!n)return{added:0,removed:0};
   const ord=new Uint32Array(n);for(let i=0;i<n;i++)ord[i]=i;
   ord.sort((x,y)=>B.ts[x]-B.ts[y]||x-y);
-  let N={ts:new Uint32Array(n),ti:new Uint32Array(n),ai:new Uint32Array(n),ms:new Uint32Array(n),sr:new Uint8Array(n).fill(src?1:0)};
+  let N={ts:new Uint32Array(n),ti:new Uint32Array(n),ai:new Uint32Array(n),ms:new Uint32Array(n),sr:new Uint8Array(n).fill(src)};
   for(let i=0;i<n;i++){const o=ord[i];N.ts[i]=B.ts[o];N.ti[i]=B.ti[o];N.ai[i]=B.ai[o];N.ms[i]=B.ms[o]}
   const E=plCols(d),en=E.ts.length,lo0=N.ts[0],hi0=N.ts[n-1];
   let out,added=n,removed=0;
-  if(src===0){
-    const a=plLower(E.ts,lo0),b=plLower(E.ts,hi0+1);removed=b-a;
-    out=plCat([plSlice(E,0,a),N,plSlice(E,b,en)]);
+  if(src===0||src===2){
+    const a=plLower(E.ts,lo0),b=plLower(E.ts,hi0+1),mine=x=>src===2?x===2:x!==2;
+    let kept=0;for(let i=a;i<b;i++)if(!mine(E.sr[i]))kept++;
+    removed=b-a-kept;
+    if(!kept)out=plCat([plSlice(E,0,a),N,plSlice(E,b,en)]);
+    else{   /* the other service's plays in this stretch stay, and are merged in time order */
+      const K={ts:new Uint32Array(kept),ti:new Uint32Array(kept),ai:new Uint32Array(kept),ms:new Uint32Array(kept),sr:new Uint8Array(kept)};
+      let k=0;for(let i=a;i<b;i++)if(!mine(E.sr[i])){K.ts[k]=E.ts[i];K.ti[k]=E.ti[i];K.ai[k]=E.ai[i];K.ms[k]=E.ms[i];K.sr[k]=E.sr[i];k++}
+      out=plCat([plSlice(E,0,a),plZip2(K,N),plSlice(E,b,en)]);
+    }
   }else{
     const s=plLower(E.ts,lo0);
     if(s<en){   /* overlaps what is there: drop plays it already has */
@@ -2920,7 +2929,9 @@ async function plZipList(file){
     if(o+46>cd.byteLength||cd.getUint32(o,true)!==0x02014b50)break;
     const method=cd.getUint16(o+10,true),csz=cd.getUint32(o+20,true),nl=cd.getUint16(o+28,true),el=cd.getUint16(o+30,true),cl=cd.getUint16(o+32,true),lho=cd.getUint32(o+42,true);
     const name=dec.decode(new Uint8Array(cd.buffer,cd.byteOffset+o+46,nl));o+=46+nl+el+cl;
-    if(/(^|\/)(streaming_history_audio[^\/]*|endsong[^\/]*|streaminghistory\d*)\.json$/i.test(name))out.push({name,method,csz,lho});
+    if(/(^|\/)(streaming_history_audio[^\/]*|endsong[^\/]*|streaminghistory\d*)\.json$/i.test(name))out.push({name,method,csz,lho,kind:'json'});
+    else if(/(play activity|daily tracks)[^\/]*\.csv$/i.test(name))out.push({name,method,csz,lho,kind:'csv'});
+    else if(/(apple|media|music)[^\/]*\.zip$/i.test(name))out.push({name,method,csz,lho,kind:'zip'});
   }
   return out;
 }
@@ -2932,6 +2943,95 @@ async function plZipText(file,e){
   if(e.method===0)return blob.text();
   if(e.method!==8||typeof DecompressionStream==='undefined')throw plErr('This browser cannot open that zip. Unzip it on your computer and choose the Streaming_History_Audio files inside.');
   return new Response(blob.stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+}
+async function plZipBlob(file,e){
+  if(e.csz===0xFFFFFFFF)throw plErr('A zip inside that zip is too big to open here. Unzip it on your computer and choose the Apple Music Play Activity file inside.');
+  const h=new DataView(await file.slice(e.lho,e.lho+30).arrayBuffer());
+  if(h.getUint32(0,true)!==0x04034b50)throw plErr('That zip file looks damaged.');
+  const at=e.lho+30+h.getUint16(26,true)+h.getUint16(28,true),blob=file.slice(at,at+e.csz);
+  if(e.method===0)return blob;
+  if(e.method!==8||typeof DecompressionStream==='undefined')throw plErr('This browser cannot open that zip. Unzip it on your computer and choose the Apple Music Play Activity file inside.');
+  return new Response(blob.stream().pipeThrough(new DecompressionStream('deflate-raw'))).blob();
+}
+/* ---- Apple Music's data export (privacy.apple.com): "Apple Music Play Activity.csv" has every play with a time;
+   "Play History Daily Tracks.csv" has one row per song per day. Columns are found by their names, since Apple has changed them over time ---- */
+function* plCsv(s){
+  if(s.charCodeAt(0)===0xFEFF)s=s.slice(1);
+  const n=s.length;let i=0,row=[];
+  while(i<n){
+    let f;
+    if(s[i]==='"'){
+      let j=i+1,buf='';
+      for(;;){const q=s.indexOf('"',j);if(q<0){buf+=s.slice(j);i=n;break}buf+=s.slice(j,q);if(s[q+1]==='"'){buf+='"';j=q+2}else{i=q+1;break}}
+      f=buf;
+    }else{let j=i;while(j<n){const x=s.charCodeAt(j);if(x===44||x===10||x===13)break;j++}f=s.slice(i,j);i=j}
+    row.push(f);
+    const x=s[i];
+    if(x===','){i++;if(i>=n){row.push('');yield row;row=[]}}
+    else if(x===undefined){yield row;row=[]}
+    else if(x==='\r'||x==='\n'){if(x==='\r'&&s[i+1]==='\n')i++;i++;yield row;row=[]}
+  }
+}
+const plNorm=h=>String(h).toLowerCase().replace(/[^a-z0-9]/g,'');
+function plAppleCols(hdr){
+  const m=new Map();hdr.forEach((h,i)=>{const k=plNorm(h);if(!m.has(k))m.set(k,i)});
+  const f=(...ks)=>{for(const k of ks)if(m.has(k))return m.get(k);return -1};
+  const c={type:f('eventtype'),song:f('songname','trackname','contentname','title'),artist:f('artistname','artist','albumartistname'),album:f('albumname','album'),
+    end:f('eventendtimestamp','endtimestamp'),start:f('eventstarttimestamp','starttimestamp'),recv:f('eventreceivedtimestamp'),date:f('dateplayed','lastplayeddate','date'),
+    pms:f('playdurationmilliseconds','playdurationms'),mms:f('mediadurationinmilliseconds','mediadurationmilliseconds'),desc:f('trackdescription'),
+    cnt:f('playcount','totalplays','plays','count'),why:f('endreasontype')};
+  c.stamp=c.end>=0||c.start>=0||c.recv>=0||c.date>=0;
+  c.ok=c.stamp&&((c.song>=0&&c.artist>=0)||c.desc>=0);
+  return c;
+}
+/* a time cell to milliseconds: ISO with or without a zone, 20210304, a plain date (noon, so the day is right in any zone) or epoch ms */
+function plTs(v){
+  v=String(v==null?'':v).trim();if(!v)return NaN;
+  let m=/^(\d{4})-?(\d\d)-?(\d\d)$/.exec(v);if(m)return new Date(+m[1],+m[2]-1,+m[3],12).getTime();
+  if(/^\d{13}$/.test(v))return +v;
+  let x=v.replace(' ','T');if(!/(Z|[+-]\d\d:?\d\d)$/.test(x))x+='Z';
+  return Date.parse(x);
+}
+function plAppleRow(d,B,r,c,st,seen,onlyEnd){
+  st.rec++;
+  if(onlyEnd&&!/play_end/i.test(r[c.type]||'')){st.other++;return}
+  let t=c.song>=0?r[c.song]:'',a=c.artist>=0?r[c.artist]:'';
+  if((!t||!a)&&c.desc>=0){const q=String(r[c.desc]||''),k=q.indexOf(' - ');if(k>0){a=q.slice(0,k);t=q.slice(k+3)}}
+  t=String(t||'').trim();a=String(a||'').trim();
+  if(!t||!a){st.other++;return}
+  const end=c.end>=0?plTs(r[c.end]):NaN,start=c.start>=0?plTs(r[c.start]):NaN;
+  let pm=c.pms>=0?parseFloat(r[c.pms]):NaN,mm=c.mms>=0?parseFloat(r[c.mms]):NaN;
+  if(!(pm>0)&&end>0&&start>0&&end>=start)pm=end-start;
+  if(!(pm>0))pm=0;if(!(mm>0))mm=0;
+  if(mm&&pm>mm)pm=mm;   /* paused or looped: never more than the song's length */
+  let ms=end>0?end:start>0?start+pm:NaN;
+  if(!(ms>0)&&c.recv>=0)ms=plTs(r[c.recv]);
+  if(!(ms>0)&&c.date>=0)ms=plTs(r[c.date]);
+  if(!(ms>946684800000&&ms<Date.now()+864e5)){st.other++;return}
+  const done=(c.why>=0&&/natural_end/i.test(r[c.why]||''))||(mm>0&&mm<PL_MIN&&pm>=mm*.9);
+  if(pm>0&&pm<PL_MIN&&!done){st.short++;return}
+  const n=c.cnt>=0?Math.max(1,Math.min(500,parseInt(r[c.cnt],10)||1)):1,al=c.album>=0?String(r[c.album]||'').trim():'',sec=Math.floor(ms/1000);
+  if(n===1){const key=sec+'|'+a+'|'+t;if(seen.has(key)){st.dup++;return}seen.add(key)}
+  for(let k=0;k<n;k++)plPush(d,B,a,t,al,sec+k*60,pm/n);
+  st.used+=n;if(!st.sample)st.sample=a+' \u2013 '+t;
+  if(sec<st.min)st.min=sec;if(sec+(n-1)*60>st.max)st.max=sec+(n-1)*60;
+}
+/* returns true when the text was an Apple Music file we understood */
+async function plAppleText(d,B,txt,st,nm){
+  const it=plCsv(txt);let hdr=it.next();
+  if(hdr.done)return false;
+  const c=plAppleCols(hdr.value);
+  if(!c.ok){
+    if(c.stamp&&(c.song>=0))throw plErr(nm+' has no artist names, so Playback cannot use it. Choose Apple Music Play Activity.csv from the export.');
+    return false;
+  }
+  const onlyEnd=c.type>=0&&/play_end/i.test(txt),seen=new Set();let k=0;
+  for(const r of it){
+    if(r.length<2)continue;
+    plAppleRow(d,B,r,c,st,seen,onlyEnd);
+    if(++k%20000===0)await new Promise(x=>setTimeout(x,0));
+  }
+  st.files++;return true;
 }
 /* one file's plays into the batch. Counts a play like Spotify does: 30 seconds or more, or the whole of a short track. */
 function plRecords(d,B,arr,st){
@@ -2947,22 +3047,35 @@ function plRecords(d,B,arr,st){
     if(sec<st.min)st.min=sec;if(sec>st.max)st.max=sec;
   }
 }
+async function plReadZip(d,files,f,onProg,depth){
+  const es=await plZipList(f);let any=false;const tick=()=>new Promise(r=>setTimeout(r,0));
+  for(const e of es){
+    const base=e.name.split('/').pop();
+    if(e.kind==='zip'){if(depth<2){onProg&&onProg('Opening '+base+'…');await tick();any=(await plReadZip(d,files,await plZipBlob(f,e),onProg,depth+1))||any}continue}
+    onProg&&onProg('Reading '+base+'…');await tick();
+    const txt=await plZipText(f,e);
+    if(e.kind==='json'){let j;try{j=JSON.parse(txt)}catch(x){throw plErr(base+' is not readable.')}if(Array.isArray(j)){plRecords(d,files.B,j,files.st);files.st.files++;any=true}}
+    else if(await plAppleText(d,files.A,txt,files.sa,base))any=true;
+  }
+  return any;
+}
 async function plReadAll(d,files,onProg){
-  const B=plBatch(),st={files:0,rec:0,used:0,short:0,other:0,min:Infinity,max:0};
+  const R={B:plBatch(),A:plBatch(),st:{files:0,rec:0,used:0,short:0,other:0,min:Infinity,max:0},sa:{files:0,rec:0,used:0,short:0,other:0,dup:0,min:Infinity,max:0,sample:''}};
   const tick=()=>new Promise(r=>setTimeout(r,0));
   for(const f of files){
     const nm=String(f.name||'');
     if(/\.zip$/i.test(nm)){
-      const es=await plZipList(f);
-      if(!es.length)throw plErr('No listening history files in that zip. It needs the Extended streaming history (files named Streaming_History_Audio…).');
-      for(const e of es){onProg&&onProg('Reading '+e.name.split('/').pop()+'…');await tick();const txt=await plZipText(f,e);let j;try{j=JSON.parse(txt)}catch(x){throw plErr(e.name.split('/').pop()+' is not readable.')}if(Array.isArray(j)){plRecords(d,B,j,st);st.files++}}
+      if(!await plReadZip(d,R,f,onProg,0))throw plErr('No listening history in that zip. It needs Spotify\u2019s Extended streaming history (Streaming_History_Audio files) or Apple Music Play Activity.csv.');
     }else if(/\.json$/i.test(nm)){
       onProg&&onProg('Reading '+nm+'…');await tick();
       let j;try{j=JSON.parse(await f.text())}catch(x){throw plErr(nm+' is not readable.')}
-      if(Array.isArray(j)){plRecords(d,B,j,st);st.files++}
+      if(Array.isArray(j)){plRecords(d,R.B,j,R.st);R.st.files++}
+    }else if(/\.csv$/i.test(nm)){
+      onProg&&onProg('Reading '+nm+'…');await tick();
+      if(!await plAppleText(d,R.A,await f.text(),R.sa,nm))throw plErr(nm+' is not an Apple Music play history. Choose Apple Music Play Activity.csv.');
     }
   }
-  return{B,st};
+  return R;
 }
 async function plImport(files){
   if(PL.busy||!files||!files.length)return;
@@ -2970,18 +3083,30 @@ async function plImport(files){
   const prog=t=>{PL.prog=t;render()};
   try{
     const d=await plLoad();
-    const {B,st}=await plReadAll(d,files,prog);
-    if(!st.used)throw plErr(st.files?'Those files have no plays of 30 seconds or more.':'Nothing to read in those files. Choose the zip from Spotify, or the Streaming_History_Audio files inside it.');
-    prog('Adding '+st.used.toLocaleString()+' plays…');await new Promise(r=>setTimeout(r,0));
-    const r=plCommit(d,B,0);
-    d.exp=Math.max(d.exp||0,st.max);d.imp.push({at:Date.now(),from:st.min,to:st.max,n:st.used});
+    const {B,A,st,sa}=await plReadAll(d,files,prog);
+    if(!st.used&&!sa.used)throw plErr(st.files||sa.files?'Those files have no plays of 30 seconds or more.':'Nothing to read in those files. Choose the zip from Spotify or from Apple, or the files inside it.');
+    const mo=t=>new Date(t*1000).toLocaleDateString([],{month:'short',year:'numeric'}),dy=t=>new Date(t*1000).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'});
+    const sk=n=>n?` Skipped ${n.toLocaleString()} play${n===1?'':'s'} under 30 seconds.`:'';
+    const msg=[];
+    if(st.used){
+      prog('Adding '+st.used.toLocaleString()+' Spotify plays…');await new Promise(r=>setTimeout(r,0));
+      const r=plCommit(d,B,0);
+      d.exp=Math.max(d.exp||0,st.max);d.imp.push({at:Date.now(),from:st.min,to:st.max,n:st.used,src:'spotify'});
+      msg.push(`Added ${r.added.toLocaleString()} Spotify plays from ${mo(st.min)} to ${dy(st.max)}.`+sk(st.short)+(r.removed?` Replaced ${r.removed.toLocaleString()} plays already saved for those dates.`:''));
+    }
+    if(sa.used){
+      prog('Adding '+sa.used.toLocaleString()+' Apple Music plays…');await new Promise(r=>setTimeout(r,0));
+      const r=plCommit(d,A,2);
+      d.imp.push({at:Date.now(),from:sa.min,to:sa.max,n:sa.used,src:'apple'});
+      msg.push(`Added ${r.added.toLocaleString()} Apple Music plays from ${mo(sa.min)} to ${dy(sa.max)}.`+sk(sa.short)+(r.removed?` Replaced ${r.removed.toLocaleString()} Apple Music plays already saved for those dates.`:'')+(sa.sample?` The first one read was ${sa.sample}.`:''));
+    }
     await plSaveNow();
     try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
     const s=plResync();PL.sync=s;PL.sig=plSig();
     if(s.changed){touch()}
-    PL.msg=`Added ${r.added.toLocaleString()} plays from ${new Date(st.min*1000).toLocaleDateString([],{month:'short',year:'numeric'})} to ${new Date(st.max*1000).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'})}.`+(st.short?` Skipped ${st.short.toLocaleString()} play${st.short===1?'':'s'} under 30 seconds.`:'')+(r.removed?` Replaced ${r.removed.toLocaleString()} plays already saved for those dates.`:'');
+    PL.msg=msg.join(' ');
     UI.stR=null;UI.stAnim=true;
-  }catch(e){PL.err=e&&e.pl?e.message:'Could not read those files. Try the zip straight from Spotify.'}
+  }catch(e){PL.err=e&&e.pl?e.message:'Could not read those files. Try the zip straight from Spotify or Apple.'}
   finally{PL.busy=false;PL.prog=null;render()}
 }
 /* ---- made-up listening, to see the page before the real history arrives (never saved) ---- */
@@ -3069,8 +3194,8 @@ function stActivity(q,r){
 function stManage(d,demo){
   const real=PL.d,n=real?real.ts.length:0,sy=PL.sync,live=!!spCid();
   const when=t=>new Date(t*1000).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'});
-  let h=`<div class="setcard st-manage"><h3>Your Spotify history</h3>`;
-  h+=`<p class="note">${n?`<b>${stN(n)}</b> plays kept on this device, from ${when(real.ts[0])} to ${when(real.ts[n-1])}. Every song is counted, even from artists you have not added to Playback yet; add the artist later and its plays show up on its songs.`:'Nothing kept yet. Playback counts every play from now on, and a Spotify data export fills in everything before it.'} ${live?'New plays are added as Spotify reports them.':'Connect Spotify in Settings so new plays are added as they happen.'}</p>`;
+  let h=`<div class="setcard st-manage"><h3>Your listening history</h3>`;
+  h+=`<p class="note">${n?`<b>${stN(n)}</b> plays kept on this device, from ${when(real.ts[0])} to ${when(real.ts[n-1])}. Every song is counted, even from artists you have not added to Playback yet; add the artist later and its plays show up on its songs.`:'Nothing kept yet. Playback counts every play from now on, and a data export from Spotify or Apple Music fills in everything before it.'} ${live?'New plays are added as Spotify reports them.':'Connect Spotify in Settings so new plays are added as they happen.'}</p>`;
   if(PL.prog)h+=`<p class="note st-prog" role="status" aria-live="polite">${esc(PL.prog)}</p>`;
   if(PL.msg&&!PL.prog)h+=`<p class="note st-ok" role="status">${esc(PL.msg)}</p>`;
   if(PL.err)h+=`<p class="mberr" role="alert">${esc(PL.err)}</p>`;
@@ -3080,8 +3205,9 @@ function stManage(d,demo){
       h+=`<div class="tools"><button type="button" class="btn${PL.arm==='check'?' primary':''}" data-act="plcheck">${PL.arm==='check'?'Tap again: check off '+stN(c)+' song'+(c===1?'':'s'):'Check off '+stN(c)+' played song'+(c===1?'':'s')+' as heard'}</button></div><p class="note">${stN(c)} song${c===1?' you have':'s you have'} played but not checked off. This is optional, and it changes the heard percentage on your artists.</p>`}
     if(PL.checked&&PL.checked.length)h+=`<div class="tools"><button type="button" class="btn" data-act="plundo">Undo: uncheck ${stN(PL.checked.length)}</button></div>`;
   }
-  h+=`<div class="tools"><input type="file" id="plfile" class="st-file" accept=".zip,.json,application/zip,application/json" multiple ${PL.busy?'disabled':''}><label for="plfile" class="btn${n?'':' primary'}${PL.busy?' off':''}">${PL.busy?'Working…':n?'Add or update from a Spotify export':'Choose your Spotify export'}</label>${demo?'':`<button type="button" class="btn" data-act="stdemo">Preview with fake stats</button>`}${n&&!PL.busy?`<button type="button" class="btn danger" data-act="plclear">${PL.arm==='clear'?'Tap again to delete all '+stN(n)+' plays':'Delete play history'}</button>`:''}</div>`;
-  h+=`<details><summary class="note">How to get your history from Spotify</summary><ol class="note steps"><li>On a computer, open <a href="https://www.spotify.com/account/privacy/" target="_blank" rel="noopener">spotify.com/account/privacy</a> and scroll to <b>Download your data</b>.</li><li>Tick only <b>Extended streaming history</b> and press <b>Request data</b>. It can take up to 30 days, often just a few.</li><li>Confirm by email, then download the zip from Spotify’s message.</li><li>Choose that zip here, no unzipping needed. Playback counts a play the way Spotify does: 30 seconds or more. It reads the file on this device only.</li></ol><p class="note">Keep the zip. If this device ever forgets the history, importing it again puts everything back. Importing a newer export later replaces the dates it covers, so nothing is counted twice.</p></details></div>`;
+  h+=`<div class="tools"><input type="file" id="plfile" class="st-file" accept=".zip,.json,.csv,application/zip,application/json,text/csv" multiple ${PL.busy?'disabled':''}><label for="plfile" class="btn${n?'':' primary'}${PL.busy?' off':''}">${PL.busy?'Working…':n?'Add or update from an export':'Choose a Spotify or Apple export'}</label>${demo?'':`<button type="button" class="btn" data-act="stdemo">Preview with fake stats</button>`}${n&&!PL.busy?`<button type="button" class="btn danger" data-act="plclear">${PL.arm==='clear'?'Tap again to delete all '+stN(n)+' plays':'Delete play history'}</button>`:''}</div>`;
+  h+=`<details><summary class="note">How to get your history from Spotify</summary><ol class="note steps"><li>On a computer, open <a href="https://www.spotify.com/account/privacy/" target="_blank" rel="noopener">spotify.com/account/privacy</a> and scroll to <b>Download your data</b>.</li><li>Tick only <b>Extended streaming history</b> and press <b>Request data</b>. It can take up to 30 days, often just a few.</li><li>Confirm by email, then download the zip from Spotify’s message.</li><li>Choose that zip here, no unzipping needed. Playback counts a play the way Spotify does: 30 seconds or more. It reads the file on this device only.</li></ol><p class="note">Keep the zip. If this device ever forgets the history, importing it again puts everything back. Importing a newer export later replaces the dates it covers, so nothing is counted twice.</p></details>`;
+  h+=`<details><summary class="note">How to get your history from Apple Music</summary><ol class="note steps"><li>On a computer, open <a href="https://privacy.apple.com/" target="_blank" rel="noopener">privacy.apple.com</a>, sign in, and choose <b>Request a copy of your data</b>.</li><li>Tick <b>Apple Media Services information</b> and finish the request. Apple can take up to 7 days and emails you when it is ready.</li><li>Download every zip part from Apple’s email. Choose the zip here, or unzip it and choose <b>Apple Music Play Activity.csv</b> from the <b>Apple Music Activity</b> folder.</li></ol><p class="note">Apple’s file only reaches back as far as Apple keeps it, and it never replaces Spotify plays. Playback keeps no Apple plays after the export, because Apple does not offer a free way to read them as they happen (it needs a $99 a year developer account), so repeat the export now and then. Songs match across services, so a song you play on both adds up.</p></details></div>`;
   return h;
 }
 function statsView(){
