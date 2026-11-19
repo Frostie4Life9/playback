@@ -1504,66 +1504,126 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .hxsl.on .hxc{transform:translateY(-6px);box-shadow:0 0 0 2px #fff,0 18px 34px rgb(0 0 0 / .45)}
 .hxsl.on .hxv{left:84px}
 .hx .hxrow{padding-top:12px;margin-top:-8px}
-.hxmore{position:relative;display:flex;flex-direction:column;gap:22px;padding:8px var(--hxpad) calc(64px + var(--tail,0px));color:var(--ink)}
+.hxmore{position:relative;text-align:left;display:flex;flex-direction:column;gap:22px;padding:8px var(--hxpad) calc(64px + var(--tail,0px));color:var(--ink)}
 .hx .hxmore .simbox{margin:0;background:color-mix(in srgb,var(--surface) 86%,transparent);border-color:rgb(255 255 255 / .12);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
 .hxmore>details.more{border:1px solid rgb(255 255 255 / .12);border-radius:16px;padding:14px 16px;background:color-mix(in srgb,var(--surface) 86%,transparent);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
 .hxdel{display:flex}
 @media (prefers-reduced-motion:no-preference){.sheet.swin .hxmore{animation:swUp .62s cubic-bezier(.2,.8,.2,1) .3s backwards}}
 
-/* THE GATEFOLD: an opened album. Closed, the front cover sits over the right half; it swings open on the spine
-   (the middle) to show the album on the inside left and your ratings on the inside right. On a phone the two
-   halves stack and the cover flips up from the bottom edge instead. */
-.group.sleeve.gf{--gfz:rotateY(180deg);--cv:clamp(150px,15vw,280px);background:none;border:0;border-radius:0;padding:0;gap:0;overflow:visible;scroll-margin-top:96px}
-.gf-sp{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);perspective:2600px;border-radius:22px;box-shadow:0 30px 70px rgb(0 0 0 / .38)}
+/* THE GATEFOLD: an opened album, drawn as a real open gatefold jacket. On a wide screen it is two square panels of
+   the same printed card (the album's color with its cover art printed faintly across both, a paper grain and a creased
+   spine), with a record sleeved in each side, peeking out of the outer edges like a 2LP. Closed, the front cover lies
+   over the right panel with its record sticking out, exactly like the sleeve in the Releases row it flew out of; it
+   then swings open toward you on the spine. Long track lists scroll inside the right panel. On narrower screens the
+   halves stack and the cover lifts like a lid. */
+.group.sleeve.gf{--gfz:rotateY(180deg);--jk:color-mix(in oklab,var(--acsw) 36%,var(--bg));--cv:clamp(150px,15vw,280px);background:none;border:0;border-radius:0;padding:0;gap:0;overflow:visible;scroll-margin-top:96px;container-type:inline-size}
+.gf-sp{--P:min(calc(100cqw / 2.75),calc(100vh - 170px),880px);--D:calc(var(--P) * .91);--pk:.36;position:relative;display:grid;grid-template-columns:var(--P) var(--P);grid-template-rows:var(--P);width:calc(var(--P) * 2);margin:0 auto;perspective:2800px}
 .gf-l{position:relative;z-index:2;transform-origin:100% 50%;transform-style:preserve-3d}
-.gf-lf{position:relative;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;padding:0 0 26px;border-radius:22px 0 0 22px;color:var(--hi);
-  background:linear-gradient(160deg,color-mix(in srgb,var(--acb) 94%,#fff),color-mix(in srgb,var(--acb) 76%,#000));-webkit-backface-visibility:hidden;backface-visibility:hidden}
-.gf-lf::after{content:"";position:absolute;top:0;bottom:0;right:0;width:34px;pointer-events:none;background:linear-gradient(to left,rgb(0 0 0 / .2),transparent)}
-.gf-lb{position:absolute;inset:0;overflow:hidden;border-radius:22px;transform:rotateY(180deg);-webkit-backface-visibility:hidden;backface-visibility:hidden;
-  background:linear-gradient(180deg,var(--acb),color-mix(in srgb,var(--acb) 70%,#000))}
+.gf-lf,.gf-r{background:linear-gradient(160deg,color-mix(in srgb,var(--jk) 84%,transparent),color-mix(in srgb,var(--jk) 93%,transparent)),var(--art,none) left center/200% auto no-repeat,var(--jk)}
+.gf-r{background-position:0 0,right center,0 0}
+.gf-lf{position:relative;height:100%;box-sizing:border-box;border-radius:6px 0 0 6px;color:var(--ink);-webkit-backface-visibility:hidden;backface-visibility:hidden;
+  box-shadow:inset 2px 0 0 rgb(0 0 0 / .32),inset 0 1px 0 rgb(255 255 255 / .06),0 26px 50px rgb(0 0 0 / .32)}
+.gf-r{position:relative;z-index:1;min-width:0;border-radius:0 6px 6px 0;color:var(--ink);box-shadow:inset -2px 0 0 rgb(0 0 0 / .32),inset 0 1px 0 rgb(255 255 255 / .06),0 26px 50px rgb(0 0 0 / .32)}
+/* paper grain over both panels */
+.gf-lf::before,.gf-r::after{content:"";position:absolute;inset:0;z-index:4;border-radius:inherit;pointer-events:none;opacity:.09;mix-blend-mode:overlay;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+/* the spine crease */
+.gf-lf::after{content:"";position:absolute;top:0;bottom:0;right:0;width:26px;z-index:4;pointer-events:none;background:linear-gradient(to left,rgb(0 0 0 / .3),rgb(0 0 0 / .08) 6px,transparent)}
+.gf-r::before{content:"";position:absolute;top:0;bottom:0;left:0;width:30px;z-index:4;pointer-events:none;background:linear-gradient(to right,rgb(0 0 0 / .34),rgb(255 255 255 / .05) 2px,rgb(0 0 0 / .1) 7px,transparent)}
+.gf-lb{position:absolute;inset:0;overflow:hidden;border-radius:0 6px 6px 0;transform:rotateY(180deg);-webkit-backface-visibility:hidden;backface-visibility:hidden;background:var(--acb)}
 .gf-lb img,.gf-lb span{position:absolute;top:0;left:0;width:100%;aspect-ratio:1;height:auto}
 .gf-lb img{z-index:1;object-fit:cover}
+.gf-lb img.gf-lbg{z-index:0;inset:-40px;width:auto;height:auto;aspect-ratio:auto;filter:blur(36px) saturate(1.3) brightness(.8);transform:scale(1.15)}
+.gf-lb span{display:grid;place-items:center;font:800 120px/1 var(--body);color:rgb(255 255 255 / .4)}
+.gf-sh{position:absolute;inset:0;z-index:6;border-radius:inherit;background:#000;opacity:0;pointer-events:none}
 .gf-lb .gf-sh{z-index:3}
-.gf-lid{position:absolute;inset:0;z-index:7;overflow:hidden;border-radius:20px 20px 0 0;transform-origin:50% 0;-webkit-backface-visibility:hidden;backface-visibility:hidden;
-  background:linear-gradient(180deg,var(--acb),color-mix(in srgb,var(--acb) 70%,#000))}
+/* the records, sleeved in the outer edge of each side */
+.gf-pk{position:absolute;top:calc(var(--P) * .045);width:var(--D);height:var(--D);overflow:hidden;pointer-events:none}
+.gf-pk.l{right:100%}.gf-pk.r{left:100%}
+.gf .gf-pk .sl-disc,.gf-vr{position:absolute;top:0;width:var(--D);height:var(--D);transform:none;transition:translate .6s cubic-bezier(.2,.8,.2,1);box-shadow:0 14px 30px rgb(0 0 0 / .35)}
+.gf .gf-pk.l .sl-disc{left:calc(var(--D) * (1 - var(--pk)))}
+.gf-vr{left:calc(var(--D) * (var(--pk) - 1));border-radius:50%;background:radial-gradient(circle,transparent 0 31%,#0d0b0b 31.5% 33%,transparent 33.5%),repeating-radial-gradient(circle,#1b1717 0 1px,#0c0a0a 1px 3px)}
+.gf .gf-pk .sl-lab{width:30%;height:30%;margin:-15% 0 0 -15%;font-size:clamp(12px,calc(var(--D) * .045),20px)}
+.gf-vl{position:absolute;left:35%;top:35%;width:30%;height:30%;border-radius:50%;background:var(--acb);color:var(--hi);display:grid;place-content:center;text-align:center;line-height:1.05}
+.gf-vl b{font:800 clamp(14px,calc(var(--D) * .06),26px) Archivo,var(--display)}
+.gf-vl span{font:700 clamp(8px,calc(var(--D) * .022),11px) var(--body);letter-spacing:.06em;text-transform:uppercase;opacity:.8}
+/* hover a side and its record slides further out of the sleeve, far enough to read the label */
+@media (hover:hover){.gf-lf:hover .gf-pk.l .sl-disc{translate:-22% 0}.gf-r:hover .gf-pk.r .gf-vr{translate:22% 0}}
+/* inside each panel */
+.gf-ls,.gf-rs{position:relative;z-index:1;height:100%;box-sizing:border-box;overflow:auto;overscroll-behavior:contain;scrollbar-width:none}
+.gf-ls::-webkit-scrollbar,.gf-rs::-webkit-scrollbar{display:none}
+.gf-ls{display:flex;flex-direction:column;gap:16px;padding:0 0 26px}
+.gf-rs{display:flex;flex-direction:column;gap:14px;padding:0 0 18px;-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 36px),transparent)}
+.gf .sl-hero{background:none;color:var(--ink);flex-direction:column;align-items:flex-start;gap:24px;padding:calc(var(--P) * .07) calc(var(--P) * .07) 4px}
+.gf .sl-pack{--cv:calc(var(--P) * .46);flex:none;width:var(--cv);height:var(--cv);max-width:100%}
+.gf .sl-cover{width:var(--cv);height:var(--cv);border-radius:4px;box-shadow:0 16px 34px rgb(0 0 0 / .4)}
+.gf .sl-meta{flex:none;padding:0;gap:6px}
+.gf .sl-meta h3{font-size:clamp(26px,calc(var(--P) * .06),48px)}
+.gf .sl-kind,.gf .sl-sub,.gf .sl-rd,.gf .sl-w{color:color-mix(in srgb,var(--ink) 80%,transparent)}
+.gf .sl-meta .dxbadge{color:var(--ink);border-color:var(--ink)}
+.gf .sl-ic.sl-lbtn{top:calc(var(--P) * .06);right:calc(var(--P) * .06);color:var(--ink);border-color:color-mix(in srgb,var(--ink) 30%,transparent);background:color-mix(in srgb,var(--ink) 8%,transparent)}
+.gf .sl-ic.sl-lbtn[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.gf .dxseg{margin:0 calc(var(--P) * .07)}
+.gf-rh{position:sticky;top:0;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:22px 20px 10px 30px;background:linear-gradient(to bottom,var(--jk) 70%,transparent)}
+.gf-lbl{font:700 12px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.gf-x{width:44px;height:44px;flex:none;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center;padding:0;cursor:pointer;transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.gf-x svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.gf-x:hover{transform:rotate(90deg)}
+.gf .gf-rs .sl-acts{padding:0 22px 0 30px}
+.gf .gf-rs .tlist{padding:0 18px 0 30px}
+.gf .gf-rs .sl-foot{padding:6px 22px 0 30px}
+.gf-rs>.note{margin:0 22px 0 30px}
+.gf-lid{position:absolute;inset:0;z-index:7;overflow:hidden;border-radius:16px 16px 0 0;transform-origin:50% 0;-webkit-backface-visibility:hidden;backface-visibility:hidden;background:var(--acb)}
 .gf-lid img,.gf-lid span{position:absolute;top:0;left:0;height:100%;aspect-ratio:1;width:auto}
 .gf-lid img:not(.gf-lbg){left:50%;translate:-50% 0;z-index:1;object-fit:cover;box-shadow:0 18px 40px rgb(0 0 0 / .35)}
 .gf-lid img.gf-lbg{inset:-40px;width:auto;height:auto;aspect-ratio:auto;filter:blur(36px) saturate(1.3) brightness(.8);transform:scale(1.15)}
 .gf-lid span{left:50%;translate:-50% 0;display:grid;place-items:center;font:800 100px/1 var(--body);color:rgb(255 255 255 / .4)}
 .gf-lid .gf-sh{z-index:3}
-.gf-lb img.gf-lbg{z-index:0;inset:-40px;width:auto;height:auto;aspect-ratio:auto;filter:blur(36px) saturate(1.3) brightness(.8);transform:scale(1.15)}
-.gf-lb img:not(.gf-lbg){box-shadow:0 18px 40px rgb(0 0 0 / .35)}
-.gf-lb span{display:grid;place-items:center;font:800 120px/1 var(--body);color:rgb(255 255 255 / .4)}
-.gf .sl-hero{background:none;flex-direction:column;align-items:flex-start;gap:24px;padding:32px 32px 4px}
-.gf .sl-pack{flex:none;height:calc(var(--cv) + 10px);width:calc(var(--cv) * 1.75);max-width:100%}
-.gf .sl-cover,.gf .sl-disc{width:var(--cv);height:var(--cv)}
-.gf .sl-disc{left:calc(var(--cv) * .55);top:5px}
-.group.sleeve.gf.in .sl-disc{transform:translate3d(calc(var(--cv) * .18),0,0)}
-.gf .sl-meta{flex:none;padding:0;gap:6px}
-@media (min-width:761px){.gf .sl-hero{position:sticky;top:76px}}
-.gf .sl-meta h3{font-size:clamp(28px,2.7vw,48px)}
-.gf .sl-ic.sl-lbtn{top:24px;right:28px}
-.gf .dxseg{margin:0 32px}
-.gf-r{position:relative;z-index:1;min-width:0;display:flex;flex-direction:column;gap:14px;padding:24px 0 14px;border-radius:0 22px 22px 0;color:var(--ink);
-  background:linear-gradient(180deg,color-mix(in srgb,var(--acsw) 20%,var(--bg)),color-mix(in srgb,var(--acsw) 7%,var(--bg)) 360px)}
-.gf-r::before{content:"";position:absolute;top:0;bottom:0;left:0;width:30px;pointer-events:none;background:linear-gradient(to right,rgb(0 0 0 / .26),transparent)}
-.gf-rh{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 20px 0 26px}
-.gf-lbl{font:700 12px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.gf-sh{position:absolute;inset:0;z-index:6;border-radius:inherit;background:#000;opacity:0;pointer-events:none}
-.gf-x{width:44px;height:44px;flex:none;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center;padding:0;cursor:pointer;transition:transform .25s cubic-bezier(.2,.8,.2,1)}
-.gf-x svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
-.gf-x:hover{transform:rotate(90deg)}
-.gf .gf-r .sl-acts{padding:0 22px 0 26px}
-.gf .gf-r .tlist{padding:0 18px 0 26px}
-.gf .gf-r .sl-foot{padding:6px 22px 0 26px}
-.gf-r>.note{margin:0 22px 0 26px}
-@keyframes gfFlap{from{transform:var(--gfz)}to{transform:none}}
-@keyframes gfRise{from{opacity:0;transform:translateY(34px) scale(.96)}}
 @keyframes gfFade{from{opacity:0;transform:translateY(8px)}}
 @media (prefers-reduced-motion:no-preference){
-  .gf.gfopen .gf-r>*:not(.gf-sh){animation:gfFade .5s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(1.25s + var(--gi,0) * 70ms)}
-  .gf.gfopen .gf-r>:nth-child(2){--gi:1}.gf.gfopen .gf-r>:nth-child(3){--gi:2}.gf.gfopen .gf-r>:nth-child(4){--gi:3}.gf.gfopen .gf-r>:nth-child(n+5){--gi:4}
-  .gf.gfopen .gf-lf>*:not(.gf-sh){animation:gfFade .45s ease 1.55s backwards}
+  .gf.gfopen .gf-rs>*{animation:gfFade .5s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(1.3s + var(--gi,0) * 70ms)}
+  .gf.gfopen .gf-rs>:nth-child(2){--gi:1}.gf.gfopen .gf-rs>:nth-child(3){--gi:2}.gf.gfopen .gf-rs>:nth-child(4){--gi:3}.gf.gfopen .gf-rs>:nth-child(n+5){--gi:4}
+  .gf.gfopen .gf-ls>*{animation:gfFade .45s ease 1.55s backwards}
+}
+/* the record in each Releases-row sleeve (and the right-hand record in the gatefold): one groove per song, lit for
+   the ones you have heard. They ripple when you hover them; on a phone, when they come onto the screen. */
+.vgr{--vc:var(--c);--gv:color-mix(in srgb,var(--vc) 35%,#ffd9a8);--gp:color-mix(in srgb,var(--vc) 8%,#fff4e2)}
+@supports (color:oklch(from red l c h)){.vgr{--gv:oklch(from var(--vc) .86 calc(c*.7) h);--gp:oklch(from var(--vc) .96 calc(c*.25) h)}}
+.vgr i{position:absolute;left:calc(50% - var(--d)/2);top:calc(50% - var(--d)/2);width:var(--d);height:var(--d);border-radius:50%;border:1px solid rgb(255 255 255 / .07);box-sizing:border-box;pointer-events:none}
+.gf-vr.vgr i{border-width:1.5px}
+.vgr i.on{border-color:var(--gv)}
+.vgr i.on.fade{border-color:color-mix(in srgb,var(--gv) 24%,transparent)}
+@media (prefers-reduced-motion:no-preference){
+  .vgr.rip i.on:not(.fade){animation:slPulse .9s cubic-bezier(.4,0,.25,1) calc(var(--o,0)*42ms) backwards}
+  .vgr.rip i.on.fade{animation:slPulseF .9s cubic-bezier(.4,0,.25,1) calc(var(--o,0)*42ms) backwards}
+}
+@media (hover:hover) and (min-width:761px) and (prefers-reduced-motion:no-preference){
+  .hxsl:hover .vgr i.on:not(.fade),.gf-r:hover .vgr i.on:not(.fade){animation:slPulse .9s cubic-bezier(.4,0,.25,1) calc(var(--o,0)*42ms) backwards}
+  .hxsl:hover .vgr i.on.fade,.gf-r:hover .vgr i.on.fade{animation:slPulseF .9s cubic-bezier(.4,0,.25,1) calc(var(--o,0)*42ms) backwards}
+}
+/* narrower screens: the halves stack (album on top, ratings below), the record sits beside the cover, the cover lifts like a lid */
+@media (max-width:1099px){
+  .group.sleeve.gf{--cv:150px}
+  .gf-sp{--P:auto;--D:var(--cv);display:flex;flex-direction:column;width:auto;margin:0}
+  .gf-l{transform-origin:50% 100%}
+  .gf-lf{height:auto;border-radius:16px 16px 0 0;box-shadow:0 26px 50px rgb(0 0 0 / .32)}
+  .gf-lf::after{top:auto;left:0;width:auto;height:22px;background:linear-gradient(to top,rgb(0 0 0 / .22),transparent)}
+  .gf-r{border-radius:0 0 16px 16px;box-shadow:0 26px 50px rgb(0 0 0 / .32)}
+  .gf-r::before{right:0;bottom:auto;width:auto;height:26px;background:linear-gradient(to bottom,rgb(0 0 0 / .26),transparent)}
+  .gf-lf,.gf-r{background-size:auto,cover,auto;background-position:0 0,center,0 0}
+  .gf-pk.r{display:none}
+  .gf-pk.l{right:auto;left:calc(22px + var(--cv) * .3);top:22px;overflow:visible;z-index:0}
+  .gf .sl-hero>.sl-bar{position:absolute;top:16px;right:16px;align-self:auto}
+  .gf .gf-pk.l .sl-disc{left:0;width:var(--cv);height:var(--cv)}
+  .group.sleeve.gf.in .gf-pk.l .sl-disc{translate:20px 0}
+  .gf-ls,.gf-rs{height:auto;overflow:visible;-webkit-mask-image:none;mask-image:none}
+  .gf .sl-hero{padding:22px 22px 4px;gap:18px}
+  .gf .sl-pack{--cv:150px}
+  .gf .sl-meta h3{font-size:clamp(26px,6vw,40px)}
+  .gf .sl-ic.sl-lbtn{top:16px;right:16px}
+  .gf .dxseg{margin:0 22px}
+  .gf-rh{position:relative;padding:18px 14px 6px 18px;background:none}
+  .gf .gf-rs .sl-acts{padding:0 14px 0 18px}.gf .gf-rs .tlist{padding:0 12px 0 18px}.gf .gf-rs .sl-foot{padding:6px 14px 0 18px}.gf-rs>.note{margin:0 14px 0 18px}
 }
 @media (max-width:760px){
   .head.hero.hx{padding:0;min-height:0}
@@ -1571,19 +1631,6 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
   .hx.nophoto{--phh:210px}
   .hxsl.on .hxv{left:64px}
   .hxrh{justify-content:flex-start}
-  .group.sleeve.gf{--gfz:rotateX(-180deg);--cv:150px}
-  .gf-sp{grid-template-columns:minmax(0,1fr);border-radius:20px}
-  .gf-l{transform-origin:50% 100%}
-  .gf-lf{border-radius:20px 20px 0 0;padding-bottom:20px}
-  .gf-lf::after{top:auto;left:0;width:auto;height:28px;background:linear-gradient(to top,rgb(0 0 0 / .18),transparent)}
-  .gf-lb{transform:rotateX(180deg);border-radius:20px}
-  .gf-r{border-radius:0 0 20px 20px;padding-top:18px}
-  .gf-r::before{right:0;bottom:auto;width:auto;height:26px;background:linear-gradient(to bottom,rgb(0 0 0 / .2),transparent)}
-  .gf .sl-hero{padding:22px 20px 4px;gap:18px}
-  .gf .sl-ic.sl-lbtn{top:16px;right:16px}
-  .gf .dxseg{margin:0 20px}
-  .gf-rh{padding:0 14px 0 18px}
-  .gf .gf-r .sl-acts{padding:0 14px 0 18px}.gf .gf-r .tlist{padding:0 12px 0 18px}.gf .gf-r .sl-foot{padding:6px 14px 0 18px}.gf-r>.note{margin:0 14px 0 18px}
 }
 
 /* listen list sheet */
@@ -1713,6 +1760,10 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .track.sl-t .check .rg-v{stroke-width:1.9;filter:drop-shadow(0 0 2px var(--rcl))}
 .track.sl-t .check .rg-n{z-index:2;font-size:12px;font-weight:700;color:#1b1511}
 .track.sl-t .check .rg-d{z-index:2;width:4px;height:4px;background:#14100e}
+.track.sl-t.landing .check.check::after{opacity:0;transform:scale(.2)}
+@keyframes rgLab{0%{opacity:0;transform:scale(.2)}60%{opacity:1;transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes rgDrop{from{transform:rotate(-120deg) scale(.85)}}
+@media (prefers-reduced-motion:no-preference){.track.sl-t.landed .check.check::after{animation:rgLab .5s cubic-bezier(.2,.8,.2,1)}.track.sl-t.landed .check.check::before{animation:rgDrop .6s cubic-bezier(.2,.8,.2,1)}}
 /* not heard yet: just the outline of a record waiting to be played */
 .track.sl-t .check[aria-pressed="false"]:not(:has(.rg-n))::before{opacity:.22;transform:scale(.9)}
 .track.sl-t .check[aria-pressed="false"]:not(:has(.rg-n))::after{opacity:.18;transform:scale(.9)}
@@ -2595,6 +2646,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-n', note:'A REAL OPEN GATEFOLD: an opened album now looks like an actual open record jacket instead of a light box next to a dark one. On a wide screen it is two square panels of the same printed card, in the album\u2019s color with its cover art printed faintly across both, a paper grain and a creased spine, with a record sleeved in each side and peeking out of the outer edges like a 2LP: the left one is your progress record (heard count on its label), the right one shows your rating. Hover a side and its record slides out far enough to read the label. Long track lists scroll inside the right panel. Opening: the cover flies out of the Releases row with its record still in it (the row\u2019s sleeve empties while it is away), lands exactly as it looked in the row, then swings open toward you. No more dark slivers at the corners and no empty box sitting where the left half lands. On narrower screens the halves stack and the cover lifts like a lid. The records in the Releases row now have their lit grooves too (one per song, lit for the ones you have heard); they ripple when you hover them on a PC, and on a phone when they come onto the screen. The number still flies from the rating slider into the song\u2019s record: the label now stays empty until it lands and pops in with it, and the ratings panel no longer jumps back to the top when the page redraws (that was sending the number off-screen).'},
   {v:'2026.11.19-m', note:'GATEFOLD, TAKE TWO: tapping a record now lifts its cover out of the Releases row (its record stays behind on the shelf) and flies it down into place, so it is the album itself that arrives, not a block. The sleeve then swings open toward you on its spine like a real gatefold, the cover darkening as it tilts away from the light and casting a shadow on the inside (it used to swing away from you, which looked backwards). Closing plays it in reverse and the cover flies home into the row. On a phone the cover lands right under the row and lifts open like a lid. RATING RECORDS: the circles beside each song are now tiny records: grooved black vinyl with a sheen, a paper label tinted the album\u2019s color with your score on it, and the rating as a lit groove around the rim (a 10 is a full ring). Heard but unrated shows a blank label with its spindle hole; songs you have not heard are a faint ghost record. Hover one and it spins.'},
   {v:'2026.11.19-l', note:'ONE COLOR, AND RECORDS THAT OPEN LIKE A GATEFOLD: the artist\u2019s colors now run down the whole artist page instead of stopping in a hard line above Similar artists; the flowing colors stay pinned behind everything as you scroll. The long list of album cards under the header is gone. The Releases row is now the discography (its All / Albums / EPs / Singles filter and sort sit beside it): tap a record and it opens below like a gatefold sleeve, the cover swinging open on its spine, with the album on the inside left (cover, record, title, listens, edition) and your ratings on the inside right (album rating, friends, every song, Share and more). Tap the record again or the \u00d7 to fold it shut. Jumping to an album from History, Stats or the Listen list opens it the same way. On a phone the two halves stack and the cover flips up. Artists without a photo get the same page.'},
   {v:'2026.11.19-k', note:'APPLE PHOTO FITS THE HEADER: Apple\u2019s artist photo is a tight square crop, and filling the wide header with it cut off the lower half of the artist (Spotify\u2019s wider framing showed him to the waist). On a wide screen the Apple photo is now shown whole, as tall as the header and pinned to the right, with its left edge fading into the colors; Spotify\u2019s and the phone layout are unchanged.'},
@@ -6208,6 +6260,7 @@ function render(){
   const vk=UI.view||UI.tab,vPrev=UI.vKey;UI.vKey=vk;
   const vlT=(()=>{const el=document.querySelector('.vl-spin'),an=el&&el.getAnimations&&el.getAnimations()[0];return an?an.currentTime:null})();   /* where the record is in its slow spin, so a redraw does not snap it back to the start */
   const ll=document.getElementById('llist'),llTop=ll?ll.scrollTop:0,llTab=UI.llTab;UI.llTab=UI.tab;
+  const gfS=(()=>{const g=document.querySelector('.group.sleeve.gf');if(!g)return null;const r=g.querySelector('.gf-rs'),l=g.querySelector('.gf-ls');return{id:g.dataset.acol,r:r?r.scrollTop:0,l:l?l.scrollTop:0}})();   /* the open album's panels keep their scroll through a redraw */
   let ohg=null;{const oh=document.querySelector('.hero[data-aid]'),m=oh&&oh.querySelector('.hmesh');   /* the old artist's colors, to fade out from */
     if(m){const g=m.cloneNode(true);g.classList.add('hghost');g.dataset.aid=oh.dataset.aid;
       for(let i=0;i<oh.style.length;i++){const k=oh.style[i];if(/^--h(c\d|s\d|gb)$/.test(k))g.style.setProperty(k,oh.style.getPropertyValue(k))}
@@ -6220,6 +6273,7 @@ function render(){
   const flipOn=UI.flip&&!noMotion()&&window.SX&&typeof SX.flip==='function';UI.flip=false;
   if(flipOn)SX.flip(document.body,'#llist .tile,.sheet .group.sleeve,.hxrow .hxsl',()=>keepImgs(renderMain),{dur:420,key:el=>el.dataset.acol?'g'+el.dataset.acol:el.dataset.g?'a'+el.dataset.g:el.dataset.id?'t'+el.dataset.id:null});
   else keepImgs(()=>{const top=topHTML();if(!paneSwap(top))renderMain(top)});   /* the top bar is built once per draw: building it clears the one-shot animation flags of the sheets in it */
+  if(gfS){const g=document.querySelector('.group.sleeve.gf[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(gfS.id):gfS.id)+'"]');if(g){const r=g.querySelector('.gf-rs'),l=g.querySelector('.gf-ls');if(r)r.scrollTop=gfS.r;if(l)l.scrollTop=gfS.l}}
   slObserve();slPulseNow();UI.rAnim=null;accAfter();pfFit();
   if(vlT!=null&&vPrev===vk){const el=document.querySelector('.vl-spin'),an=el&&el.getAnimations&&el.getAnimations()[0];if(an)an.currentTime=vlT}
   if(vPrev&&vPrev!==vk&&!noMotion())pageIn(Math.sign((VORD[vk]??0)-(VORD[vPrev]??0)));
@@ -6235,6 +6289,7 @@ function render(){
   phHiLoad();
   phAmLoad();
   tdPaint();
+  hxObserve();
   const nl=document.getElementById('llist');
   if(nl){if(ll&&llTab===UI.tab)nl.scrollTop=llTop;
     else{const c=nl.querySelector('[aria-current="true"]');if(c)nl.scrollTop=c.offsetTop-nl.clientHeight/3}}
@@ -7903,13 +7958,26 @@ function tdPaint(){
 function phOn(){try{return localStorage.getItem('pb_photohero')!=='0'}catch(e){return true}}
 function spOpenUrl(a){return a.spid?'https://open.spotify.com/artist/'+encodeURIComponent(a.spid):'https://open.spotify.com/search/'+encodeURIComponent(a.name||'')}
 /* the edge-to-edge photo header (see the ARTIST PHOTO HERO styles) */
+/* On a phone (no hover) the row's records ripple as they come onto the screen instead. Each one ripples once per
+   time it scrolls in, not on every redraw. */
+let hxIO=null;const HXSEEN=new Set();
+function hxObserve(){
+  if(!('IntersectionObserver' in window)||!matchMedia('(hover:none),(max-width:760px)').matches)return;
+  if(!hxIO)hxIO=new IntersectionObserver(es=>{for(const e of es){const t=e.target,k=t.dataset.g;if(!k)continue;
+    if(e.isIntersecting&&!HXSEEN.has(k)){HXSEEN.add(k);const v=t.querySelector('.vgr');if(v&&v.querySelector('i.on')){v.classList.remove('rip');void v.offsetWidth;v.classList.add('rip');clearTimeout(v._t);v._t=setTimeout(()=>v.classList.remove('rip'),2200)}}
+    else if(!e.isIntersecting)HXSEEN.delete(k)}},{threshold:.7});
+  hxIO.disconnect();document.querySelectorAll('.hxrow .hxsl[data-g]').forEach(el=>hxIO.observe(el))}
+/* the record peeking out of each sleeve in the Releases row: one groove per song (long releases fold songs together),
+   lit for the songs you have heard, faint for ones carried over from an earlier listen */
+function hxRings(g){const rs=slRings(g),R=rs.length;
+  return rs.map((st,j)=>`<i class="${st===2?'on':st===1?'on fade':''}" style="--d:${(94-j*(50/Math.max(R,1))).toFixed(1)}%;--o:${R-1-j}"></i>`).join('')}
 function heroX(a,all,done,rated,p,phUrl,more){
   const rs=all.map(i=>rating(i.id)).filter(Boolean),avg=rs.length?(rs.reduce((x,y)=>x+y,0)/rs.length/2).toFixed(1):'';
   const sub=[done+' of '+all.length+' heard',rated?rated+' rated':'',avg?'avg '+avg:''].filter(Boolean).join(' · ');
   const og=gfOpenId(a),rl=relList(a).filter(g=>UI.filter!=='open'||String(g.id)===og||g.items.some(i=>!isDone(i.id)));
   const rel=rl.map(g=>{const sArt=g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-250':''),
       col=acolFor(g.id,sArt,g),kind=/single/i.test(g.kind||'')?'Single':/^ep$/i.test(g.kind||'')?'EP':/^studio album$/i.test(g.kind||'')?'Album':(g.kind||'');
-    const on=String(g.id)===og;return `<button class="hxsl${on?' on':''}" data-act="hjump" data-g="${esc(g.id)}" style="--c:${esc(col)}" aria-pressed="${on}" aria-label="${on?'Close':'Open'} ${esc(g.title)}"><span class="hxv" aria-hidden="true"></span><span class="hxc" aria-hidden="true">${sArt?`<img src="${esc(sArt)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span><span class="hxt">${esc(g.title)}</span><span class="hxy">${esc([kind,g.year].filter(Boolean).join(' · '))}</span></button>`}).join('');
+    const on=String(g.id)===og;return `<button class="hxsl${on?' on':''}" data-act="hjump" data-g="${esc(g.id)}" style="--c:${esc(col)}" aria-pressed="${on}" aria-label="${on?'Close':'Open'} ${esc(g.title)}"><span class="hxv vgr" aria-hidden="true">${hxRings(g)}</span><span class="hxc" aria-hidden="true">${sArt?`<img src="${esc(sArt)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span><span class="hxt">${esc(g.title)}</span><span class="hxy">${esc([kind,g.year].filter(Boolean).join(' · '))}</span></button>`}).join('');
   const ico={back:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
     play:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.8v14.4L19 12z"/></svg>',
     ear:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="6.5" rx="1.6"/><rect x="16.5" y="14" width="4.5" height="6.5" rx="1.6"/></svg>',
@@ -8976,31 +9044,36 @@ function gfHtml(a,g){return lsWith(g,()=>{
         <span class="ttl">${esc(s.t)}${s.f.length?`<span class="feat">feat. ${esc(s.f.join(', '))}</span>`:''}</span>${lsSongDelta(g,i.id)}${plBadge(i.id)}
         <button class="check" data-act="tog" data-id="${i.id}" aria-pressed="${dn}" aria-label="${r?'Rated '+fmt(r)+'. ':''}${dn?'Heard':'Not heard'}: ${esc(i.title)}"><svg viewBox="0 0 44 44" aria-hidden="true"><circle class="rg-t" cx="22" cy="22" r="16"/>${r?`<circle class="rg-v" cx="22" cy="22" r="16" stroke-dasharray="${dash}"/>`:''}</svg>${r?`<span class="rg-n">${fmt(r)}</span>`:dn?'<span class="rg-d"></span>':''}</button></div>
         ${UI.rOpen===i.id?rateMeter(i.id,s.t,simSong(a,i,s.t)):''}`}).join('');
-    const anim=UI.gfAnim===String(g.id);
-    return `<div class="group sleeve gf${lsCls(g)} ${dx?'dxon':''} ${UI.dxAnim===g.id?'dxanim':''} ${SLIN.has(String(g.id))?'in':''}${anim?' gfopen':''}" data-acol="${g.id}" style="--acs:${col};--acd:${colD}">
+    const anim=UI.gfAnim===String(g.id),rid=dx?dxId(g):g.id,ar=RATEABLE.includes(g.kind)?rating(rid):0,sr=shown.map(i=>rating(i.id)).filter(Boolean),sav=sr.length?sr.reduce((x,y)=>x+y,0)/sr.length:0;
+    const vrLab=ar?`<b>${fmt(ar)}</b><span>rated</span>`:sav?`<b>${sav.toFixed(1)}</b><span>song avg</span>`:`<b>${shown.length?gd+'/'+shown.length:'\u2013'}</b><span>heard</span>`;
+    const vgr=rings.map((st,j)=>`<i class="${st===2?'on':st===1?'on fade':''}" style="--d:${(96-j*(52/Math.max(R,1))).toFixed(1)}%;--o:${R-1-j}"></i>`).join('');
+    return `<div class="group sleeve gf${lsCls(g)} ${dx?'dxon':''} ${UI.dxAnim===g.id?'dxanim':''} ${SLIN.has(String(g.id))?'in':''}${anim?' gfopen':''}" data-acol="${g.id}" style="--acs:${col};--acd:${colD}${sArt?`;--art:url(&quot;${esc(sArt)}&quot;)`:''}">
       <div class="gf-sp">
       <div class="gf-l">
         <div class="gf-lf"><i class="gf-sh" aria-hidden="true"></i>
+          <div class="gf-pk l"><div class="sl-disc" role="img" aria-label="${gd} of ${shown.length} songs heard">${ringHtml}<span class="sl-lab">${shown.length?gd+'/'+shown.length:'–'}</span></div></div>
+          <div class="gf-ls">
           <div class="sl-hero">
             ${albBar(g,a)}
-            <div class="sl-pack">
-              <div class="sl-disc" role="img" aria-label="${gd} of ${shown.length} songs heard">${ringHtml}<span class="sl-lab">${shown.length?gd+'/'+shown.length:'–'}</span></div>
-              <div class="sl-cover">${art?`<img src="${esc(art)}" ${dx&&sArt&&art!==sArt?`data-f="${esc(sArt)}" `:''}alt="" loading="lazy" decoding="async" onerror="if(this.dataset.f){this.src=this.dataset.f;this.removeAttribute('data-f')}else coverErr(this)">`:''}<span class="sl-ph" aria-hidden="true">${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div>
-            </div>
+            <div class="sl-pack"><div class="sl-cover">${art?`<img src="${esc(art)}" ${dx&&sArt&&art!==sArt?`data-f="${esc(sArt)}" `:''}alt="" loading="lazy" decoding="async" onerror="if(this.dataset.f){this.src=this.dataset.f;this.removeAttribute('data-f')}else coverErr(this)">`:''}<span class="sl-ph" aria-hidden="true">${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div></div>
             <div class="sl-meta"><span class="sl-kind">${esc(g.kind)} · ${esc(g.year)}</span><h3>${esc(dx?dxName(g):g.title)}</h3>${dx?'<span class="dxbadge">Deluxe</span>':''}${g.w&&g.w.length?`<span class="sl-w">with ${esc(g.w.join(' & '))}</span>`:''}<span class="sl-sub">${gd} of ${shown.length} heard</span>${rdLine(g,dx)}${lsPager(g)}${UI.wEdit===g.id?`<form class="sl-wf" data-form="gwith" data-a="${a.id}" data-g="${g.id}"><input name="w" value="${esc((g.w||[]).join(' & '))}" placeholder="Other artist, like Kenny Beats" aria-label="Collab with" autocomplete="off" autocapitalize="words"><button>Save</button></form>`:''}</div>
           </div>
           ${dxs.length?`<div class="dxseg" role="group" aria-label="Edition" data-dx="${dx?1:0}"><button type="button" data-act="dxsel" data-g="${g.id}" data-v="0" aria-pressed="${!dx}">Standard<span class="mono">${sd}/${std.length}</span></button><button type="button" class="dx" data-act="dxsel" data-g="${g.id}" data-v="1" aria-pressed="${dx}">Deluxe<span class="mono">${dd}/${g.items.length}</span></button></div>`:''}
+          </div>
         </div>
         <div class="gf-lb" aria-hidden="true"><i class="gf-sh"></i>${sArt?`<img class="gf-lbg" src="${esc(sArt)}" alt="" decoding="async" onerror="this.remove()"><img src="${esc(sArt)}" alt="" decoding="async" onerror="this.remove()">`:''}<span>${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div>
       </div>
       <div class="gf-r"><i class="gf-sh" aria-hidden="true"></i>
+        <div class="gf-pk r" aria-hidden="true"><div class="gf-vr vgr" style="--vc:var(--ac)">${vgr}<span class="gf-vl">${vrLab}</span></div></div>
+        <div class="gf-rs">
         <div class="gf-rh"><span class="gf-lbl">${RATEABLE.includes(g.kind)?'Your ratings':'Songs'}</span><button type="button" class="gf-x" data-act="gfclose" aria-label="Close ${esc(g.title)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
         ${albumBar(g,a,full,shown.length)}
         ${friendStrip(g,a,dx)}
         ${g.items.length?'':'<p class="note">No songs listed yet. Tap the details button (i) up top to fill them in; your album rating stays.</p>'}
         ${g.items.length&&!rows.length?'<p class="note gf-none">Every song here is heard. Tap the ear button up top to show them all.</p>':''}
         <div class="tlist">${trackRows}</div>
-            <div class="sl-foot">${shareBtn(g,a)}<details class="gmore"${UI.armed===g.id?' open':''}><summary aria-label="More for this album">⋯</summary>${moreBtns(g,dx)}${delGBtn(g,a)}</details></div>
+        <div class="sl-foot">${shareBtn(g,a)}<details class="gmore"${UI.armed===g.id?' open':''}><summary aria-label="More for this album">⋯</summary>${moreBtns(g,dx)}${delGBtn(g,a)}</details></div>
+        </div>
       </div>
       </div>
     </div>`})}
@@ -9031,7 +9104,7 @@ function gfRun(el,back){
   const sp=el.querySelector('.gf-sp'),l=el.querySelector('.gf-l'),r=el.querySelector('.gf-r');
   if(!sp||!l||!r)return null;
   const tile=document.querySelector('.hxsl.on .hxc'),z=getComputedStyle(el).getPropertyValue('--gfz').trim()||'rotateY(180deg)';
-  const phone=matchMedia('(max-width:760px)').matches,S=sp.getBoundingClientRect(),R=r.getBoundingClientRect(),Lr=l.getBoundingClientRect();
+  const phone=matchMedia('(max-width:1099px)').matches,S=sp.getBoundingClientRect(),R=r.getBoundingClientRect(),Lr=l.getBoundingClientRect();
   /* the closed jacket: over the inside right on a PC; on a phone it sits over the top half (the album side), right under the row */
   const J=phone?{x:Lr.left,y:Lr.top,w:Lr.width,h:Lr.height}:{x:R.left,y:R.top,w:R.width,h:R.height},ch=Math.min(J.w,J.h);   /* the closed jacket, and the cover square at its top */
   const ins=(y,h)=>`inset(${(y-S.top).toFixed(1)}px ${(S.right-(J.x+J.w)).toFixed(1)}px ${(S.bottom-(y+h)).toFixed(1)}px ${(J.x-S.left).toFixed(1)}px round 10px)`;
@@ -9041,8 +9114,11 @@ function gfRun(el,back){
   sp.style.transformOrigin=`${(J.x-S.left).toFixed(1)}px ${(J.y-S.top).toFixed(1)}px`;
   const T=1750,o={duration:T,fill:'both',direction:back?'reverse':'normal'},a=[];
   const fly='cubic-bezier(.25,.8,.25,1)',sw='cubic-bezier(.45,0,.2,1)';
-  a.push(sp.animate([{transform:from,clipPath:cSq,opacity:fo?1:0,offset:0,easing:fly},{transform:'none',clipPath:cSq,opacity:1,offset:.36,easing:'cubic-bezier(.3,.7,.3,1)'},
+  const W=phone?.49:.42;   /* when the swing starts */
+  /* a PC: the closed jacket is exactly the cover with its record sticking out, so the whole thing just flies; a phone clips to the cover square first */
+  if(phone)a.push(sp.animate([{transform:from,clipPath:cSq,opacity:fo?1:0,offset:0,easing:fly},{transform:'none',clipPath:cSq,opacity:1,offset:.36,easing:'cubic-bezier(.3,.7,.3,1)'},
     {transform:'none',clipPath:cJk,offset:.49},{transform:'none',clipPath:cAll,offset:.495},{transform:'none',clipPath:cAll,offset:1}],o));
+  else a.push(sp.animate([{transform:from,opacity:fo?1:0,offset:0,easing:fly},{transform:'none',opacity:1,offset:W},{transform:'none',opacity:1,offset:1}],o));
   const sh=(sel,kf)=>{const e=el.querySelector(sel);if(e)a.push(e.animate(kf,o))};
   let lid=null;
   if(phone){   /* a phone: the cover is a lid over the album side that lifts up toward you and away; the ratings rise in below */
@@ -9053,12 +9129,16 @@ function gfRun(el,back){
     sh('.gf-lf>.gf-sh',[{opacity:.5,offset:0},{opacity:.5,offset:.6},{opacity:0,offset:1}]);
     a.push(r.animate([{opacity:0,transform:'translateY(-24px)',offset:0},{opacity:0,transform:'translateY(-24px)',offset:.55,easing:'cubic-bezier(.2,.8,.2,1)'},{opacity:1,transform:'none',offset:1}],o));
   }else{
-    a.push(l.animate([{transform:z,offset:0},{transform:z,offset:.49,easing:sw},{transform:'none',offset:1}],o));
-    sh('.gf-r>.gf-sh',[{opacity:.5,offset:0},{opacity:.5,offset:.49},{opacity:.28,offset:.75},{opacity:0,offset:1}]);
-    sh('.gf-lb>.gf-sh',[{opacity:0,offset:0},{opacity:0,offset:.49},{opacity:.55,offset:.74},{opacity:.55,offset:1}]);
-    sh('.gf-lf>.gf-sh',[{opacity:.5,offset:0},{opacity:.5,offset:.74},{opacity:0,offset:1}]);
+    a.push(l.animate([{transform:z,offset:0},{transform:z,offset:W,easing:sw},{transform:'none',offset:1}],o));
+    sh('.gf-r>.gf-sh',[{opacity:.5,offset:0},{opacity:.5,offset:W},{opacity:.28,offset:.72},{opacity:0,offset:1}]);
+    sh('.gf-lb>.gf-sh',[{opacity:0,offset:0},{opacity:0,offset:W},{opacity:.55,offset:.71},{opacity:.55,offset:1}]);
+    sh('.gf-lf>.gf-sh',[{opacity:.5,offset:0},{opacity:.5,offset:.71},{opacity:0,offset:1}]);
+    /* the left record rides inside the cover; once open it slides a little further out of its sleeve, then settles */
+    const ld=el.querySelector('.gf-pk.l .sl-disc');if(ld)a.push(ld.animate([{translate:'0 0',offset:0},{translate:'0 0',offset:.8},{translate:'-10% 0',offset:.9},{translate:'0 0',offset:1}],o));
   }
-  if(tile&&fo)a.push(tile.animate([{opacity:back?1:0,offset:0},{opacity:0,offset:.3},{opacity:back?0:1,offset:.42},{opacity:back?0:1,offset:1}],{duration:T,fill:back?'forwards':'none',direction:back?'reverse':'normal'}));
+  /* the sleeve in the row empties while its cover and record are away, and fills back in once they have landed */
+  if(tile&&fo){const hs=tile.closest('.hxsl'),parts=hs?hs.querySelectorAll('.hxc,.hxv'):[tile];
+    parts.forEach(e=>a.push(e.animate([{opacity:0,offset:0},{opacity:0,offset:W},{opacity:1,offset:Math.min(1,W+.12)},{opacity:1,offset:1}],{duration:T,fill:back?'forwards':'none',direction:back?'reverse':'normal'})))}
   const done=a[0].finished;done.then(()=>{if(!back){a.forEach(x=>{try{x.cancel()}catch(e){}});sp.style.transformOrigin='';if(lid)lid.remove()}},()=>{});
   return done}
 /* fold the open album shut, then drop it from the page */
