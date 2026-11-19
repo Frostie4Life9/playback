@@ -2646,6 +2646,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-s', note:'GATEFOLD: NO MORE FADE-AWAY AND POP-BACK: the album in the Releases row used to vanish the moment you tapped it, then fade back in halfway through the opening, so it looked like it blinked. It now stays put the whole time. The cover that flies out is a copy of it, and the row\u2019s sleeve keeps its lifted, ringed look while the record is open; closing flies the cover back onto it.'},
   {v:'2026.11.19-r', note:'GATEFOLD NO LONGER SNAPS OPEN: opening a record asks the server what your friends rated for that artist, and when the answer arrived a second or so later the page was redrawn right in the middle of the opening, so the record skipped straight to fully open. Redraws caused by things arriving in the background (friends\u2019 ratings, the activity feed, Spotify checks, new-release scans, photos, sync) now wait until the opening or closing has finished. Taps still redraw immediately.'},
   {v:'2026.11.19-q', note:'NO MORE POP ON THE ARTIST PHOTO: if the page redrew while the photo was still fading in, the photo jumped to full strength; it now carries on from where the fade was. When a sharper copy of the photo arrives a moment later, it waits for the fade to finish and then blends over the old one instead of snapping.'},
   {v:'2026.11.19-p', note:'ARTIST PHOTO STAYS PUT: the photo at the top of an artist page no longer flashes and reloads every time you open an album, and no longer re-fades two to four times in a row when an artist first opens. Any redraw of the page was throwing the photo away and putting it back, which restarted its fade-in; now it fades in once per artist and then just stays.'},
@@ -9179,9 +9180,7 @@ function gfRun(el,back){
     /* the left record rides inside the cover; once open it slides a little further out of its sleeve, then settles */
     const ld=el.querySelector('.gf-pk.l .sl-disc');if(ld)a.push(ld.animate([{translate:'0 0',offset:0},{translate:'0 0',offset:.8},{translate:'-10% 0',offset:.9},{translate:'0 0',offset:1}],o));
   }
-  /* the sleeve in the row empties while its cover and record are away, and fills back in once they have landed */
-  if(tile&&fo){const hs=tile.closest('.hxsl'),parts=hs?hs.querySelectorAll('.hxc,.hxv'):[tile];
-    parts.forEach(e=>a.push(e.animate([{opacity:0,offset:0},{opacity:0,offset:W},{opacity:1,offset:Math.min(1,W+.12)},{opacity:1,offset:1}],{duration:T,fill:back?'forwards':'none',direction:back?'reverse':'normal'})))}
+  /* the row's sleeve stays exactly where it is the whole time (no fading out and back in): the cover that flies is a copy of it, and the open record's tile just keeps its lifted, ringed look */
   const done=a[0].finished;const mine=GFP=done.then(()=>{},()=>{}).then(()=>new Promise(r=>setTimeout(r,60)));mine.then(()=>{if(GFP===mine)GFP=null});
   done.then(()=>{if(!back){a.forEach(x=>{try{x.cancel()}catch(e){}});sp.style.transformOrigin='';if(lid)lid.remove()}},()=>{});
   return done}
