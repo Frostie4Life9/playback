@@ -1102,10 +1102,18 @@ button.pf-row{padding:8px 10px}button.pf-row:hover{border-color:var(--accent)}bu
 .frover{z-index:95}
 .frsheet .setcard{border:0;padding:0;background:none;box-shadow:none;margin:0}
 @media (prefers-reduced-motion:no-preference){
+  .llover.ll-in .llbk{animation:frfade .25s ease both}
+  .llover.ll-in .llsheet{animation:frup .38s cubic-bezier(.2,.9,.25,1) both}
+  .llover.ll-in .llsheet li{animation:pfup .4s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*45ms + 160ms)}
   .frover.fr-in .llbk{animation:frfade .25s ease both}
   .frover.fr-in .llsheet{animation:frup .38s cubic-bezier(.2,.9,.25,1) both}
+  /* the exit comes last so it wins over the entrance of the same sheet */
+  .llover.out .llbk{animation:frfadeout .22s ease both}
+  .llover.out .llsheet{animation:frdown .26s cubic-bezier(.5,0,.75,.4) both}
 }
 @keyframes frfade{from{opacity:0}to{opacity:1}}
+@keyframes frfadeout{to{opacity:0}}
+@keyframes frdown{to{transform:translateY(40px);opacity:0}}
 @keyframes frup{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
 /* Friends shortcut in the top bar and the Friends page */
 .settings,.frwrap,.setcard.acc{min-width:0;max-width:100%;box-sizing:border-box}
@@ -2285,6 +2293,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.18-u', note:'FRIENDS AND LISTEN LIST ANIMATE AGAIN: the Friends sheet had lost its opening animation in the last build (a side effect of the faster artist switching), and it is back. The Listen list now opens with a fade and slide-up, with its rows rising in one after another, and both the Friends sheet and the Listen list slide away when you close them (close button, tapping outside, or Esc).'},
   {v:'2026.11.18-t', note:'FASTER ARTIST SWITCHING: opening another artist no longer rebuilds the whole page. When nothing else on the page has changed, the top bar and the wall of artists stay as they are and only the artist pane is redrawn, so clicks land sooner on slower laptops (about 40% less work per click in testing with 70 artists, more with bigger libraries). The record is also drawn once in its new look instead of twice. Everything looks and animates the same; any other change still redraws the full page.'},
   {v:'2026.11.18-s', note:'SMOOTHER ON LAPTOPS: the top bar and the floating dock no longer blur what scrolls behind them (they were already almost solid, so they look the same, but the blur was re-done every scroll frame). The artist page background colors now run on three moving layers instead of six, two colors each, with every album color still there and still sized by your ratings, and they stop drifting while the artist card is scrolled out of view. The spinning liquid vinyl is unchanged.'},
    {v:'2026.11.18-r', note:'SETTINGS SPOTIFY CARD FIXED: the Spotify card in Settings failed to load (\u201cCannot read properties of undefined\u201d) because two parts of the play counting shared a name, so the older Most played list broke once the Stats page was added. It works again. You can also still reach your counts on the Stats page.'},
@@ -5585,7 +5594,7 @@ async function push(force){
 }
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pull();else if(accSync()&&!ownSync()&&pushTimer&&SYS.status!=='conflict'){clearTimeout(pushTimer);pushTimer=null;push(false)}});   /* leaving the app sends a waiting account save right away */
 window.addEventListener('online',()=>pull());
-document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&UI.pAlb){UI.pAlb='';render()}else if(ev.key==='Escape'&&UI.frOpen){UI.frOpen=false;render()}else if(ev.key==='Escape'&&UI.llOpen){UI.llOpen=false;render()}else if(ev.key==='Escape'&&UI.mm){UI.mm=false;UI.mmAnim=false;render()}});
+document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&UI.pAlb){UI.pAlb='';render()}else if(ev.key==='Escape'&&UI.frOpen){if(!sheetOut('fr')){UI.frOpen=false;render()}}else if(ev.key==='Escape'&&UI.llOpen){if(!sheetOut('ll')){UI.llOpen=false;render()}}else if(ev.key==='Escape'&&UI.mm){UI.mm=false;UI.mmAnim=false;render()}});
 document.addEventListener('toggle',ev=>{if(ev.target.id==='syncpanel')UI.syncOpen=ev.target.open;else if(ev.target.id==='syncguide')UI.guideOpen=ev.target.open;else if(ev.target.id==='backup')UI.bkOpen=ev.target.open;else if(ev.target.id==='addart')UI.addOpen=ev.target.open;else if(ev.target.id==='listenpanel')UI.llOpen=ev.target.open;else if(ev.target.id==='coladd')UI.colAdd=ev.target.open;else if(ev.target.id==='colhand')UI.colHand=ev.target.open;else if(ev.target.id==='coltok')UI.colTok=ev.target.open;else if(ev.target.classList&&ev.target.classList.contains('splog'))UI.spLogOpen=ev.target.open;else if(ev.target.classList&&ev.target.classList.contains('plays'))UI.plOpen=ev.target.open},true);
 const UI={view:null,libOpen:false,addOpen:false,rOpen:null,lq:{music:'',screen:''},tab:'music',sel:{music:null,screen:null},filter:'all',armed:null,addType:'show',copied:false,epOpen:{},dxOpen:{},wEdit:null,dEdit:null};
 
@@ -5873,7 +5882,7 @@ function render(){
   /* a filter or sort change: tiles and release cards that stay glide to their new spots, new ones rise in one after another */
   const flipOn=UI.flip&&!noMotion()&&window.SX&&typeof SX.flip==='function';UI.flip=false;
   if(flipOn)SX.flip(document.body,'#llist .tile,.sheet .group.sleeve',()=>keepImgs(renderMain),{dur:420,key:el=>el.dataset.acol?'g'+el.dataset.acol:el.dataset.g?'a'+el.dataset.g:el.dataset.id?'t'+el.dataset.id:null});
-  else keepImgs(()=>{if(!paneSwap())renderMain()});
+  else keepImgs(()=>{const top=topHTML();if(!paneSwap(top))renderMain(top)});   /* the top bar is built once per draw: building it clears the one-shot animation flags of the sheets in it */
   slObserve();slPulseNow();UI.rAnim=null;accAfter();pfFit();
   if(vlT!=null&&vPrev===vk){const el=document.querySelector('.vl-spin'),an=el&&el.getAnimations&&el.getAnimations()[0];if(an)an.currentTime=vlT}
   if(vPrev&&vPrev!==vk&&!noMotion())pageIn(Math.sign((VORD[vk]??0)-(VORD[vPrev]??0)));
@@ -7313,14 +7322,14 @@ function keepImgs(fn){
   document.querySelectorAll('img[src]').forEach(im=>{if(old.has(im))return;
     const l=m.get(im.getAttribute('src')),k=l&&l.findIndex(o=>o.className===im.className);
     if(l&&k>=0)im.replaceWith(l.splice(k,1)[0])})}
-function renderMain(){
+function renderMain(topIn){
   PAINT=null;
   if(!READY){document.getElementById('app').innerHTML='<p class="empty">Loading your log\u2026</p>';return}
   const e=current();
   LIBIN=!!UI.libAnim;UI.libAnim=false;
   if(UI.mm&&(UI.tab!=='music'||(UI.view&&UI.view!=='history'&&UI.view!=='stats')))UI.mm=false;   /* the Music menu only belongs to Music */   /* the menu's opening animation plays on the one draw that opens it */
   const list=S[UI.tab];
-  const top=topHTML(),mo={};
+  const top=topIn!=null?topIn:topHTML(),mo={};
   document.getElementById('app').innerHTML=top+`${UI.view==='settings'?settingsView():UI.view==='account'?accountView():UI.view==='friends'?friendsView():UI.view==='friend'?friendView():UI.view==='collection'?collectionView():UI.view==='history'?historyView():UI.view==='stats'?statsView():mainView(e,list,mo)}
   <footer>
     <p class="buildid">Build ${esc(BUILD)}</p>
@@ -7328,7 +7337,8 @@ function renderMain(){
   if(!UI.view&&UI.tab==='music'&&mo.aside)PAINT={top,side:asideKey(mo.aside)};
   heroStart();
 }
-function topHTML(){return `
+function topHTML(){const out=topHTML0();UI.llAnim=false;return out}
+function topHTML0(){return `
   <header class="top">
       <nav class="tabs" aria-label="Section">
         <button data-act="tab" data-v="music" aria-pressed="${(!UI.view&&UI.tab==='music')||UI.view==='history'||UI.view==='stats'}" aria-haspopup="menu" aria-expanded="${!!UI.mm}">${ICO.music}<span>Music</span><i class="caret" aria-hidden="true"></i></button>
@@ -7345,7 +7355,7 @@ function topHTML(){return `
   </header>
   ${UI.frOpen&&GCID?friendsSheet():''}
   ${UI.pAlb?albumSheet():''}
-  ${UI.llOpen&&!UI.view&&UI.tab==='music'?`<div class="llover"><button class="llbk" data-act="llclose" aria-label="Close Listen list"></button>${listenSide()}</div>`:''}
+  ${UI.llOpen&&!UI.view&&UI.tab==='music'?`<div class="llover${UI.llAnim?' ll-in':''}"><button class="llbk" data-act="llclose" aria-label="Close Listen list"></button>${listenSide()}</div>`:''}
   ${SV.err?`<div class="banner" role="alert"><p>This browser would not save your last change. It is still on screen, but it will be gone if you close the app. ${syncOn()?'Tap Upload now in Sync at the bottom so it is safe on your Worker, or copy a backup.':'Copy a backup at the bottom to keep it safe.'}</p></div>`:''}
   ${SYS.status==='conflict'?conflictBanner():''}
   ${bkNudge()}
@@ -7358,12 +7368,12 @@ function topHTML(){return `
    page always ends up just as a full redraw would leave it. */
 let PAINT=null;
 const asideKey=h=>h.replace(/ aria-current="true"/g,' aria-current="false"').replace(/<button class="libbtn"[\s\S]*?<\/button>/,'');
-function paneSwap(){
+function paneSwap(top){
   if(!READY||!PAINT||UI.view||UI.tab!=='music'||UI.libAnim||UI.mm)return false;
   const app=document.getElementById('app'),side=app&&app.querySelector(':scope>.shell>aside.side'),old=app&&app.querySelector(':scope>.shell>section.sheet'),ll=side&&side.querySelector('#llist');
   if(!side||!old||!ll)return false;
   const e=current();if(!e)return false;
-  const top=topHTML();if(top!==PAINT.top)return false;
+  if(top!==PAINT.top)return false;
   const a=mainAside(e,S.music);if(asideKey(a)!==PAINT.side)return false;
   ll.querySelectorAll('[aria-current="true"]').forEach(n=>n.setAttribute('aria-current','false'));
   ll.querySelectorAll('[data-act="sel"]').forEach(n=>{if(n.dataset.id===e.id)n.setAttribute('aria-current','true')});
@@ -8332,9 +8342,9 @@ function llResolve(x){
   return{x,a,g,n:its.length,d,heard:(its.length>0&&d===its.length)||!!rating(g.id),art}}
 function listenSide(){
   const L=listenAll().map(llResolve),todo=L.filter(r=>!r.heard).sort((p,q)=>(q.x.added||0)-(p.x.added||0)),done=L.filter(r=>r.heard).sort((p,q)=>(q.x.added||0)-(p.x.added||0));
-  const row=r=>{const x=r.x,sub=esc(x.artist)+(x.year||r.g&&/^\d{4}/.test(r.g.year)?' · '+esc(x.year||String(r.g.year).slice(0,4)):'');
+  const row=(r,i)=>{const x=r.x,sub=esc(x.artist)+(x.year||r.g&&/^\d{4}/.test(r.g.year)?' · '+esc(x.year||String(r.g.year).slice(0,4)):'');
     const st=r.heard?'Heard':!r.g?'Not in your log yet':r.n?r.d+'/'+r.n+' heard':'No songs listed yet';
-    return `<li class="${r.heard?'heard':''}"><span class="wl-art" ${r.art?`style="background:var(--sunk) url('${esc(r.art)}') center/cover"`:''} aria-hidden="true"></span>
+    return `<li class="${r.heard?'heard':''}" style="--i:${Math.min(i||0,9)}"><span class="wl-art" ${r.art?`style="background:var(--sunk) url('${esc(r.art)}') center/cover"`:''} aria-hidden="true"></span>
       <span class="wl-meta"><b>${esc(x.title)}</b><span>${sub}</span></span>
       <span class="wl-st">${st}${r.g&&r.n&&!r.heard?`<span class="bar" aria-hidden="true"><i style="width:${r.d/r.n*100}%"></i></span>`:''}</span>
       <span class="wl-act">${r.a?`<button class="link" data-act="llgo" data-a="${r.a.id}"${r.g?` data-g="${r.g.id}"`:''}>Open</button>`:''}<button class="link" data-act="lldel" data-id="${x.id}" aria-label="Remove ${esc(x.title)} from the listen list">Remove</button></span></li>`};
@@ -8528,6 +8538,11 @@ function filmView(f){
 }
 
 /* ---------- events ---------- */
+/* closing the Friends sheet or the Listen list: it plays its exit first, then closes */
+function sheetOut(kind){const o=document.querySelector('.llover:not(.albover)');
+  if(!o||noMotion()||!o.animate)return false;if(o.classList.contains('out'))return true;
+  o.classList.add('out');clearTimeout(UI.outT);
+  UI.outT=setTimeout(()=>{if(kind==='fr')UI.frOpen=false;else UI.llOpen=false;render()},250);return true}
 document.addEventListener('click',ev=>{
   const b=ev.target.closest('[data-act]');
   if(!b){if(UI.mm&&!ev.target.closest('.mmenu')){UI.mm=false;UI.mmAnim=false;render()}return}
@@ -8536,6 +8551,7 @@ document.addEventListener('click',ev=>{
   if(['tog','ropen','rclear','dedit','rvedit','rvdel','grpall','lsnew','lltog'].includes(act)&&b.closest('.lsold'))return;   /* an earlier listen is view only */
   if(act!=='del'&&act!=='delg'&&act!=='lsrm')UI.armed=null;
   if(act!=='mbundo')UI.undoArm=null;
+  if((act==='frclose'&&UI.frOpen||act==='llclose'&&UI.llOpen)&&sheetOut(act==='frclose'?'fr':'ll'))return;
   if(act!=='plcheck'&&act!=='plclear')PL.arm='';
   if(act!=='sugclear')UI.sugArm=false;
   if(act!=='accdel'&&ACX.arm){ACX.arm=false}
@@ -8567,7 +8583,7 @@ document.addEventListener('click',ev=>{
   else if(act==='frclose'){UI.frOpen=false}
   else if(act==='frgo'){UI.frOpen=false;UI.view='account';pReset();UI.pAnim=true;window.scrollTo({top:0})}
   else if(act==='frback'){UI.view=UI.fPrev||null;UI.frOpen=true;UI.frAnim=true;ACX.anim=true}
-  else if(act==='llopen'){UI.llOpen=true}
+  else if(act==='llopen'){UI.llOpen=true;UI.llAnim=true}
   else if(act==='nrcheck'){nrScan(true);return}
   else if(act==='nrauto'){const l=nrLoc();l.off=l.off?0:1;nrSave(l);NR.msg=l.off?'Daily checks are off. Check now still works.':'Daily checks are on.'}
   else if(act==='nradd'){const x=nrList().find(y=>y.id===b.dataset.id);if(x){llAdd(x.a,x.t,x.d.slice(0,4));S.nr.list=nrList().filter(y=>y.id!==x.id);touch();briefPush()}}
