@@ -1365,6 +1365,37 @@ body{overflow-x:clip}
   .head.hero h2{font-size:32px}
 }
 
+/* artist photo hero: the photo fades into the color field; Play on Spotify sits under the name (Settings can turn it off) */
+.hphoto{position:absolute;z-index:-1;left:0;right:0;top:0;height:300px;pointer-events:none;
+  -webkit-mask-image:linear-gradient(to bottom,#000 45%,transparent 100%);mask-image:linear-gradient(to bottom,#000 45%,transparent 100%)}
+.hphoto img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 22%;animation:hPh .6s ease both}
+@keyframes hPh{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){.hphoto img{animation:none}}
+.head.hero.ph{padding-top:236px}
+.head.hero.ph .hbody{display:contents}
+.head.hero.ph .hbody>*{order:6;width:100%}
+.head.hero.ph .meta{order:1}
+.head.hero.ph .hplay{order:2}
+.head.hero.ph .hrec{order:3}
+.head.hero.ph .hstats{order:4}
+.head.hero.ph .tools{order:5}
+.head.hero.ph h2,.head.hero.ph .meta .note{text-shadow:0 2px 16px color-mix(in srgb,var(--bg) 70%,transparent)}
+.hplay{display:flex;justify-content:center}
+.hpbtn{display:inline-flex;align-items:center;gap:9px;height:48px;padding:0 28px;border-radius:999px;background:var(--ink);color:var(--bg);font-weight:600;font-size:15px;text-decoration:none;box-shadow:0 6px 18px rgb(0 0 0 / .28)}
+.hpbtn svg{width:18px;height:18px;fill:currentColor}
+.hpbtn:hover{opacity:.9}.hpbtn:active{transform:scale(.98)}
+@media (min-width:761px){
+  .hphoto{left:auto;right:0;top:0;bottom:0;width:38%;height:auto;
+    -webkit-mask-image:linear-gradient(to right,transparent 25%,#000 80%),linear-gradient(to bottom,#000 60%,transparent 100%);-webkit-mask-composite:source-in;
+    mask-image:linear-gradient(to right,transparent 25%,#000 80%),linear-gradient(to bottom,#000 60%,transparent 100%);mask-composite:intersect}
+  .head.hero.ph{padding-top:28px;min-height:320px}
+  .head.hero.ph .hbody{display:flex;flex:0 1 330px}
+  .head.hero.ph .hbody>*{order:0;width:auto}
+  .head.hero.ph .hbody>.meta,.head.hero.ph .hbody>.tools,.head.hero.ph .hbody>.mbsrc{width:100%}
+  .head.hero.ph .hplay{justify-content:flex-start}
+  .head.hero.ph .hrec{order:-1}
+}
+
 /* listen list sheet */
 .llover{position:fixed;inset:0;z-index:90;display:flex;align-items:flex-end;justify-content:center}
 .llbk{position:absolute;inset:0;border:0;padding:0;background:rgb(0 0 0 / .55)}
@@ -2350,6 +2381,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-d', note:'ARTIST PHOTO HEADER: an artist\u2019s page now opens with their photo fading down into the colors from their ratings, like the Apple Music artist page. Under the name is a Play on Spotify button that opens the artist in Spotify (in the Spotify app on a phone). On a PC the photo sits on the right and fades left and down. The record and tonearm stay under it. An artist with no photo keeps the plain color header. Settings has an Artist page card to turn the photo header off if you do not like it (saved on this device).'},
   {v:'2026.11.19-c', note:'NEW RELEASES NO LONGER LIST ALBUMS THAT ARE NOT OUT YET: an album Apple has announced for a later date (Justice\u2019s GTA VI score, out Dec 11) was showing under New from your artists. Now only albums and EPs that are actually out appear. Anything already listed with a future date is taken off when Playback opens, and an announced album shows up on its own once its release day has passed (and within the last two months). If Apple moves a date later, the entry is taken back off.'},
   {v:'2026.11.19-b', note:'DELUXES FOLLOW THE TRACKLIST: Justice\u2019s \u2020 (Anniversary Edition) stayed a separate album because its title shares no words with Justice. An edition now folds into the standard album when it carries at least 90% of that album\u2019s songs and adds some, came out no earlier, and fits only that one album, whatever its title says. The edition keeps its own name and cover on the Deluxe side of the switch. Re-recordings, live and remix sets, and box sets that hold two albums still stay apart. New releases use the same test: Apple lists an edition apart from the album, so a fresh release is now checked against the songs of albums you already have and skipped if it is just an edition of one. Tap Check for new releases on the artist to fold an existing one; the rating on the stand-alone edition moves to your deluxe rating.'},
   {v:'2026.11.19-a', note:'EASIER TO FIND YOUR WAY (from a friend\u2019s feedback on a phone): the bottom bar now has Music, Stats, History and Settings as real tabs, evenly spaced (Stats and History used to hide in a popup, and a friend\u2019s two tabs sat bunched on the left); the round buttons at the top have words under them on a phone (Listen list, Add artist, Friends, Account); the artist page has an All artists button; Listen list and Listen again on an album say what they do; a new log shows Start your log with a Search for an artist button; and a short spotlight tour runs once for friends (replay it from Settings, Show the tour).'},
@@ -7359,6 +7391,7 @@ function settingsView(){
     </div>
     ${acct.trim()?`<div class="set-col set-acct"><h3 class="set-gh">Account &amp; community</h3>${acct}</div>`:''}
     <div class="set-col set-data"><h3 class="set-gh">Your data</h3>
+    <div class="setcard"><h3>Artist page</h3><p class="note">The artist's photo fades into their colors at the top of their page, with a Play on Spotify button. Turn it off to get the plain color header back. Saved on this device.</p><div class="tools"><button class="btn" data-act="phtog" aria-pressed="${phOn()}">${phOn()?'Turn off artist photo':'Turn on artist photo'}</button></div></div>
     <div class="setcard"><h3>How Playback works</h3><p class="note">A short tour of the buttons and tabs.</p><div class="tools"><button class="btn" data-act="tourgo">Show the tour</button></div></div>
     <div class="setcard"><h3>Sync &amp; data</h3>
     <details id="syncpanel" ${UI.syncOpen?'open':''}>
@@ -7634,6 +7667,9 @@ function tdPaint(){
     const sel='.tdisc[data-td="'+String(a.id).replace(/["\\]/g,'\\$&')+'"]';
     el.textContent=sel+'{--tl:'+(P[0]||songs[0]).col+';background-image:'+hDisc(P,n,a.id,songs,70)
       +(clear?';--tg:color-mix(in srgb,var(--ink) 16%,transparent);background-color:color-mix(in srgb,var(--ink) 6%,transparent);box-shadow:inset 0 0 0 1.5px rgb(255 255 255 / .4),0 6px 14px rgb(0 0 0 / .25)':'')+'}'}}
+/* artist photo header: on by default, turned off per device in Settings > Artist page */
+function phOn(){try{return localStorage.getItem('pb_photohero')!=='0'}catch(e){return true}}
+function spOpenUrl(a){return a.spid?'https://open.spotify.com/artist/'+encodeURIComponent(a.spid):'https://open.spotify.com/search/'+encodeURIComponent(a.name||'')}
 function heroStyle(a){const v=heroVars(a);return Object.keys(v).filter(k=>v[k]).map(k=>k+':'+v[k]).join(';')}
 function heroPaint(){const el=document.querySelector('.hero[data-aid]');if(!el)return;
   const a=S.music.find(x=>x.id===el.dataset.aid);if(!a)return;
@@ -8613,10 +8649,12 @@ function artistView(a){heroLook(a.id);
       <div class="sl-foot">${shareBtn(g,a)}<details class="gmore"${UI.armed===g.id?' open':''}><summary aria-label="More for this album">\u22ef</summary>${moreBtns(g,dx)}${delGBtn(g,a)}</details></div>
     </div>`})).join('');
   UI.dxAnim=null;                                    /* the switch animation plays once, on the draw it was asked for */
-  return `<div class="head hero${hClear()?' hclear':''}" data-aid="${esc(a.id)}" style="${esc(heroStyle(a))}"><i class="hg" aria-hidden="true"></i><div class="hmesh" aria-hidden="true"><i class="hbase"></i><i class="fl fl0"><i class="fb b0"></i><i class="fb b3"></i></i><i class="fl fl1"><i class="fb b1"></i><i class="fb b4"></i></i><i class="fl fl2"><i class="fb b2"></i><i class="fb b5"></i></i></div>
+  const phOk=phOn(),phUrl=phOk?(a.simg||a.img||''):'';
+  return `<div class="head hero${hClear()?' hclear':''}${phUrl?' ph':''}" data-aid="${esc(a.id)}" style="${esc(heroStyle(a))}"><i class="hg" aria-hidden="true"></i><div class="hmesh" aria-hidden="true"><i class="hbase"></i><i class="fl fl0"><i class="fb b0"></i><i class="fb b3"></i></i><i class="fl fl1"><i class="fb b1"></i><i class="fb b4"></i></i><i class="fl fl2"><i class="fb b2"></i><i class="fb b5"></i></i></div>${phUrl?`<div class="hphoto" aria-hidden="true"><img src="${esc(phUrl)}" alt="" decoding="async" onerror="var h=this.closest('.hero');if(h)h.classList.remove('ph');this.parentNode.remove()"></div>`:''}
     <div class="hrec"><div class="hring" style="--p:${p}"><div class="hdisc"><div class="hspin"></div><div class="hlab"><b${p>=100?' class="s"':''}>${p}%</b><span>heard</span></div></div></div>${HARM}</div>
     <div class="hbody">
       <div class="meta"><h2>${esc(a.name)}</h2>${a.aka&&a.aka.length?`<span class="note">also ${esc(a.aka.slice(0,3).join(' · '))}</span>`:''}</div>
+      ${phUrl?`<div class="hplay"><a class="hpbtn" href="${esc(spOpenUrl(a))}" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>Play on Spotify</a></div>`:''}
       <div class="hstats"><div><b>${done}<small> /${all.length}</small></b><span>tracks heard</span></div><div><b>${rated}</b><span>rated</span></div><div><b>${a.groups.length}</b><span>releases</span></div></div>
       <div class="tools" role="group" aria-label="Show"><button class="chip" data-act="filter" data-v="all" aria-pressed="${UI.filter==='all'}">Everything</button><button class="chip" data-act="filter" data-v="open" aria-pressed="${UI.filter==='open'}">Still to hear</button></div>
       ${mbArtistBar(a)}
@@ -8781,6 +8819,7 @@ document.addEventListener('click',ev=>{
   else if(act==='nrclear'){S.nr.list=[];touch();briefPush()}
   else if(act==='llclose'){UI.llOpen=false}
   else if(act==='addart'){UI.libOpen=false;UI.addOpen=true;UI.toAdd=true}
+  else if(act==='phtog'){try{localStorage.setItem('pb_photohero',phOn()?'0':'1')}catch(e){}}
   else if(act==='tourgo'){UI.view=null;UI.tab='music';UI.libOpen=false;setTimeout(()=>tourOpen(0),120)}
   else if(act==='dcforget'){dcSetToken('');COL.tokMsg='Removed from this device.';UI.colTok=true}
   else if(act==='colf'){UI.colF=b.dataset.v}
