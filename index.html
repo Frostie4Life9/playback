@@ -2293,6 +2293,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.18-v', note:'SCREEN AND COLLECTION ARE OWNER-ONLY FOR NOW: both are still work in progress, so their tabs, pages and the Screen block on Stats are hidden for everyone except you (the owner, same check as the suite bar and People card). A friend whose browser had Screen saved as the last tab lands on Music instead.'},
   {v:'2026.11.18-u', note:'FRIENDS AND LISTEN LIST ANIMATE AGAIN: the Friends sheet had lost its opening animation in the last build (a side effect of the faster artist switching), and it is back. The Listen list now opens with a fade and slide-up, with its rows rising in one after another, and both the Friends sheet and the Listen list slide away when you close them (close button, tapping outside, or Esc).'},
   {v:'2026.11.18-t', note:'FASTER ARTIST SWITCHING: opening another artist no longer rebuilds the whole page. When nothing else on the page has changed, the top bar and the wall of artists stay as they are and only the artist pane is redrawn, so clicks land sooner on slower laptops (about 40% less work per click in testing with 70 artists, more with bigger libraries). The record is also drawn once in its new look instead of twice. Everything looks and animates the same; any other change still redraws the full page.'},
   {v:'2026.11.18-s', note:'SMOOTHER ON LAPTOPS: the top bar and the floating dock no longer blur what scrolls behind them (they were already almost solid, so they look the same, but the blur was re-done every scroll frame). The artist page background colors now run on three moving layers instead of six, two colors each, with every album color still there and still sized by your ratings, and they stop drifting while the artist card is scrolled out of view. The spinning liquid vinyl is unchanged.'},
@@ -4539,7 +4540,7 @@ function statSide(){
       h+=`</div><p class="nb">Only albums with at least 3 rated songs and a gap of half a point or more.</p>`;
     }
   }
-  if(D.scr.length||D.eps){
+  if(isOwnerUI()&&(D.scr.length||D.eps)){
     const sr=D.scr.map(x=>x.r),topS=[...D.scr].sort((x,y)=>y.r-x.r||x.s.title.localeCompare(y.s.title)).slice(0,5)
       .map(x=>({tab:'screen',id:x.s.id,t:x.s.title,sub:x.s.type==='film'?'Film':'Show',v:fmt(x.r)}));
     h+=`<div><h4>Screen <span class="avg">${D.scr.length} show${D.scr.length===1?'':'s'} and films rated${sr.length?' · average '+f1(mean(sr)):''} · ${D.eps} episode${D.eps===1?'':'s'} rated</span></h4>${topS.length?statRows(topS):''}</div>`;
@@ -5454,6 +5455,8 @@ const saveSync=()=>{try{localStorage.setItem(SYNC_KEY,JSON.stringify(SY))}catch(
 const SYS={status:SY.url?'idle':'off',msg:'',remote:null};
 let pushTimer=null,inflight=false;
 /* your own Worker, signed in with the sync key or (SY.via) with the owner Google account: everything that needs the Worker (Spotify, photos, Discogs, brief) uses this */
+/* Screen and Collection are still work in progress: only you (owner) get their tabs, pages and shortcuts; friends never see them */
+const isOwnerUI=()=>{try{return !!(window.PB_OWNER||(ACC&&ACC.me&&ACC.me.owner))}catch(e){return !!window.PB_OWNER}};
 const ownSync=()=>{if(!SY.url)return false;if(SY.key)return true;try{return !!(SY.via&&ACC.token&&ACC.me)}catch(e){return false}};
 const syH=()=>SY.key?{'x-sync-key':SY.key}:{authorization:'Bearer '+(()=>{try{return ACC.token}catch(e){return ''}})()};   /* how a request to the owner routes proves it is you */
 const accSync=()=>{try{return !!(SY.acct&&accOn())}catch(e){return false}};   /* the log kept under a Google account on Playback's Worker (accOn is defined further down the page) */
@@ -5867,6 +5870,7 @@ function pageIn(dir){
   }
 }
 function render(){
+  if(!isOwnerUI()){if(UI.tab==='screen')UI.tab='music';if(UI.view==='collection')UI.view=null}   /* a saved tab or a stale link can never land a friend on a hidden page */
   lsHeal();
   const vk=UI.view||UI.tab,vPrev=UI.vKey;UI.vKey=vk;
   const vlT=(()=>{const el=document.querySelector('.vl-spin'),an=el&&el.getAnimations&&el.getAnimations()[0];return an?an.currentTime:null})();   /* where the record is in its slow spin, so a redraw does not snap it back to the start */
@@ -7342,8 +7346,8 @@ function topHTML0(){return `
   <header class="top">
       <nav class="tabs" aria-label="Section">
         <button data-act="tab" data-v="music" aria-pressed="${(!UI.view&&UI.tab==='music')||UI.view==='history'||UI.view==='stats'}" aria-haspopup="menu" aria-expanded="${!!UI.mm}">${ICO.music}<span>Music</span><i class="caret" aria-hidden="true"></i></button>
-        <button data-act="tab" data-v="screen" aria-pressed="${!UI.view&&UI.tab==='screen'}">${ICO.screen}<span>Screen</span></button>
-        <button data-act="view" data-v="collection" aria-pressed="${UI.view==='collection'}">${ICO.collection}<span>Collection</span></button>
+        ${isOwnerUI()?`<button data-act="tab" data-v="screen" aria-pressed="${!UI.view&&UI.tab==='screen'}">${ICO.screen}<span>Screen</span></button>
+        <button data-act="view" data-v="collection" aria-pressed="${UI.view==='collection'}">${ICO.collection}<span>Collection</span></button>`:''}
         <button data-act="view" data-v="settings" aria-pressed="${UI.view==='settings'}">${ICO.settings}<span>Settings</span></button>
         ${UI.mm?`<div class="mmenu${UI.mmAnim?' mm-in':''}" role="menu" aria-label="Music"><button role="menuitem" data-act="mmgo" data-v="artists"${UI.view!=='history'&&UI.view!=='stats'?' aria-current="true"':''}>${ICO.grid}<span>Artists</span></button><button role="menuitem" data-act="mmgo" data-v="history"${UI.view==='history'?' aria-current="true"':''}>${ICO.history}<span>History</span></button><button role="menuitem" data-act="mmgo" data-v="stats"${UI.view==='stats'?' aria-current="true"':''}>${ICO.stats}<span>Stats</span></button></div>`:''}
       </nav>
