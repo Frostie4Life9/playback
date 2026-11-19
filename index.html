@@ -2646,6 +2646,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-r', note:'GATEFOLD NO LONGER SNAPS OPEN: opening a record asks the server what your friends rated for that artist, and when the answer arrived a second or so later the page was redrawn right in the middle of the opening, so the record skipped straight to fully open. Redraws caused by things arriving in the background (friends\u2019 ratings, the activity feed, Spotify checks, new-release scans, photos, sync) now wait until the opening or closing has finished. Taps still redraw immediately.'},
   {v:'2026.11.19-q', note:'NO MORE POP ON THE ARTIST PHOTO: if the page redrew while the photo was still fading in, the photo jumped to full strength; it now carries on from where the fade was. When a sharper copy of the photo arrives a moment later, it waits for the fade to finish and then blends over the old one instead of snapping.'},
   {v:'2026.11.19-p', note:'ARTIST PHOTO STAYS PUT: the photo at the top of an artist page no longer flashes and reloads every time you open an album, and no longer re-fades two to four times in a row when an artist first opens. Any redraw of the page was throwing the photo away and putting it back, which restarted its fade-in; now it fades in once per artist and then just stays.'},
   {v:'2026.11.19-o', note:'ANIMATIONS NO LONGER SKIP AHEAD: a sync starting or finishing (which happens a moment after every rating or change), the Spotify check that runs every couple of minutes, and coming back to the app all rebuilt the whole page underneath whatever was animating, so the animation jumped straight to its end. Now the Sync chip at the top updates in place, and the background Spotify check only redraws when it actually found something new. Animations play through to the end.'},
@@ -3703,7 +3704,7 @@ function stManage(d,demo){
 }
 function statsView(){
   const demo=!!(UI.stDemo&&PL.demo),d=demo?PL.demo:PL.d;
-  if(!d){plLoad().then(()=>{if(UI.view==='stats')render()});return `<section class="colv stv"><p class="note" role="status">Loading your play history…</p></section>`}
+  if(!d){plLoad().then(()=>{if(UI.view==='stats')renderSoon()});return `<section class="colv stv"><p class="note" role="status">Loading your play history…</p></section>`}
   const anim=UI.stAnim;UI.stAnim=false;
   if(!d.ts.length)return `<section class="colv stv${anim?' stanim':''}" aria-labelledby="st-h"><div class="col-hero st-hero"><div class="col-hero-t"><span class="sl-kind">Your listening</span><h2 id="st-h">Stats</h2></div></div><div class="setcard"><h3>Nothing to show yet</h3><p class="note">Stats needs your play history. Playback now counts every play Spotify reports, from any artist, and your Spotify data export fills in the past. Want to see what it will look like first?</p><div class="tools"><button type="button" class="btn primary" data-act="stdemo">Preview with fake stats</button></div></div>${stManage(d,false)}</section>`;
   const now=Math.floor(Date.now()/1000),last=d.ts[d.ts.length-1];
@@ -5180,7 +5181,7 @@ async function spImgBackfill(){
     }
   }catch(e){if(e&&(e.code==='quota'||e.code==='limited'||e.code==='busy')){try{localStorage.setItem('pb_imgcool',String(Date.now()+Math.min(Math.max((e.wait||0)*1000,216e5),1728e5)))}catch(_){}}
     fail=e&&e.code==='http'&&e.status===400?'the Worker refused the request, so it may not be updated yet':(e&&e.code?spMessage(e):'something unexpected happened')}
-  finally{SPX.imgRun=false;spGap=250;if(renamed){rebuildAka();mergeSameArtists();touch()}if(got||renamed)render()
+  finally{SPX.imgRun=false;spGap=250;if(renamed){rebuildAka();mergeSameArtists();touch()}if(got||renamed)renderSoon()
     if(fail)imgNote('Artist photos stopped after '+tried+' of '+todo.length+': '+fail+(got?' ('+got+' added)':'')+'. It will try again next time.','err',true);
     else imgNote('Artist photos done: '+got+' added'+(miss.length?', '+miss.length+' not found ('+miss.slice(0,3).join(', ')+(miss.length>3?'\u2026':'')+')':'')+'.','')}
 }
@@ -5468,12 +5469,12 @@ async function spPoll(force){
     else plays=await spLocalPlays();
     SPX.err='';plFeed(plays);spApply(plays);
   }catch(e){SPX.err=spMessage(e);if(e.code==='reconnect'&&!viaW){SPL={};splSave()}}
-  finally{SPX.busy=false;if(force||sig0!==S.mtime+'|'+(window.PL&&PL.ver)+'|'+SPX.err)render()}   /* a quiet background check with nothing new must not rebuild the page under a running animation */
+  finally{SPX.busy=false;if(force||sig0!==S.mtime+'|'+(window.PL&&PL.ver)+'|'+SPX.err)renderSoon()}   /* a quiet background check with nothing new must not rebuild the page under a running animation */
 }
 async function spBoot(){
   if(SPX.started)return;SPX.started=true;
   setTimeout(()=>{spImgBackfill()},4000);   /* artist photos: started here so every path through boot gets it */
-  setTimeout(()=>{plLoad().then(()=>{PL.sig=plSig();PL.sync=plResync();if(PL.sync.changed){touch();render()}})},3500);   /* play counts for the songs in the log, from the whole play history */
+  setTimeout(()=>{plLoad().then(()=>{PL.sig=plSig();PL.sync=plResync();if(PL.sync.changed){touch();renderSoon()}})},3500);   /* play counts for the songs in the log, from the whole play history */
   if(SP_CB){SPX.busy=true;render();
     try{await spFinish(SP_CB);UI.tab='music'}catch(e){SPX.err=spMessage(e)}
     finally{SPX.busy=false}}
@@ -5763,7 +5764,7 @@ async function tmAutoRefresh(){
     try{tmMergeShow(s.tmdb,await tmFetchShow(s.tmdb));changed=true}
     catch(e){if(e.code!=='gone'&&e.code!=='http')break}
   }}finally{TMX.auto=false}
-  if(changed){touch();render()}
+  if(changed){touch();renderSoon()}
 }
 async function tmSaveKey(k){
   k=(k||'').trim();if(!k)return;
@@ -5930,17 +5931,17 @@ function conflictBanner(){
     ${localFirst?keep+use:use+keep}</div>`;
 }
 function ok(){SYS.status='ok';SYS.msg='';SY.at=Date.now();saveSync()}
-function adopt(j){S=j;S.flags=S.flags||{};S.marks=S.marks||{};S.music=S.music||[];S.screen=S.screen||[];seedAll();SY.last=S.mtime||0;save();ok();render()}
+function adopt(j){S=j;S.flags=S.flags||{};S.marks=S.marks||{};S.music=S.music||[];S.screen=S.screen||[];seedAll();SY.last=S.mtime||0;save();ok();renderSoon()}
 /* A sync starting or finishing only changes the little Sync chip. Rebuilding the whole page for that restarted every
    animation that was playing (they jumped to their end), so the chip is patched in place unless something bigger
    on screen depends on the sync state. */
 function syncRedraw(){
   const full=SYS.status==='conflict'||UI.view==='settings'||UI.view==='account'||!!document.querySelector('.banner[role="alert"]');
   const chip=document.querySelector('.top .sync');
-  if(full||!chip){render();return}
+  if(full||!chip){renderSoon();return}
   chip.dataset.s=SYS.status;
   const t=chip.lastChild;
-  if(t&&t.nodeType===3)t.textContent=syncLabel();else render()}
+  if(t&&t.nodeType===3)t.textContent=syncLabel();else renderSoon()}
 async function pull(){
   if(!READY||!syncOn()||inflight)return;inflight=true;SYS.status='busy';syncRedraw();
   try{
@@ -7011,7 +7012,7 @@ async function accFriends(force){
   if(!force&&Date.now()-ACX.frAt<30000)return;
   ACX.loading=true;
   try{const{status,j}=await accApi('GET','/friends');if(status===200){if(!ACX.fr)ACX.anim=true;ACX.fr=j}}catch(e){}
-  ACX.frAt=Date.now();ACX.loading=false;render();
+  ACX.frAt=Date.now();ACX.loading=false;renderSoon();
 }
 /* what friends rated, for the artist or title on screen; asked for once every five minutes */
 function accWant(){
@@ -7024,7 +7025,7 @@ function accWant(){
   if(UI.tab==='music'){for(const g of e.groups||[]){if(!RATEABLE.includes(g.kind))continue;const{k,t}=accKeys(e,g);if(k)ks.push(k,k+'~dx');ts.push(t,t+'~dx')}}
   else{kind='s';const{k,t}=accScreenKeys(e);if(k)ks.push(k);ts.push(t)}
   if(!ks.length&&!ts.length)return;
-  accApi('POST','/friends/ratings',{kind,ks:ks.slice(0,400),ts:ts.slice(0,400)}).then(({status,j})=>{if(status===200){ACX.rows[key]=j.rows||[];render()}}).catch(()=>{});
+  accApi('POST','/friends/ratings',{kind,ks:ks.slice(0,400),ts:ts.slice(0,400)}).then(({status,j})=>{if(status===200){ACX.rows[key]=j.rows||[];renderSoon()}}).catch(()=>{});
 }
 function accRowsFor(key,k,t){
   const rows=ACX.rows[key];if(!rows||!rows.length)return[];
@@ -7597,7 +7598,7 @@ async function accFeed(force){
   FEED.loading=true;
   try{const{status,j}=await accApi('GET','/feed');if(status===200){FEED.rows=Array.isArray(j.rows)?j.rows:[];FEED.err=''}else FEED.err=j.error||'Could not load what friends rated.'}
   catch(e){FEED.err='Could not reach Playback\u2019s server. Check your connection.'}
-  FEED.at=Date.now();FEED.loading=false;FEED.anim=true;render();
+  FEED.at=Date.now();FEED.loading=false;FEED.anim=true;renderSoon();
 }
 const frTab=()=>UI.frTab||(ACX.fr&&ACX.fr.friends.length?'feed':'list');
 function feedHtml(){
@@ -8939,7 +8940,7 @@ async function nrScan(force){
     loc.at=limited?Date.now()-NR_EVERY+3600e3:Date.now();nrSave(loc);
     NR.busy=false;NR.msg=limited?'Apple Music asked for a pause. Playback will try again in about an hour.':(force?(found?found+' new release'+(found===1?'':'s')+' found.':'Nothing new from '+arts.length+' artists.'):'');
     if(found){NR.anim=true;touch();briefPush()}
-    render();
+    renderSoon();
   }
 }
 function nrGo(id){const x=nrList().find(y=>y.id===id);if(!x)return;
@@ -8963,7 +8964,7 @@ async function simLoad(type,artist,title){
       if(status===200&&Array.isArray(j.rows)){e.rows=j.rows;e.anim=true}
       else e.err=status===409?'Similar music is not switched on for this server yet.':status===429?(j.error==='daily limit'?'You have used today\u2019s fresh lookups. Anything you looked up before still opens; try again tomorrow.':'Last.fm is busy. Try again in a minute.'):status===404?'The sync Worker needs its latest update before this works.':'Could not find similar music right now.'}
   }catch(er){e.err='Could not reach Playback\u2019s server. Check your connection.'}
-  e.busy=false;render();
+  e.busy=false;renderSoon();
 }
 function simRow(x,i,type){
   const nm=type==='t'?x.a:x.n,a=rtArtist([nm]),pc=Math.round((x.m||0)*100);
@@ -9130,6 +9131,14 @@ function artistView(a){heroLook(a.id);
     <div class="hxdel">${delBtn(a.id,'Delete artist')}</div>`;
   return heroX(a,all,done,rated,p,phUrl,more);
 }
+/* A redraw that comes from the background (a reply from the server, a poll, photos arriving) rebuilds the whole page, and
+   rebuilding the page under an opening or closing gatefold makes it snap to its end. Those redraws wait for the motion to
+   finish; redraws you ask for with a tap still happen at once. */
+let GFP=null,RSOON=0;
+function renderSoon(){
+  if(!GFP){render();return}
+  if(RSOON)return;RSOON=1;
+  GFP.then(()=>{RSOON=0;render()},()=>{RSOON=0;render()})}
 /* THE GATEFOLD'S MOTION. Opening: the record's cover lifts out of the Releases row and flies down into place (as just
    the cover), the sleeve unfolds to full length, then the front cover swings open toward you on the spine like a real
    gatefold, darkening as it tilts away from the light and casting a shadow on the inside. Closing plays it all backwards:
@@ -9173,7 +9182,8 @@ function gfRun(el,back){
   /* the sleeve in the row empties while its cover and record are away, and fills back in once they have landed */
   if(tile&&fo){const hs=tile.closest('.hxsl'),parts=hs?hs.querySelectorAll('.hxc,.hxv'):[tile];
     parts.forEach(e=>a.push(e.animate([{opacity:0,offset:0},{opacity:0,offset:W},{opacity:1,offset:Math.min(1,W+.12)},{opacity:1,offset:1}],{duration:T,fill:back?'forwards':'none',direction:back?'reverse':'normal'})))}
-  const done=a[0].finished;done.then(()=>{if(!back){a.forEach(x=>{try{x.cancel()}catch(e){}});sp.style.transformOrigin='';if(lid)lid.remove()}},()=>{});
+  const done=a[0].finished;const mine=GFP=done.then(()=>{},()=>{}).then(()=>new Promise(r=>setTimeout(r,60)));mine.then(()=>{if(GFP===mine)GFP=null});
+  done.then(()=>{if(!back){a.forEach(x=>{try{x.cancel()}catch(e){}});sp.style.transformOrigin='';if(lid)lid.remove()}},()=>{});
   return done}
 /* fold the open album shut, then drop it from the page */
 function gfClose(){const el=document.querySelector('.group.sleeve.gf');
