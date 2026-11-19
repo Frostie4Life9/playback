@@ -50,7 +50,7 @@
    Every response carries x-pb-worker: 5 so the app knows what this Worker
    can do (2 = compressed sync, 3 = Spotify plays, 4 = Spotify catalog too,
    5 = the morning-brief list, 6 = Discogs pressing search, 7 = Discogs pressing photos, 8 = your own record photos,
-   11 = Google accounts, friends and friends' ratings, 12 = a capped copy of a friend's log under their Google account, 13 = the owner can sign in with Google instead of pasting the sync key, 14 = profile picture and account color, 15 = the owner can list every account: GET /users, see the accounts section above the export).
+   11 = Google accounts, friends and friends' ratings, 12 = a capped copy of a friend's log under their Google account, 13 = the owner can sign in with Google instead of pasting the sync key, 14 = profile picture and account color, 15 = the owner can list every account: GET /users, see the accounts section above the export, 16 = Apple Music artist photos: GET /apple/art).
 
    MORNING BRIEF (version 5)
    The app keeps a tiny list of the next episode of each show you follow
@@ -118,7 +118,7 @@ const CORS = {
   'Access-Control-Allow-Headers': 'content-type, x-sync-key, authorization',
   'Access-Control-Expose-Headers': 'x-pb-worker, retry-after, x-pb-cache',
   'Access-Control-Max-Age': '86400',
-  'x-pb-worker': '15'
+  'x-pb-worker': '16'
 };
 const JSON_H = Object.assign({ 'content-type': 'application/json', 'cache-control': 'no-store' }, CORS);
 const GZ_H = Object.assign({ 'content-type': 'application/gzip', 'cache-control': 'no-store' }, CORS);
@@ -219,6 +219,41 @@ async function spRefresh(env, auth) {
 const CAT_OK = /^(search|artists\/[A-Za-z0-9]{22}(\/albums)?|albums\/[A-Za-z0-9]{22}(\/tracks)?)\?[A-Za-z0-9_=&%.,:+*'()\-]{0,600}$/;
 const CAT_CACHE = /^(albums|artists)\/[A-Za-z0-9]{22}(\?[A-Za-z0-9_=&%.,:+*'()\-]{0,200})?$/;   /* one album or one artist, never lists or searches */
 const CAT_TTL = 30 * 86400;
+/* Apple Music artist photo (version 16). Apple's keyless lookup has no artist pictures, but every artist page on
+   music.apple.com names one in its page metadata (og:image). A browser cannot read that page across sites, so this reads
+   it here and hands back only the picture's address minus its size, so the app can ask Apple for the size it wants.
+   Owner only (it sits behind the sync key like everything else), one call per artist: the app remembers the answer. */
+async function appleArt(url) {
+  const id = (url.searchParams.get('id') || '').replace(/\D/g, '');
+  if (!id || id.length > 12) return reply({ error: 'bad id' }, 400);
+  const cc = /^[a-z]{2}$/.test(url.searchParams.get('c') || '') ? url.searchParams.get('c') : 'us';
+  let r;
+  try {
+    r = await fetch('https://music.apple.com/' + cc + '/artist/' + id, {
+      headers: { 'user-agent': 'Mozilla/5.0 (compatible; PlaybackApp/1.0; +https://frostie4life9.github.io/playback/)', accept: 'text/html' },
+      redirect: 'follow'
+    });
+  } catch (e) { return reply({ error: 'unreachable' }, 502); }
+  if (r.status === 404) return reply({ error: 'none' }, 404);
+  if (!r.ok || !r.body) return reply({ error: 'apple ' + r.status }, 502);
+  /* the picture is named in the first part of the page: read only that much, not the whole 600 KB */
+  const rd = r.body.getReader(), dec = new TextDecoder();
+  let html = '';
+  try {
+    while (html.length < 150000) {
+      const { done, value } = await rd.read();
+      if (done) break;
+      html += dec.decode(value, { stream: true });
+      if (/<meta[^>]+og:image/i.test(html) && html.includes('</head>')) break;
+    }
+  } catch (e) {}
+  try { await rd.cancel(); } catch (e) {}
+  const m = html.match(/<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i) || html.match(/<meta[^>]+content="([^"]+)"[^>]+property="og:image"/i);
+  const u = m && m[1].replace(/&amp;/g, '&');
+  if (!u || !/^https:\/\/is\d+-ssl\.mzstatic\.com\/image\/thumb\/[A-Za-z0-9_\-.\/]+\/[^\/]+$/.test(u)) return reply({ error: 'none' }, 404);
+  return reply({ base: u.replace(/\/[^\/]+$/, '') });
+}
+
 async function spCatalog(env, url) {
   let p = url.searchParams.get('p') || '';
   if (!CAT_OK.test(p)) return reply({ error: 'path not allowed' }, 400);
@@ -916,6 +951,7 @@ export default {
       if (request.method === 'GET') return new Response((await env.STATE.get('rating-dates')) || '[]', { headers: JSON_H });
       return reply({ error: 'method not allowed' }, 405);
     }
+    if (url.pathname === '/apple/art') return request.method === 'GET' ? appleArt(url) : reply({ error: 'method not allowed' }, 405);
     if (url.pathname === '/spotify/api') return request.method === 'GET' ? spCatalog(env, url) : reply({ error: 'method not allowed' }, 405);
     if (url.pathname === '/photo') {
       if (request.method === 'PUT') return photoPut(request, env, url);

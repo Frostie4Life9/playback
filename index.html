@@ -1393,6 +1393,12 @@ body:has(.head.hero.hx) .backlib{display:none}
 .head.hero.hx h2,.hxsub,.head.hero.hx .meta .note,.hxback{text-shadow:0 1px 14px rgb(0 0 0 / .28)}
 .hxsub{margin:14px 0 0;font-size:18px;color:rgb(255 255 255 / .86);font-variant-numeric:tabular-nums}
 .hxact{display:flex;align-items:center;gap:14px;margin-top:26px}
+.hsrc{display:inline-flex;align-items:center;gap:2px;margin-top:16px;padding:4px;border-radius:999px;background:rgb(255 255 255 / .16);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);animation:hsrcIn .4s cubic-bezier(.2,.8,.2,1) both}
+.hsrc .hsl{padding:0 8px 0 12px;font-size:13px;color:rgb(255 255 255 / .75)}
+.hsrc button{height:32px;padding:0 14px;border:0;border-radius:999px;background:none;color:#fff;font:600 13px var(--body);cursor:pointer;transition:background .25s,color .25s}
+.hsrc button[aria-pressed="true"]{background:#fff;color:#111}
+@keyframes hsrcIn{from{opacity:0;transform:translateY(6px)}}
+@media (prefers-reduced-motion:reduce){.hsrc{animation:none}}
 .hpbtn{display:inline-flex;align-items:center;gap:10px;height:56px;padding:0 34px 0 28px;border-radius:999px;background:#fff;color:#111;font-weight:700;font-size:18px;text-decoration:none;transition:transform .15s}
 .hpbtn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
 .hpbtn:hover{transform:scale(1.04)}.hpbtn:active{transform:scale(.97)}
@@ -2454,6 +2460,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-i', note:'APPLE MUSIC ARTIST PHOTOS, WITH A SWITCH: an artist\u2019s header can now use their Apple Music photo, which Apple serves much larger and sharper than Spotify\u2019s. A small Photo switch under the Play button flips between Spotify and Apple Music (your choice is remembered on this device); Spotify stays the default and nothing is replaced. The first time you open an artist, Playback asks Apple for the photo once (through your sync Worker, no Apple account or key) and remembers it, so there is no extra load after that. If Apple has no photo for an artist the switch simply does not appear. Owner only for now. The sync Worker moves to version 16 and redeploys on its own from GitHub.'},
   {v:'2026.11.19-g', note:'SHARPER ARTIST PHOTOS: the wide artist header used the mid-size Spotify photo, which looked soft stretched across the window. It now uses the biggest photo Spotify has. Artists added from now on save it right away; artists already in Playback get it the first time you open their page (one Spotify call each, not all at once, so the shared Spotify quota is safe).'},
   {v:'2026.11.19-f', note:'ARTIST PAGE, REBUILT LIKE THE APPLE MUSIC MOCKUP: an artist with a photo now gets a full-width header that runs edge to edge and up under the top bar. The photo fills the right side (the top on a phone) and dissolves into the artist\u2019s rating colors. On the left: All artists, a big plain title, one summary line (heard, rated, average), a white Play pill (opens Spotify) and two round buttons, one for only-songs-still-to-hear and one (i) that opens the stats and import source. Along the bottom is a Releases row: your progress record (still spins, still catches the record flying in) then every release as a sleeve with its record peeking out; tap one to jump to it. On a PC the artist list steps aside for this page, and All artists opens it over the whole window. Artists without a photo keep the old header; Settings > Artist page turns the photo header off.'},
   {v:'2026.11.19-e', note:'ARTIST PHOTO HEADER, REDONE TO MATCH THE MOCKUPS: the first version faded the photo to almost nothing in a thin strip, left an empty purple middle, put a glow on the name and made the button gray. Now the photo shows at full strength and only dissolves at its edge into the artist\u2019s colors. On a phone it fills the top with the name, a white Play on Spotify button, the record and the stats below. On a PC everything sits in one column on the left (big name, Play, a smaller spinning record beside the stats, filters) and the photo fills the right side, so the record no longer covers anyone\u2019s face. The filter switch is see-through white to sit on the colors. Settings > Artist page still turns it off.'},
@@ -2717,6 +2724,7 @@ function mergeSameArtists(){
       if(!keep.spid&&o.spid)keep.spid=o.spid;
       if(!keep.simg&&o.simg)keep.simg=o.simg;
       if(!keep.simgHi&&o.simgHi)keep.simgHi=o.simgHi;
+      if(!keep.aimg&&o.aimg){keep.aimg=o.aimg;if(o.aamid)keep.aamid=o.aamid}
       akaSet(keep,{name:o.name,aka:o.aka});
       S.music=S.music.filter(x=>x!==o);
     }
@@ -6086,6 +6094,7 @@ function render(){
   slFxResume();
   phPull();
   phHiLoad();
+  phAmLoad();
   tdPaint();
   const nl=document.getElementById('llist');
   if(nl){if(ll&&llTab===UI.tab)nl.scrollTop=llTop;
@@ -7777,6 +7786,7 @@ function heroX(a,all,done,rated,p,phUrl){
         <button class="hcirc" data-act="filter" data-v="${open?'all':'open'}" aria-pressed="${open}" aria-label="${open?'Showing songs still to hear. Show everything':'Show only songs still to hear'}" title="Still to hear">${ico.ear}</button>
         <button class="hcirc" data-act="hinfo" aria-expanded="${!!UI.hinfo}" aria-label="Artist details" title="Details">${ico.info}</button>
       </div>
+      ${hxSrcHtml(a)}
       ${UI.hinfo?`<div class="hxpanel"><div class="hstats"><div><b>${done}<small> /${all.length}</small></b><span>tracks heard</span></div><div><b>${rated}</b><span>rated</span></div><div><b>${a.groups.length}</b><span>releases</span></div></div>${mbArtistBar(a)}</div>`:''}
     </div>
     <div class="hxrel"><h3 class="hxlbl">Releases</h3><div class="hxrow">
@@ -7785,6 +7795,52 @@ function heroX(a,all,done,rated,p,phUrl){
     </div></div>
   </div>`}
 /* the photo header reaches up under the top bar: pull it up by however far the page puts it below the top */
+var PHAM={busy:false};
+/* TWO ARTIST PHOTOS: Spotify's (saved as simgHi/simg) and Apple Music's (aimg = the picture's address without a size).
+   A switch under the buttons picks which one the header shows; it is remembered on this device. Apple's only appears for
+   the owner (it is read through the sync Worker, version 16), once an artist's page has been opened. */
+function spPhoto(a){return a.simgHi||a.simg||a.img||''}
+function amPhoto(a){return a.aimg?a.aimg+'/'+(innerWidth<700?'1600x1600bb.jpg':'2400x2400bb.jpg'):''}
+function phSrcPref(){try{return localStorage.getItem('pb_artsrc')==='am'?'am':'sp'}catch(e){return 'sp'}}
+function phPick(a){return phSrcPref()==='am'&&a.aimg?amPhoto(a):(spPhoto(a)||amPhoto(a))}
+function hxSrcHtml(a){
+  if(!a||!a.aimg||!spPhoto(a))return '';
+  const am=phPick(a)===amPhoto(a);
+  return `<div class="hsrc" role="group" aria-label="Artist photo source"><span class="hsl">Photo</span><button type="button" data-act="hsrc" data-v="sp" aria-pressed="${!am}">Spotify</button><button type="button" data-act="hsrc" data-v="am" aria-pressed="${am}">Apple Music</button></div>`;
+}
+/* swap the picture in place (no redraw, so the colors keep flowing): fade the old one out, fade the new one in */
+function phSetSrc(v){
+  try{localStorage.setItem('pb_artsrc',v==='am'?'am':'sp')}catch(e){}
+  const h=document.querySelector('.head.hero.hx'),a=h&&(S.music||[]).find(x=>x.id===h.dataset.aid);if(!a)return;
+  h.querySelectorAll('.hsrc button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===(v==='am'?'am':'sp'))));
+  const im=h.querySelector('.hphoto img'),u=phPick(a);if(!im||!u||im.getAttribute('src')===u)return;
+  const still=matchMedia('(prefers-reduced-motion:reduce)').matches,t=new Image();
+  im.style.animation='none';im.style.transition=still?'none':'opacity .22s ease';im.style.opacity='.0';
+  const go=()=>{im.src=u;requestAnimationFrame(()=>{im.style.opacity='1'})};
+  t.onload=()=>setTimeout(go,still?0:200);t.onerror=()=>{im.style.opacity='1'};t.src=u;
+}
+/* Apple's artist photo: once per artist, the first time their page opens (the owner only; one Apple lookup if the Apple id is not known yet, then one Worker call) */
+async function phAmLoad(){
+  const h=document.querySelector('.head.hero.hx');if(!h)return;
+  const a=(S.music||[]).find(x=>x.id===h.dataset.aid);
+  if(!a||a.aimg||(a.aimgTry&&a.aimgTry>Date.now()-12096e5)||PHAM.busy||!READY||!ownSync()||(SY.wv||0)<16)return;
+  PHAM.busy=true;
+  try{
+    let id=String(a.amid||a.aamid||'');
+    if(!id){id=await nrFindId(a);if(id)a.aamid=id}
+    if(!id){a.aimgTry=Date.now();save();return}
+    const r=await fetch(SY.url.replace(/\/+$/,'')+'/apple/art?id='+encodeURIComponent(id)+'&c='+amCountry(),{cache:'no-store',headers:{...syH()}});
+    if(r.status===404){a.aimgTry=Date.now();save();return}
+    if(!r.ok)throw 0;
+    const j=await r.json().catch(()=>null);
+    if(!j||!/^https:\/\/is\d+-ssl\.mzstatic\.com\//.test(j.base||'')){a.aimgTry=Date.now();save();return}
+    a.aimg=j.base;delete a.aimgTry;save();
+    const cur=document.querySelector('.head.hero.hx[data-aid="'+a.id+'"]');       /* still on this artist: slide the switch in */
+    if(cur&&!cur.querySelector('.hsrc')){const act=cur.querySelector('.hxact'),html=hxSrcHtml(a);if(act&&html)act.insertAdjacentHTML('afterend',html)}
+    if(cur&&phSrcPref()==='am')phSetSrc('am');
+  }catch(e){a.aimgTry=Date.now()-13*864e5}   /* a hiccup (offline, Apple busy) tries again tomorrow, not in two weeks */
+  finally{PHAM.busy=false}
+}
 /* an artist added before this had only the mid-size photo saved: fetch the biggest once when their page opens (one Spotify call, never in bulk) */
 async function phHiLoad(){
   const h=document.querySelector('.head.hero.hx');if(!h)return;
@@ -7797,7 +7853,8 @@ async function phHiLoad(){
     const hit=await spApi('artists/'+a.spid+'?locale=en'),hi=hit&&spImgHi(hit.images);
     if(hi){a.simgHi=hi;save()}
     const im=document.querySelector('.head.hero.hx[data-aid="'+a.id+'"] .hphoto img');
-    if(hi&&im&&im.getAttribute('src')!==hi){const t=new Image();t.onload=()=>{im.src=hi};t.src=hi}
+    const want=phPick(a);   /* the photo the switch has picked, which is Apple's when that is chosen */
+    if(hi&&im&&want&&im.getAttribute('src')!==want){const t=new Image();t.onload=()=>{im.src=want};t.src=want}
   }catch(e){if(e&&(e.code==='quota'||e.code==='limited')){try{localStorage.setItem('pb_imgcool',String(Date.now()+Math.min(Math.max((e.wait||0)*1000,216e5),1728e5)))}catch(_){}}}
 }
 function phPull(){const h=document.querySelector('.head.hero.hx'),app=document.getElementById('app');if(!h||!app)return;
@@ -8784,7 +8841,7 @@ function artistView(a){heroLook(a.id);
       <div class="sl-foot">${shareBtn(g,a)}<details class="gmore"${UI.armed===g.id?' open':''}><summary aria-label="More for this album">\u22ef</summary>${moreBtns(g,dx)}${delGBtn(g,a)}</details></div>
     </div>`})).join('');
   UI.dxAnim=null;                                    /* the switch animation plays once, on the draw it was asked for */
-  const phOk=phOn(),phUrl=phOk?(a.simgHi||a.simg||a.img||''):'';
+  const phOk=phOn(),phUrl=phOk?phPick(a):'';
   const head=phUrl?heroX(a,all,done,rated,p,phUrl):`<div class="head hero${hClear()?' hclear':''}" data-aid="${esc(a.id)}" style="${esc(heroStyle(a))}"><i class="hg" aria-hidden="true"></i><div class="hmesh" aria-hidden="true"><i class="hbase"></i><i class="fl fl0"><i class="fb b0"></i><i class="fb b3"></i></i><i class="fl fl1"><i class="fb b1"></i><i class="fb b4"></i></i><i class="fl fl2"><i class="fb b2"></i><i class="fb b5"></i></i></div>
     <div class="hrec"><div class="hring" style="--p:${p}"><div class="hdisc"><div class="hspin"></div><div class="hlab"><b${p>=100?' class="s"':''}>${p}%</b><span>heard</span></div></div></div>${HARM}</div>
     <div class="hbody">
@@ -8937,6 +8994,7 @@ document.addEventListener('click',ev=>{
     const rt=document.querySelector('.rater');
     if(rt&&!matchMedia('(prefers-reduced-motion:reduce)').matches){UI.rClosing=true;const cid=UI.rOpen,fly=rtFlyPrep(cid);rt.classList.remove('rt-in');rt.classList.add('rt-out');
       setTimeout(()=>{UI.rClosing=false;UI.rOpen=null;if(fly)UI.rLand=cid;render()},230);rtFlyGo(fly);return}}
+  if(act==='hsrc'){phSetSrc(b.dataset.v);return}
   if(act==='view'){UI.view=b.dataset.v;UI.rOpen=null;if(UI.view==='account'){pReset();if(b.dataset.tab==='c')UI.pTab='c';UI.pAnim=true}if(UI.view==='friends'){UI.pAnim=true;ACX.anim=true}if(UI.view==='history'){UI.hAnim=true;UI.hEdit=null}window.scrollTo({top:0})}
   else if(act==='lib'){UI.libOpen=!UI.libOpen;UI.libAnim=UI.libOpen}
   else if(act==='fropen'){UI.frOpen=true;UI.frAnim=true;UI.llOpen=false;ACX.anim=!!ACX.fr;FEED.anim=true;if(accOn()){accFriends(true);accFeed(false)}}
