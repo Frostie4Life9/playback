@@ -1365,35 +1365,48 @@ body{overflow-x:clip}
   .head.hero h2{font-size:32px}
 }
 
-/* artist photo hero: the photo fades into the color field; Play on Spotify sits under the name (Settings can turn it off) */
-.hphoto{position:absolute;z-index:-1;left:0;right:0;top:0;height:300px;pointer-events:none;
-  -webkit-mask-image:linear-gradient(to bottom,#000 45%,transparent 100%);mask-image:linear-gradient(to bottom,#000 45%,transparent 100%)}
-.hphoto img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 22%;animation:hPh .6s ease both}
+/* artist photo hero (Apple Music style): the artist's photo fills the top (phone) or right side (PC) of the header at full
+   strength and dissolves into their rating colors; name, Play on Spotify and stats sit on the color. Settings can turn it off. */
+.hphoto{position:absolute;z-index:-1;left:0;right:0;top:0;height:380px;pointer-events:none;
+  -webkit-mask-image:linear-gradient(to bottom,#000 0,#000 52%,rgb(0 0 0 / .55) 74%,transparent 100%);mask-image:linear-gradient(to bottom,#000 0,#000 52%,rgb(0 0 0 / .55) 74%,transparent 100%)}
+.hphoto img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 25%;animation:hPh .7s ease both}
 @keyframes hPh{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){.hphoto img{animation:none}}
-.head.hero.ph{padding-top:236px}
+.head.hero.ph{padding-top:300px;gap:18px}
 .head.hero.ph .hbody{display:contents}
 .head.hero.ph .hbody>*{order:6;width:100%}
-.head.hero.ph .meta{order:1}
+.head.hero.ph .meta{order:1;gap:4px}
 .head.hero.ph .hplay{order:2}
-.head.hero.ph .hrec{order:3}
+.head.hero.ph .hrec{order:3;margin-top:6px}
 .head.hero.ph .hstats{order:4}
 .head.hero.ph .tools{order:5}
-.head.hero.ph h2,.head.hero.ph .meta .note{text-shadow:0 2px 16px color-mix(in srgb,var(--bg) 70%,transparent)}
+.head.hero.ph h2{font-size:42px;color:#fff}
+.head.hero.ph .meta .note{color:rgb(255 255 255 / .78)}
+.head.hero.ph .tools{background:rgb(255 255 255 / .14)}
+.head.hero.ph .chip{color:rgb(255 255 255 / .82)}
+.head.hero.ph .chip[aria-pressed="true"]{background:#fff;color:#111}
 .hplay{display:flex;justify-content:center}
-.hpbtn{display:inline-flex;align-items:center;gap:9px;height:48px;padding:0 28px;border-radius:999px;background:var(--ink);color:var(--bg);font-weight:600;font-size:15px;text-decoration:none;box-shadow:0 6px 18px rgb(0 0 0 / .28)}
-.hpbtn svg{width:18px;height:18px;fill:currentColor}
-.hpbtn:hover{opacity:.9}.hpbtn:active{transform:scale(.98)}
+.hpbtn{display:inline-flex;align-items:center;gap:10px;height:52px;padding:0 30px 0 26px;border-radius:999px;background:#fff;color:#111;font-weight:700;font-size:16px;text-decoration:none;transition:transform .15s}
+.hpbtn svg{width:20px;height:20px;fill:currentColor}
+.hpbtn:hover{transform:scale(1.03)}.hpbtn:active{transform:scale(.97)}
 @media (min-width:761px){
-  .hphoto{left:auto;right:0;top:0;bottom:0;width:38%;height:auto;
-    -webkit-mask-image:linear-gradient(to right,transparent 25%,#000 80%),linear-gradient(to bottom,#000 60%,transparent 100%);-webkit-mask-composite:source-in;
-    mask-image:linear-gradient(to right,transparent 25%,#000 80%),linear-gradient(to bottom,#000 60%,transparent 100%);mask-composite:intersect}
-  .head.hero.ph{padding-top:28px;min-height:320px}
-  .head.hero.ph .hbody{display:flex;flex:0 1 330px}
-  .head.hero.ph .hbody>*{order:0;width:auto}
-  .head.hero.ph .hbody>.meta,.head.hero.ph .hbody>.tools,.head.hero.ph .hbody>.mbsrc{width:100%}
-  .head.hero.ph .hplay{justify-content:flex-start}
-  .head.hero.ph .hrec{order:-1}
+  .hphoto{left:auto;right:0;top:0;bottom:0;width:clamp(360px,calc(100% - 430px),62%);height:auto;
+    -webkit-mask-image:linear-gradient(to right,transparent 0,rgb(0 0 0 / .4) 20%,#000 52%),linear-gradient(to bottom,#000 72%,transparent 100%);-webkit-mask-composite:source-in;
+    mask-image:linear-gradient(to right,transparent 0,rgb(0 0 0 / .4) 20%,#000 52%),linear-gradient(to bottom,#000 72%,transparent 100%);mask-composite:intersect}
+  .hphoto img{object-position:50% 22%}
+  /* PC: everything in one left column like the mockup; the record shrinks and spins beside the stats, off the photo */
+  .head.hero.ph{display:grid;grid-template-columns:132px minmax(0,300px);justify-content:start;align-content:center;
+    grid-template-areas:"m m" "p p" "r s" "t t" "b b";gap:20px 22px;padding:44px 52px;min-height:440px}
+  .head.hero.ph .hbody{display:contents}
+  .head.hero.ph .hbody>*{order:0;width:auto;grid-column:1 / -1}
+  .head.hero.ph .meta{grid-area:m;align-items:flex-start;text-align:left}
+  .head.hero.ph .hplay{grid-area:p;justify-content:flex-start}
+  .head.hero.ph .hrec{grid-area:r;width:220px;height:220px;margin:0 -88px -88px 0;align-self:center;justify-self:start;transform:scale(.6);transform-origin:0 0}
+  .head.hero.ph .hstats{grid-area:s;align-self:center;justify-content:flex-start}
+  .head.hero.ph .hstats>div{padding:0 18px}
+  .head.hero.ph .tools{grid-area:t;max-width:432px}
+  .head.hero.ph .mbsrc{grid-area:b;max-width:432px}
+  .head.hero.ph h2{font-size:64px;line-height:.95}
 }
 
 /* listen list sheet */
@@ -2381,6 +2394,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-e', note:'ARTIST PHOTO HEADER, REDONE TO MATCH THE MOCKUPS: the first version faded the photo to almost nothing in a thin strip, left an empty purple middle, put a glow on the name and made the button gray. Now the photo shows at full strength and only dissolves at its edge into the artist\u2019s colors. On a phone it fills the top with the name, a white Play on Spotify button, the record and the stats below. On a PC everything sits in one column on the left (big name, Play, a smaller spinning record beside the stats, filters) and the photo fills the right side, so the record no longer covers anyone\u2019s face. The filter switch is see-through white to sit on the colors. Settings > Artist page still turns it off.'},
   {v:'2026.11.19-d', note:'ARTIST PHOTO HEADER: an artist\u2019s page now opens with their photo fading down into the colors from their ratings, like the Apple Music artist page. Under the name is a Play on Spotify button that opens the artist in Spotify (in the Spotify app on a phone). On a PC the photo sits on the right and fades left and down. The record and tonearm stay under it. An artist with no photo keeps the plain color header. Settings has an Artist page card to turn the photo header off if you do not like it (saved on this device).'},
   {v:'2026.11.19-c', note:'NEW RELEASES NO LONGER LIST ALBUMS THAT ARE NOT OUT YET: an album Apple has announced for a later date (Justice\u2019s GTA VI score, out Dec 11) was showing under New from your artists. Now only albums and EPs that are actually out appear. Anything already listed with a future date is taken off when Playback opens, and an announced album shows up on its own once its release day has passed (and within the last two months). If Apple moves a date later, the entry is taken back off.'},
   {v:'2026.11.19-b', note:'DELUXES FOLLOW THE TRACKLIST: Justice\u2019s \u2020 (Anniversary Edition) stayed a separate album because its title shares no words with Justice. An edition now folds into the standard album when it carries at least 90% of that album\u2019s songs and adds some, came out no earlier, and fits only that one album, whatever its title says. The edition keeps its own name and cover on the Deluxe side of the switch. Re-recordings, live and remix sets, and box sets that hold two albums still stay apart. New releases use the same test: Apple lists an edition apart from the album, so a fresh release is now checked against the songs of albums you already have and skipped if it is just an edition of one. Tap Check for new releases on the artist to fold an existing one; the rating on the stand-alone edition moves to your deluxe rating.'},
