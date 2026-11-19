@@ -2646,6 +2646,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-q', note:'NO MORE POP ON THE ARTIST PHOTO: if the page redrew while the photo was still fading in, the photo jumped to full strength; it now carries on from where the fade was. When a sharper copy of the photo arrives a moment later, it waits for the fade to finish and then blends over the old one instead of snapping.'},
   {v:'2026.11.19-p', note:'ARTIST PHOTO STAYS PUT: the photo at the top of an artist page no longer flashes and reloads every time you open an album, and no longer re-fades two to four times in a row when an artist first opens. Any redraw of the page was throwing the photo away and putting it back, which restarted its fade-in; now it fades in once per artist and then just stays.'},
   {v:'2026.11.19-o', note:'ANIMATIONS NO LONGER SKIP AHEAD: a sync starting or finishing (which happens a moment after every rating or change), the Spotify check that runs every couple of minutes, and coming back to the app all rebuilt the whole page underneath whatever was animating, so the animation jumped straight to its end. Now the Sync chip at the top updates in place, and the background Spotify check only redraws when it actually found something new. Animations play through to the end.'},
   {v:'2026.11.19-n', note:'A REAL OPEN GATEFOLD: an opened album now looks like an actual open record jacket instead of a light box next to a dark one. On a wide screen it is two square panels of the same printed card, in the album\u2019s color with its cover art printed faintly across both, a paper grain and a creased spine, with a record sleeved in each side and peeking out of the outer edges like a 2LP: the left one is your progress record (heard count on its label), the right one shows your rating. Hover a side and its record slides out far enough to read the label. Long track lists scroll inside the right panel. Opening: the cover flies out of the Releases row with its record still in it (the row\u2019s sleeve empties while it is away), lands exactly as it looked in the row, then swings open toward you. No more dark slivers at the corners and no empty box sitting where the left half lands. On narrower screens the halves stack and the cover lifts like a lid. The records in the Releases row now have their lit grooves too (one per song, lit for the ones you have heard); they ripple when you hover them on a PC, and on a phone when they come onto the screen. The number still flies from the rating slider into the song\u2019s record: the label now stays empty until it lands and pops in with it, and the ratings panel no longer jumps back to the top when the page redraws (that was sending the number off-screen).'},
@@ -7726,13 +7727,18 @@ function settingsView(){
    So before a redraw, the covers already on screen are kept, and any new cover with the same picture and place in the markup is swapped for the kept one. */
 function keepImgs(fn){
   const m=new Map(),old=new Set();
-  document.querySelectorAll('img[src]').forEach(im=>{if(!(im.complete&&im.naturalWidth))return;old.add(im);const k=im.getAttribute('src');if(!m.has(k))m.set(k,[]);m.get(k).push(im)});
+  const fadeT=new Map();   /* how far into its fade-in each header photo is, so a redraw mid-fade carries on from there */
+  document.querySelectorAll('img[src]').forEach(im=>{if(!(im.complete&&im.naturalWidth))return;old.add(im);const k=im.getAttribute('src');if(!m.has(k))m.set(k,[]);m.get(k).push(im);
+    if(im.closest('.hphoto')){const an=im.getAnimations&&im.getAnimations()[0];if(an&&an.playState==='running')fadeT.set(im,an.currentTime)}});
   fn();
   if(!m.size)return;
   for(const l of m.values()){for(let q=l.length-1;q>=0;q--)if(l[q].isConnected)l.splice(q,1)}   /* only covers the redraw threw away */
   document.querySelectorAll('img[src]').forEach(im=>{if(old.has(im))return;
     const l=m.get(im.getAttribute('src')),k=l&&l.findIndex(o=>o.className===im.className);
-    if(l&&k>=0){const o=l.splice(k,1)[0];if(o.closest('.hphoto'))o.style.animation='none';im.replaceWith(o)}})}
+    if(l&&k>=0){const o=l.splice(k,1)[0],ph=!!o.closest('.hphoto');
+      if(ph)o.style.animation='none';   /* a photo that finished fading in must not start over */
+      im.replaceWith(o);
+      if(ph&&fadeT.has(o)){o.style.animation='';const an=o.getAnimations&&o.getAnimations()[0];if(an)an.currentTime=fadeT.get(o)}}})}
 function renderMain(topIn){
   PAINT=null;
   if(!READY){document.getElementById('app').innerHTML='<p class="empty">Loading your log\u2026</p>';return}
@@ -8035,6 +8041,18 @@ function hxSrcHtml(a){
 }
 let PHSEEN='';   /* which artist's photo (id|url) has already faded in, so a redraw of the same page never replays the fade */
 function phSeen(im){const h=im.closest('.hero[data-aid]');PHSEEN=(h?h.dataset.aid:'')+'|'+im.getAttribute('src')}
+/* swap a header photo for a sharper copy of the same picture: wait out any fade-in still running, then lay the new one over the old and fade it in, so nothing pops */
+function phXfade(im,want){
+  const t=new Image();
+  t.onload=async()=>{
+    const an=im.getAnimations&&im.getAnimations()[0];if(an&&an.playState==='running'){try{await an.finished}catch(e){}}
+    if(!im.isConnected||noMotion()){if(im.isConnected)im.src=want;return}
+    const c=im.cloneNode(false);c.removeAttribute('onload');c.removeAttribute('onerror');c.src=want;
+    c.style.cssText='position:absolute;top:0;right:0;opacity:0;transition:opacity .45s ease;animation:none';
+    im.parentNode.appendChild(c);void c.offsetWidth;c.style.opacity='1';
+    const done=()=>{if(im.isConnected)im.src=want;c.remove()};
+    c.addEventListener('transitionend',done,{once:true});setTimeout(done,700)};
+  t.src=want}
 /* swap the picture in place (no redraw, so the colors keep flowing): fade the old one out, fade the new one in */
 function phSetSrc(v){
   try{localStorage.setItem('pb_artsrc',v==='am'?'am':'sp')}catch(e){}
@@ -8084,7 +8102,7 @@ async function phHiLoad(){
     if(hi){a.simgHi=hi;save()}
     const im=document.querySelector('.head.hero.hx[data-aid="'+a.id+'"] .hphoto img');
     const want=phPick(a);   /* the photo the switch has picked, which is Apple's when that is chosen */
-    if(hi&&im&&want&&im.getAttribute('src')!==want){const t=new Image();t.onload=()=>{im.src=want};t.src=want}
+    if(hi&&im&&want&&im.getAttribute('src')!==want)phXfade(im,want)
   }catch(e){if(e&&(e.code==='quota'||e.code==='limited')){try{localStorage.setItem('pb_imgcool',String(Date.now()+Math.min(Math.max((e.wait||0)*1000,216e5),1728e5)))}catch(_){}}}
 }
 function phPull(){const h=document.querySelector('.head.hero.hx'),app=document.getElementById('app');if(!h||!app)return;
