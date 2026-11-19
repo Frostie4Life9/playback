@@ -2350,6 +2350,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-c', note:'NEW RELEASES NO LONGER LIST ALBUMS THAT ARE NOT OUT YET: an album Apple has announced for a later date (Justice\u2019s GTA VI score, out Dec 11) was showing under New from your artists. Now only albums and EPs that are actually out appear. Anything already listed with a future date is taken off when Playback opens, and an announced album shows up on its own once its release day has passed (and within the last two months). If Apple moves a date later, the entry is taken back off.'},
   {v:'2026.11.19-b', note:'DELUXES FOLLOW THE TRACKLIST: Justice\u2019s \u2020 (Anniversary Edition) stayed a separate album because its title shares no words with Justice. An edition now folds into the standard album when it carries at least 90% of that album\u2019s songs and adds some, came out no earlier, and fits only that one album, whatever its title says. The edition keeps its own name and cover on the Deluxe side of the switch. Re-recordings, live and remix sets, and box sets that hold two albums still stay apart. New releases use the same test: Apple lists an edition apart from the album, so a fresh release is now checked against the songs of albums you already have and skipped if it is just an edition of one. Tap Check for new releases on the artist to fold an existing one; the rating on the stand-alone edition moves to your deluxe rating.'},
   {v:'2026.11.19-a', note:'EASIER TO FIND YOUR WAY (from a friend\u2019s feedback on a phone): the bottom bar now has Music, Stats, History and Settings as real tabs, evenly spaced (Stats and History used to hide in a popup, and a friend\u2019s two tabs sat bunched on the left); the round buttons at the top have words under them on a phone (Listen list, Add artist, Friends, Account); the artist page has an All artists button; Listen list and Listen again on an album say what they do; a new log shows Start your log with a Search for an artist button; and a short spotlight tour runs once for friends (replay it from Settings, Show the tour).'},
   {v:'2026.11.18-v', note:'SCREEN AND COLLECTION ARE OWNER-ONLY FOR NOW: both are still work in progress, so their tabs, pages and the Screen block on Stats are hidden for everyone except you (the owner, same check as the suite bar and People card). A friend whose browser had Screen saved as the last tab lands on Music instead.'},
@@ -8418,8 +8419,11 @@ async function nrAdd(a,res,id){
   for(const c of res){
     if(!c||c.wrapperType!=='collection'||!c.collectionId||String(c.artistId)!==String(id))continue;
     const name=String(c.collectionName||'');if(!name||/\s-\s(single)$/i.test(name)||/\b(remix(es|ed)?|instrumentals?|karaoke|demos)\b/i.test(name)||SP_LIVE.test(name))continue;
-    const cid=String(c.collectionId);if(st.seen[cid])continue;
-    const when=Date.parse(c.releaseDate||'');if(!when||Date.now()-when>NR_FRESH)continue;
+    const cid=String(c.collectionId),when=Date.parse(c.releaseDate||'');
+    /* announced but not out yet is not "new": it is left off (and taken back off if Apple's date has moved later) and shows up once its day arrives */
+    if(when&&when>Date.now()){const k=st.list.findIndex(x=>x.id==='am:'+cid);if(k>=0)st.list.splice(k,1);delete st.seen[cid];continue}
+    if(st.seen[cid])continue;
+    if(!when||Date.now()-when>NR_FRESH)continue;
     if(rtGroup(a,name)||await nrIsEdition(a,cid)){st.seen[cid]=1;continue}   /* already in your log, by title or by tracklist */
     st.seen[cid]=1;
     st.list.unshift({id:'am:'+cid,aid:a.id,a:a.name,t:name.replace(/\s-\s(EP)$/i,'').trim(),d:new Date(when).toISOString().slice(0,10),ep:/\s-\sEP$/i.test(name),img:String(c.artworkUrl100||'').replace(/\/\d+x\d+bb\.(jpg|png)$/,'/300x300bb.$1'),u:/^https:\/\//.test(c.collectionViewUrl||'')?c.collectionViewUrl:''});n++;
@@ -8428,6 +8432,11 @@ async function nrAdd(a,res,id){
   if(st.list.length>40)st.list.length=40;
   return n;
 }
+/* drops anything listed before its release day (older builds listed announced albums) so it can be listed properly once it is out */
+function nrPrune(){const st=S.nr;if(!st||!Array.isArray(st.list))return false;
+  const t=todayISO(),gone=st.list.filter(x=>x.d>t);if(!gone.length)return false;
+  gone.forEach(x=>{if(st.seen)delete st.seen[String(x.id).replace(/^am:/,'')]});
+  st.list=st.list.filter(x=>!(x.d>t));return true}
 async function nrScan(force){
   if(NR.busy||!READY||!window.fetch||!navigator.onLine)return;
   const loc=nrLoc();if(!force&&(loc.off||Date.now()-loc.at<NR_EVERY))return;
@@ -9158,7 +9167,7 @@ document.getElementById('updx').addEventListener('click',()=>{
 });
 if(/[?&]v=\d+/.test(location.search))try{history.replaceState(null,'',location.pathname+location.hash)}catch(e){}
 setTimeout(()=>checkUpdate(true),2500);
-setTimeout(()=>{try{nrScan(false)}catch(e){}},25000);   /* the daily new-release look, a little after start-up so it never competes with the first draw */
+setTimeout(()=>{try{if(nrPrune()){touch();briefPush();render()}nrScan(false)}catch(e){}},25000);   /* the daily new-release look, a little after start-up so it never competes with the first draw */
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){checkUpdate(false);setTimeout(()=>{try{nrScan(false)}catch(e){}},8000)}});
 /* and keep looking while the app is simply left open on screen */
 setInterval(()=>{if(document.visibilityState==='visible')checkUpdate(false)},30e3);
