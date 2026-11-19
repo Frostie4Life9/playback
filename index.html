@@ -2460,6 +2460,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-j', note:'APPLE PHOTO SWITCH NOW SHOWS UP: the Photo switch never appeared because Playback checked a saved \u201cWorker version\u201d number before asking for the Apple photo, and that number only refreshes during a full sync, so it still said the Worker was old right after the update. The check is gone: Playback just asks, and if the Worker really is old it tries again in an hour.'},
   {v:'2026.11.19-i', note:'APPLE MUSIC ARTIST PHOTOS, WITH A SWITCH: an artist\u2019s header can now use their Apple Music photo, which Apple serves much larger and sharper than Spotify\u2019s. A small Photo switch under the Play button flips between Spotify and Apple Music (your choice is remembered on this device); Spotify stays the default and nothing is replaced. The first time you open an artist, Playback asks Apple for the photo once (through your sync Worker, no Apple account or key) and remembers it, so there is no extra load after that. If Apple has no photo for an artist the switch simply does not appear. Owner only for now. The sync Worker moves to version 16 and redeploys on its own from GitHub.'},
   {v:'2026.11.19-g', note:'SHARPER ARTIST PHOTOS: the wide artist header used the mid-size Spotify photo, which looked soft stretched across the window. It now uses the biggest photo Spotify has. Artists added from now on save it right away; artists already in Playback get it the first time you open their page (one Spotify call each, not all at once, so the shared Spotify quota is safe).'},
   {v:'2026.11.19-f', note:'ARTIST PAGE, REBUILT LIKE THE APPLE MUSIC MOCKUP: an artist with a photo now gets a full-width header that runs edge to edge and up under the top bar. The photo fills the right side (the top on a phone) and dissolves into the artist\u2019s rating colors. On the left: All artists, a big plain title, one summary line (heard, rated, average), a white Play pill (opens Spotify) and two round buttons, one for only-songs-still-to-hear and one (i) that opens the stats and import source. Along the bottom is a Releases row: your progress record (still spins, still catches the record flying in) then every release as a sleeve with its record peeking out; tap one to jump to it. On a PC the artist list steps aside for this page, and All artists opens it over the whole window. Artists without a photo keep the old header; Settings > Artist page turns the photo header off.'},
@@ -7823,14 +7824,17 @@ function phSetSrc(v){
 async function phAmLoad(){
   const h=document.querySelector('.head.hero.hx');if(!h)return;
   const a=(S.music||[]).find(x=>x.id===h.dataset.aid);
-  if(!a||a.aimg||(a.aimgTry&&a.aimgTry>Date.now()-12096e5)||PHAM.busy||!READY||!ownSync()||(SY.wv||0)<16)return;
+  if(!a||a.aimg||(a.aimgTry&&a.aimgTry>Date.now()-12096e5)||PHAM.busy||!READY||!ownSync())return;   /* no Worker-version check: the number saved here only refreshes on a full sync, so it can lag a Worker that was just updated */
   PHAM.busy=true;
   try{
     let id=String(a.amid||a.aamid||'');
     if(!id){id=await nrFindId(a);if(id)a.aamid=id}
     if(!id){a.aimgTry=Date.now();save();return}
     const r=await fetch(SY.url.replace(/\/+$/,'')+'/apple/art?id='+encodeURIComponent(id)+'&c='+amCountry(),{cache:'no-store',headers:{...syH()}});
-    if(r.status===404){a.aimgTry=Date.now();save();return}
+    const wv=+(r.headers.get('x-pb-worker')||0);if(wv>(SY.wv||0)){SY.wv=wv;saveSync()}
+    if(r.status===404){const j0=await r.json().catch(()=>null);
+      if(wv<16||(j0&&j0.error==='not found')){a.aimgTry=Date.now()-12096e5+36e5;return}   /* an older Worker: ask again in an hour, not in two weeks */
+      a.aimgTry=Date.now();save();return}
     if(!r.ok)throw 0;
     const j=await r.json().catch(()=>null);
     if(!j||!/^https:\/\/is\d+-ssl\.mzstatic\.com\//.test(j.base||'')){a.aimgTry=Date.now();save();return}
