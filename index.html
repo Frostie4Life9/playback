@@ -1381,6 +1381,11 @@ body:has(.head.hero.hx) .backlib{display:none}
 .hx .hphoto img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 20%;animation:hPh .8s ease both}
 @keyframes hPh{from{opacity:0;transform:scale(1.04)}}
 @media (prefers-reduced-motion:reduce){.hx .hphoto img{animation:none}}
+/* Apple's artist photo is a tight square crop: filling the wide header with it cuts off his lower half, so on a wide screen it is shown whole, as tall as the header and pinned to the right, its left edge fading into the colors */
+@media (min-width:761px){
+  .hx .hphoto.am img{width:auto;height:100%;max-width:100%;aspect-ratio:1;margin-left:auto;object-position:50% 0;
+    -webkit-mask-image:linear-gradient(to right,transparent 0,rgb(0 0 0 / .6) 14%,#000 34%);mask-image:linear-gradient(to right,transparent 0,rgb(0 0 0 / .6) 14%,#000 34%)}
+}
 .hx .hscrim{position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(90deg,rgb(0 0 0 / .34),rgb(0 0 0 / .1) 45%,transparent 70%)}
 .hx .hfoot{position:absolute;left:0;right:0;bottom:0;height:34%;z-index:-1;pointer-events:none;background:linear-gradient(to bottom,transparent,color-mix(in srgb,var(--bg) 88%,transparent))}
 .hxin{position:relative;display:flex;flex-direction:column;align-items:flex-start;max-width:620px}
@@ -2460,6 +2465,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-k', note:'APPLE PHOTO FITS THE HEADER: Apple\u2019s artist photo is a tight square crop, and filling the wide header with it cut off the lower half of the artist (Spotify\u2019s wider framing showed him to the waist). On a wide screen the Apple photo is now shown whole, as tall as the header and pinned to the right, with its left edge fading into the colors; Spotify\u2019s and the phone layout are unchanged.'},
   {v:'2026.11.19-j', note:'APPLE PHOTO SWITCH NOW SHOWS UP: the Photo switch never appeared because Playback checked a saved \u201cWorker version\u201d number before asking for the Apple photo, and that number only refreshes during a full sync, so it still said the Worker was old right after the update. The check is gone: Playback just asks, and if the Worker really is old it tries again in an hour.'},
   {v:'2026.11.19-i', note:'APPLE MUSIC ARTIST PHOTOS, WITH A SWITCH: an artist\u2019s header can now use their Apple Music photo, which Apple serves much larger and sharper than Spotify\u2019s. A small Photo switch under the Play button flips between Spotify and Apple Music (your choice is remembered on this device); Spotify stays the default and nothing is replaced. The first time you open an artist, Playback asks Apple for the photo once (through your sync Worker, no Apple account or key) and remembers it, so there is no extra load after that. If Apple has no photo for an artist the switch simply does not appear. Owner only for now. The sync Worker moves to version 16 and redeploys on its own from GitHub.'},
   {v:'2026.11.19-g', note:'SHARPER ARTIST PHOTOS: the wide artist header used the mid-size Spotify photo, which looked soft stretched across the window. It now uses the biggest photo Spotify has. Artists added from now on save it right away; artists already in Playback get it the first time you open their page (one Spotify call each, not all at once, so the shared Spotify quota is safe).'},
@@ -7777,7 +7783,7 @@ function heroX(a,all,done,rated,p,phUrl){
     info:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.2"/></svg>'};
   const open=UI.filter==='open';
   return `<div class="head hero hx${hClear()?' hclear':''}" data-aid="${esc(a.id)}" style="${esc(heroStyle(a))}"><i class="hg" aria-hidden="true"></i><div class="hmesh" aria-hidden="true"><i class="hbase"></i><i class="fl fl0"><i class="fb b0"></i><i class="fb b3"></i></i><i class="fl fl1"><i class="fb b1"></i><i class="fb b4"></i></i><i class="fl fl2"><i class="fb b2"></i><i class="fb b5"></i></i></div>
-    <div class="hphoto" aria-hidden="true"><img src="${esc(phUrl)}" alt="" decoding="async" onerror="this.parentNode.remove()"></div><i class="hscrim" aria-hidden="true"></i><i class="hfoot" aria-hidden="true"></i>
+    <div class="hphoto${a.aimg&&phUrl===amPhoto(a)?' am':''}" aria-hidden="true"><img src="${esc(phUrl)}" alt="" decoding="async" onerror="this.parentNode.remove()"></div><i class="hscrim" aria-hidden="true"></i><i class="hfoot" aria-hidden="true"></i>
     <div class="hxin">
       <button class="hxback" data-act="hback">${ico.back}All artists</button>
       <div class="meta"><h2>${esc(a.name)}</h2>${a.aka&&a.aka.length?`<span class="note">also ${esc(a.aka.slice(0,3).join(' · '))}</span>`:''}</div>
@@ -7817,7 +7823,7 @@ function phSetSrc(v){
   const im=h.querySelector('.hphoto img'),u=phPick(a);if(!im||!u||im.getAttribute('src')===u)return;
   const still=matchMedia('(prefers-reduced-motion:reduce)').matches,t=new Image();
   im.style.animation='none';im.style.transition=still?'none':'opacity .22s ease';im.style.opacity='.0';
-  const go=()=>{im.src=u;requestAnimationFrame(()=>{im.style.opacity='1'})};
+  const ph=im.parentNode,go=()=>{if(ph)ph.classList.toggle('am',u===amPhoto(a));im.src=u;requestAnimationFrame(()=>{im.style.opacity='1'})};
   t.onload=()=>setTimeout(go,still?0:200);t.onerror=()=>{im.style.opacity='1'};t.src=u;
 }
 /* Apple's artist photo: once per artist, the first time their page opens (the owner only; one Apple lookup if the Apple id is not known yet, then one Worker call) */
