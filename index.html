@@ -2350,6 +2350,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-b', note:'DELUXES FOLLOW THE TRACKLIST: Justice\u2019s \u2020 (Anniversary Edition) stayed a separate album because its title shares no words with Justice. An edition now folds into the standard album when it carries at least 90% of that album\u2019s songs and adds some, came out no earlier, and fits only that one album, whatever its title says. The edition keeps its own name and cover on the Deluxe side of the switch. Re-recordings, live and remix sets, and box sets that hold two albums still stay apart. New releases use the same test: Apple lists an edition apart from the album, so a fresh release is now checked against the songs of albums you already have and skipped if it is just an edition of one. Tap Check for new releases on the artist to fold an existing one; the rating on the stand-alone edition moves to your deluxe rating.'},
   {v:'2026.11.19-a', note:'EASIER TO FIND YOUR WAY (from a friend\u2019s feedback on a phone): the bottom bar now has Music, Stats, History and Settings as real tabs, evenly spaced (Stats and History used to hide in a popup, and a friend\u2019s two tabs sat bunched on the left); the round buttons at the top have words under them on a phone (Listen list, Add artist, Friends, Account); the artist page has an All artists button; Listen list and Listen again on an album say what they do; a new log shows Start your log with a Search for an artist button; and a short spotlight tour runs once for friends (replay it from Settings, Show the tour).'},
   {v:'2026.11.18-v', note:'SCREEN AND COLLECTION ARE OWNER-ONLY FOR NOW: both are still work in progress, so their tabs, pages and the Screen block on Stats are hidden for everyone except you (the owner, same check as the suite bar and People card). A friend whose browser had Screen saved as the last tab lands on Music instead.'},
   {v:'2026.11.18-u', note:'FRIENDS AND LISTEN LIST ANIMATE AGAIN: the Friends sheet had lost its opening animation in the last build (a side effect of the faster artist switching), and it is back. The Listen list now opens with a fade and slide-up, with its rows rising in one after another, and both the Friends sheet and the Listen list slide away when you close them (close button, tapping outside, or Esc).'},
@@ -3714,16 +3715,28 @@ const nrmN=x=>nrm(x).replace(/\b(vol|volume|pt|part|chapter|book|act|episode)\s+
 function edFold(entries,keep){
   const keyOf=t=>mbKeyOf((t.recording&&t.recording.title)||t.title);
   const keys=E=>new Set(E.rep.map(keyOf));
-  const studio=entries.filter(E=>E.kind==='Studio album'&&E.rep.length).sort((a,b)=>nrm(a.title).length-nrm(b.title).length);
+  /* smallest tracklist first, so a standard album is always in `base` before the edition that extends it */
+  const studio=entries.filter(E=>E.kind==='Studio album'&&E.rep.length).sort((a,b)=>(keys(a).size-keys(b).size)||(nrm(a.title).length-nrm(b.title).length));
   const base=[],gone=new Set();
+  const cover=(ak,bk)=>{let n=0;ak.forEach(k=>{if(bk.has(k))n++});return n};
   for(const B of studio){
     const bt=nrmN(B.title),bk=keys(B);
-    const A=base.find(A=>{
+    let A=base.find(A=>{
       const at=nrmN(A.title);
       if(!at||!bt.startsWith(at+' ')||ED_NOT.test(bt.slice(at.length)))return false;
       const ak=keys(A);if(bk.size<=ak.size)return false;
-      let hit=0;ak.forEach(k=>{if(bk.has(k))hit++});
-      return hit>=Math.ceil(ak.size*.75)});
+      return cover(ak,bk)>=Math.ceil(ak.size*.75)});
+    /* The tracklist alone can also make it a deluxe, whatever the title says ("Justice" and
+       "† (Anniversary Edition)" share no words): it carries at least 90% of the standard album's
+       songs, adds some (but not a whole second album's worth), came out no earlier, and fits one
+       standard album only. A re-recording, live set or remix set (ED_NOT in its title) stays apart. */
+    if(!A&&!ED_NOT.test(bt)){
+      const fits=base.filter(C=>{
+        const ak=keys(C);
+        return ak.size&&bk.size>ak.size&&bk.size<=ak.size*2+2&&B.date>=C.date&&cover(ak,bk)>=Math.ceil(ak.size*.9)});
+      /* a box set that carries two albums fits neither */
+      if(fits.length===1&&!base.some(C=>C!==fits[0]&&keys(C).size>=3&&cover(keys(C),bk)>=Math.ceil(keys(C).size*.75)))A=fits[0];
+    }
     if(!A){base.push(B);continue}
     gone.add(B);
     if(keep){
@@ -8385,7 +8398,21 @@ async function nrFindId(a){
   }
   return '';
 }
-function nrAdd(a,res,id){
+/* A fresh release whose title is not in your log can still be a deluxe of an album that is: Apple lists "† (Anniversary Edition)" apart from "Justice".
+   Its songs are read (one extra lookup, only for these rare cases) and if it carries at least 90% of an album or EP you already have, it is that album's edition and not new. */
+async function nrIsEdition(a,cid){
+  const res=await nrGet('lookup',{id:cid,entity:'song',limit:200});
+  const ck=new Set(res.filter(t=>t&&t.wrapperType==='track'&&t.trackName).map(t=>mbKeyOf(t.trackName)));
+  if(ck.size<3)return false;
+  await mbSleep(NR_GAP);
+  return a.groups.some(g=>{
+    if(g.kind!=='Studio album'&&g.kind!=='EP')return false;
+    const gk=new Set(g.items.filter(i=>!i.dx).map(i=>mbKeyOf(i.title)));
+    if(gk.size<3||ck.size<=gk.size)return false;
+    let n=0;gk.forEach(k=>{if(ck.has(k))n++});
+    return n>=Math.ceil(gk.size*.9)});
+}
+async function nrAdd(a,res,id){
   const st=S.nr||(S.nr={seen:{},list:[]});if(!st.seen)st.seen={};if(!Array.isArray(st.list))st.list=[];
   let n=0;
   for(const c of res){
@@ -8393,7 +8420,7 @@ function nrAdd(a,res,id){
     const name=String(c.collectionName||'');if(!name||/\s-\s(single)$/i.test(name)||/\b(remix(es|ed)?|instrumentals?|karaoke|demos)\b/i.test(name)||SP_LIVE.test(name))continue;
     const cid=String(c.collectionId);if(st.seen[cid])continue;
     const when=Date.parse(c.releaseDate||'');if(!when||Date.now()-when>NR_FRESH)continue;
-    if(rtGroup(a,name)){st.seen[cid]=1;continue}   /* already in your log */
+    if(rtGroup(a,name)||await nrIsEdition(a,cid)){st.seen[cid]=1;continue}   /* already in your log, by title or by tracklist */
     st.seen[cid]=1;
     st.list.unshift({id:'am:'+cid,aid:a.id,a:a.name,t:name.replace(/\s-\s(EP)$/i,'').trim(),d:new Date(when).toISOString().slice(0,10),ep:/\s-\sEP$/i.test(name),img:String(c.artworkUrl100||'').replace(/\/\d+x\d+bb\.(jpg|png)$/,'/300x300bb.$1'),u:/^https:\/\//.test(c.collectionViewUrl||'')?c.collectionViewUrl:''});n++;
   }
@@ -8414,7 +8441,7 @@ async function nrScan(force){
       try{
         if(!rec.id&&a.amid)rec.id=String(a.amid);
         if(!rec.id){rec.id=await nrFindId(a);await mbSleep(NR_GAP)}
-        if(rec.id){found+=nrAdd(a,await nrGet('lookup',{id:rec.id,entity:'album',limit:200}),rec.id);await mbSleep(NR_GAP)}
+        if(rec.id){found+=await nrAdd(a,await nrGet('lookup',{id:rec.id,entity:'album',limit:200}),rec.id);await mbSleep(NR_GAP)}
         rec.t=Date.now();
       }catch(e){if(e&&e.code==='limited'){limited=true;break}rec.t=Date.now()}
       nrSave(loc);
