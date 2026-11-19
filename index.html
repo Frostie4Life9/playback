@@ -1365,48 +1365,108 @@ body{overflow-x:clip}
   .head.hero h2{font-size:32px}
 }
 
-/* artist photo hero (Apple Music style): the artist's photo fills the top (phone) or right side (PC) of the header at full
-   strength and dissolves into their rating colors; name, Play on Spotify and stats sit on the color. Settings can turn it off. */
-.hphoto{position:absolute;z-index:-1;left:0;right:0;top:0;height:380px;pointer-events:none;
-  -webkit-mask-image:linear-gradient(to bottom,#000 0,#000 52%,rgb(0 0 0 / .55) 74%,transparent 100%);mask-image:linear-gradient(to bottom,#000 0,#000 52%,rgb(0 0 0 / .55) 74%,transparent 100%)}
-.hphoto img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 25%;animation:hPh .7s ease both}
-@keyframes hPh{from{opacity:0}}
-@media (prefers-reduced-motion:reduce){.hphoto img{animation:none}}
-.head.hero.ph{padding-top:300px;gap:18px}
-.head.hero.ph .hbody{display:contents}
-.head.hero.ph .hbody>*{order:6;width:100%}
-.head.hero.ph .meta{order:1;gap:4px}
-.head.hero.ph .hplay{order:2}
-.head.hero.ph .hrec{order:3;margin-top:6px}
-.head.hero.ph .hstats{order:4}
-.head.hero.ph .tools{order:5}
-.head.hero.ph h2{font-size:42px;color:#fff}
-.head.hero.ph .meta .note{color:rgb(255 255 255 / .78)}
-.head.hero.ph .tools{background:rgb(255 255 255 / .14)}
-.head.hero.ph .chip{color:rgb(255 255 255 / .82)}
-.head.hero.ph .chip[aria-pressed="true"]{background:#fff;color:#111}
-.hplay{display:flex;justify-content:center}
-.hpbtn{display:inline-flex;align-items:center;gap:10px;height:52px;padding:0 30px 0 26px;border-radius:999px;background:#fff;color:#111;font-weight:700;font-size:16px;text-decoration:none;transition:transform .15s}
-.hpbtn svg{width:20px;height:20px;fill:currentColor}
-.hpbtn:hover{transform:scale(1.03)}.hpbtn:active{transform:scale(.97)}
+/* ARTIST PHOTO HERO (Apple Music style, from the mockups). When an artist has a photo, the header runs edge to edge
+   across the window and up under the top bar: photo on the right (on top on a phone) dissolving into the artist's
+   rating colors, a big plain title, one summary line, a white Play pill with round buttons, and a Releases row of
+   sleeves (your progress record first). The artist list steps aside on a PC. Settings > Artist page turns it off. */
+body:has(.head.hero.hx){overflow-x:clip}
+body:has(.head.hero.hx) .top{position:relative;z-index:6}
+body:has(.head.hero.hx) .backlib{display:none}
+.head.hero.hx{--hxpad:calc(1.5vw + 28px);--pull:0px;width:100vw;margin-left:calc(50% - 50vw);margin-right:0;border:0;border-radius:0;background:var(--bg);
+  display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;flex-wrap:nowrap;gap:0;
+  min-height:calc(var(--pull) + clamp(520px,72vh,800px));padding:calc(var(--pull) + 48px) var(--hxpad) 28px;color:#fff}
+.hx .hphoto{position:absolute;z-index:-1;top:0;right:0;bottom:0;width:min(66%,1250px);pointer-events:none;
+  -webkit-mask-image:linear-gradient(to right,transparent 0,rgb(0 0 0 / .45) 22%,#000 50%),linear-gradient(to bottom,#000 58%,transparent 97%);-webkit-mask-composite:source-in;
+  mask-image:linear-gradient(to right,transparent 0,rgb(0 0 0 / .45) 22%,#000 50%),linear-gradient(to bottom,#000 58%,transparent 97%);mask-composite:intersect}
+.hx .hphoto img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 20%;animation:hPh .8s ease both}
+@keyframes hPh{from{opacity:0;transform:scale(1.04)}}
+@media (prefers-reduced-motion:reduce){.hx .hphoto img{animation:none}}
+.hx .hscrim{position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(90deg,rgb(0 0 0 / .34),rgb(0 0 0 / .1) 45%,transparent 70%)}
+.hx .hfoot{position:absolute;left:0;right:0;bottom:0;height:34%;z-index:-1;pointer-events:none;background:linear-gradient(to bottom,transparent,color-mix(in srgb,var(--bg) 88%,transparent))}
+.hxin{position:relative;display:flex;flex-direction:column;align-items:flex-start;max-width:620px}
+.hxback{display:inline-flex;align-items:center;gap:6px;background:none;border:0;padding:6px 0;margin:0 0 10px;color:rgb(255 255 255 / .82);font-size:15px;font-weight:500;cursor:pointer}
+.hxback svg{width:18px;height:18px}
+.hxback:hover{color:#fff}
+.head.hero.hx .meta{align-items:flex-start;text-align:left;gap:6px;width:auto}
+.head.hero.hx h2{font:800 clamp(54px,6.6vw,112px)/.9 var(--body);font-stretch:normal;letter-spacing:-.045em;color:#fff;margin:0;overflow-wrap:anywhere}
+.head.hero.hx .meta .note{color:rgb(255 255 255 / .7);font-size:14px}
+.head.hero.hx h2,.hxsub,.head.hero.hx .meta .note,.hxback{text-shadow:0 1px 14px rgb(0 0 0 / .28)}
+.hxsub{margin:14px 0 0;font-size:18px;color:rgb(255 255 255 / .86);font-variant-numeric:tabular-nums}
+.hxact{display:flex;align-items:center;gap:14px;margin-top:26px}
+.hpbtn{display:inline-flex;align-items:center;gap:10px;height:56px;padding:0 34px 0 28px;border-radius:999px;background:#fff;color:#111;font-weight:700;font-size:18px;text-decoration:none;transition:transform .15s}
+.hpbtn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
+.hpbtn:hover{transform:scale(1.04)}.hpbtn:active{transform:scale(.97)}
+.hcirc{width:56px;height:56px;border-radius:50%;border:0;padding:0;display:grid;place-items:center;cursor:pointer;color:#fff;
+  background:rgb(255 255 255 / .2);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);transition:background .2s,color .2s,transform .15s}
+.hcirc svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.hcirc:hover{background:rgb(255 255 255 / .3)}.hcirc:active{transform:scale(.95)}
+.hcirc[aria-pressed="true"],.hcirc[aria-expanded="true"]{background:#fff;color:#111}
+.hxpanel{margin-top:18px;padding:18px 20px;border-radius:20px;width:min(100%,520px);display:flex;flex-direction:column;gap:14px;
+  background:rgb(0 0 0 / .34);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);animation:hxIn .25s ease both}
+@keyframes hxIn{from{opacity:0;transform:translateY(-6px)}}
+.hxpanel .hstats{display:flex}
+.hxpanel .hstats>div{flex:1;align-items:center}
+.hxpanel .hstats>div+div{border-left:1px solid rgb(255 255 255 / .2)}
+.hxpanel .hstats span,.hxpanel .hstats b small,.hxpanel .label{color:rgb(255 255 255 / .72)}
+.hxpanel .mbsrc{width:100%;justify-content:space-between}
+.hxrel{margin-top:auto;padding-top:40px}
+.hxlbl{font-size:20px;font-weight:700;letter-spacing:-.01em;margin:0 0 14px}
+.hxrow{display:flex;align-items:flex-start;gap:62px;overflow-x:auto;scroll-padding-inline:0 var(--hxpad);scrollbar-width:none;margin-right:calc(-1 * var(--hxpad));padding:4px var(--hxpad) 6px 0;scroll-snap-type:x proximity}
+.hxrow::-webkit-scrollbar{display:none}
+.hxsl,.hxprog{flex:none;position:relative;width:136px;background:none;border:0;padding:0;text-align:left;color:#fff;cursor:pointer;scroll-snap-align:start}
+.hxc{position:relative;z-index:1;display:grid;place-items:center;width:136px;height:136px;border-radius:6px;overflow:hidden;background:var(--c);box-shadow:0 12px 26px rgb(0 0 0 / .38);
+  font:800 54px/1 var(--body);color:rgb(255 255 255 / .55)}
+.hxc img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hxv{position:absolute;z-index:0;top:6px;left:50px;width:124px;height:124px;border-radius:50%;transition:left .35s cubic-bezier(.2,.8,.2,1);
+  background:radial-gradient(circle,var(--c) 0 19%,#0d0d0d 19.5% 21%,transparent 21.5%),repeating-radial-gradient(circle,#191919 0 1.6px,#0b0b0b 1.6px 3.4px)}
+.hxsl:hover .hxv,.hxsl:focus-visible .hxv{left:72px}
+.hxt{display:block;margin-top:12px;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+.hxy{display:block;font-size:12px;color:rgb(255 255 255 / .68);white-space:nowrap}
+.hxprog{cursor:default;width:136px}
+.hxprog .hrec{width:220px;height:220px;transform:scale(.618);transform-origin:0 0;margin:0 -84px -84px 0}
+.hxprog .hring{box-shadow:0 12px 26px rgb(0 0 0 / .3);border-radius:50%}
+.hxprog .hxt{margin-top:12px}
+/* the top bar floats on the photo */
 @media (min-width:761px){
-  .hphoto{left:auto;right:0;top:0;bottom:0;width:clamp(360px,calc(100% - 430px),62%);height:auto;
-    -webkit-mask-image:linear-gradient(to right,transparent 0,rgb(0 0 0 / .4) 20%,#000 52%),linear-gradient(to bottom,#000 72%,transparent 100%);-webkit-mask-composite:source-in;
-    mask-image:linear-gradient(to right,transparent 0,rgb(0 0 0 / .4) 20%,#000 52%),linear-gradient(to bottom,#000 72%,transparent 100%);mask-composite:intersect}
-  .hphoto img{object-position:50% 22%}
-  /* PC: everything in one left column like the mockup; the record shrinks and spins beside the stats, off the photo */
-  .head.hero.ph{display:grid;grid-template-columns:132px minmax(0,300px);justify-content:start;align-content:center;
-    grid-template-areas:"m m" "p p" "r s" "t t" "b b";gap:20px 22px;padding:44px 52px;min-height:440px}
-  .head.hero.ph .hbody{display:contents}
-  .head.hero.ph .hbody>*{order:0;width:auto;grid-column:1 / -1}
-  .head.hero.ph .meta{grid-area:m;align-items:flex-start;text-align:left}
-  .head.hero.ph .hplay{grid-area:p;justify-content:flex-start}
-  .head.hero.ph .hrec{grid-area:r;width:220px;height:220px;margin:0 -88px -88px 0;align-self:center;justify-self:start;transform:scale(.6);transform-origin:0 0}
-  .head.hero.ph .hstats{grid-area:s;align-self:center;justify-content:flex-start}
-  .head.hero.ph .hstats>div{padding:0 18px}
-  .head.hero.ph .tools{grid-area:t;max-width:432px}
-  .head.hero.ph .mbsrc{grid-area:b;max-width:432px}
-  .head.hero.ph h2{font-size:64px;line-height:.95}
+  /* All artists on a PC: the artist library opens over the whole window, like on a phone */
+  body:has(.head.hero.hx):has(.side.libfull){overflow:hidden}
+  body:has(.head.hero.hx) .side.libfull{display:flex;position:fixed;z-index:80;inset:0;height:100vh;max-height:none;margin:0;top:0;overflow:auto;background:var(--bg);padding:28px calc(1.5vw + 28px) 48px;animation:hxIn .25s ease both}
+  body:has(.head.hero.hx) .side.libfull .libbtn{display:none}
+  body:has(.head.hero.hx) .side.libfull .lhead{display:block;position:absolute;top:24px;right:calc(1.5vw + 28px);z-index:2}
+  body:has(.head.hero.hx) .side.libfull .lhead h2{display:none}
+  body:has(.head.hero.hx) .side.libfull .libbody{padding-right:64px}
+  body:has(.head.hero.hx) .side.libfull .lclose{width:48px;height:48px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:24px;line-height:1;padding:0;cursor:pointer}
+  body:has(.head.hero.hx) .shell{grid-template-columns:minmax(0,1fr)}
+  body:has(.head.hero.hx) .side:not(.libopen){display:none}
+  body:has(.head.hero.hx) .top .tabs{background:rgb(0 0 0 / .26);border-color:rgb(255 255 255 / .14);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+  body:has(.head.hero.hx) .top .tabs button:not([aria-pressed="true"]){color:rgb(255 255 255 / .86)}
+}
+body:has(.head.hero.hx) .top :is(.tact,.tbtn,.iconbtn){background:rgb(0 0 0 / .26);border-color:rgb(255 255 255 / .18);color:#fff;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
+@media (max-width:760px){
+  .head.hero.hx{--hxpad:18px;--phh:clamp(330px,56vh,470px);min-height:0;align-items:center;text-align:center;
+    padding:calc(var(--pull) + var(--phh) - 120px) var(--hxpad) 22px}
+  .hx .hphoto{left:0;right:0;width:auto;bottom:auto;height:calc(var(--pull) + var(--phh));
+    -webkit-mask-image:linear-gradient(to bottom,#000 0,#000 50%,rgb(0 0 0 / .5) 74%,transparent 100%);-webkit-mask-composite:source-over;
+    mask-image:linear-gradient(to bottom,#000 0,#000 50%,rgb(0 0 0 / .5) 74%,transparent 100%);mask-composite:add}
+  .hx .hphoto img{object-position:50% 22%}
+  .hx .hscrim{background:linear-gradient(to bottom,rgb(0 0 0 / .18) 0,transparent calc(var(--pull) + 90px),transparent calc(var(--pull) + var(--phh) * .42),rgb(0 0 0 / .5) calc(var(--pull) + var(--phh) - 10px),rgb(0 0 0 / .28) calc(var(--pull) + var(--phh) + 140px),transparent 100%)}
+  .hx .hfoot{height:16%}
+  .hxin{align-items:center;max-width:none;width:100%}
+  .hxback{position:absolute;left:0;top:calc(-1 * (var(--phh) - 120px) + 10px);margin:0;padding:8px 14px 8px 10px;border-radius:999px;background:rgb(0 0 0 / .3);color:#fff;font-size:14px;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+  .head.hero.hx .meta{align-items:center;text-align:center}
+  .head.hero.hx h2{font-size:clamp(42px,12vw,58px)}
+  .hxsub{font-size:15px;margin-top:10px}
+  .hxact{margin-top:20px;gap:12px}
+  .hpbtn{height:52px;font-size:17px;padding:0 30px 0 24px}
+  .hcirc{width:52px;height:52px}
+  .hxpanel{width:100%}
+  .hxrel{align-self:stretch;text-align:left;padding-top:30px}
+  .hxlbl{font-size:18px}
+  .hxrow{gap:50px;margin-left:calc(-1 * var(--hxpad));padding-left:var(--hxpad);scroll-padding-inline:var(--hxpad)}
+  .hxsl,.hxprog,.hxc{width:116px}.hxc{height:116px;font-size:46px}
+  .hxv{width:106px;height:106px;left:44px}
+  .hxprog .hrec{transform:scale(.527);margin:0 -104px -104px 0}
 }
 
 /* listen list sheet */
@@ -2394,6 +2454,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-f', note:'ARTIST PAGE, REBUILT LIKE THE APPLE MUSIC MOCKUP: an artist with a photo now gets a full-width header that runs edge to edge and up under the top bar. The photo fills the right side (the top on a phone) and dissolves into the artist\u2019s rating colors. On the left: All artists, a big plain title, one summary line (heard, rated, average), a white Play pill (opens Spotify) and two round buttons, one for only-songs-still-to-hear and one (i) that opens the stats and import source. Along the bottom is a Releases row: your progress record (still spins, still catches the record flying in) then every release as a sleeve with its record peeking out; tap one to jump to it. On a PC the artist list steps aside for this page, and All artists opens it over the whole window. Artists without a photo keep the old header; Settings > Artist page turns the photo header off.'},
   {v:'2026.11.19-e', note:'ARTIST PHOTO HEADER, REDONE TO MATCH THE MOCKUPS: the first version faded the photo to almost nothing in a thin strip, left an empty purple middle, put a glow on the name and made the button gray. Now the photo shows at full strength and only dissolves at its edge into the artist\u2019s colors. On a phone it fills the top with the name, a white Play on Spotify button, the record and the stats below. On a PC everything sits in one column on the left (big name, Play, a smaller spinning record beside the stats, filters) and the photo fills the right side, so the record no longer covers anyone\u2019s face. The filter switch is see-through white to sit on the colors. Settings > Artist page still turns it off.'},
   {v:'2026.11.19-d', note:'ARTIST PHOTO HEADER: an artist\u2019s page now opens with their photo fading down into the colors from their ratings, like the Apple Music artist page. Under the name is a Play on Spotify button that opens the artist in Spotify (in the Spotify app on a phone). On a PC the photo sits on the right and fades left and down. The record and tonearm stay under it. An artist with no photo keeps the plain color header. Settings has an Artist page card to turn the photo header off if you do not like it (saved on this device).'},
   {v:'2026.11.19-c', note:'NEW RELEASES NO LONGER LIST ALBUMS THAT ARE NOT OUT YET: an album Apple has announced for a later date (Justice\u2019s GTA VI score, out Dec 11) was showing under New from your artists. Now only albums and EPs that are actually out appear. Anything already listed with a future date is taken off when Playback opens, and an announced album shows up on its own once its release day has passed (and within the last two months). If Apple moves a date later, the entry is taken back off.'},
@@ -6016,6 +6077,7 @@ function render(){
   clrPlay();
   if(UI.lit&&!UI.rLand&&!(UI.lit.id&&UI.lit.id===UI.rOpen))slLitNow();   /* no number is flying in and its slider is closed, so the groove lights with this draw */
   slFxResume();
+  phPull();
   tdPaint();
   const nl=document.getElementById('llist');
   if(nl){if(ll&&llTab===UI.tab)nl.scrollTop=llTop;
@@ -7684,6 +7746,42 @@ function tdPaint(){
 /* artist photo header: on by default, turned off per device in Settings > Artist page */
 function phOn(){try{return localStorage.getItem('pb_photohero')!=='0'}catch(e){return true}}
 function spOpenUrl(a){return a.spid?'https://open.spotify.com/artist/'+encodeURIComponent(a.spid):'https://open.spotify.com/search/'+encodeURIComponent(a.name||'')}
+/* the edge-to-edge photo header (see the ARTIST PHOTO HERO styles) */
+function heroX(a,all,done,rated,p,phUrl){
+  const rs=all.map(i=>rating(i.id)).filter(Boolean),avg=rs.length?(rs.reduce((x,y)=>x+y,0)/rs.length/2).toFixed(1):'';
+  const sub=[done+' of '+all.length+' heard',rated?rated+' rated':'',avg?'avg '+avg:''].filter(Boolean).join(' · ');
+  const rel=relList(a).map(g=>{const sArt=g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-250':''),
+      col=acolFor(g.id,sArt,g),kind=/single/i.test(g.kind||'')?'Single':/^ep$/i.test(g.kind||'')?'EP':/^studio album$/i.test(g.kind||'')?'Album':(g.kind||'');
+    return `<button class="hxsl" data-act="hjump" data-g="${esc(g.id)}" style="--c:${esc(col)}" aria-label="Go to ${esc(g.title)}"><span class="hxv" aria-hidden="true"></span><span class="hxc" aria-hidden="true">${sArt?`<img src="${esc(sArt)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span><span class="hxt">${esc(g.title)}</span><span class="hxy">${esc([kind,g.year].filter(Boolean).join(' · '))}</span></button>`}).join('');
+  const ico={back:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
+    play:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.8v14.4L19 12z"/></svg>',
+    ear:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="6.5" rx="1.6"/><rect x="16.5" y="14" width="4.5" height="6.5" rx="1.6"/></svg>',
+    info:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.2"/></svg>'};
+  const open=UI.filter==='open';
+  return `<div class="head hero hx${hClear()?' hclear':''}" data-aid="${esc(a.id)}" style="${esc(heroStyle(a))}"><i class="hg" aria-hidden="true"></i><div class="hmesh" aria-hidden="true"><i class="hbase"></i><i class="fl fl0"><i class="fb b0"></i><i class="fb b3"></i></i><i class="fl fl1"><i class="fb b1"></i><i class="fb b4"></i></i><i class="fl fl2"><i class="fb b2"></i><i class="fb b5"></i></i></div>
+    <div class="hphoto" aria-hidden="true"><img src="${esc(phUrl)}" alt="" decoding="async" onerror="this.parentNode.remove()"></div><i class="hscrim" aria-hidden="true"></i><i class="hfoot" aria-hidden="true"></i>
+    <div class="hxin">
+      <button class="hxback" data-act="hback">${ico.back}All artists</button>
+      <div class="meta"><h2>${esc(a.name)}</h2>${a.aka&&a.aka.length?`<span class="note">also ${esc(a.aka.slice(0,3).join(' · '))}</span>`:''}</div>
+      <p class="hxsub">${esc(sub)}</p>
+      <div class="hxact">
+        <a class="hpbtn" href="${esc(spOpenUrl(a))}" target="_blank" rel="noopener noreferrer">${ico.play}Play</a>
+        <button class="hcirc" data-act="filter" data-v="${open?'all':'open'}" aria-pressed="${open}" aria-label="${open?'Showing songs still to hear. Show everything':'Show only songs still to hear'}" title="Still to hear">${ico.ear}</button>
+        <button class="hcirc" data-act="hinfo" aria-expanded="${!!UI.hinfo}" aria-label="Artist details" title="Details">${ico.info}</button>
+      </div>
+      ${UI.hinfo?`<div class="hxpanel"><div class="hstats"><div><b>${done}<small> /${all.length}</small></b><span>tracks heard</span></div><div><b>${rated}</b><span>rated</span></div><div><b>${a.groups.length}</b><span>releases</span></div></div>${mbArtistBar(a)}</div>`:''}
+    </div>
+    <div class="hxrel"><h3 class="hxlbl">Releases</h3><div class="hxrow">
+      <div class="hxprog"><div class="hrec"><div class="hring" style="--p:${p}"><div class="hdisc"><div class="hspin"></div><div class="hlab"><b${p>=100?' class="s"':''}>${p}%</b><span>heard</span></div></div></div>${HARM}</div><span class="hxt">Your progress</span><span class="hxy">${done} of ${all.length} songs</span></div>
+      ${rel}
+    </div></div>
+  </div>`}
+/* the photo header reaches up under the top bar: pull it up by however far the page puts it below the top */
+function phPull(){const h=document.querySelector('.head.hero.hx'),app=document.getElementById('app');if(!h||!app)return;
+  h.style.marginTop='';h.style.setProperty('--pull','0px');
+  const d=Math.max(0,Math.round(h.getBoundingClientRect().top-app.getBoundingClientRect().top));
+  h.style.marginTop=(-d)+'px';h.style.setProperty('--pull',d+'px')}
+window.addEventListener('resize',()=>{clearTimeout(window.__phT);window.__phT=setTimeout(phPull,60)});
 function heroStyle(a){const v=heroVars(a);return Object.keys(v).filter(k=>v[k]).map(k=>k+':'+v[k]).join(';')}
 function heroPaint(){const el=document.querySelector('.hero[data-aid]');if(!el)return;
   const a=S.music.find(x=>x.id===el.dataset.aid);if(!a)return;
@@ -8664,15 +8762,15 @@ function artistView(a){heroLook(a.id);
     </div>`})).join('');
   UI.dxAnim=null;                                    /* the switch animation plays once, on the draw it was asked for */
   const phOk=phOn(),phUrl=phOk?(a.simg||a.img||''):'';
-  return `<div class="head hero${hClear()?' hclear':''}${phUrl?' ph':''}" data-aid="${esc(a.id)}" style="${esc(heroStyle(a))}"><i class="hg" aria-hidden="true"></i><div class="hmesh" aria-hidden="true"><i class="hbase"></i><i class="fl fl0"><i class="fb b0"></i><i class="fb b3"></i></i><i class="fl fl1"><i class="fb b1"></i><i class="fb b4"></i></i><i class="fl fl2"><i class="fb b2"></i><i class="fb b5"></i></i></div>${phUrl?`<div class="hphoto" aria-hidden="true"><img src="${esc(phUrl)}" alt="" decoding="async" onerror="var h=this.closest('.hero');if(h)h.classList.remove('ph');this.parentNode.remove()"></div>`:''}
+  const head=phUrl?heroX(a,all,done,rated,p,phUrl):`<div class="head hero${hClear()?' hclear':''}" data-aid="${esc(a.id)}" style="${esc(heroStyle(a))}"><i class="hg" aria-hidden="true"></i><div class="hmesh" aria-hidden="true"><i class="hbase"></i><i class="fl fl0"><i class="fb b0"></i><i class="fb b3"></i></i><i class="fl fl1"><i class="fb b1"></i><i class="fb b4"></i></i><i class="fl fl2"><i class="fb b2"></i><i class="fb b5"></i></i></div>
     <div class="hrec"><div class="hring" style="--p:${p}"><div class="hdisc"><div class="hspin"></div><div class="hlab"><b${p>=100?' class="s"':''}>${p}%</b><span>heard</span></div></div></div>${HARM}</div>
     <div class="hbody">
       <div class="meta"><h2>${esc(a.name)}</h2>${a.aka&&a.aka.length?`<span class="note">also ${esc(a.aka.slice(0,3).join(' · '))}</span>`:''}</div>
-      ${phUrl?`<div class="hplay"><a class="hpbtn" href="${esc(spOpenUrl(a))}" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>Play on Spotify</a></div>`:''}
       <div class="hstats"><div><b>${done}<small> /${all.length}</small></b><span>tracks heard</span></div><div><b>${rated}</b><span>rated</span></div><div><b>${a.groups.length}</b><span>releases</span></div></div>
       <div class="tools" role="group" aria-label="Show"><button class="chip" data-act="filter" data-v="all" aria-pressed="${UI.filter==='all'}">Everything</button><button class="chip" data-act="filter" data-v="open" aria-pressed="${UI.filter==='open'}">Still to hear</button></div>
       ${mbArtistBar(a)}
-    </div></div>
+    </div></div>`;
+  return `${head}
     ${simBox(a)}
     ${relBar(a)}
     ${groups||`<p class="empty">${relKind(a)!=='all'&&UI.filter==='all'?'No releases of that kind here.':'You have heard every track listed here.'}</p>`}
@@ -8833,6 +8931,9 @@ document.addEventListener('click',ev=>{
   else if(act==='nrclear'){S.nr.list=[];touch();briefPush()}
   else if(act==='llclose'){UI.llOpen=false}
   else if(act==='addart'){UI.libOpen=false;UI.addOpen=true;UI.toAdd=true}
+  else if(act==='hinfo'){UI.hinfo=!UI.hinfo}
+  else if(act==='hjump'){UI.toAlb=b.dataset.g}
+  else if(act==='hback'){UI.libOpen=true;UI.libAnim=true}
   else if(act==='phtog'){try{localStorage.setItem('pb_photohero',phOn()?'0':'1')}catch(e){}}
   else if(act==='tourgo'){UI.view=null;UI.tab='music';UI.libOpen=false;setTimeout(()=>tourOpen(0),120)}
   else if(act==='dcforget'){dcSetToken('');COL.tokMsg='Removed from this device.';UI.colTok=true}
