@@ -437,7 +437,8 @@ footer textarea{font:12px var(--mono);margin-top:8px}
 @media (max-width:760px){
   body{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
   .tabs{position:fixed;z-index:40;left:0;right:0;bottom:0;border-radius:0;padding:6px 8px calc(8px + env(safe-area-inset-bottom,0px));gap:0;
-    display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -6px 20px rgb(0 0 0 / .06)}
+    display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -6px 20px rgb(0 0 0 / .06)}
+  .tabs[data-n="6"] button{font-size:11px}
   .tabs button{flex-direction:column;gap:3px;padding:6px 0;min-height:52px;font-size:12px;border-radius:12px}
   .tabs button[aria-pressed="true"]{background:transparent;box-shadow:none;color:var(--accent)}
   .tabs svg{width:24px;height:24px}
@@ -1739,6 +1740,62 @@ button.st-t:hover{color:var(--accent);text-decoration:underline}
   .st-col i,.st-chart rect{transition:opacity .15s}
 }
 @media (max-width:560px){.st-rl{grid-template-columns:minmax(0,1fr)}.st-rc{grid-template-columns:40px minmax(0,1fr) auto;gap:10px}.st-row{grid-template-columns:22px 40px minmax(0,1fr) auto;gap:10px}.st-cv{width:40px;height:40px}.st-fill{left:72px}}
+
+/* ===== 2026.11.19-a: navigation clarity ===== */
+.start{display:flex;flex-direction:column;align-items:center;text-align:center;padding:48px 20px 24px}
+.start-v{width:104px;height:104px}
+.start h2{margin:24px 0 8px;font:800 28px/1.1 Archivo,var(--display);letter-spacing:-.01em}
+.start p{margin:0 0 24px;max-width:300px;color:var(--muted);font-size:16px;line-height:1.45}
+.startbtn{min-height:52px;padding:0 28px;font-size:16px}
+.start .link{min-height:44px;margin-top:8px;padding:0 16px;font-size:15px}
+.backlib{display:none}
+.sl-bar{position:absolute;top:14px;right:14px;z-index:2;display:flex;gap:8px}
+.sl-ic.sl-lbtn{position:relative;top:auto;right:auto;width:auto;min-height:44px;padding:0 14px 0 11px;border-radius:999px;display:inline-flex;align-items:center;gap:7px;font:600 13px var(--body);white-space:nowrap;cursor:pointer}
+.sl-bl{line-height:1}
+@media (max-width:760px){
+  .top{padding-bottom:18px}
+  .topr,.topact{gap:14px}
+  .topr .tlab::after{content:attr(data-l);position:absolute;top:calc(100% + 3px);left:50%;transform:translateX(-50%);font:600 11px/1 var(--body);letter-spacing:0;text-transform:none;color:var(--muted);white-space:nowrap;pointer-events:none}
+  .backlib{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px 0 10px;margin:0 0 12px;align-self:flex-start;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font:600 15px var(--body);cursor:pointer}
+  .backlib svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+  .sl-bar{position:static;align-self:flex-end}
+  /* the floating dock names every tab, not just the one you are on */
+  body{padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))}
+  .tabs{height:68px;padding:0 6px;gap:2px}
+  .tabs button{flex:1;flex-direction:column;gap:2px;height:56px;min-height:56px;padding:0;border-radius:24px;font:600 11px/1 var(--body)}
+  .tabs button span{position:static;width:auto;height:auto;overflow:visible;clip:auto}
+  .tabs button[aria-pressed="true"]{flex:1}
+  .tabs[data-n="6"] button{font-size:10px}
+}
+/* first-run tour */
+.tour{position:fixed;inset:0;z-index:300}
+.tour-spot{position:fixed;left:50%;top:50%;width:0;height:0;border-radius:18px;box-shadow:0 0 0 100vmax rgb(10 16 14 / .72);outline:2px solid var(--accent);pointer-events:none}
+.tour-spot.none{outline-color:transparent}
+.tour-card{position:fixed;box-sizing:border-box;padding:20px;border-radius:22px;background:var(--surface);color:var(--ink);border:1px solid var(--line);box-shadow:0 16px 48px rgb(0 0 0 / .4)}
+.tour-n{margin:0 0 6px;font:500 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tour-card h2{margin:0 0 8px;font:800 21px/1.15 Archivo,var(--display)}
+.tour-t{margin:0 0 18px;font-size:15px;line-height:1.45}
+.tour-foot{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.tour-dots{display:flex;gap:6px}
+.tour-dots i{display:block;width:8px;height:8px;border-radius:4px;background:var(--line);transition:width .3s,background .3s}
+.tour-dots i.on{width:20px;background:var(--accent)}
+.tour-btns{display:flex;align-items:center;gap:4px}
+.tour-skip{min-height:44px;padding:0 14px;border:0;background:transparent;color:var(--muted);font:600 15px var(--body);cursor:pointer}
+.tour-next{min-height:44px;padding:0 22px}
+.tour-lock{overflow:hidden}
+@keyframes tourfade{from{opacity:0}to{opacity:1}}
+@keyframes tourtxt{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes startspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:no-preference){
+  .tour{animation:tourfade .25s ease both}
+  .tour.out{animation:tourfade .2s ease reverse both}
+  .tour.ready .tour-spot{transition:left .35s cubic-bezier(.2,.8,.2,1),top .35s cubic-bezier(.2,.8,.2,1),width .35s cubic-bezier(.2,.8,.2,1),height .35s cubic-bezier(.2,.8,.2,1)}
+  .tour.ready .tour-card{transition:left .35s cubic-bezier(.2,.8,.2,1),top .35s cubic-bezier(.2,.8,.2,1)}
+  .tour-card.swap h2,.tour-card.swap .tour-t{animation:tourtxt .3s ease both}
+  .start>*{animation:tourtxt .45s cubic-bezier(.2,.8,.2,1) both}
+  .start>*:nth-child(2){animation-delay:.06s}.start>*:nth-child(3){animation-delay:.12s}.start>*:nth-child(4){animation-delay:.18s}.start>*:nth-child(5){animation-delay:.24s}
+  .start-v{animation:startspin 14s linear infinite}
+}
 </style>
 
 <!-- suite:css v10 · shared by Kitchen, Grocery, Lift, DishLog, Protocol, Rail, Game Log, Playback — edit tools/suite.py in the kitchen repo, not here -->
@@ -2293,6 +2350,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-a', note:'EASIER TO FIND YOUR WAY (from a friend\u2019s feedback on a phone): the bottom bar now has Music, Stats, History and Settings as real tabs, evenly spaced (Stats and History used to hide in a popup, and a friend\u2019s two tabs sat bunched on the left); the round buttons at the top have words under them on a phone (Listen list, Add artist, Friends, Account); the artist page has an All artists button; Listen list and Listen again on an album say what they do; a new log shows Start your log with a Search for an artist button; and a short spotlight tour runs once for friends (replay it from Settings, Show the tour).'},
   {v:'2026.11.18-v', note:'SCREEN AND COLLECTION ARE OWNER-ONLY FOR NOW: both are still work in progress, so their tabs, pages and the Screen block on Stats are hidden for everyone except you (the owner, same check as the suite bar and People card). A friend whose browser had Screen saved as the last tab lands on Music instead.'},
   {v:'2026.11.18-u', note:'FRIENDS AND LISTEN LIST ANIMATE AGAIN: the Friends sheet had lost its opening animation in the last build (a side effect of the faster artist switching), and it is back. The Listen list now opens with a fade and slide-up, with its rows rising in one after another, and both the Friends sheet and the Listen list slide away when you close them (close button, tapping outside, or Esc).'},
   {v:'2026.11.18-t', note:'FASTER ARTIST SWITCHING: opening another artist no longer rebuilds the whole page. When nothing else on the page has changed, the top bar and the wall of artists stay as they are and only the artist pane is redrawn, so clicks land sooner on slower laptops (about 40% less work per click in testing with 70 artists, more with bigger libraries). The record is also drawn once in its new look instead of twice. Everything looks and animates the same; any other change still redraws the full page.'},
@@ -3420,7 +3478,7 @@ function lsPager(g){
     ${df&&parts.length?`<p class="ls-df">vs listen ${df.k}: ${parts.join(' · ')}</p>`:''}</div>`}
 function relBtn(g){
   if(!RATEABLE.includes(g.kind)||!rating(g.id))return '';const n=lsRaw(g.id).length;
-  return `<button class="sl-ic sl-lbtn sl-again" data-act="lsnew" data-g="${esc(g.id)}" aria-label="Listen again: start another listen of ${esc(g.title)}" title="Listen again">${ICO.again}${n>1?`<b>${n}</b>`:''}</button>`}
+  return `<button class="sl-ic sl-lbtn sl-again" data-act="lsnew" data-g="${esc(g.id)}" aria-label="Listen again: start another listen of ${esc(g.title)}" title="Listen again">${ICO.again}<span class="sl-bl">Listen again</span>${n>1?`<b>${n}</b>`:''}</button>`}
 const todayISO=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
 const fmtRd=d=>{const m=/^(\d{4})-(\d\d)-(\d\d)$/.exec(d||'');return m?new Date(+m[1],+m[2]-1,+m[3]).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'}):''};
 function artistItems(a){return a.groups.flatMap(g=>g.items)}
@@ -5926,7 +5984,7 @@ function mainAside(e,list){return `<aside class="side ${UI.libOpen||!e?'libopen'
         </form>
       </details>`:tmSide()}
     </aside>`}
-function mainSheet(e){return `<section class="sheet" aria-live="polite">${e?(UI.tab==='music'?artistView(e):e.type==='film'?filmView(e):showView(e)):'<p class="empty">Tap Add artist or the + button to add your first one.</p>'}</section>`}
+function mainSheet(e){return `<section class="sheet" aria-live="polite">${e?(UI.tab==='music'?backLibBtn()+artistView(e):e.type==='film'?filmView(e):showView(e)):(UI.tab==='music'?startView():'<p class="empty">Tap Add artist or the + button to add your first one.</p>')}</section>`}
 function mainView(e,list,out){const a=mainAside(e,list);if(out)out.aside=a;return `
 
   <div class="shell">
@@ -7095,7 +7153,7 @@ function albumSheet(){
 function friendsBtn(){
   if(!GCID||!accOn())return '';
   const n=ACX.fr?ACX.fr.incoming.length:0,cur=!!UI.frOpen;
-  return `<button class="tact tfr${cur?' cur':''}" data-act="fropen" aria-haspopup="dialog" aria-expanded="${cur}" aria-label="Friends${n?', '+n+' request'+(n===1?'':'s')+' waiting':''}">${ICO.friends}${n?`<i class="tbadge" aria-hidden="true">${n}</i>`:''}</button>`;
+  return `<button class="tact tlab tfr${cur?' cur':''}" data-l="Friends" data-act="fropen" aria-haspopup="dialog" aria-expanded="${cur}" aria-label="Friends${n?', '+n+' request'+(n===1?'':'s')+' waiting':''}">${ICO.friends}${n?`<i class="tbadge" aria-hidden="true">${n}</i>`:''}</button>`;
 }
 /* the Friends sheet: slides up over whatever you are on (music, screen, collection...) so closing it puts you right back */
 function friendsSheet(){
@@ -7116,7 +7174,7 @@ function accBtn(){
   if(!GCID)return '';
   const on=accOn(),cur=UI.view==='account';
   const pic=on&&accPicOf(ACC.me);
-  return `<button class="tact tacc${on?' on':''}${pic?' pic':''}" data-act="view" data-v="account" aria-pressed="${cur}" aria-label="${on?'Account: '+esc(ACC.me.name):'Sign in or make an account'}"${on?` style="--h:${accHueOf(ACC.me)}"`:''}>${on?(pic?accFace(ACC.me):`<b aria-hidden="true">${accIni(ACC.me.name)}</b>`):ICO.user}</button>`;
+  return `<button class="tact tlab tacc${on?' on':''}${pic?' pic':''}" data-l="${on?'Account':'Sign in'}" data-act="view" data-v="account" aria-pressed="${cur}" aria-label="${on?'Account: '+esc(ACC.me.name):'Sign in or make an account'}"${on?` style="--h:${accHueOf(ACC.me)}"`:''}>${on?(pic?accFace(ACC.me):`<b aria-hidden="true">${accIni(ACC.me.name)}</b>`):ICO.user}</button>`;
 }
 /* the owner login: this Google account unlocks your own Worker (log, photos, Spotify, Discogs) instead of the sync key */
 function accOwnerHtml(b){
@@ -7287,6 +7345,7 @@ function settingsView(){
     </div>
     ${acct.trim()?`<div class="set-col set-acct"><h3 class="set-gh">Account &amp; community</h3>${acct}</div>`:''}
     <div class="set-col set-data"><h3 class="set-gh">Your data</h3>
+    <div class="setcard"><h3>How Playback works</h3><p class="note">A short tour of the buttons and tabs.</p><div class="tools"><button class="btn" data-act="tourgo">Show the tour</button></div></div>
     <div class="setcard"><h3>Sync &amp; data</h3>
     <details id="syncpanel" ${UI.syncOpen?'open':''}>
       <summary class="label" style="cursor:pointer">Sync</summary>
@@ -7340,20 +7399,22 @@ function renderMain(topIn){
   </footer>`;
   if(!UI.view&&UI.tab==='music'&&mo.aside)PAINT={top,side:asideKey(mo.aside)};
   heroStart();
+  tourMaybe();
 }
 function topHTML(){const out=topHTML0();UI.llAnim=false;return out}
 function topHTML0(){return `
   <header class="top">
-      <nav class="tabs" aria-label="Section">
-        <button data-act="tab" data-v="music" aria-pressed="${(!UI.view&&UI.tab==='music')||UI.view==='history'||UI.view==='stats'}" aria-haspopup="menu" aria-expanded="${!!UI.mm}">${ICO.music}<span>Music</span><i class="caret" aria-hidden="true"></i></button>
+      <nav class="tabs" aria-label="Section" data-n="${isOwnerUI()?6:4}">
+        <button data-act="mmgo" data-v="artists" aria-pressed="${!UI.view&&UI.tab==='music'}">${ICO.music}<span>Music</span></button>
+        <button data-act="mmgo" data-v="stats" aria-pressed="${UI.view==='stats'}">${ICO.stats}<span>Stats</span></button>
+        <button data-act="mmgo" data-v="history" aria-pressed="${UI.view==='history'}">${ICO.history}<span>History</span></button>
         ${isOwnerUI()?`<button data-act="tab" data-v="screen" aria-pressed="${!UI.view&&UI.tab==='screen'}">${ICO.screen}<span>Screen</span></button>
         <button data-act="view" data-v="collection" aria-pressed="${UI.view==='collection'}">${ICO.collection}<span>Collection</span></button>`:''}
         <button data-act="view" data-v="settings" aria-pressed="${UI.view==='settings'}">${ICO.settings}<span>Settings</span></button>
-        ${UI.mm?`<div class="mmenu${UI.mmAnim?' mm-in':''}" role="menu" aria-label="Music"><button role="menuitem" data-act="mmgo" data-v="artists"${UI.view!=='history'&&UI.view!=='stats'?' aria-current="true"':''}>${ICO.grid}<span>Artists</span></button><button role="menuitem" data-act="mmgo" data-v="history"${UI.view==='history'?' aria-current="true"':''}>${ICO.history}<span>History</span></button><button role="menuitem" data-act="mmgo" data-v="stats"${UI.view==='stats'?' aria-current="true"':''}>${ICO.stats}<span>Stats</span></button></div>`:''}
       </nav>
     <div class="topr">
       <button class="sync" data-act="opensync" data-s="${SYS.status}"><i></i>${esc(syncLabel())}</button>
-      ${!UI.view?`<div class="topact">${UI.tab==='music'?`<button class="tact" data-act="llopen" aria-label="Listen list, ${llCount()} to hear${nrList().length?', '+nrList().length+' new release'+(nrList().length===1?'':'s'):''}">${ICO.mark}${llCount()+nrList().length?`<i class="tbadge">${llCount()+nrList().length}</i>`:''}</button>`:''}<button class="tact tmob" data-act="lib" aria-label="${UI.tab==='music'?'Switch artist':'Switch show or film'}">${ICO.grid}</button>${UI.tab==='music'?`<button class="tact tmob" data-act="addart" aria-label="Add an artist">${ICO.plus}</button>`:''}</div>`:''}
+      ${!UI.view?`<div class="topact">${UI.tab==='music'?`<button class="tact tlab" data-l="Listen list" data-act="llopen" aria-label="Listen list, ${llCount()} to hear${nrList().length?', '+nrList().length+' new release'+(nrList().length===1?'':'s'):''}">${ICO.mark}${llCount()+nrList().length?`<i class="tbadge">${llCount()+nrList().length}</i>`:''}</button>`:`<button class="tact tmob tlab" data-l="Switch" data-act="lib" aria-label="Switch show or film">${ICO.grid}</button>`}${UI.tab==='music'?`<button class="tact tmob tlab" data-l="Add artist" data-act="addart" aria-label="Add an artist">${ICO.plus}</button>`:''}</div>`:''}
       ${friendsBtn()}${accBtn()}
     </div>
   </header>
@@ -7709,7 +7770,94 @@ function heroTick(t){
   el.style.transform='rotate('+HERO.ang.toFixed(2)+'deg)';
   liqTick(dt,HERO.spd,t);
   HERO.raf=requestAnimationFrame(heroTick)}
+/* ===== 2026.11.19-a: navigation clarity. An empty log says what to do, the artist page has a labeled way back,
+   and a short spotlight tour (first launch for friends, replayable from Settings) explains the buttons. ===== */
+function startView(){return `<div class="start">
+  <svg class="start-v" viewBox="0 0 104 104" aria-hidden="true"><circle cx="52" cy="52" r="50" fill="var(--ink)"/><circle cx="52" cy="52" r="40" fill="none" stroke="var(--bg)" stroke-opacity=".18" stroke-width="2"/><circle cx="52" cy="52" r="31" fill="none" stroke="var(--bg)" stroke-opacity=".18" stroke-width="2"/><circle cx="52" cy="52" r="15" fill="var(--accent)"/><circle cx="52" cy="52" r="3" fill="var(--bg)"/></svg>
+  <h2>Start your log</h2>
+  <p>Search for an artist, then rate the albums you have heard.</p>
+  <button class="btn primary startbtn" data-act="addart">Search for an artist</button>
+  <button class="link" data-act="tourgo">How Playback works</button></div>`}
+function backLibBtn(){return `<button class="backlib" data-act="lib">${ICO.back}All artists</button>`}
+
+var TOUR={on:false,i:0,chk:false};
+function tourSeen(){try{return localStorage.getItem(KEY+'_tour')==='1'}catch(e){return false}}
+function tourMark(){try{localStorage.setItem(KEY+'_tour','1')}catch(e){}}
+function tourVis(sel){for(const n of document.querySelectorAll(sel)){const r=n.getBoundingClientRect();if(r.width>0&&r.height>0)return n}return null}
+function tourSteps(){return [
+  {sels:['.topact [data-act="addart"]','.startbtn','details.addart summary'],h:'Add an artist',t:'Search for an artist and Playback pulls in their albums. Then rate the songs and albums you have heard.',ext:1},
+  {sels:['.topr .tlab'],all:true,h:'Listen list, Friends, Account',t:'The Listen list saves albums to hear next. Friends opens your friends’ pages. Account is where you sign in to keep your log on every device.',ext:1},
+  {sels:['.tabs'],h:'Your tabs',t:'Music is your artists. Stats and History show what you have played and rated. Settings has backup and sync.'},
+  {sels:null,h:'Rate as you listen',t:'Open an artist, tap an album, then rate its songs. Tap Listen again on an album when you replay it.'}]}
+function tourDraw(){
+  const el=document.getElementById('tour');if(!el||!TOUR.on)return;
+  const S=tourSteps(),st=S[TOUR.i],spot=el.querySelector('.tour-spot'),card=el.querySelector('.tour-card');
+  card.querySelector('.tour-n').textContent='Step '+(TOUR.i+1)+' of '+S.length;
+  card.querySelector('h2').textContent=st.h;
+  card.querySelector('.tour-t').textContent=st.t;
+  card.querySelector('.tour-next').textContent=TOUR.i===S.length-1?'Done':'Next';
+  card.querySelector('.tour-dots').innerHTML=S.map((_,k)=>'<i'+(k===TOUR.i?' class="on"':'')+'></i>').join('');
+  card.classList.remove('swap');void card.offsetWidth;card.classList.add('swap');
+  let r=null;
+  if(st.sels){
+    if(st.all){
+      const l=[...document.querySelectorAll(st.sels[0])].map(n=>n.getBoundingClientRect()).filter(b=>b.width>0&&b.height>0);
+      if(l.length)r={left:Math.min(...l.map(b=>b.left)),top:Math.min(...l.map(b=>b.top)),right:Math.max(...l.map(b=>b.right)),bottom:Math.max(...l.map(b=>b.bottom))};
+    }else for(const s of st.sels){const n=tourVis(s);if(n){const b=n.getBoundingClientRect();r={left:b.left,top:b.top,right:b.right,bottom:b.bottom};break}}
+  }
+  const vw=innerWidth,vh=innerHeight,pad=8,ext=(r&&st.ext&&vw<=760)?18:0;
+  if(r){
+    spot.classList.remove('none');
+    spot.style.left=(r.left-pad)+'px';spot.style.top=(r.top-pad)+'px';
+    spot.style.width=(r.right-r.left+pad*2)+'px';spot.style.height=(r.bottom-r.top+pad*2+ext)+'px';
+  }else{
+    spot.classList.add('none');
+    spot.style.left=(vw/2)+'px';spot.style.top=(vh/2)+'px';spot.style.width='0px';spot.style.height='0px';
+  }
+  const cw=Math.min(vw-32,380);card.style.width=cw+'px';
+  const ch=card.offsetHeight;
+  let left=(vw-cw)/2,top=(vh-ch)/2;
+  if(r){
+    left=Math.max(16,Math.min(r.left+(r.right-r.left)/2-cw/2,vw-cw-16));
+    const below=r.bottom+pad+ext+14;
+    top=((r.top+r.bottom)/2<vh/2&&below+ch<=vh-12)?below:Math.max(12,r.top-pad-14-ch);
+  }
+  card.style.left=left+'px';card.style.top=top+'px';
+}
+function tourOpen(i){
+  if(TOUR.on)return;
+  TOUR.on=true;TOUR.i=i||0;
+  document.documentElement.classList.add('tour-lock');
+  window.scrollTo(0,0);
+  const d=document.createElement('div');d.id='tour';d.className='tour';
+  d.setAttribute('role','dialog');d.setAttribute('aria-modal','true');d.setAttribute('aria-labelledby','tour-h');
+  d.innerHTML='<div class="tour-spot"></div><section class="tour-card"><p class="tour-n"></p><h2 id="tour-h"></h2><p class="tour-t"></p><div class="tour-foot"><div class="tour-dots" aria-hidden="true"></div><div class="tour-btns"><button type="button" class="tour-skip" data-tour="skip">Skip tour</button><button type="button" class="btn primary tour-next" data-tour="next">Next</button></div></div></section>';
+  d.addEventListener('click',ev=>{
+    const b=ev.target.closest('[data-tour]');if(!b)return;
+    ev.stopPropagation();
+    if(b.dataset.tour==='skip'||TOUR.i>=tourSteps().length-1)tourClose();
+    else{TOUR.i++;tourDraw()}
+  });
+  document.body.appendChild(d);
+  tourDraw();
+  requestAnimationFrame(()=>requestAnimationFrame(()=>d.classList.add('ready')));
+  try{d.querySelector('.tour-next').focus({preventScroll:true})}catch(e){}
+}
+function tourClose(){
+  const d=document.getElementById('tour');
+  TOUR.on=false;tourMark();
+  document.documentElement.classList.remove('tour-lock');
+  if(d){d.classList.add('out');setTimeout(()=>{if(d.parentNode&&!TOUR.on)d.remove()},220)}
+}
+function tourMaybe(){
+  if(TOUR.chk||!READY)return;TOUR.chk=true;
+  setTimeout(()=>{if(!tourSeen()&&!isOwnerUI()&&!TOUR.on&&!UI.view&&UI.tab==='music')tourOpen(0)},1500);
+}
+addEventListener('resize',()=>tourDraw());
+addEventListener('keydown',ev=>{if(TOUR.on&&ev.key==='Escape')tourClose()});
+
 const ICO={
+  back:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
   friends:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 19.5c.5-3.3 3-5.2 6-5.2s5.5 1.9 6 5.2"/><circle cx="17" cy="9.5" r="2.5"/><path d="M16.5 14.6c2.6-.2 4.6 1.4 5 4.4"/></svg>',
   user:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.6"/><path d="M4.8 20c.6-3.7 3.7-5.8 7.2-5.8s6.6 2.1 7.2 5.8"/></svg>',
   mark:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h11v17L12 16.5l-5.5 4z"/></svg>',
@@ -7906,7 +8054,8 @@ const rymSearchUrl=(a,g)=>'https://rateyourmusic.com/search?searchtype=l&searcht
 function listBtn(g,a){
   const on=llOn(a.name,g.title),sg=stdItems(g),heard=(sg.length>0&&sg.every(i=>isDone(i.id)))||!!rating(g.id);
   if(!on&&heard)return '';
-  return `<button class="sl-ic sl-lbtn" data-act="lltog" data-a="${a.id}" data-g="${g.id}" aria-pressed="${on}" aria-label="${on?'On your listen list, remove':'Add to listen list'}" title="${on?'On your listen list':'Add to listen list'}">${on?ICO.listOn:ICO.list}</button>`}
+  return `<button class="sl-ic sl-lbtn" data-act="lltog" data-a="${a.id}" data-g="${g.id}" aria-pressed="${on}" aria-label="${on?'On your listen list, remove':'Add to listen list'}" title="${on?'On your listen list':'Add to listen list'}">${on?ICO.listOn:ICO.list}<span class="sl-bl">${on?'On the list':'Add to list'}</span></button>`}
+function albBar(g,a){const h=listBtn(g,a)+relBtn(g);return h?`<div class="sl-bar">${h}</div>`:''}
 
 /* ---------- share card ----------
    Share under an album opens a picture of your rating (cover, big number, song average, favorites).
@@ -8413,7 +8562,7 @@ function artistView(a){heroLook(a.id);
         ${UI.rOpen===i.id?rateMeter(i.id,s.t,simSong(a,i,s.t)):''}`}).join('');
     return `<div class="group sleeve${lsCls(g)} ${dx?'dxon':''} ${UI.dxAnim===g.id?'dxanim':''} ${SLIN.has(String(g.id))?'in':''}" data-acol="${g.id}" style="--acs:${col};--acd:${colD}">
       <div class="sl-hero">
-        ${listBtn(g,a)}${relBtn(g)}
+        ${albBar(g,a)}
         <div class="sl-pack">
           <div class="sl-disc" role="img" aria-label="${gd} of ${shown.length} songs heard">${ringHtml}<span class="sl-lab">${shown.length?gd+'/'+shown.length:'\u2013'}</span></div>
           <div class="sl-cover">${art?`<img src="${esc(art)}" ${dx&&sArt&&art!==sArt?`data-f="${esc(sArt)}" `:''}alt="" loading="lazy" decoding="async" onerror="if(this.dataset.f){this.src=this.dataset.f;this.removeAttribute('data-f')}else coverErr(this)">`:''}<span class="sl-ph" aria-hidden="true">${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div>
@@ -8596,6 +8745,7 @@ document.addEventListener('click',ev=>{
   else if(act==='nrclear'){S.nr.list=[];touch();briefPush()}
   else if(act==='llclose'){UI.llOpen=false}
   else if(act==='addart'){UI.libOpen=false;UI.addOpen=true;UI.toAdd=true}
+  else if(act==='tourgo'){UI.view=null;UI.tab='music';UI.libOpen=false;setTimeout(()=>tourOpen(0),120)}
   else if(act==='dcforget'){dcSetToken('');COL.tokMsg='Removed from this device.';UI.colTok=true}
   else if(act==='colf'){UI.colF=b.dataset.v}
   else if(act==='coladdp'){const p=(COL.res||[])[+b.dataset.i];if(!p)return;
