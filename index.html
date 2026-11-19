@@ -2646,6 +2646,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-p', note:'ARTIST PHOTO STAYS PUT: the photo at the top of an artist page no longer flashes and reloads every time you open an album, and no longer re-fades two to four times in a row when an artist first opens. Any redraw of the page was throwing the photo away and putting it back, which restarted its fade-in; now it fades in once per artist and then just stays.'},
   {v:'2026.11.19-o', note:'ANIMATIONS NO LONGER SKIP AHEAD: a sync starting or finishing (which happens a moment after every rating or change), the Spotify check that runs every couple of minutes, and coming back to the app all rebuilt the whole page underneath whatever was animating, so the animation jumped straight to its end. Now the Sync chip at the top updates in place, and the background Spotify check only redraws when it actually found something new. Animations play through to the end.'},
   {v:'2026.11.19-n', note:'A REAL OPEN GATEFOLD: an opened album now looks like an actual open record jacket instead of a light box next to a dark one. On a wide screen it is two square panels of the same printed card, in the album\u2019s color with its cover art printed faintly across both, a paper grain and a creased spine, with a record sleeved in each side and peeking out of the outer edges like a 2LP: the left one is your progress record (heard count on its label), the right one shows your rating. Hover a side and its record slides out far enough to read the label. Long track lists scroll inside the right panel. Opening: the cover flies out of the Releases row with its record still in it (the row\u2019s sleeve empties while it is away), lands exactly as it looked in the row, then swings open toward you. No more dark slivers at the corners and no empty box sitting where the left half lands. On narrower screens the halves stack and the cover lifts like a lid. The records in the Releases row now have their lit grooves too (one per song, lit for the ones you have heard); they ripple when you hover them on a PC, and on a phone when they come onto the screen. The number still flies from the rating slider into the song\u2019s record: the label now stays empty until it lands and pops in with it, and the ratings panel no longer jumps back to the top when the page redraws (that was sending the number off-screen).'},
   {v:'2026.11.19-m', note:'GATEFOLD, TAKE TWO: tapping a record now lifts its cover out of the Releases row (its record stays behind on the shelf) and flies it down into place, so it is the album itself that arrives, not a block. The sleeve then swings open toward you on its spine like a real gatefold, the cover darkening as it tilts away from the light and casting a shadow on the inside (it used to swing away from you, which looked backwards). Closing plays it in reverse and the cover flies home into the row. On a phone the cover lands right under the row and lifts open like a lid. RATING RECORDS: the circles beside each song are now tiny records: grooved black vinyl with a sheen, a paper label tinted the album\u2019s color with your score on it, and the rating as a lit groove around the rim (a 10 is a full ring). Heard but unrated shows a blank label with its spindle hole; songs you have not heard are a faint ghost record. Hover one and it spins.'},
@@ -6297,6 +6298,7 @@ function render(){
   clrPlay();
   if(UI.lit&&!UI.rLand&&!(UI.lit.id&&UI.lit.id===UI.rOpen))slLitNow();   /* no number is flying in and its slider is closed, so the groove lights with this draw */
   slFxResume();
+  if(!document.querySelector('.hero.hx[data-aid]'))PHSEEN='';
   phPull();
   phHiLoad();
   phAmLoad();
@@ -7730,7 +7732,7 @@ function keepImgs(fn){
   for(const l of m.values()){for(let q=l.length-1;q>=0;q--)if(l[q].isConnected)l.splice(q,1)}   /* only covers the redraw threw away */
   document.querySelectorAll('img[src]').forEach(im=>{if(old.has(im))return;
     const l=m.get(im.getAttribute('src')),k=l&&l.findIndex(o=>o.className===im.className);
-    if(l&&k>=0)im.replaceWith(l.splice(k,1)[0])})}
+    if(l&&k>=0){const o=l.splice(k,1)[0];if(o.closest('.hphoto'))o.style.animation='none';im.replaceWith(o)}})}
 function renderMain(topIn){
   PAINT=null;
   if(!READY){document.getElementById('app').innerHTML='<p class="empty">Loading your log\u2026</p>';return}
@@ -7997,7 +7999,7 @@ function heroX(a,all,done,rated,p,phUrl,more){
   const open=UI.filter==='open';
   return `<div class="head hero hx${hClear()?' hclear':''}${phUrl?'':' nophoto'}" data-aid="${esc(a.id)}" style="${esc(heroStyle(a))}"><div class="hxbg" aria-hidden="true"><div class="hmesh"><i class="hbase"></i><i class="fl fl0"><i class="fb b0"></i><i class="fb b3"></i></i><i class="fl fl1"><i class="fb b1"></i><i class="fb b4"></i></i><i class="fl fl2"><i class="fb b2"></i><i class="fb b5"></i></i></div></div>
     <div class="hxtop">
-    ${phUrl?`<div class="hphoto${a.aimg&&phUrl===amPhoto(a)?' am':''}" aria-hidden="true"><img src="${esc(phUrl)}" alt="" decoding="async" onerror="this.parentNode.remove()"></div>`:''}<i class="hscrim" aria-hidden="true"></i>
+    ${phUrl?`<div class="hphoto${a.aimg&&phUrl===amPhoto(a)?' am':''}" aria-hidden="true"><img src="${esc(phUrl)}" alt="" decoding="async"${PHSEEN===a.id+'|'+phUrl?' style="animation:none"':''} onload="phSeen(this)" onerror="this.parentNode.remove()"></div>`:''}<i class="hscrim" aria-hidden="true"></i>
     <div class="hxin">
       <button class="hxback" data-act="hback">${ico.back}All artists</button>
       <div class="meta"><h2>${esc(a.name)}</h2>${a.aka&&a.aka.length?`<span class="note">also ${esc(a.aka.slice(0,3).join(' · '))}</span>`:''}</div>
@@ -8031,6 +8033,8 @@ function hxSrcHtml(a){
   const am=phPick(a)===amPhoto(a);
   return `<div class="hsrc" role="group" aria-label="Artist photo source"><span class="hsl">Photo</span><button type="button" data-act="hsrc" data-v="sp" aria-pressed="${!am}">Spotify</button><button type="button" data-act="hsrc" data-v="am" aria-pressed="${am}">Apple Music</button></div>`;
 }
+let PHSEEN='';   /* which artist's photo (id|url) has already faded in, so a redraw of the same page never replays the fade */
+function phSeen(im){const h=im.closest('.hero[data-aid]');PHSEEN=(h?h.dataset.aid:'')+'|'+im.getAttribute('src')}
 /* swap the picture in place (no redraw, so the colors keep flowing): fade the old one out, fade the new one in */
 function phSetSrc(v){
   try{localStorage.setItem('pb_artsrc',v==='am'?'am':'sp')}catch(e){}
