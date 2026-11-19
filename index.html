@@ -1501,9 +1501,11 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .hxhint{margin:16px 0 0;font-size:13px;letter-spacing:.01em;color:rgb(255 255 255 / .72);animation:hxIn .4s ease .3s backwards}
 /* the open record in the row: lifted, ringed, its record pulled further out */
 .hxsl .hxc{transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s}
-.hxsl.on{--hxg:color-mix(in srgb,var(--c) 55%,#fff)}
+.hxsl.on{--hxg:color-mix(in srgb,var(--c) 38%,#fff)}
 /* the open record's sleeve in the row: its cover has been lifted off, so the sleeve sinks and darkens, glows in the album's color, and a notch points down at the open jacket. Closing lifts it back up just as the cover lands */
-.hxsl.on .hxc{transform:scale(.9);box-shadow:0 0 0 2px var(--hxg),0 0 22px 4px color-mix(in srgb,var(--hxg) 55%,transparent)}
+.hxsl.on .hxc{transform:scale(.9);box-shadow:0 0 0 2px var(--hxg),0 0 22px 5px color-mix(in srgb,var(--hxg) 88%,transparent),0 0 46px 10px color-mix(in srgb,var(--hxg) 42%,transparent)}
+.hxsl.on:not(.up) .hxv{left:6px}   /* the record went with the cover: it is tucked fully back inside the sleeve */
+.hxsl.on.up .hxv{left:50px;transition:left .42s cubic-bezier(.2,.8,.2,1)}
 .hxc::after{content:"";position:absolute;inset:0;z-index:2;border-radius:inherit;pointer-events:none;background:rgb(0 0 0 / .3);box-shadow:inset 0 5px 14px rgb(0 0 0 / .6);opacity:0}
 .hxsl.on .hxc::after{opacity:1}
 .hxsl.on::after{content:"";position:absolute;left:calc(50% - 8px);bottom:-8px;width:16px;height:8px;background:var(--hxg);clip-path:polygon(0 0,100% 0,50% 100%)}
@@ -1512,12 +1514,16 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .hxsl.on.up::after{opacity:0;transition:opacity .3s}
 @media (prefers-reduced-motion:no-preference){
   .hxsl.on .hxc{animation:hxSink .5s cubic-bezier(.2,.8,.2,1) .06s backwards}
+  .hxsl.on .hxv{animation:hxTuck .5s cubic-bezier(.2,.8,.2,1) .06s backwards}
   .hxsl.on .hxc::after{animation:hxDim .5s ease .06s backwards}
   .hxsl.on::after{animation:hxDim .4s ease .3s backwards}}
 @keyframes hxSink{from{transform:none;box-shadow:0 0 0 0 transparent,0 0 0 0 transparent}}
 @keyframes hxDim{from{opacity:0}}
+@keyframes hxTuck{from{left:50px}}
+@media (max-width:760px){.hx .hxrow{padding-left:var(--hxpad);margin-left:calc(-1 * var(--hxpad))}.hxsl.on.up .hxv{left:44px}}
+.hx .group.sleeve.gf{position:relative;z-index:2}   /* the jacket (and the cover flying out of the row) sits above the row's sleeves, never behind them */
 .hxsl.on .hxv{left:84px}
-.hx .hxrow{padding-top:12px;margin-top:-8px;padding-bottom:14px;margin-bottom:-8px}
+.hx .hxrow{padding:26px var(--hxpad) 26px 22px;margin:-22px calc(-1 * var(--hxpad)) -20px -22px}   /* room around the row so a sleeve's glow is not cut off */
 .hxmore{position:relative;text-align:left;display:flex;flex-direction:column;gap:22px;padding:8px var(--hxpad) calc(64px + var(--tail,0px));color:var(--ink)}
 .hx .hxmore .simbox{margin:0;background:color-mix(in srgb,var(--surface) 86%,transparent);border-color:rgb(255 255 255 / .12);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
 .hxmore>details.more{border:1px solid rgb(255 255 255 / .12);border-radius:16px;padding:14px 16px;background:color-mix(in srgb,var(--surface) 86%,transparent);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
@@ -2660,6 +2666,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-u', note:'GATEFOLD OPENING, TAKE THREE: the cover used to slide behind the row\u2019s sleeves (they sat on a higher layer than the jacket); it now stays in front of the whole row. The motion is new too: the cover lifts off the shelf at the size of its sleeve with a soft shadow, drops down out of the row first, then slides across and swells to full size as it comes to rest (position and size now ease separately, and there is no more tilting). The record goes with it, so the sleeve left in the row sits empty, sunk and darker, with a brighter glow in the album\u2019s color and the notch pointing at the jacket. Closing plays it in reverse: the cover returns, the record slides back out of its sleeve and the sleeve rises up as it lands.'},
   {v:'2026.11.19-t', note:'GATEFOLD: THE COVER NOW LOOKS PULLED OFF ITS SLEEVE: the album in the Releases row stays put, but when you open it the cover pops up toward you, tilts and swings out along an arc instead of sliding straight over its own tile. The sleeve it left sinks and darkens, glows in the album\u2019s color, and a small notch under it points down at the open jacket. Closing plays it in reverse: the cover arcs back and the sleeve rises up again as it lands.'},
   {v:'2026.11.19-s', note:'GATEFOLD: NO MORE FADE-AWAY AND POP-BACK: the album in the Releases row used to vanish the moment you tapped it, then fade back in halfway through the opening, so it looked like it blinked. It now stays put the whole time. The cover that flies out is a copy of it, and the row\u2019s sleeve keeps its lifted, ringed look while the record is open; closing flies the cover back onto it.'},
   {v:'2026.11.19-r', note:'GATEFOLD NO LONGER SNAPS OPEN: opening a record asks the server what your friends rated for that artist, and when the answer arrived a second or so later the page was redrawn right in the middle of the opening, so the record skipped straight to fully open. Redraws caused by things arriving in the background (friends\u2019 ratings, the activity feed, Spotify checks, new-release scans, photos, sync) now wait until the opening or closing has finished. Taps still redraw immediately.'},
@@ -9168,21 +9175,23 @@ function gfRun(el,back){
   const J=phone?{x:Lr.left,y:Lr.top,w:Lr.width,h:Lr.height}:{x:R.left,y:R.top,w:R.width,h:R.height},ch=Math.min(J.w,J.h);   /* the closed jacket, and the cover square at its top */
   const ins=(y,h)=>`inset(${(y-S.top).toFixed(1)}px ${(S.right-(J.x+J.w)).toFixed(1)}px ${(S.bottom-(y+h)).toFixed(1)}px ${(J.x-S.left).toFixed(1)}px round 10px)`;
   const cSq=ins(J.y,ch),cJk=ins(J.y,J.h),cAll='inset(-120px -120px -120px -120px round 22px)';
-  /* the cover is pulled off its sleeve: it pops up toward you (a little bigger, tilted), then swings out and down along an arc instead of sliding straight over its own tile */
-  let from='translateY(40px) scale(.9)',lift=from,mid=from,fo=0;
-  if(tile){const t=tile.getBoundingClientRect();if(t.width){const k=t.width/J.w,dx=t.left-J.x,dy=t.top-J.y;
-    from=`translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px) scale(${k.toFixed(4)})`;
-    lift=`translate(${dx.toFixed(1)}px,${(dy-12).toFixed(1)}px) scale(${(k*1.12).toFixed(4)}) rotate(-3deg)`;
-    const bow=(dx>=0?1:-1)*Math.min(80,Math.abs(dy)*.12+26);
-    mid=`translate(${(dx*.5+bow).toFixed(1)}px,${(dy*.42).toFixed(1)}px) scale(${(k+(1-k)*.45).toFixed(4)}) rotate(-4deg)`;fo=1}}
+  /* the cover is pulled off its sleeve: it lifts a little toward you at the size of the sleeve, travels down smoothly (position and size ease separately, so it leaves the shelf small and only swells as it comes to rest), and its shadow fades as it lands */
+  let dx=0,dy=40,k=.9,fo=0;
+  if(tile){const t=tile.getBoundingClientRect();if(t.width){k=t.width/J.w;dx=t.left-J.x;dy=t.top-J.y;fo=1}}
   sp.style.transformOrigin=`${(J.x-S.left).toFixed(1)}px ${(J.y-S.top).toFixed(1)}px`;
   const T=1750,o={duration:T,fill:'both',direction:back?'reverse':'normal'},a=[];
   const fly='cubic-bezier(.25,.8,.25,1)',sw='cubic-bezier(.45,0,.2,1)';
   const W=phone?.49:.42;   /* when the swing starts */
-  /* a PC: the closed jacket is exactly the cover with its record sticking out, so the whole thing just flies; a phone clips to the cover square first */
-  if(phone)a.push(sp.animate([{transform:from,clipPath:cSq,opacity:fo?1:0,offset:0,easing:'cubic-bezier(.2,.9,.3,1)'},{transform:lift,clipPath:cSq,opacity:1,offset:.06,easing:'cubic-bezier(.4,0,.5,1)'},{transform:mid,clipPath:cSq,opacity:1,offset:.2,easing:'cubic-bezier(.3,.7,.3,1)'},{transform:'none',clipPath:cSq,opacity:1,offset:.36,easing:'cubic-bezier(.3,.7,.3,1)'},
-    {transform:'none',clipPath:cJk,offset:.49},{transform:'none',clipPath:cAll,offset:.495},{transform:'none',clipPath:cAll,offset:1}],o));
-  else a.push(sp.animate([{transform:from,opacity:fo?1:0,offset:0,easing:'cubic-bezier(.2,.9,.3,1)'},{transform:lift,opacity:1,offset:.06,easing:'cubic-bezier(.4,0,.5,1)'},{transform:mid,opacity:1,offset:.22,easing:'cubic-bezier(.3,.7,.3,1)'},{transform:'none',opacity:1,offset:W},{transform:'none',opacity:1,offset:1}],o));
+  const FW=phone?.36:W;    /* when the cover has landed */
+  const px=(x,y)=>`${x.toFixed(1)}px ${y.toFixed(1)}px`,lift=fo?14:0;
+  a.push(sp.animate([{opacity:fo?1:0,offset:0},{opacity:1,offset:FW},{opacity:1,offset:1}],o));
+  /* down first, then across: the height eases ahead of the sideways slide, so the cover drops out of the row instead of cutting diagonally over its neighbours */
+  a.push(sp.animate([{translate:`0px ${dy.toFixed(1)}px`,offset:0,easing:'cubic-bezier(.2,.8,.3,1)'},{translate:`0px ${(dy-lift).toFixed(1)}px`,offset:.08,easing:'cubic-bezier(.3,.1,.2,1)'},{translate:'0px 0px',offset:FW},{translate:'0px 0px',offset:1}],o));
+  a.push(sp.animate([{left:`${dx.toFixed(1)}px`,offset:0},{left:`${dx.toFixed(1)}px`,offset:.1,easing:'cubic-bezier(.55,0,.25,1)'},{left:'0px',offset:FW},{left:'0px',offset:1}],o));
+  a.push(sp.animate([{scale:String(k),offset:0,easing:'cubic-bezier(.2,.8,.3,1)'},{scale:String(fo?k*1.07:k),offset:.08,easing:'linear'},{scale:String(fo?k*1.09:k),offset:.18,easing:'cubic-bezier(.5,0,.2,1)'},{scale:'1',offset:FW},{scale:'1',offset:1}],o));
+  if(fo)a.push(sp.animate([{filter:'drop-shadow(0 0 0 rgb(0 0 0 / 0))',offset:0},{filter:'drop-shadow(0 18px 20px rgb(0 0 0 / .5))',offset:.1},{filter:'drop-shadow(0 22px 30px rgb(0 0 0 / .4))',offset:FW*.8},{filter:'drop-shadow(0 0 0 rgb(0 0 0 / 0))',offset:FW},{filter:'drop-shadow(0 0 0 rgb(0 0 0 / 0))',offset:1}],o));
+  /* a phone clips to the cover square first, then opens out to the whole jacket */
+  if(phone)a.push(sp.animate([{clipPath:cSq,offset:0},{clipPath:cSq,offset:.36},{clipPath:cJk,offset:.49},{clipPath:cAll,offset:.495},{clipPath:cAll,offset:1}],o));
   const sh=(sel,kf)=>{const e=el.querySelector(sel);if(e)a.push(e.animate(kf,o))};
   let lid=null;
   if(phone){   /* a phone: the cover is a lid over the album side that lifts up toward you and away; the ratings rise in below */
