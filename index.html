@@ -2454,6 +2454,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-g', note:'SHARPER ARTIST PHOTOS: the wide artist header used the mid-size Spotify photo, which looked soft stretched across the window. It now uses the biggest photo Spotify has. Artists added from now on save it right away; artists already in Playback get it the first time you open their page (one Spotify call each, not all at once, so the shared Spotify quota is safe).'},
   {v:'2026.11.19-f', note:'ARTIST PAGE, REBUILT LIKE THE APPLE MUSIC MOCKUP: an artist with a photo now gets a full-width header that runs edge to edge and up under the top bar. The photo fills the right side (the top on a phone) and dissolves into the artist\u2019s rating colors. On the left: All artists, a big plain title, one summary line (heard, rated, average), a white Play pill (opens Spotify) and two round buttons, one for only-songs-still-to-hear and one (i) that opens the stats and import source. Along the bottom is a Releases row: your progress record (still spins, still catches the record flying in) then every release as a sleeve with its record peeking out; tap one to jump to it. On a PC the artist list steps aside for this page, and All artists opens it over the whole window. Artists without a photo keep the old header; Settings > Artist page turns the photo header off.'},
   {v:'2026.11.19-e', note:'ARTIST PHOTO HEADER, REDONE TO MATCH THE MOCKUPS: the first version faded the photo to almost nothing in a thin strip, left an empty purple middle, put a glow on the name and made the button gray. Now the photo shows at full strength and only dissolves at its edge into the artist\u2019s colors. On a phone it fills the top with the name, a white Play on Spotify button, the record and the stats below. On a PC everything sits in one column on the left (big name, Play, a smaller spinning record beside the stats, filters) and the photo fills the right side, so the record no longer covers anyone\u2019s face. The filter switch is see-through white to sit on the colors. Settings > Artist page still turns it off.'},
   {v:'2026.11.19-d', note:'ARTIST PHOTO HEADER: an artist\u2019s page now opens with their photo fading down into the colors from their ratings, like the Apple Music artist page. Under the name is a Play on Spotify button that opens the artist in Spotify (in the Spotify app on a phone). On a PC the photo sits on the right and fades left and down. The record and tonearm stay under it. An artist with no photo keeps the plain color header. Settings has an Artist page card to turn the photo header off if you do not like it (saved on this device).'},
@@ -2715,6 +2716,7 @@ function mergeSameArtists(){
       for(const g of o.groups)foldGroup(keep,g);
       if(!keep.spid&&o.spid)keep.spid=o.spid;
       if(!keep.simg&&o.simg)keep.simg=o.simg;
+      if(!keep.simgHi&&o.simgHi)keep.simgHi=o.simgHi;
       akaSet(keep,{name:o.name,aka:o.aka});
       S.music=S.music.filter(x=>x!==o);
     }
@@ -4920,6 +4922,10 @@ function spImportMessage(e){
   if(e.code==='limited'||e.code==='quota')return spMessage(e)+' Albums already read are saved on this device, so the next try picks up where this one stopped. Nothing in your log was changed.';
   return 'Spotify import stopped: '+spMessage(e)+' Nothing in your log was changed.';
 }
+function spImgHi(imgs){   /* the biggest photo Spotify has, for the wide artist header */
+  const im=(Array.isArray(imgs)?imgs:[]).filter(x=>x&&/^https:\/\/i\.scdn\.co\//.test(x.url||'')).sort((a,b)=>(b.width||0)-(a.width||0));
+  return (im[0]||{}).url||'';
+}
 function spPickImg(imgs){
   const im=(Array.isArray(imgs)?imgs:[]).filter(x=>x&&/^https:\/\/i\.scdn\.co\//.test(x.url||'')).sort((a,b)=>(a.width||0)-(b.width||0));
   return (im.find(x=>(x.width||0)>=100)||im[im.length-1]||{}).url||'';
@@ -4966,6 +4972,7 @@ async function spImgBackfill(){
         u=hit?spImg(hit.images):'';if(hit)a.spid=hit.id}
       a.simgTry=Date.now();a.simgV=2;tried++;
       if(hit&&hit.name){a.snameAt=Date.now();if(spShowName(a,hit.name))renamed++}
+      if(hit&&hit.images){const hi=spImgHi(hit.images);if(hi)a.simgHi=hi}
       if(u&&!a.simg){a.simg=u;got++;imgNote('Artist photos: '+a.name+' \u2713 ('+tried+' of '+todo.length+')','',true)}else if(!u&&!a.simg){miss.push(a.name);imgNote('Artist photos: no photo found for '+a.name+' ('+tried+' of '+todo.length+')','',true)}
       save();
     }
@@ -6078,6 +6085,7 @@ function render(){
   if(UI.lit&&!UI.rLand&&!(UI.lit.id&&UI.lit.id===UI.rOpen))slLitNow();   /* no number is flying in and its slider is closed, so the groove lights with this draw */
   slFxResume();
   phPull();
+  phHiLoad();
   tdPaint();
   const nl=document.getElementById('llist');
   if(nl){if(ll&&llTab===UI.tab)nl.scrollTop=llTop;
@@ -7777,6 +7785,21 @@ function heroX(a,all,done,rated,p,phUrl){
     </div></div>
   </div>`}
 /* the photo header reaches up under the top bar: pull it up by however far the page puts it below the top */
+/* an artist added before this had only the mid-size photo saved: fetch the biggest once when their page opens (one Spotify call, never in bulk) */
+async function phHiLoad(){
+  const h=document.querySelector('.head.hero.hx');if(!h)return;
+  const a=(S.music||[]).find(x=>x.id===h.dataset.aid);
+  if(!a||!a.spid||a.simgHi||(a.simgHiTry&&a.simgHiTry>Date.now()-12096e5)||!READY||!spViaWorker()||SPX.imgRun||MBX.busy)return;
+  let cool=0;try{cool=+localStorage.getItem('pb_imgcool')||0}catch(e){}
+  if(cool>Date.now())return;
+  a.simgHiTry=Date.now();
+  try{
+    const hit=await spApi('artists/'+a.spid+'?locale=en'),hi=hit&&spImgHi(hit.images);
+    if(hi){a.simgHi=hi;save()}
+    const im=document.querySelector('.head.hero.hx[data-aid="'+a.id+'"] .hphoto img');
+    if(hi&&im&&im.getAttribute('src')!==hi){const t=new Image();t.onload=()=>{im.src=hi};t.src=hi}
+  }catch(e){if(e&&(e.code==='quota'||e.code==='limited')){try{localStorage.setItem('pb_imgcool',String(Date.now()+Math.min(Math.max((e.wait||0)*1000,216e5),1728e5)))}catch(_){}}}
+}
 function phPull(){const h=document.querySelector('.head.hero.hx'),app=document.getElementById('app');if(!h||!app)return;
   h.style.marginTop='';h.style.setProperty('--pull','0px');
   const d=Math.max(0,Math.round(h.getBoundingClientRect().top-app.getBoundingClientRect().top));
@@ -8761,7 +8784,7 @@ function artistView(a){heroLook(a.id);
       <div class="sl-foot">${shareBtn(g,a)}<details class="gmore"${UI.armed===g.id?' open':''}><summary aria-label="More for this album">\u22ef</summary>${moreBtns(g,dx)}${delGBtn(g,a)}</details></div>
     </div>`})).join('');
   UI.dxAnim=null;                                    /* the switch animation plays once, on the draw it was asked for */
-  const phOk=phOn(),phUrl=phOk?(a.simg||a.img||''):'';
+  const phOk=phOn(),phUrl=phOk?(a.simgHi||a.simg||a.img||''):'';
   const head=phUrl?heroX(a,all,done,rated,p,phUrl):`<div class="head hero${hClear()?' hclear':''}" data-aid="${esc(a.id)}" style="${esc(heroStyle(a))}"><i class="hg" aria-hidden="true"></i><div class="hmesh" aria-hidden="true"><i class="hbase"></i><i class="fl fl0"><i class="fb b0"></i><i class="fb b3"></i></i><i class="fl fl1"><i class="fb b1"></i><i class="fb b4"></i></i><i class="fl fl2"><i class="fb b2"></i><i class="fb b5"></i></i></div>
     <div class="hrec"><div class="hring" style="--p:${p}"><div class="hdisc"><div class="hspin"></div><div class="hlab"><b${p>=100?' class="s"':''}>${p}%</b><span>heard</span></div></div></div>${HARM}</div>
     <div class="hbody">
