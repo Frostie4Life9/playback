@@ -1480,6 +1480,103 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
   .hxprog .hrec{transform:scale(.527);margin:0 -104px -104px 0}
 }
 
+/* ONE COLOR FIELD: the artist's colors run the whole page, not just the header. The fluid sits in a layer behind
+   everything and stays pinned to the screen as you scroll, so it never stretches and never stops at a hard edge. */
+.head.hero.hx{display:block;padding:0;min-height:0;overflow:clip;color:var(--ink)}
+.hxbg{position:absolute;inset:0;z-index:-2;overflow:clip;pointer-events:none}
+.hx .hxbg>.hmesh{position:sticky;inset:auto;top:0;width:100%;height:100vh;height:100lvh;border-radius:0;z-index:0}
+.hx .hxbg>.hmesh.hghost{margin-bottom:-100vh;margin-bottom:-100lvh;z-index:1}
+.hx .hxtop>.hscrim{-webkit-mask-image:linear-gradient(to bottom,#000 55%,transparent);mask-image:linear-gradient(to bottom,#000 55%,transparent)}
+.hxtop{position:relative;display:flex;flex-direction:column;min-height:calc(var(--pull) + clamp(520px,72vh,800px));padding:calc(var(--pull) + 48px) var(--hxpad) 28px;color:#fff}
+.hx.nophoto .hxtop{min-height:calc(var(--pull) + clamp(440px,58vh,640px))}
+.hxrh{display:flex;align-items:center;justify-content:space-between;gap:12px 18px;flex-wrap:wrap;margin:0 0 16px}
+.hxrh .hxlbl{margin:0}
+.hx .relbar{flex:0 1 auto;justify-content:flex-end}
+.hx .rseg{background:rgb(0 0 0 / .24);border-color:rgb(255 255 255 / .14);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.hx .rseg button{color:rgb(255 255 255 / .84)}
+.hx .rseg button[aria-pressed="true"]{background:#fff;color:#111}
+.hx .rsort select{background-color:rgb(0 0 0 / .24);color:#fff;border:1px solid rgb(255 255 255 / .14);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.hx .rsort option{color:#111;background:#fff}
+.hxnone{align-self:center;margin:0;padding:40px 0;font-size:15px;color:rgb(255 255 255 / .8)}
+.hxhint{margin:16px 0 0;font-size:13px;letter-spacing:.01em;color:rgb(255 255 255 / .72);animation:hxIn .4s ease .3s backwards}
+/* the open record in the row: lifted, ringed, its record pulled further out */
+.hxsl .hxc{transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s}
+.hxsl.on .hxc{transform:translateY(-6px);box-shadow:0 0 0 2px #fff,0 18px 34px rgb(0 0 0 / .45)}
+.hxsl.on .hxv{left:84px}
+.hx .hxrow{padding-top:12px;margin-top:-8px}
+.hxmore{position:relative;display:flex;flex-direction:column;gap:22px;padding:8px var(--hxpad) calc(64px + var(--tail,0px));color:var(--ink)}
+.hx .hxmore .simbox{margin:0;background:color-mix(in srgb,var(--surface) 86%,transparent);border-color:rgb(255 255 255 / .12);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.hxmore>details.more{border:1px solid rgb(255 255 255 / .12);border-radius:16px;padding:14px 16px;background:color-mix(in srgb,var(--surface) 86%,transparent);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.hxdel{display:flex}
+@media (prefers-reduced-motion:no-preference){.sheet.swin .hxmore{animation:swUp .62s cubic-bezier(.2,.8,.2,1) .3s backwards}}
+
+/* THE GATEFOLD: an opened album. Closed, the front cover sits over the right half; it swings open on the spine
+   (the middle) to show the album on the inside left and your ratings on the inside right. On a phone the two
+   halves stack and the cover flips up from the bottom edge instead. */
+.group.sleeve.gf{--gfz:rotateY(-180deg);--cv:clamp(150px,15vw,280px);background:none;border:0;border-radius:0;padding:0;gap:0;overflow:visible;scroll-margin-top:96px}
+.gf-sp{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);perspective:2600px;border-radius:22px;box-shadow:0 30px 70px rgb(0 0 0 / .38)}
+.gf-l{position:relative;z-index:2;transform-origin:100% 50%;transform-style:preserve-3d}
+.gf-lf{position:relative;height:100%;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;padding:0 0 26px;border-radius:22px 0 0 22px;color:var(--hi);
+  background:linear-gradient(160deg,color-mix(in srgb,var(--acb) 94%,#fff),color-mix(in srgb,var(--acb) 76%,#000));-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.gf-lf::after{content:"";position:absolute;top:0;bottom:0;right:0;width:34px;pointer-events:none;background:linear-gradient(to left,rgb(0 0 0 / .2),transparent)}
+.gf-lb{position:absolute;inset:0;overflow:hidden;border-radius:22px;transform:rotateY(180deg);-webkit-backface-visibility:hidden;backface-visibility:hidden;
+  background:linear-gradient(180deg,var(--acb),color-mix(in srgb,var(--acb) 70%,#000))}
+.gf-lb img,.gf-lb span{position:absolute;top:0;left:0;width:100%;aspect-ratio:1;height:auto}
+.gf-lb img{z-index:1;object-fit:cover}
+.gf-lb span{display:grid;place-items:center;font:800 120px/1 var(--body);color:rgb(255 255 255 / .4)}
+.gf .sl-hero{background:none;flex-direction:column;align-items:flex-start;gap:24px;padding:32px 32px 4px}
+.gf .sl-pack{flex:none;height:calc(var(--cv) + 10px);width:calc(var(--cv) * 1.75);max-width:100%}
+.gf .sl-cover,.gf .sl-disc{width:var(--cv);height:var(--cv)}
+.gf .sl-disc{left:calc(var(--cv) * .55);top:5px}
+.group.sleeve.gf.in .sl-disc{transform:translate3d(calc(var(--cv) * .18),0,0)}
+.gf .sl-meta{flex:none;padding:0;gap:6px}
+@media (min-width:761px){.gf .sl-hero{position:sticky;top:76px}}
+.gf .sl-meta h3{font-size:clamp(28px,2.7vw,48px)}
+.gf .sl-ic.sl-lbtn{top:24px;right:28px}
+.gf .dxseg{margin:0 32px}
+.gf-r{position:relative;min-width:0;display:flex;flex-direction:column;gap:14px;padding:24px 0 14px;border-radius:0 22px 22px 0;color:var(--ink);
+  background:linear-gradient(180deg,color-mix(in srgb,var(--acsw) 20%,var(--bg)),color-mix(in srgb,var(--acsw) 7%,var(--bg)) 360px)}
+.gf-r::before{content:"";position:absolute;top:0;bottom:0;left:0;width:30px;pointer-events:none;background:linear-gradient(to right,rgb(0 0 0 / .26),transparent)}
+.gf-rh{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 20px 0 26px}
+.gf-lbl{font:700 12px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.gf-x{width:44px;height:44px;flex:none;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:grid;place-items:center;padding:0;cursor:pointer;transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.gf-x svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.gf-x:hover{transform:rotate(90deg)}
+.gf .gf-r .sl-acts{padding:0 22px 0 26px}
+.gf .gf-r .tlist{padding:0 18px 0 26px}
+.gf .gf-r .sl-foot{padding:6px 22px 0 26px}
+.gf-r>.note{margin:0 22px 0 26px}
+@keyframes gfFlap{from{transform:var(--gfz)}to{transform:none}}
+@keyframes gfRise{from{opacity:0;transform:translateY(34px) scale(.96)}}
+@keyframes gfFade{from{opacity:0;transform:translateY(8px)}}
+@media (prefers-reduced-motion:no-preference){
+  .gf.gfopen .gf-sp{animation:gfRise .5s cubic-bezier(.2,.8,.2,1) both}
+  .gf.gfopen .gf-l{animation:gfFlap 1.1s cubic-bezier(.62,.02,.22,1) .3s both}
+  .gf.gfopen .gf-r>*{animation:gfFade .5s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(.8s + var(--gi,0) * 70ms)}
+  .gf.gfopen .gf-r>:nth-child(2){--gi:1}.gf.gfopen .gf-r>:nth-child(3){--gi:2}.gf.gfopen .gf-r>:nth-child(4){--gi:3}.gf.gfopen .gf-r>:nth-child(n+5){--gi:4}
+  .gf.gfopen .gf-lf>*{animation:gfFade .45s ease 1.15s backwards}
+}
+@media (max-width:760px){
+  .head.hero.hx{padding:0;min-height:0}
+  .hxtop{min-height:0;align-items:center;text-align:center;padding:calc(var(--pull) + var(--phh) - 120px) var(--hxpad) 22px}
+  .hx.nophoto{--phh:210px}
+  .hxsl.on .hxv{left:64px}
+  .hxrh{justify-content:flex-start}
+  .group.sleeve.gf{--gfz:rotateX(180deg);--cv:150px}
+  .gf-sp{grid-template-columns:minmax(0,1fr);border-radius:20px}
+  .gf-l{transform-origin:50% 100%}
+  .gf-lf{border-radius:20px 20px 0 0;padding-bottom:20px}
+  .gf-lf::after{top:auto;left:0;width:auto;height:28px;background:linear-gradient(to top,rgb(0 0 0 / .18),transparent)}
+  .gf-lb{transform:rotateX(180deg);border-radius:20px}
+  .gf-r{border-radius:0 0 20px 20px;padding-top:18px}
+  .gf-r::before{right:0;bottom:auto;width:auto;height:26px;background:linear-gradient(to bottom,rgb(0 0 0 / .2),transparent)}
+  .gf .sl-hero{padding:22px 20px 4px;gap:18px}
+  .gf .sl-ic.sl-lbtn{top:16px;right:16px}
+  .gf .dxseg{margin:0 20px}
+  .gf-rh{padding:0 14px 0 18px}
+  .gf .gf-r .sl-acts{padding:0 14px 0 18px}.gf .gf-r .tlist{padding:0 12px 0 18px}.gf .gf-r .sl-foot{padding:6px 14px 0 18px}.gf-r>.note{margin:0 14px 0 18px}
+}
+
 /* listen list sheet */
 .llover{position:fixed;inset:0;z-index:90;display:flex;align-items:flex-end;justify-content:center}
 .llbk{position:absolute;inset:0;border:0;padding:0;background:rgb(0 0 0 / .55)}
@@ -2465,6 +2562,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-l', note:'ONE COLOR, AND RECORDS THAT OPEN LIKE A GATEFOLD: the artist\u2019s colors now run down the whole artist page instead of stopping in a hard line above Similar artists; the flowing colors stay pinned behind everything as you scroll. The long list of album cards under the header is gone. The Releases row is now the discography (its All / Albums / EPs / Singles filter and sort sit beside it): tap a record and it opens below like a gatefold sleeve, the cover swinging open on its spine, with the album on the inside left (cover, record, title, listens, edition) and your ratings on the inside right (album rating, friends, every song, Share and more). Tap the record again or the \u00d7 to fold it shut. Jumping to an album from History, Stats or the Listen list opens it the same way. On a phone the two halves stack and the cover flips up. Artists without a photo get the same page.'},
   {v:'2026.11.19-k', note:'APPLE PHOTO FITS THE HEADER: Apple\u2019s artist photo is a tight square crop, and filling the wide header with it cut off the lower half of the artist (Spotify\u2019s wider framing showed him to the waist). On a wide screen the Apple photo is now shown whole, as tall as the header and pinned to the right, with its left edge fading into the colors; Spotify\u2019s and the phone layout are unchanged.'},
   {v:'2026.11.19-j', note:'APPLE PHOTO SWITCH NOW SHOWS UP: the Photo switch never appeared because Playback checked a saved \u201cWorker version\u201d number before asking for the Apple photo, and that number only refreshes during a full sync, so it still said the Worker was old right after the update. The check is gone: Playback just asks, and if the Worker really is old it tries again in an hour.'},
   {v:'2026.11.19-i', note:'APPLE MUSIC ARTIST PHOTOS, WITH A SWITCH: an artist\u2019s header can now use their Apple Music photo, which Apple serves much larger and sharper than Spotify\u2019s. A small Photo switch under the Play button flips between Spotify and Apple Music (your choice is remembered on this device); Spotify stays the default and nothing is replaced. The first time you open an artist, Playback asks Apple for the photo once (through your sync Worker, no Apple account or key) and remembers it, so there is no extra load after that. If Apple has no photo for an artist the switch simply does not appear. Owner only for now. The sync Worker moves to version 16 and redeploys on its own from GitHub.'},
@@ -6086,14 +6184,14 @@ function render(){
   const swK=!UI.view?UI.tab+':'+(UI.sel[UI.tab]||''):null,swGo=!!(swK&&UI.swKey&&UI.swKey!==swK);if(swK)UI.swKey=swK;
   /* a filter or sort change: tiles and release cards that stay glide to their new spots, new ones rise in one after another */
   const flipOn=UI.flip&&!noMotion()&&window.SX&&typeof SX.flip==='function';UI.flip=false;
-  if(flipOn)SX.flip(document.body,'#llist .tile,.sheet .group.sleeve',()=>keepImgs(renderMain),{dur:420,key:el=>el.dataset.acol?'g'+el.dataset.acol:el.dataset.g?'a'+el.dataset.g:el.dataset.id?'t'+el.dataset.id:null});
+  if(flipOn)SX.flip(document.body,'#llist .tile,.sheet .group.sleeve,.hxrow .hxsl',()=>keepImgs(renderMain),{dur:420,key:el=>el.dataset.acol?'g'+el.dataset.acol:el.dataset.g?'a'+el.dataset.g:el.dataset.id?'t'+el.dataset.id:null});
   else keepImgs(()=>{const top=topHTML();if(!paneSwap(top))renderMain(top)});   /* the top bar is built once per draw: building it clears the one-shot animation flags of the sheets in it */
   slObserve();slPulseNow();UI.rAnim=null;accAfter();pfFit();
   if(vlT!=null&&vPrev===vk){const el=document.querySelector('.vl-spin'),an=el&&el.getAnimations&&el.getAnimations()[0];if(an)an.currentTime=vlT}
   if(vPrev&&vPrev!==vk&&!noMotion())pageIn(Math.sign((VORD[vk]??0)-(VORD[vPrev]??0)));
   if(swGo&&!UI.toAlb&&!UI.toSheet)window.scrollTo({top:0,behavior:noMotion()?'auto':'smooth'});   /* a different artist or title: start at the top, not wherever the last one was scrolled */
   if(swGo&&ohg&&!noMotion()){const nh=document.querySelector('.hero[data-aid]');
-    if(nh&&nh.dataset.aid!==ohg.dataset.aid){nh.insertBefore(ohg,nh.firstChild);ohg.addEventListener('animationend',e=>{if(e.target===ohg)ohg.remove()})}}
+    if(nh&&nh.dataset.aid!==ohg.dataset.aid){const hb=nh.querySelector('.hxbg')||nh;hb.insertBefore(ohg,hb.firstChild);ohg.addEventListener('animationend',e=>{if(e.target===ohg)ohg.remove()})}}
   if(swGo&&!noMotion()){const sh=document.querySelector('.sheet');   /* a different artist or title is open: its text and cards ease in, one after another */
     if(sh){[...sh.children].forEach((c,i)=>c.style.setProperty('--sw',Math.min(i,6)*70+'ms'));sh.classList.add('swin');clearTimeout(UI.swT);UI.swT=setTimeout(()=>sh.classList.remove('swin'),1500)}}
   clrPlay();
@@ -6109,7 +6207,7 @@ function render(){
   if(UI.toAdd){UI.toAdd=false;const ad=document.getElementById('addart');if(ad)ad.scrollIntoView({behavior:'smooth',block:'start'})}
   if(UI.toAlb){const gid=UI.toAlb;UI.toAlb=null;
     const al=document.querySelector('.group.sleeve[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(gid):gid)+'"]');
-    if(al){al.scrollIntoView({behavior:'smooth',block:'start'});slRipple(al,500)}}
+    if(al){gfShow(al);slRipple(al,1300)}}
   if(UI.toSheet){UI.toSheet=false;const sh=document.querySelector('.sheet');if(sh)sh.scrollIntoView({behavior:'smooth',block:'start'})}
 }
 let LIBIN=false;   /* set by renderMain for the one draw that opens the artist menu */
@@ -7771,19 +7869,21 @@ function tdPaint(){
 function phOn(){try{return localStorage.getItem('pb_photohero')!=='0'}catch(e){return true}}
 function spOpenUrl(a){return a.spid?'https://open.spotify.com/artist/'+encodeURIComponent(a.spid):'https://open.spotify.com/search/'+encodeURIComponent(a.name||'')}
 /* the edge-to-edge photo header (see the ARTIST PHOTO HERO styles) */
-function heroX(a,all,done,rated,p,phUrl){
+function heroX(a,all,done,rated,p,phUrl,more){
   const rs=all.map(i=>rating(i.id)).filter(Boolean),avg=rs.length?(rs.reduce((x,y)=>x+y,0)/rs.length/2).toFixed(1):'';
   const sub=[done+' of '+all.length+' heard',rated?rated+' rated':'',avg?'avg '+avg:''].filter(Boolean).join(' · ');
-  const rel=relList(a).map(g=>{const sArt=g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-250':''),
+  const og=gfOpenId(a),rl=relList(a).filter(g=>UI.filter!=='open'||String(g.id)===og||g.items.some(i=>!isDone(i.id)));
+  const rel=rl.map(g=>{const sArt=g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-250':''),
       col=acolFor(g.id,sArt,g),kind=/single/i.test(g.kind||'')?'Single':/^ep$/i.test(g.kind||'')?'EP':/^studio album$/i.test(g.kind||'')?'Album':(g.kind||'');
-    return `<button class="hxsl" data-act="hjump" data-g="${esc(g.id)}" style="--c:${esc(col)}" aria-label="Go to ${esc(g.title)}"><span class="hxv" aria-hidden="true"></span><span class="hxc" aria-hidden="true">${sArt?`<img src="${esc(sArt)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span><span class="hxt">${esc(g.title)}</span><span class="hxy">${esc([kind,g.year].filter(Boolean).join(' · '))}</span></button>`}).join('');
+    const on=String(g.id)===og;return `<button class="hxsl${on?' on':''}" data-act="hjump" data-g="${esc(g.id)}" style="--c:${esc(col)}" aria-pressed="${on}" aria-label="${on?'Close':'Open'} ${esc(g.title)}"><span class="hxv" aria-hidden="true"></span><span class="hxc" aria-hidden="true">${sArt?`<img src="${esc(sArt)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span><span class="hxt">${esc(g.title)}</span><span class="hxy">${esc([kind,g.year].filter(Boolean).join(' · '))}</span></button>`}).join('');
   const ico={back:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
     play:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.8v14.4L19 12z"/></svg>',
     ear:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="6.5" rx="1.6"/><rect x="16.5" y="14" width="4.5" height="6.5" rx="1.6"/></svg>',
     info:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.2"/></svg>'};
   const open=UI.filter==='open';
-  return `<div class="head hero hx${hClear()?' hclear':''}" data-aid="${esc(a.id)}" style="${esc(heroStyle(a))}"><i class="hg" aria-hidden="true"></i><div class="hmesh" aria-hidden="true"><i class="hbase"></i><i class="fl fl0"><i class="fb b0"></i><i class="fb b3"></i></i><i class="fl fl1"><i class="fb b1"></i><i class="fb b4"></i></i><i class="fl fl2"><i class="fb b2"></i><i class="fb b5"></i></i></div>
-    <div class="hphoto${a.aimg&&phUrl===amPhoto(a)?' am':''}" aria-hidden="true"><img src="${esc(phUrl)}" alt="" decoding="async" onerror="this.parentNode.remove()"></div><i class="hscrim" aria-hidden="true"></i><i class="hfoot" aria-hidden="true"></i>
+  return `<div class="head hero hx${hClear()?' hclear':''}${phUrl?'':' nophoto'}" data-aid="${esc(a.id)}" style="${esc(heroStyle(a))}"><div class="hxbg" aria-hidden="true"><div class="hmesh"><i class="hbase"></i><i class="fl fl0"><i class="fb b0"></i><i class="fb b3"></i></i><i class="fl fl1"><i class="fb b1"></i><i class="fb b4"></i></i><i class="fl fl2"><i class="fb b2"></i><i class="fb b5"></i></i></div></div>
+    <div class="hxtop">
+    ${phUrl?`<div class="hphoto${a.aimg&&phUrl===amPhoto(a)?' am':''}" aria-hidden="true"><img src="${esc(phUrl)}" alt="" decoding="async" onerror="this.parentNode.remove()"></div>`:''}<i class="hscrim" aria-hidden="true"></i>
     <div class="hxin">
       <button class="hxback" data-act="hback">${ico.back}All artists</button>
       <div class="meta"><h2>${esc(a.name)}</h2>${a.aka&&a.aka.length?`<span class="note">also ${esc(a.aka.slice(0,3).join(' · '))}</span>`:''}</div>
@@ -7796,10 +7896,12 @@ function heroX(a,all,done,rated,p,phUrl){
       ${hxSrcHtml(a)}
       ${UI.hinfo?`<div class="hxpanel"><div class="hstats"><div><b>${done}<small> /${all.length}</small></b><span>tracks heard</span></div><div><b>${rated}</b><span>rated</span></div><div><b>${a.groups.length}</b><span>releases</span></div></div>${mbArtistBar(a)}</div>`:''}
     </div>
-    <div class="hxrel"><h3 class="hxlbl">Releases</h3><div class="hxrow">
+    <div class="hxrel"><div class="hxrh"><h3 class="hxlbl">Releases</h3>${relBar(a)}</div><div class="hxrow">
       <div class="hxprog"><div class="hrec"><div class="hring" style="--p:${p}"><div class="hdisc"><div class="hspin"></div><div class="hlab"><b${p>=100?' class="s"':''}>${p}%</b><span>heard</span></div></div></div>${HARM}</div><span class="hxt">Your progress</span><span class="hxy">${done} of ${all.length} songs</span></div>
-      ${rel}
-    </div></div>
+      ${rel||`<p class="hxnone">${UI.filter==='open'?'Nothing left to hear here.':'No releases of that kind here.'}</p>`}
+    </div>${og?'':`<p class="hxhint">Tap a record to open it</p>`}</div>
+    </div>
+    <div class="hxmore">${more||''}</div>
   </div>`}
 /* the photo header reaches up under the top bar: pull it up by however far the page puts it below the top */
 var PHAM={busy:false};
@@ -7870,7 +7972,11 @@ async function phHiLoad(){
 function phPull(){const h=document.querySelector('.head.hero.hx'),app=document.getElementById('app');if(!h||!app)return;
   h.style.marginTop='';h.style.setProperty('--pull','0px');
   const d=Math.max(0,Math.round(h.getBoundingClientRect().top-app.getBoundingClientRect().top));
-  h.style.marginTop=(-d)+'px';h.style.setProperty('--pull',d+'px')}
+  h.style.marginTop=(-d)+'px';h.style.setProperty('--pull',d+'px');
+  /* whatever page padding sits under the artist page (room for the phone dock) gets the artist's colors too */
+  h.style.marginBottom='';h.style.setProperty('--tail','0px');
+  const below=Math.max(0,Math.round(document.documentElement.scrollHeight-(h.getBoundingClientRect().bottom+scrollY)));
+  if(below&&below<400){h.style.marginBottom=(-below)+'px';h.style.setProperty('--tail',below+'px')}}
 window.addEventListener('resize',()=>{clearTimeout(window.__phT);window.__phT=setTimeout(phPull,60)});
 function heroStyle(a){const v=heroVars(a);return Object.keys(v).filter(k=>v[k]).map(k=>k+':'+v[k]).join(';')}
 function heroPaint(){const el=document.querySelector('.hero[data-aid]');if(!el)return;
@@ -8812,14 +8918,16 @@ function relBar(a){if(a.groups.length<2)return '';
   const n={all:a.groups.length,alb:0,ep:0,sin:0,oth:0};a.groups.forEach(g=>n[relKindOf(g)]++);const k=relKind(a),so=relSort();
   return `<div class="relbar"><div class="rseg" role="group" aria-label="Kind of release">${Object.entries(REL_KINDS).filter(([v])=>v==='all'||n[v]||v===k).map(([v,t])=>`<button data-act="relkind" data-v="${v}" aria-pressed="${k===v}">${t}<span class="c">${n[v]}</span></button>`).join('')}</div>
     <label class="lsort rsort"><select id="rsort" aria-label="Sort releases">${Object.entries(REL_SORTS).map(([v,t])=>`<option value="${v}"${so===v?' selected':''}>${t}</option>`).join('')}</select></label></div>`}
-function artistView(a){heroLook(a.id);
-  const all=artistItems(a),done=all.filter(i=>isDone(i.id)).length,rated=all.filter(i=>rating(i.id)).length,p=pct(all.map(i=>i.id));
-  const groups=relList(a).map(g=>lsWith(g,()=>{
+/* THE GATEFOLD: the Releases row is the discography. Tapping a record opens that one album like a gatefold sleeve:
+   the front cover swings open on its spine, album info on the inside left, your ratings on the inside right.
+   One album is open at a time; tapping it again (or the close button) folds it shut. */
+function gfOpenId(a){return UI.alb&&UI.alb.aid===a.id&&a.groups.some(g=>String(g.id)===UI.alb.g)?UI.alb.g:''}
+function gfHtml(a,g){return lsWith(g,()=>{
+
     const std=stdItems(g),dxs=dxItems(g),dx=dxOn(g),shown=dx?g.items:std;
     const gd=shown.filter(i=>isDone(i.id)).length,full=gd===shown.length&&shown.length>0;
     const sd=std.filter(i=>isDone(i.id)).length,dd=g.items.filter(i=>isDone(i.id)).length;
     const rows=shown.map((i,k)=>({i,k})).filter(({i})=>UI.filter==='all'||!isDone(i.id));
-    if(UI.filter==='open'&&!rows.length&&(dx||!dxs.some(i=>!isDone(i.id))))return '';
     const sArt=g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-250':''),art=dx?(g.dxImg||sArt):sArt;
     const col=acolFor(g.id,sArt,g),colD=g.dxImg&&g.dxImg!==sArt?acolFor(g.id+'~dx',g.dxImg,{title:dxName(g),id:g.id}):col;
     /* one groove per song; a long release folds songs into at most 22 grooves */
@@ -8834,36 +8942,42 @@ function artistView(a){heroLook(a.id);
         <span class="ttl">${esc(s.t)}${s.f.length?`<span class="feat">feat. ${esc(s.f.join(', '))}</span>`:''}</span>${lsSongDelta(g,i.id)}${plBadge(i.id)}
         <button class="check" data-act="tog" data-id="${i.id}" aria-pressed="${dn}" aria-label="${r?'Rated '+fmt(r)+'. ':''}${dn?'Heard':'Not heard'}: ${esc(i.title)}"><svg viewBox="0 0 44 44" aria-hidden="true"><circle class="rg-t" cx="22" cy="22" r="16"/>${r?`<circle class="rg-v" cx="22" cy="22" r="16" stroke-dasharray="${dash}"/>`:''}</svg>${r?`<span class="rg-n">${fmt(r)}</span>`:dn?'<span class="rg-d"></span>':''}</button></div>
         ${UI.rOpen===i.id?rateMeter(i.id,s.t,simSong(a,i,s.t)):''}`}).join('');
-    return `<div class="group sleeve${lsCls(g)} ${dx?'dxon':''} ${UI.dxAnim===g.id?'dxanim':''} ${SLIN.has(String(g.id))?'in':''}" data-acol="${g.id}" style="--acs:${col};--acd:${colD}">
-      <div class="sl-hero">
-        ${albBar(g,a)}
-        <div class="sl-pack">
-          <div class="sl-disc" role="img" aria-label="${gd} of ${shown.length} songs heard">${ringHtml}<span class="sl-lab">${shown.length?gd+'/'+shown.length:'\u2013'}</span></div>
-          <div class="sl-cover">${art?`<img src="${esc(art)}" ${dx&&sArt&&art!==sArt?`data-f="${esc(sArt)}" `:''}alt="" loading="lazy" decoding="async" onerror="if(this.dataset.f){this.src=this.dataset.f;this.removeAttribute('data-f')}else coverErr(this)">`:''}<span class="sl-ph" aria-hidden="true">${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div>
+    const anim=UI.gfAnim===String(g.id);
+    return `<div class="group sleeve gf${lsCls(g)} ${dx?'dxon':''} ${UI.dxAnim===g.id?'dxanim':''} ${SLIN.has(String(g.id))?'in':''}${anim?' gfopen':''}" data-acol="${g.id}" style="--acs:${col};--acd:${colD}">
+      <div class="gf-sp">
+      <div class="gf-l">
+        <div class="gf-lf">
+          <div class="sl-hero">
+            ${albBar(g,a)}
+            <div class="sl-pack">
+              <div class="sl-disc" role="img" aria-label="${gd} of ${shown.length} songs heard">${ringHtml}<span class="sl-lab">${shown.length?gd+'/'+shown.length:'–'}</span></div>
+              <div class="sl-cover">${art?`<img src="${esc(art)}" ${dx&&sArt&&art!==sArt?`data-f="${esc(sArt)}" `:''}alt="" loading="lazy" decoding="async" onerror="if(this.dataset.f){this.src=this.dataset.f;this.removeAttribute('data-f')}else coverErr(this)">`:''}<span class="sl-ph" aria-hidden="true">${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div>
+            </div>
+            <div class="sl-meta"><span class="sl-kind">${esc(g.kind)} · ${esc(g.year)}</span><h3>${esc(dx?dxName(g):g.title)}</h3>${dx?'<span class="dxbadge">Deluxe</span>':''}${g.w&&g.w.length?`<span class="sl-w">with ${esc(g.w.join(' & '))}</span>`:''}<span class="sl-sub">${gd} of ${shown.length} heard</span>${rdLine(g,dx)}${lsPager(g)}${UI.wEdit===g.id?`<form class="sl-wf" data-form="gwith" data-a="${a.id}" data-g="${g.id}"><input name="w" value="${esc((g.w||[]).join(' & '))}" placeholder="Other artist, like Kenny Beats" aria-label="Collab with" autocomplete="off" autocapitalize="words"><button>Save</button></form>`:''}</div>
+          </div>
+          ${dxs.length?`<div class="dxseg" role="group" aria-label="Edition" data-dx="${dx?1:0}"><button type="button" data-act="dxsel" data-g="${g.id}" data-v="0" aria-pressed="${!dx}">Standard<span class="mono">${sd}/${std.length}</span></button><button type="button" class="dx" data-act="dxsel" data-g="${g.id}" data-v="1" aria-pressed="${dx}">Deluxe<span class="mono">${dd}/${g.items.length}</span></button></div>`:''}
         </div>
-        <div class="sl-meta"><span class="sl-kind">${esc(g.kind)} \u00b7 ${esc(g.year)}</span><h3>${esc(dx?dxName(g):g.title)}</h3>${dx?'<span class="dxbadge">Deluxe</span>':''}${g.w&&g.w.length?`<span class="sl-w">with ${esc(g.w.join(' & '))}</span>`:''}<span class="sl-sub">${gd} of ${shown.length} heard</span>${rdLine(g,dx)}${lsPager(g)}${UI.wEdit===g.id?`<form class="sl-wf" data-form="gwith" data-a="${a.id}" data-g="${g.id}"><input name="w" value="${esc((g.w||[]).join(' & '))}" placeholder="Other artist, like Kenny Beats" aria-label="Collab with" autocomplete="off" autocapitalize="words"><button>Save</button></form>`:''}</div>
+        <div class="gf-lb" aria-hidden="true">${sArt?`<img src="${esc(sArt)}" alt="" decoding="async" onerror="this.remove()">`:''}<span>${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div>
       </div>
-      ${dxs.length?`<div class="dxseg" role="group" aria-label="Edition" data-dx="${dx?1:0}"><button type="button" data-act="dxsel" data-g="${g.id}" data-v="0" aria-pressed="${!dx}">Standard<span class="mono">${sd}/${std.length}</span></button><button type="button" class="dx" data-act="dxsel" data-g="${g.id}" data-v="1" aria-pressed="${dx}">Deluxe<span class="mono">${dd}/${g.items.length}</span></button></div>`:''}
-      ${albumBar(g,a,full,shown.length)}
-      ${friendStrip(g,a,dx)}
-      ${g.items.length?'':'<p class="note">No songs listed yet. Tap Find on MusicBrainz above to fill them in; your album rating stays.</p>'}
-      <div class="tlist">${trackRows}</div>
-      <div class="sl-foot">${shareBtn(g,a)}<details class="gmore"${UI.armed===g.id?' open':''}><summary aria-label="More for this album">\u22ef</summary>${moreBtns(g,dx)}${delGBtn(g,a)}</details></div>
-    </div>`})).join('');
-  UI.dxAnim=null;                                    /* the switch animation plays once, on the draw it was asked for */
-  const phOk=phOn(),phUrl=phOk?phPick(a):'';
-  const head=phUrl?heroX(a,all,done,rated,p,phUrl):`<div class="head hero${hClear()?' hclear':''}" data-aid="${esc(a.id)}" style="${esc(heroStyle(a))}"><i class="hg" aria-hidden="true"></i><div class="hmesh" aria-hidden="true"><i class="hbase"></i><i class="fl fl0"><i class="fb b0"></i><i class="fb b3"></i></i><i class="fl fl1"><i class="fb b1"></i><i class="fb b4"></i></i><i class="fl fl2"><i class="fb b2"></i><i class="fb b5"></i></i></div>
-    <div class="hrec"><div class="hring" style="--p:${p}"><div class="hdisc"><div class="hspin"></div><div class="hlab"><b${p>=100?' class="s"':''}>${p}%</b><span>heard</span></div></div></div>${HARM}</div>
-    <div class="hbody">
-      <div class="meta"><h2>${esc(a.name)}</h2>${a.aka&&a.aka.length?`<span class="note">also ${esc(a.aka.slice(0,3).join(' · '))}</span>`:''}</div>
-      <div class="hstats"><div><b>${done}<small> /${all.length}</small></b><span>tracks heard</span></div><div><b>${rated}</b><span>rated</span></div><div><b>${a.groups.length}</b><span>releases</span></div></div>
-      <div class="tools" role="group" aria-label="Show"><button class="chip" data-act="filter" data-v="all" aria-pressed="${UI.filter==='all'}">Everything</button><button class="chip" data-act="filter" data-v="open" aria-pressed="${UI.filter==='open'}">Still to hear</button></div>
-      ${mbArtistBar(a)}
-    </div></div>`;
-  return `${head}
+      <div class="gf-r">
+        <div class="gf-rh"><span class="gf-lbl">${RATEABLE.includes(g.kind)?'Your ratings':'Songs'}</span><button type="button" class="gf-x" data-act="gfclose" aria-label="Close ${esc(g.title)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+        ${albumBar(g,a,full,shown.length)}
+        ${friendStrip(g,a,dx)}
+        ${g.items.length?'':'<p class="note">No songs listed yet. Tap the details button (i) up top to fill them in; your album rating stays.</p>'}
+        ${g.items.length&&!rows.length?'<p class="note gf-none">Every song here is heard. Tap the ear button up top to show them all.</p>':''}
+        <div class="tlist">${trackRows}</div>
+            <div class="sl-foot">${shareBtn(g,a)}<details class="gmore"${UI.armed===g.id?' open':''}><summary aria-label="More for this album">⋯</summary>${moreBtns(g,dx)}${delGBtn(g,a)}</details></div>
+      </div>
+      </div>
+    </div>`})}
+function artistView(a){heroLook(a.id);
+  if(UI.toAlb&&a.groups.some(g=>String(g.id)===String(UI.toAlb))){UI.alb={aid:a.id,g:String(UI.toAlb)};UI.gfAnim=String(UI.toAlb)}
+  const all=artistItems(a),done=all.filter(i=>isDone(i.id)).length,rated=all.filter(i=>rating(i.id)).length,p=pct(all.map(i=>i.id));
+  const og=gfOpenId(a),og2=og&&a.groups.find(g=>String(g.id)===og),gf=og2?gfHtml(a,og2):'';
+  UI.dxAnim=null;UI.gfAnim=null;                     /* the switch and opening animations play once, on the draw they were asked for */
+  const phUrl=phOn()?phPick(a):'';
+  const more=`${gf}
     ${simBox(a)}
-    ${relBar(a)}
-    ${groups||`<p class="empty">${relKind(a)!=='all'&&UI.filter==='all'?'No releases of that kind here.':'You have heard every track listed here.'}</p>`}
     <details class="more"><summary>Add a release</summary>
       <form data-form="group" data-a="${a.id}">
         <div class="row2"><input id="g-title" name="title" placeholder="Release title" required><input id="g-year" name="year" placeholder="Year" style="max-width:90px"></div>
@@ -8872,8 +8986,29 @@ function artistView(a){heroLook(a.id);
         <textarea id="g-tracks" name="tracks" placeholder="One track per line" required></textarea>
         <button class="btn primary">Add release</button>
       </form></details>
-    <div>${delBtn(a.id,'Delete artist')}</div>`;
+    <div class="hxdel">${delBtn(a.id,'Delete artist')}</div>`;
+  return heroX(a,all,done,rated,p,phUrl,more);
 }
+/* fold the open album shut (the cover swings back over, the sleeve sinks away), then drop it from the page */
+function gfClose(){const el=document.querySelector('.group.sleeve.gf');
+  const done=()=>{UI.alb=null;UI.gfClosing=false;render()};
+  if(!el||noMotion()){done();return}
+  if(UI.gfClosing)return;UI.gfClosing=true;
+  const l=el.querySelector('.gf-l'),sp=el.querySelector('.gf-sp'),z=getComputedStyle(el).getPropertyValue('--gfz').trim()||'rotateY(-180deg)';
+  el.classList.remove('gfopen');
+  try{l.animate([{transform:'none'},{transform:z}],{duration:640,easing:'cubic-bezier(.55,0,.3,1)',fill:'forwards'});
+    el.querySelectorAll('.gf-r>*').forEach(c=>c.animate([{opacity:1},{opacity:0}],{duration:260,fill:'forwards'}));
+    sp.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateY(18px) scale(.97)'}],{duration:280,delay:560,easing:'ease-in',fill:'forwards'}).finished.then(done,done)}
+  catch(e){done()}}
+/* bring a freshly opened album into view: keep the Releases row just under the top bar with the sleeve opening below it */
+function gfShow(el){if(!el)return;
+  const on=document.querySelector('.hxsl.on'),rw=on&&on.parentNode;   /* slide the Releases row so the open record is showing */
+  if(on&&rw){const L=on.offsetLeft-rw.offsetLeft,R=L+on.offsetWidth+60;if(L<rw.scrollLeft||R>rw.scrollLeft+rw.clientWidth)rw.scrollTo({left:Math.max(0,L-24),behavior:noMotion()?'auto':'smooth'})}
+  const r=el.getBoundingClientRect();
+  if(r.top>60&&r.top<innerHeight*.5)return;
+  const row=document.querySelector('.hx .hxrel'),rt=row?row.getBoundingClientRect().top:r.top;
+  const top=Math.max(0,Math.min(scrollY+rt-84,scrollY+r.top-90));
+  window.scrollTo({top,behavior:noMotion()?'auto':'smooth'})}
 
 /* where this artist's list came from, and the button to (re)import it */
 function mbArtistBar(a){
@@ -9023,7 +9158,8 @@ document.addEventListener('click',ev=>{
   else if(act==='llclose'){UI.llOpen=false}
   else if(act==='addart'){UI.libOpen=false;UI.addOpen=true;UI.toAdd=true}
   else if(act==='hinfo'){UI.hinfo=!UI.hinfo}
-  else if(act==='hjump'){UI.toAlb=b.dataset.g}
+  else if(act==='hjump'){if(UI.alb&&UI.alb.g===String(b.dataset.g)&&document.querySelector('.group.sleeve.gf')){gfClose();return}UI.rOpen=null;UI.toAlb=b.dataset.g}
+  else if(act==='gfclose'){gfClose();return}
   else if(act==='hback'){UI.libOpen=true;UI.libAnim=true}
   else if(act==='phtog'){try{localStorage.setItem('pb_photohero',phOn()?'0':'1')}catch(e){}}
   else if(act==='tourgo'){UI.view=null;UI.tab='music';UI.libOpen=false;setTimeout(()=>tourOpen(0),120)}
