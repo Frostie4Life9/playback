@@ -2646,6 +2646,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-o', note:'ANIMATIONS NO LONGER SKIP AHEAD: a sync starting or finishing (which happens a moment after every rating or change), the Spotify check that runs every couple of minutes, and coming back to the app all rebuilt the whole page underneath whatever was animating, so the animation jumped straight to its end. Now the Sync chip at the top updates in place, and the background Spotify check only redraws when it actually found something new. Animations play through to the end.'},
   {v:'2026.11.19-n', note:'A REAL OPEN GATEFOLD: an opened album now looks like an actual open record jacket instead of a light box next to a dark one. On a wide screen it is two square panels of the same printed card, in the album\u2019s color with its cover art printed faintly across both, a paper grain and a creased spine, with a record sleeved in each side and peeking out of the outer edges like a 2LP: the left one is your progress record (heard count on its label), the right one shows your rating. Hover a side and its record slides out far enough to read the label. Long track lists scroll inside the right panel. Opening: the cover flies out of the Releases row with its record still in it (the row\u2019s sleeve empties while it is away), lands exactly as it looked in the row, then swings open toward you. No more dark slivers at the corners and no empty box sitting where the left half lands. On narrower screens the halves stack and the cover lifts like a lid. The records in the Releases row now have their lit grooves too (one per song, lit for the ones you have heard); they ripple when you hover them on a PC, and on a phone when they come onto the screen. The number still flies from the rating slider into the song\u2019s record: the label now stays empty until it lands and pops in with it, and the ratings panel no longer jumps back to the top when the page redraws (that was sending the number off-screen).'},
   {v:'2026.11.19-m', note:'GATEFOLD, TAKE TWO: tapping a record now lifts its cover out of the Releases row (its record stays behind on the shelf) and flies it down into place, so it is the album itself that arrives, not a block. The sleeve then swings open toward you on its spine like a real gatefold, the cover darkening as it tilts away from the light and casting a shadow on the inside (it used to swing away from you, which looked backwards). Closing plays it in reverse and the cover flies home into the row. On a phone the cover lands right under the row and lifts open like a lid. RATING RECORDS: the circles beside each song are now tiny records: grooved black vinyl with a sheen, a paper label tinted the album\u2019s color with your score on it, and the rating as a lit groove around the rim (a 10 is a full ring). Heard but unrated shows a blank label with its spindle hole; songs you have not heard are a faint ghost record. Hover one and it spins.'},
   {v:'2026.11.19-l', note:'ONE COLOR, AND RECORDS THAT OPEN LIKE A GATEFOLD: the artist\u2019s colors now run down the whole artist page instead of stopping in a hard line above Similar artists; the flowing colors stay pinned behind everything as you scroll. The long list of album cards under the header is gone. The Releases row is now the discography (its All / Albums / EPs / Singles filter and sort sit beside it): tap a record and it opens below like a gatefold sleeve, the cover swinging open on its spine, with the album on the inside left (cover, record, title, listens, edition) and your ratings on the inside right (album rating, friends, every song, Share and more). Tap the record again or the \u00d7 to fold it shut. Jumping to an album from History, Stats or the Listen list opens it the same way. On a phone the two halves stack and the cover flips up. Artists without a photo get the same page.'},
@@ -5456,6 +5457,7 @@ async function spPoll(force){
   if(!viaW&&!SPL.rt)return;
   if(!force&&Date.now()-SPX.last<120e3)return;
   SPX.busy=true;SPX.last=Date.now();if(force)render();
+  const sig0=S.mtime+'|'+(window.PL&&PL.ver)+'|'+SPX.err;
   try{
     if(viaW&&SPL.rt)await spHandOff({cid:SPL.cid||spCid(),rt:SPL.rt,at:SPL.at||'',exp:SPL.exp||0});   /* the Worker was just updated: it takes over */
     let plays;
@@ -5464,7 +5466,7 @@ async function spPoll(force){
     else plays=await spLocalPlays();
     SPX.err='';plFeed(plays);spApply(plays);
   }catch(e){SPX.err=spMessage(e);if(e.code==='reconnect'&&!viaW){SPL={};splSave()}}
-  finally{SPX.busy=false;render()}
+  finally{SPX.busy=false;if(force||sig0!==S.mtime+'|'+(window.PL&&PL.ver)+'|'+SPX.err)render()}   /* a quiet background check with nothing new must not rebuild the page under a running animation */
 }
 async function spBoot(){
   if(SPX.started)return;SPX.started=true;
@@ -5927,8 +5929,18 @@ function conflictBanner(){
 }
 function ok(){SYS.status='ok';SYS.msg='';SY.at=Date.now();saveSync()}
 function adopt(j){S=j;S.flags=S.flags||{};S.marks=S.marks||{};S.music=S.music||[];S.screen=S.screen||[];seedAll();SY.last=S.mtime||0;save();ok();render()}
+/* A sync starting or finishing only changes the little Sync chip. Rebuilding the whole page for that restarted every
+   animation that was playing (they jumped to their end), so the chip is patched in place unless something bigger
+   on screen depends on the sync state. */
+function syncRedraw(){
+  const full=SYS.status==='conflict'||UI.view==='settings'||UI.view==='account'||!!document.querySelector('.banner[role="alert"]');
+  const chip=document.querySelector('.top .sync');
+  if(full||!chip){render();return}
+  chip.dataset.s=SYS.status;
+  const t=chip.lastChild;
+  if(t&&t.nodeType===3)t.textContent=syncLabel();else render()}
 async function pull(){
-  if(!READY||!syncOn()||inflight)return;inflight=true;SYS.status='busy';render();
+  if(!READY||!syncOn()||inflight)return;inflight=true;SYS.status='busy';syncRedraw();
   try{
     const{status,j}=await api('GET');
     if(status!==200){fail(status,j);return}
@@ -5942,7 +5954,7 @@ async function pull(){
       SY.last=local;ok();briefPush();
     }else{inflight=false;await push(false);return}       /* nothing saved yet: upload this device */
   }catch(e){SYS.status='error';SYS.msg=ownSync()?'Could not reach your Worker. Check the URL and your connection.':'Could not reach Playback’s server. Check your connection.'}
-  finally{inflight=false;render()}
+  finally{inflight=false;syncRedraw()}
 }
 /* ---------- list for your morning brief ----------
    A Worker from 2026.11.05 on (x-pb-worker 5) keeps a tiny list of the next episode
@@ -5971,14 +5983,14 @@ async function briefPush(){
   }catch(e){}
 }
 async function push(force){
-  if(!READY||!syncOn()||inflight||(!force&&SYS.status==='conflict'))return;   /* never upload past an unanswered choice */inflight=true;SYS.status='busy';render();
+  if(!READY||!syncOn()||inflight||(!force&&SYS.status==='conflict'))return;   /* never upload past an unanswered choice */inflight=true;SYS.status='busy';syncRedraw();
   try{
     const{status,j}=await api('PUT',S,force);
     if(status===200){SY.last=S.mtime||0;ok();briefPush()}
     else if(status===409&&j){ if((S.mtime||0)>SY.last){SYS.status='conflict';SYS.remote=j} else adopt(j) }
     else fail(status,j);
   }catch(e){SYS.status='error';SYS.msg=ownSync()?'Could not reach your Worker. Your changes are saved here and will upload next time.':'Could not reach Playback’s server. Your changes are saved here and will upload next time.'}
-  finally{inflight=false;render()}
+  finally{inflight=false;syncRedraw()}
 }
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pull();else if(accSync()&&!ownSync()&&pushTimer&&SYS.status!=='conflict'){clearTimeout(pushTimer);pushTimer=null;push(false)}});   /* leaving the app sends a waiting account save right away */
 window.addEventListener('online',()=>pull());
