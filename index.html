@@ -3163,6 +3163,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.20-e', note:'THREE-COLOR ARTISTS: an artist with no ratings now takes three colors from their newest album (the main cover color plus the next two strongest), so the moving color blend and mixed records show on every artist instead of one flat color. Once you rate one album, the three colors come from that album instead. With two or more rated albums it works as before, a blend of every rated cover weighted by rating. A cover with fewer than three real colors gets a lighter and a deeper shade of its main color.'},
   {v:'2026.11.20-d', note:'PHOTO CHECK ON NEW RELEASES: when Playback finds a new release for an artist (the daily new-release check, or Check for new releases on their page), their Apple Music photo is looked at again the next time you open them, right then and not after 60 days, because artists often change their photo with a new release. It skips the Worker\u2019s saved copy for that one check (Worker 21, it updates itself from GitHub). A failed check keeps your current photo.'},
   {v:'2026.11.20-c', note:'APPLE ARTIST PHOTOS RECHECK: an artist\u2019s Apple Music photo is now checked again every 60 days, when their page opens, so a new photo on Apple Music shows up by itself. Photos you already have start their 60 days today. If a recheck fails or Apple has nothing, your current photo stays and it tries again the next day.'},
   {v:'2026.11.20-b', note:'SORT MENU: Default order is gone from the Releases sort, since it was just oldest first. Oldest first is now the starting order (a device that had Default order saved switches to it), and the rest of the menu is unchanged.'},
@@ -8391,8 +8392,58 @@ function heroPalette(a,lazy){const out=[];
   for(const g of a.groups){const r=rating(g.id);if(!(r>0))continue;
     const art=gArt(g);
     if(!art)continue;
-    out.push({col:gCol(g,art,lazy),w:.12+.88*Math.pow(Math.min(10,r)/10,3)})}
-  out.sort((x,y)=>y.w-x.w);return out.slice(0,24)}
+    out.push({g,col:gCol(g,art,lazy),w:.12+.88*Math.pow(Math.min(10,r)/10,3)})}
+  if(out.length>=2){out.sort((x,y)=>y.w-x.w);return out.slice(0,24).map(({col,w})=>({col,w}))}
+  /* One rated album, or none: one cover can't make a blend on its own, so three colors are taken from one cover.
+     That's the rated album if there is one, otherwise the artist's newest album. */
+  const g=out.length?out[0].g:heroNewest(a);if(!g)return [];
+  return heroTri(g,gArt(g),lazy)}
+/* the newest album with a cover (a studio album if there is one, then any album/EP, then anything) */
+function heroNewest(a){const art=a.groups.filter(g=>gArt(g));if(!art.length)return null;
+  const pick=L=>L.reduce((b,g)=>!b||String(g.year||'')>=String(b.year||'')?g:b,null);
+  return pick(art.filter(g=>g.kind==='Studio album'))||pick(art.filter(g=>RATEABLE.includes(g.kind)))||pick(art)}
+/* Three colors from one cover: its main color (the same one used everywhere else for that album) plus the next two
+   strongest colors on the cover that are clearly different. A cover with fewer than three real colors gets a lighter and
+   a deeper shade of its main color, so every artist still gets the moving blend. */
+function heroTri(g,art,lazy){const main=gCol(g,art,lazy),t=ACOL3[g.id];
+  if(t===undefined){if(art)acol3Lazy(g.id,art);return [{col:main,w:1}]}
+  const m=hRgb(main),ex=[];
+  for(const x of t||[]){const r=hRgb(x.c);if(!r||(m&&Math.hypot(r[0]-m[0],r[1]-m[1],r[2]-m[2])<85))continue;
+    if(ex.some(e=>{const q=hRgb(e.col);return Math.hypot(q[0]-r[0],q[1]-r[1],q[2]-r[2])<85}))continue;
+    ex.push({col:x.c,w:Math.max(.45,Math.min(.85,Math.sqrt(x.p/.3)))});if(ex.length===2)break}
+  if(ex.length<2)ex.push({col:hShade(main,.2,14),w:.6});
+  if(ex.length<2)ex.push({col:hShade(main,-.08,-16),w:.5});
+  const P=[{col:main,w:1},...ex.slice(0,2)];P.tri=true;return P}
+function hShade(c,dl,dh){const r=hRgb(c);if(!r)return c;const[h,s,l]=rgbHsl(r);
+  return hslHex((h+dh+360)%360,Math.min(1,s+(dl<0?.1:0)),Math.max(.1,Math.min(.82,l+dl)))}
+function rgbHsl(c){const r=c[0]/255,g=c[1]/255,b=c[2]/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn,l=(mx+mn)/2;let h=0;
+  if(d){h=mx===r?((g-b)/d)%6:mx===g?(b-r)/d+2:(r-g)/d+4;h*=60;if(h<0)h+=360}
+  return[h,d?d/(1-Math.abs(2*l-1)):0,l]}
+/* the cover's color candidates: pixels grouped into nearby colors, ranked by area and how colorful they are */
+const ACOL3_KEY=KEY+'_acol3v1';
+let ACOL3=(()=>{try{return JSON.parse(localStorage.getItem(ACOL3_KEY))||{}}catch(e){return{}}})();
+const A3Q=[],A3S={};let A3N=0;
+function acol3Save(){try{localStorage.setItem(ACOL3_KEY,JSON.stringify(ACOL3))}catch(e){}}
+function acol3Lazy(key,url){if(A3S[key]||!url)return;A3S[key]=1;A3Q.push([key,url]);a3Pump()}
+function a3Pump(){while(A3N<3&&A3Q.length){const[k,u]=A3Q.shift();A3N++;acol3Read(k,u,()=>{A3N--;a3Pump()})}}
+function acol3Read(key,url,done){
+  const im=new Image();im.crossOrigin='anonymous';im.decoding='async';
+  im.onload=()=>{try{const c=document.createElement('canvas');c.width=c.height=48;const x=c.getContext('2d',{willReadFrequently:true});
+      const iw=im.naturalWidth||48,ih=im.naturalHeight||48,sq=Math.min(iw,ih);x.drawImage(im,(iw-sq)/2,(ih-sq)/2,sq,sq,0,0,48,48);
+      ACOL3[key]=acol3FromPixels(x.getImageData(0,0,48,48).data)}catch(e){ACOL3[key]=''}
+    acol3Save();ACOLV++;tdSoon();heroPaint();done()};
+  im.onerror=()=>done();   /* a failed load is tried again next time the app opens */
+  im.src=url}
+function acol3FromPixels(d){const B={};let N=0;
+  for(let i=0;i<d.length;i+=4){if(d[i+3]<128)continue;const r=d[i],g=d[i+1],b=d[i+2],k=(r>>4)<<8|(g>>4)<<4|(b>>4);
+    const o=B[k]||(B[k]={rgb:[0,0,0],n:0});o.rgb[0]+=r;o.rgb[1]+=g;o.rgb[2]+=b;o.n++;N++}
+  if(!N)return '';
+  const L=Object.values(B).map(o=>({rgb:o.rgb.map(v=>v/o.n),n:o.n})).sort((x,y)=>y.n-x.n),C=[];
+  for(const x of L){const h=C.find(c=>Math.hypot(c.rgb[0]-x.rgb[0],c.rgb[1]-x.rgb[1],c.rgb[2]-x.rgb[2])<56);
+    if(h){const t=h.n+x.n;h.rgb=h.rgb.map((v,i)=>(v*h.n+x.rgb[i]*x.n)/t);h.n=t}else C.push({rgb:x.rgb.slice(),n:x.n})}
+  for(const c of C){const[h,s,l]=rgbHsl(c.rgb);c.p=c.n/N;c.sc=Math.sqrt(c.p)*(.35+s*Math.min(1,4*Math.min(l,1-l)));
+    c.hex=hslHex(h,s,Math.max(.16,Math.min(.78,l)))}   /* kept off pure black and pure white so it still reads on the page */
+  return C.filter(c=>c.p>=.015).sort((x,y)=>y.sc-x.sc).slice(0,6).map(c=>({c:c.hex,p:+c.p.toFixed(3)}))}
 /* the songs behind a splatter record: every song you rated, in the color of its release's cover.
    An artist with album ratings but no song ratings gets one splatter per rated album instead. */
 function heroSongs(a,lazy){const out=[];
@@ -8401,6 +8452,11 @@ function heroSongs(a,lazy){const out=[];
       if(col===null)col=gCol(g,gArt(g),lazy);
       out.push({id:String(i.id),col,r:Math.min(10,r)})}}
   if(!out.length)for(const g of a.groups){const r=rating(g.id);if(r>0)out.push({id:String(g.id),col:gCol(g,gArt(g),lazy),r:Math.min(10,r)})}
+  /* one cover's three colors: the songs share them out (main color most), and an artist with nothing rated gets a few splatters of them */
+  const P=heroPalette(a,lazy);
+  if(P.tri&&P.length>1&&new Set(out.map(x=>x.col)).size<=1){const seq=[0,1,0,2,0,1,2];
+    if(out.length)out.forEach((x,i)=>x.col=P[seq[i%seq.length]].col);
+    else for(let i=0;i<9;i++)out.push({id:a.id+'~s'+i,col:P[seq[i%seq.length]].col,r:6+(hseed(a.id+'~'+i)%7)/2})}
   return out}
 /* Vinyl looks. Each time an artist opens, one of these is picked at random (1 soft fade, 3 marble,
    7 streak splatter, 8 flung paint, 9 liquid). Splatter and liquid are drawn as SVG from the same weighted
