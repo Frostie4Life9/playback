@@ -1571,6 +1571,14 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .simar:active:not(:disabled){transform:scale(.92)}
 .simar:disabled{opacity:.35;cursor:default}
 .simnav{display:flex;gap:8px;animation:simNavIn .4s cubic-bezier(.2,.8,.2,1) both}
+.simbox.crate .simbody{transition:height .38s cubic-bezier(.4,0,.2,1)}
+.simbox.sim-closing .simt{transition:opacity .25s,transform .35s cubic-bezier(.4,0,1,1);opacity:0;transform:translateY(12px)}
+.simbox.sim-closing .simd{transition:transform .38s cubic-bezier(.4,0,1,1);transform:rotate(-90deg)}
+.simbox.sim-closing .simnav{transition:opacity .2s,transform .25s;opacity:0;transform:translateX(10px)}
+.simbox.sim-closing .simtg i{transform:rotate(45deg) translate(-1px,-1px)}
+.simbox.crate .simtt small{transition:opacity .2s}
+.simbox.crate.open .simbody.sim-opening{animation:simGrow .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes simGrow{from{opacity:0;clip-path:inset(0 0 100% 0);transform:translateY(-8px)}to{opacity:1;clip-path:inset(0 0 -40px 0);transform:none}}
 @keyframes simNavIn{from{opacity:0;transform:translateX(10px)}}
 .simbox.crate .simbody{padding:0;min-width:0}
 .simbox.crate .simbody>.note{color:rgb(255 255 255 / .7);margin:14px 0 0}
@@ -2739,6 +2747,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-ad', note:'FANS ALSO SPIN, SMOOTHER: Hide now folds the row shut (the records drop and spin back, the arrows slide away) instead of vanishing, Show slides it open, and the mouse wheel now glides the row along smoothly like the arrow buttons do instead of jumping.'},
   {v:'2026.11.19-ac', note:'FANS ALSO SPIN, RESTYLED AND SCROLLABLE: the grey card is gone, so the section now sits right on the artist\u2019s color like Releases, with a glass Show/Hide pill and records lined up with the Releases row, running off the right edge with a soft fade. On a PC it now scrolls: arrow buttons next to Show/Hide (they dim at the ends) and the normal mouse wheel moves the row sideways. Also fixed the first record sitting flush against the left edge (it was snapping past the row\u2019s padding).'},
   {v:'2026.11.19-ab', note:'ARTIST PAGE BOTTOM, CRATE STYLE: Similar artists is now \u201cFans also spin\u201d, a slim bar that stays collapsed until you tap it, then opens to a row of records (artists in your log show their photo on the label and open when tapped; new ones show their initial and tap to add). Add a release is an empty sleeve at the end of the Releases row that opens the form in a panel, and Delete artist moved into Details (\u24d8). Also fixed the last jump when closing an album: the gap above the next item now closes up smoothly instead of vanishing at the end.'},
   {v:'2026.11.19-aa', note:'ARTIST PHOTO AND OPEN ALBUM TIDY-UP: the artist header now uses Apple Music\u2019s sharper photo by default, and the Spotify / Apple Music switch moved off the header into Details (the \u24d8 button). The open album no longer repeats its cover on the inside left: it is already in the Releases row and printed across the jacket.'},
@@ -9105,12 +9114,28 @@ document.addEventListener('click',ev=>{const b=ev.target.closest('[data-simscrol
   const r=b.closest('.simbox')?.querySelector('.simrow');if(!r)return;
   r.scrollBy({left:(+b.dataset.simscroll)*Math.max(200,r.clientWidth*.8),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})});
 document.addEventListener('scroll',ev=>{if(ev.target.classList&&ev.target.classList.contains('simrow'))simNavSync()},true);
+/* the wheel glides: each notch adds to a target and the row eases toward it (same feel as the arrow buttons) */
+const SIMW={r:null,t:0,raf:0};
+function simGlide(){const r=SIMW.r;if(!r||!r.isConnected){SIMW.raf=0;return}
+  const d=SIMW.t-r.scrollLeft;if(Math.abs(d)<.6){r.scrollLeft=SIMW.t;SIMW.raf=0;return}
+  r.scrollLeft+=d*.18;SIMW.raf=requestAnimationFrame(simGlide)}
 document.addEventListener('wheel',ev=>{const r=ev.target.closest&&ev.target.closest('.simrow');if(!r||ev.ctrlKey)return;
   if(Math.abs(ev.deltaX)>Math.abs(ev.deltaY))return;   /* trackpads already scroll sideways on their own */
   const max=r.scrollWidth-r.clientWidth;if(max<=0)return;
   const d=ev.deltaY*(ev.deltaMode===1?32:ev.deltaMode===2?r.clientWidth:1);
-  if((d<0&&r.scrollLeft<=0)||(d>0&&r.scrollLeft>=max-1))return;
-  ev.preventDefault();r.scrollLeft+=d},{passive:false});
+  const from=SIMW.raf&&SIMW.r===r?SIMW.t:r.scrollLeft;
+  if((d<0&&from<=0)||(d>0&&from>=max-1))return;   /* at an end: let the page scroll */
+  ev.preventDefault();
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){r.scrollLeft=Math.max(0,Math.min(max,from+d));return}
+  SIMW.r=r;SIMW.t=Math.max(0,Math.min(max,from+d*1.4));if(!SIMW.raf)SIMW.raf=requestAnimationFrame(simGlide)},{passive:false});
+/* Hide: the records drop back and the row folds shut before the page redraws, instead of vanishing */
+document.addEventListener('click',ev=>{const b=ev.target.closest('.simtg[aria-expanded="true"]');if(!b||b._closing)return;
+  const bx=b.closest('.simbox'),body=bx&&bx.querySelector('.simbody');
+  if(!body||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  ev.preventDefault();ev.stopImmediatePropagation();b._closing=true;
+  body.style.height=body.offsetHeight+'px';body.style.overflow='hidden';void body.offsetHeight;
+  bx.classList.add('sim-closing');body.style.height='0px';
+  setTimeout(()=>{b.click()},380)},true);
 addEventListener('resize',()=>simNavSync());
 /* Fans also spin: collapsed to one slim bar until tapped, then a crate of records, one per similar artist, the label
    showing the artist's photo when they are in your log (tap to open them) or their initial when not (tap to add them) */
