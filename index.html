@@ -1533,6 +1533,49 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .hx .hxmore .simbox{margin:0;background:color-mix(in srgb,var(--surface) 86%,transparent);border-color:rgb(255 255 255 / .12);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
 .hxmore>details.more{border:1px solid rgb(255 255 255 / .12);border-radius:16px;padding:14px 16px;background:color-mix(in srgb,var(--surface) 86%,transparent);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
 .hxdel{display:flex}
+/* the empty sleeve at the end of the Releases row: tap it to add a release by hand */
+.hxadd .hxc{background:transparent;border:2px dashed rgb(255 255 255 / .38);box-shadow:none;color:rgb(255 255 255 / .7);transition:border-color .25s,background .25s,color .25s,transform .35s cubic-bezier(.2,.8,.2,1)}
+.hxadd .hxc svg{width:42px;height:42px;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.hxadd:hover .hxc,.hxadd:focus-visible .hxc{border-color:rgb(255 255 255 / .8);background:rgb(255 255 255 / .07);color:#fff;transform:translateY(-4px)}
+.hxadd[aria-expanded="true"] .hxc{border-style:solid;border-color:#fff;background:rgb(255 255 255 / .1);color:#fff}
+.hxadd[aria-expanded="true"] .hxc svg{transform:rotate(45deg)}
+.hxadd .hxy{color:rgb(255 255 255 / .55)}
+.hxaddp{border:1px solid rgb(255 255 255 / .12);border-radius:20px;padding:18px 20px 20px;max-width:640px;background:color-mix(in srgb,var(--surface) 86%,transparent);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);transform-origin:50% 0}
+.hxaddp form{display:flex;flex-direction:column;gap:8px}
+.hxaddh{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.hxaddh h3{margin:0;font-size:17px}
+.hxaddx{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;border:0;background:rgb(255 255 255 / .1);color:var(--ink);cursor:pointer;transition:background .2s,transform .3s}
+.hxaddx:hover{background:rgb(255 255 255 / .18);transform:rotate(90deg)}
+.hxaddx svg{width:16px;height:16px}
+.hxaddp.in{animation:hxAddIn .45s cubic-bezier(.2,.8,.2,1) both}
+.hxaddp.out{animation:hxAddOut .22s cubic-bezier(.4,0,1,1) forwards}
+@keyframes hxAddIn{from{opacity:0;transform:translateY(-16px) scale(.97)}}
+@keyframes hxAddOut{to{opacity:0;transform:translateY(-10px) scale(.97)}}
+/* Delete artist sits at the bottom of Details */
+.hxpdel{display:flex;padding-top:12px;border-top:1px solid rgb(255 255 255 / .12)}
+/* Fans also spin: a slim bar, opening to a crate of records */
+.hx .hxmore .simbox.crate{display:block}
+.simbox.crate .simbody{padding:0;min-width:0}
+.simbox.crate .simhead{min-height:52px;padding:0 18px}
+.simbox.crate .simhead small{display:block;font-size:12px;font-weight:400;color:var(--muted);margin-top:1px}
+.simrow{display:flex;gap:26px;overflow-x:auto;scrollbar-width:none;padding:6px 18px 18px;scroll-snap-type:x proximity}
+.simrow::-webkit-scrollbar{display:none}
+.simt{flex:none;width:118px;border:0;background:none;padding:0;color:var(--ink);font:inherit;text-align:left;cursor:pointer;scroll-snap-align:start}
+.simd{position:relative;display:grid;place-items:center;width:118px;height:118px;border-radius:50%;box-shadow:0 10px 22px rgb(0 0 0 / .35);
+  background:radial-gradient(circle,transparent 0 30%,#0d0d0d 30.5% 32%,transparent 32.5%),repeating-radial-gradient(circle,#191919 0 1.6px,#0b0b0b 1.6px 3.4px);transition:transform .7s cubic-bezier(.2,.8,.2,1)}
+.simd::before{content:"";position:absolute;width:60%;height:60%;border-radius:50%;background:var(--sc)}
+.simd img{position:absolute;z-index:1;width:60%;height:60%;border-radius:50%;object-fit:cover}
+.simd b{position:relative;font:800 26px/1 var(--body);color:rgb(255 255 255 / .75)}
+.simt:hover .simd,.simt:focus-visible .simd{transform:rotate(40deg) translateY(-3px)}
+.simn{display:block;margin-top:10px;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sims{display:block;font-size:12px;color:var(--muted);white-space:nowrap}
+.sims em{font-style:normal;color:var(--accent);font-weight:600}
+.simrow.sim-in .simt{animation:simUp .5s cubic-bezier(.2,.8,.2,1) calc(var(--i) * 45ms) backwards}
+.simrow.sim-in .simd{animation:simSpin .9s cubic-bezier(.2,.8,.2,1) calc(var(--i) * 45ms) backwards}
+@keyframes simUp{from{opacity:0;transform:translateY(16px)}}
+@keyframes simSpin{from{transform:rotate(-120deg)}}
+@media (max-width:760px){.simt,.simd{width:96px}.simd{height:96px}.simrow{gap:18px}}
+@media (prefers-reduced-motion:reduce){.simrow.sim-in .simt,.simrow.sim-in .simd,.hxaddp.in,.hxaddp.out{animation:none}}
 @media (prefers-reduced-motion:no-preference){.sheet.swin .hxmore{animation:swUp .62s cubic-bezier(.2,.8,.2,1) .3s backwards}}
 
 /* THE GATEFOLD: an opened album, drawn as a real open gatefold jacket. On a wide screen it is two square panels of
@@ -2672,6 +2715,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-ab', note:'ARTIST PAGE BOTTOM, CRATE STYLE: Similar artists is now \u201cFans also spin\u201d, a slim bar that stays collapsed until you tap it, then opens to a row of records (artists in your log show their photo on the label and open when tapped; new ones show their initial and tap to add). Add a release is an empty sleeve at the end of the Releases row that opens the form in a panel, and Delete artist moved into Details (\u24d8). Also fixed the last jump when closing an album: the gap above the next item now closes up smoothly instead of vanishing at the end.'},
   {v:'2026.11.19-aa', note:'ARTIST PHOTO AND OPEN ALBUM TIDY-UP: the artist header now uses Apple Music\u2019s sharper photo by default, and the Spotify / Apple Music switch moved off the header into Details (the \u24d8 button). The open album no longer repeats its cover on the inside left: it is already in the Releases row and printed across the jacket.'},
   {v:'2026.11.19-z', note:'CLOSING AN ALBUM: THE RELEASES ROW NO LONGER JUMPS AT THE END (found from your screen recording): the \u201cTap a record to open it\u201d line under the row was taken out while an album was open. The row sits at the bottom of the artist header, so it dropped by that line\u2019s height when an album opened, then jumped back up in one frame when closing finished. The line now keeps its space while hidden, so the row never moves. The Spotify / Apple Music photo switch also no longer replays its fade-in on every redraw.'},
   {v:'2026.11.19-y', note:'CLOSING AN ALBUM: THE PAGE NO LONGER SNAPS AT THE END: the snap was the artist\u2019s color background, not the cover. Closing an album rebuilds the artist page, and the rebuilt background started its slowly turning color pools over from the beginning, so the whole page behind everything lurched into a new position the moment the album finished closing (opening one did the same, hidden under the flying cover). The colors now carry on from exactly where they were through any redraw of the same artist, including ratings and background syncs.'},
@@ -8059,11 +8103,12 @@ function heroX(a,all,done,rated,p,phUrl,more){
         <button class="hcirc" data-act="filter" data-v="${open?'all':'open'}" aria-pressed="${open}" aria-label="${open?'Showing songs still to hear. Show everything':'Show only songs still to hear'}" title="Still to hear">${ico.ear}</button>
         <button class="hcirc" data-act="hinfo" aria-expanded="${!!UI.hinfo}" aria-label="Artist details" title="Details">${ico.info}</button>
       </div>
-      ${UI.hinfo?`<div class="hxpanel">${hxSrcHtml(a)}<div class="hstats"><div><b>${done}<small> /${all.length}</small></b><span>tracks heard</span></div><div><b>${rated}</b><span>rated</span></div><div><b>${a.groups.length}</b><span>releases</span></div></div>${mbArtistBar(a)}</div>`:''}
+      ${UI.hinfo?`<div class="hxpanel">${hxSrcHtml(a)}<div class="hstats"><div><b>${done}<small> /${all.length}</small></b><span>tracks heard</span></div><div><b>${rated}</b><span>rated</span></div><div><b>${a.groups.length}</b><span>releases</span></div></div>${mbArtistBar(a)}<div class="hxpdel">${delBtn(a.id,'Delete artist')}</div></div>`:''}
     </div>
     <div class="hxrel"><div class="hxrh"><h3 class="hxlbl">Releases</h3>${relBar(a)}</div><div class="hxrow">
       <div class="hxprog"><div class="hrec"><div class="hring" style="--p:${p}"><div class="hdisc"><div class="hspin"></div><div class="hlab"><b${p>=100?' class="s"':''}>${p}%</b><span>heard</span></div></div></div>${HARM}</div><span class="hxt">Your progress</span><span class="hxy">${done} of ${all.length} songs</span></div>
       ${rel||`<p class="hxnone">${UI.filter==='open'?'Nothing left to hear here.':'No releases of that kind here.'}</p>`}
+      <button class="hxsl hxadd" data-act="reladd" data-a="${esc(a.id)}" aria-expanded="${UI.relAdd===a.id}" aria-label="Add a release by hand"><span class="hxc" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><span class="hxt">Add a release</span><span class="hxy">By hand</span></button>
     </div><p class="hxhint${og?' off':''}"${og?' aria-hidden="true"':''}>Tap a record to open it</p></div>
     </div>
     <div class="hxmore">${more||''}</div>
@@ -9025,9 +9070,16 @@ function simBody(e,type,ctx){
   if(!e.rows||!e.rows.length)return `<p class="note">Nothing found. Last.fm may not know this ${type==='t'?'song':'artist'} well enough yet.</p>`;
   const an=e.anim?' sim-in':'';e.anim=false;
   return `<ul class="sim-l${an}">${e.rows.slice(0,type==='t'?15:20).map((x,i)=>simRow(x,i,type)).join('')}</ul><p class="note sim-src">Matches from Last.fm listening data.</p>`}
+/* Fans also spin: collapsed to one slim bar until tapped, then a crate of records, one per similar artist, the label
+   showing the artist's photo when they are in your log (tap to open them) or their initial when not (tap to add them) */
 function simBox(a){
   const open=UI.simOpen===a.id,ao=open&&UI.simAnim?' sim-opening':'';if(open)UI.simAnim=false;
-  return `<div class="simbox${open?' open':''}"><button class="simhead" data-act="simtog" data-a="${a.id}" aria-expanded="${open}"><span>Similar artists</span><i aria-hidden="true"></i></button>${open?`<div class="simbody${ao}">${simBody(SIM[simKey('a',a.name)],'a',{artist:a.name})}</div>`:''}</div>`}
+  const e=SIM[simKey('a',a.name)],body=open?(e&&!e.busy&&!e.err&&e.rows&&e.rows.length?simCrate(e,ao):simBody(e,'a',{artist:a.name})):'';
+  return `<div class="simbox crate${open?' open':''}"><button class="simhead" data-act="simtog" data-a="${a.id}" aria-expanded="${open}"><span>Fans also spin<small>${open?'Similar artists, from Last.fm':'Similar artists'}</small></span><i aria-hidden="true"></i></button>${open?`<div class="simbody${ao}">${body}</div>`:''}</div>`}
+function simCrate(e,ao){const an=e.anim||ao?' sim-in':'';e.anim=false;
+  return `<div class="simrow${an}">${e.rows.slice(0,20).map((x,i)=>{const a=rtArtist([x.n]),ph=a?(spPhoto(a)||(a.aimg?a.aimg+'/300x300bb.jpg':'')):'',pc=Math.round((x.m||0)*100);
+    const st=a?pct(artistItems(a).map(y=>y.id))+'% heard':pc+'% match';
+    return `<button class="simt" style="--i:${Math.min(i,12)};--sc:hsl(${colHash(x.n)%360} 42% 40%)" data-act="${a?'llgo':'simadd'}" ${a?`data-a="${esc(a.id)}"`:`data-n="${esc(x.n)}"`} aria-label="${a?'Open':'Add'} ${esc(x.n)}"><span class="simd" aria-hidden="true">${ph?`<img src="${esc(ph)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}<b>${esc(String(x.n).trim().charAt(0).toUpperCase())}</b></span><span class="simn">${esc(x.n)}</span><span class="sims">${a?'':'<em>Add</em> \u00b7 '}${esc(st)}</span></button>`}).join('')}</div>`}
 function simSong(a,i,t){
   const open=UI.simSong===i.id,ao=open&&UI.simAnim?' sim-opening':'';if(open)UI.simAnim=false;
   return `<div class="simsong"><button class="link" data-act="simsong" data-id="${i.id}" data-art="${esc(a.name)}" data-ttl="${esc(t)}" aria-expanded="${open}">${open?'Hide similar songs':'Similar songs'}</button>${open?`<div class="simbody${ao}">${simBody(SIM[simKey('t',a.name,t)],'t',{artist:a.name,title:t})}</div>`:''}</div>`}
@@ -9160,17 +9212,18 @@ function artistView(a){heroLook(a.id);
   const og=gfOpenId(a),og2=og&&a.groups.find(g=>String(g.id)===og),gf=og2?gfHtml(a,og2):'';
   UI.dxAnim=null;UI.gfAnim=null;                     /* the switch and opening animations play once, on the draw they were asked for */
   const phUrl=phOn()?phPick(a):'';
-  const more=`${gf}
-    ${simBox(a)}
-    <details class="more"><summary>Add a release</summary>
+  const addIn=UI.relAddAnim;UI.relAddAnim=false;
+  const addP=UI.relAdd===a.id?`<div class="hxaddp${addIn?' in':''}" role="region" aria-label="Add a release">
+      <div class="hxaddh"><h3>Add a release</h3><button class="hxaddx" data-act="reladd" data-a="${a.id}" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
       <form data-form="group" data-a="${a.id}">
         <div class="row2"><input id="g-title" name="title" placeholder="Release title" required><input id="g-year" name="year" placeholder="Year" style="max-width:90px"></div>
         <select id="g-kind" name="kind" aria-label="Release type"><option>Studio album</option><option>EP</option><option>Single</option><option>B-sides &amp; singles</option><option>Compilation</option><option>Live</option><option>Archival release</option><option>Other</option></select>
         <p class="note">A song that's already listed for this artist is skipped, so nothing shows up twice.</p>
         <textarea id="g-tracks" name="tracks" placeholder="One track per line" required></textarea>
         <button class="btn primary">Add release</button>
-      </form></details>
-    <div class="hxdel">${delBtn(a.id,'Delete artist')}</div>`;
+      </form></div>`:'';
+  const more=`${gf}${addP}
+    ${simBox(a)}`;
   return heroX(a,all,done,rated,p,phUrl,more);
 }
 /* A redraw that comes from the background (a reply from the server, a poll, photos arriving) rebuilds the whole page, and
@@ -9254,9 +9307,10 @@ function gfCollapse(el,ms){
   if(!el.isConnected)return;
   const cs=getComputedStyle(el),f=v=>parseFloat(v)||0,h=el.offsetHeight,mt=f(cs.marginTop),mb=f(cs.marginBottom),pt=f(cs.paddingTop),pb=f(cs.paddingBottom);
   /* once the album is closed the "Tap a record to open it" hint comes back under the row, so leave exactly its room behind: the page then doesn't shift when it reappears */
-  let extra=0;const rel=document.querySelector('.hx .hxrel');
+  let extra=0;const rel=document.querySelector('.hx .hxrel'),gap=f(getComputedStyle(el.parentElement).rowGap);
   if(rel&&!rel.querySelector('.hxhint')){const pr=document.createElement('p');pr.className='hxhint';pr.textContent='Tap a record to open it';pr.style.cssText='position:absolute;visibility:hidden;animation:none;left:0;right:0';rel.appendChild(pr);
-    extra=pr.getBoundingClientRect().height+f(getComputedStyle(pr).marginTop)-f(getComputedStyle(el.parentElement).rowGap);pr.remove()}
+    extra=pr.getBoundingClientRect().height+f(getComputedStyle(pr).marginTop)-gap;pr.remove()}
+  else extra=-gap;   /* the hint keeps its own room now; what still vanishes with the album is the gap above the next item, so close that up too (it was the last 22px jump) */
   const hf=Math.max(extra,0),mf=Math.min(extra,0);
   const y0=scrollY,doc=document.documentElement,M1=Math.max(0,doc.scrollHeight-(h+mt+mb)+extra-innerHeight);
   const y1=Math.min(y0,Math.max(0,UI.gfS0==null?y0:UI.gfS0),M1);   /* back to where the page was before the album opened, never further down than the shorter page allows */
@@ -9524,6 +9578,10 @@ document.addEventListener('click',ev=>{
   else if(act==='llclear'){S.listen=listenAll().filter(x=>!llResolve(x).heard);touch()}
   else if(act==='llgo'){UI.view=null;UI.rel=null;UI.tab='music';UI.sel.music=b.dataset.a;UI.libOpen=false;UI.rOpen=null;UI.llOpen=false;UI.filter='all';
     if(b.dataset.g)UI.toAlb=b.dataset.g;else UI.toSheet=true}   /* a listen-list album opens that album; Collection's Open in Music has no album, so it still goes to the artist */
+  else if(act==='reladd'){const aid=b.dataset.a,on=UI.relAdd===aid,pn=document.querySelector('.hxaddp');
+    if(on&&pn&&!noMotion()){if(pn.classList.contains('out'))return;pn.classList.add('out');document.querySelectorAll('.hxadd').forEach(x=>x.setAttribute('aria-expanded','false'));setTimeout(()=>{UI.relAdd=null;render()},220);return}
+    UI.relAdd=on?null:aid;UI.relAddAnim=!on;
+    if(!on){if(UI.alb)UI.alb=null;setTimeout(()=>{const p=document.querySelector('.hxaddp');if(!p)return;const r=p.getBoundingClientRect();if(r.top<70||r.bottom>innerHeight)p.scrollIntoView({behavior:noMotion()?'auto':'smooth',block:'center'});const t=p.querySelector('input');if(t)t.focus({preventScroll:true})},80)}}
   else if(act==='simtog'){UI.simOpen=UI.simOpen===b.dataset.a?null:b.dataset.a;UI.simAnim=!!UI.simOpen;if(UI.simOpen){const ar=S.music.find(x=>x.id===UI.simOpen);if(ar)simLoad('a',ar.name)}}
   else if(act==='simsong'){UI.simSong=UI.simSong===id?null:id;UI.simAnim=!!UI.simSong;if(UI.simSong)simLoad('t',b.dataset.art,b.dataset.ttl)}
   else if(act==='simretry'){const t=b.dataset.type;SIM[simKey(t,b.dataset.art,b.dataset.ttl)]=null;simLoad(t,b.dataset.art,b.dataset.ttl)}
@@ -9755,7 +9813,7 @@ document.addEventListener('submit',ev=>{
     if(UI.addType==='film'){const id=sid('film',title,d.year||'');if(!S.screen.some(x=>x.id===id))S.screen.push({id,type:'film',title,year:d.year.trim()});UI.sel.screen=id}
     else{const eps=(d.seasons||'').split(/[,\s]+/).map(Number).filter(n=>n>0&&n<=200);if(!eps.length)return;
       const id=sid('show',title);if(!S.screen.some(x=>x.id===id))S.screen.push({id,type:'show',title,year:d.year.trim(),seasons:eps.map((n,k)=>({n:k+1,eps:n}))});UI.sel.screen=id}}
-  else if(kind==='group'){const a=S.music.find(x=>x.id===f.dataset.a),title=d.title.trim();if(!a||!title)return;
+  else if(kind==='group'){const a=S.music.find(x=>x.id===f.dataset.a),title=d.title.trim();if(!a||!title)return;UI.relAdd=null;
     const gid=sid(a.id,title);let g=a.groups.find(x=>x.id===gid);if(!g){g={id:gid,title,year:d.year.trim()||'—',kind:d.kind,items:[]};a.groups.push(g)}
     const have=new Set(artistItems(a).map(mbItemKey));
     d.tracks.split('\n').map(t=>t.trim()).filter(Boolean).forEach(t=>{const k=mbKeyOf(t);if(have.has(k))return;have.add(k);g.items.push({id:sid(a.id,title,t),title:t})});
