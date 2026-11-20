@@ -2668,6 +2668,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-x', note:'Closing an album: the cover now lands exactly on the sleeve (it was aiming at the sunk size, so it ended a few pixels off and then jumped), with a gentler lift so the hand-off is seamless.'},
   {v:'2026.11.19-w', note:'CLOSING AN ALBUM: NO MORE SNAP AT THE VERY END: the last step of closing swapped the flying cover for the real sleeve underneath, and the two didn\u2019t match (the cover was a touch darker and its record looked different; the sleeve\u2019s drop shadow came back all at once; a page that was scrolled sideways in the Releases row jumped back to the start; the page below shifted by a pixel). The cover now fades out over the sleeve as it lands, the sleeve eases back to exactly how a resting sleeve looks (shadow, record and all), the row keeps its scroll position, and the page height is matched to the pixel, so the redraw at the end changes nothing you can see.'},
   {v:'2026.11.19-v', note:'CLOSING AN ALBUM NO LONGER SNAPS THE PAGE: when you closed an album the space the open jacket held vanished all at once and the page jumped back toward the top, which made the cover\u2019s trip home hard to follow. Now, as the jacket shuts and the cover flies home, the empty space closes up smoothly while the page eases back to where it was before you opened the album, and the \u201cTap a record to open it\u201d line comes back without nudging anything.'},
   {v:'2026.11.19-u', note:'GATEFOLD OPENING, TAKE THREE: the cover used to slide behind the row\u2019s sleeves (they sat on a higher layer than the jacket); it now stays in front of the whole row. The motion is new too: the cover lifts off the shelf at the size of its sleeve with a soft shadow, drops down out of the row first, then slides across and swells to full size as it comes to rest (position and size now ease separately, and there is no more tilting). The record goes with it, so the sleeve left in the row sits empty, sunk and darker, with a brighter glow in the album\u2019s color and the notch pointing at the jacket. Closing plays it in reverse: the cover returns, the record slides back out of its sleeve and the sleeve rises up as it lands.'},
@@ -9181,19 +9182,23 @@ function gfRun(el,back){
   const cSq=ins(J.y,ch),cJk=ins(J.y,J.h),cAll='inset(-120px -120px -120px -120px round 22px)';
   /* the cover is pulled off its sleeve: it lifts a little toward you at the size of the sleeve, travels down smoothly (position and size ease separately, so it leaves the shelf small and only swells as it comes to rest), and its shadow fades as it lands */
   let dx=0,dy=40,k=.9,fo=0;
-  if(tile){const t=tile.getBoundingClientRect();if(t.width){k=t.width/J.w;dx=t.left-J.x;dy=t.top-J.y;fo=1}}
+  if(tile){
+    /* aim for the sleeve as it rests, not as it sits while sunk (scaled to .9): the sleeve rises back to full size as the cover lands, so landing on the sunk size left it 7px off and the crossfade showed it */
+    const ps=tile.style.cssText;tile.style.animation='none';tile.style.transition='none';tile.style.transform='none';
+    const t=tile.getBoundingClientRect();tile.style.cssText=ps;
+    if(t.width){k=t.width/J.w;dx=t.left-J.x;dy=t.top-J.y;fo=1}}
   sp.style.transformOrigin=`${(J.x-S.left).toFixed(1)}px ${(J.y-S.top).toFixed(1)}px`;
   const T=1750,o={duration:T,fill:'both',direction:back?'reverse':'normal'},a=[];
   const fly='cubic-bezier(.25,.8,.25,1)',sw='cubic-bezier(.45,0,.2,1)';
   const W=phone?.49:.42;   /* when the swing starts */
   const FW=phone?.36:W;    /* when the cover has landed */
-  const px=(x,y)=>`${x.toFixed(1)}px ${y.toFixed(1)}px`,lift=fo?14:0;
+  const px=(x,y)=>`${x.toFixed(1)}px ${y.toFixed(1)}px`,lift=fo?6:0;
   /* the copy fades in as it lifts and, on closing, fades back out over the real sleeve as it lands, so the hand-off at the very end is a crossfade instead of a swap */
   a.push(sp.animate(fo?[{opacity:0,offset:0},{opacity:1,offset:.09},{opacity:1,offset:1}]:[{opacity:0,offset:0},{opacity:1,offset:FW},{opacity:1,offset:1}],o));
   /* down first, then across: the height eases ahead of the sideways slide, so the cover drops out of the row instead of cutting diagonally over its neighbours */
   a.push(sp.animate([{translate:`0px ${dy.toFixed(1)}px`,offset:0,easing:'cubic-bezier(.2,.8,.3,1)'},{translate:`0px ${(dy-lift).toFixed(1)}px`,offset:.08,easing:'cubic-bezier(.3,.1,.2,1)'},{translate:'0px 0px',offset:FW},{translate:'0px 0px',offset:1}],o));
   a.push(sp.animate([{left:`${dx.toFixed(1)}px`,offset:0},{left:`${dx.toFixed(1)}px`,offset:.1,easing:'cubic-bezier(.55,0,.25,1)'},{left:'0px',offset:FW},{left:'0px',offset:1}],o));
-  a.push(sp.animate([{scale:String(k),offset:0,easing:'cubic-bezier(.2,.8,.3,1)'},{scale:String(fo?k*1.07:k),offset:.08,easing:'linear'},{scale:String(fo?k*1.09:k),offset:.18,easing:'cubic-bezier(.5,0,.2,1)'},{scale:'1',offset:FW},{scale:'1',offset:1}],o));
+  a.push(sp.animate([{scale:String(k),offset:0,easing:'cubic-bezier(.2,.8,.3,1)'},{scale:String(fo?k*1.03:k),offset:.08,easing:'linear'},{scale:String(fo?k*1.09:k),offset:.18,easing:'cubic-bezier(.5,0,.2,1)'},{scale:'1',offset:FW},{scale:'1',offset:1}],o));
   if(fo)a.push(sp.animate([{filter:'drop-shadow(0 0 0 rgb(0 0 0 / 0))',offset:0},{filter:'drop-shadow(0 18px 20px rgb(0 0 0 / .5))',offset:.1},{filter:'drop-shadow(0 22px 30px rgb(0 0 0 / .4))',offset:FW*.8},{filter:'drop-shadow(0 0 0 rgb(0 0 0 / 0))',offset:FW},{filter:'drop-shadow(0 0 0 rgb(0 0 0 / 0))',offset:1}],o));
   /* a phone clips to the cover square first, then opens out to the whole jacket */
   if(phone)a.push(sp.animate([{clipPath:cSq,offset:0},{clipPath:cSq,offset:.36},{clipPath:cJk,offset:.49},{clipPath:cAll,offset:.495},{clipPath:cAll,offset:1}],o));
