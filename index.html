@@ -1412,6 +1412,7 @@ body:has(.head.hero.hx) .backlib{display:none}
 .hcirc svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .hcirc:hover{background:rgb(255 255 255 / .3)}.hcirc:active{transform:scale(.95)}
 .hcirc[aria-pressed="true"],.hcirc[aria-expanded="true"]{background:#fff;color:#111}
+.hxpanel .hsrc{margin-top:0;align-self:flex-start;background:rgb(255 255 255 / .1)}
 .hxpanel{margin-top:18px;padding:18px 20px;border-radius:20px;width:min(100%,520px);display:flex;flex-direction:column;gap:14px;
   background:rgb(0 0 0 / .34);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);animation:hxIn .25s ease both}
 @keyframes hxIn{from{opacity:0;transform:translateY(-6px)}}
@@ -1580,6 +1581,7 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .gf-rs{display:flex;flex-direction:column;gap:14px;padding:0 0 18px;-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 36px),transparent)}
 .gf .sl-hero{background:none;color:var(--ink);flex-direction:column;align-items:flex-start;gap:24px;padding:calc(var(--P) * .07) calc(var(--P) * .07) 4px}
 .gf .sl-pack{--cv:calc(var(--P) * .46);flex:none;width:var(--cv);height:var(--cv);max-width:100%}
+.gf .sl-pack{display:none}   /* the cover is already in the Releases row and printed across the jacket, so the inside skips it */
 .gf .sl-cover{width:var(--cv);height:var(--cv);border-radius:4px;box-shadow:0 16px 34px rgb(0 0 0 / .4)}
 .gf .sl-meta{flex:none;padding:0;gap:6px}
 .gf .sl-meta h3{font-size:clamp(26px,calc(var(--P) * .06),48px)}
@@ -2670,6 +2672,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-aa', note:'ARTIST PHOTO AND OPEN ALBUM TIDY-UP: the artist header now uses Apple Music\u2019s sharper photo by default, and the Spotify / Apple Music switch moved off the header into Details (the \u24d8 button). The open album no longer repeats its cover on the inside left: it is already in the Releases row and printed across the jacket.'},
   {v:'2026.11.19-z', note:'CLOSING AN ALBUM: THE RELEASES ROW NO LONGER JUMPS AT THE END (found from your screen recording): the \u201cTap a record to open it\u201d line under the row was taken out while an album was open. The row sits at the bottom of the artist header, so it dropped by that line\u2019s height when an album opened, then jumped back up in one frame when closing finished. The line now keeps its space while hidden, so the row never moves. The Spotify / Apple Music photo switch also no longer replays its fade-in on every redraw.'},
   {v:'2026.11.19-y', note:'CLOSING AN ALBUM: THE PAGE NO LONGER SNAPS AT THE END: the snap was the artist\u2019s color background, not the cover. Closing an album rebuilds the artist page, and the rebuilt background started its slowly turning color pools over from the beginning, so the whole page behind everything lurched into a new position the moment the album finished closing (opening one did the same, hidden under the flying cover). The colors now carry on from exactly where they were through any redraw of the same artist, including ratings and background syncs.'},
   {v:'2026.11.19-x', note:'Closing an album: the cover now lands exactly on the sleeve (it was aiming at the sunk size, so it ended a few pixels off and then jumped), with a gentler lift so the hand-off is seamless.'},
@@ -8056,8 +8059,7 @@ function heroX(a,all,done,rated,p,phUrl,more){
         <button class="hcirc" data-act="filter" data-v="${open?'all':'open'}" aria-pressed="${open}" aria-label="${open?'Showing songs still to hear. Show everything':'Show only songs still to hear'}" title="Still to hear">${ico.ear}</button>
         <button class="hcirc" data-act="hinfo" aria-expanded="${!!UI.hinfo}" aria-label="Artist details" title="Details">${ico.info}</button>
       </div>
-      ${hxSrcHtml(a)}
-      ${UI.hinfo?`<div class="hxpanel"><div class="hstats"><div><b>${done}<small> /${all.length}</small></b><span>tracks heard</span></div><div><b>${rated}</b><span>rated</span></div><div><b>${a.groups.length}</b><span>releases</span></div></div>${mbArtistBar(a)}</div>`:''}
+      ${UI.hinfo?`<div class="hxpanel">${hxSrcHtml(a)}<div class="hstats"><div><b>${done}<small> /${all.length}</small></b><span>tracks heard</span></div><div><b>${rated}</b><span>rated</span></div><div><b>${a.groups.length}</b><span>releases</span></div></div>${mbArtistBar(a)}</div>`:''}
     </div>
     <div class="hxrel"><div class="hxrh"><h3 class="hxlbl">Releases</h3>${relBar(a)}</div><div class="hxrow">
       <div class="hxprog"><div class="hrec"><div class="hring" style="--p:${p}"><div class="hdisc"><div class="hspin"></div><div class="hlab"><b${p>=100?' class="s"':''}>${p}%</b><span>heard</span></div></div></div>${HARM}</div><span class="hxt">Your progress</span><span class="hxy">${done} of ${all.length} songs</span></div>
@@ -8073,7 +8075,7 @@ var PHAM={busy:false};
    the owner (it is read through the sync Worker, version 16), once an artist's page has been opened. */
 function spPhoto(a){return a.simgHi||a.simg||a.img||''}
 function amPhoto(a){return a.aimg?a.aimg+'/'+(innerWidth<700?'1600x1600bb.jpg':'2400x2400bb.jpg'):''}
-function phSrcPref(){try{return localStorage.getItem('pb_artsrc')==='am'?'am':'sp'}catch(e){return 'sp'}}
+function phSrcPref(){try{return localStorage.getItem('pb_artsrc2')==='sp'?'sp':'am'}catch(e){return 'am'}}   /* Apple Music's photo by default (sharper); Spotify is the choice in Details */
 function phPick(a){return phSrcPref()==='am'&&a.aimg?amPhoto(a):(spPhoto(a)||amPhoto(a))}
 function hxSrcHtml(a){
   if(!a||!a.aimg||!spPhoto(a))return '';
@@ -8096,7 +8098,7 @@ function phXfade(im,want){
   t.src=want}
 /* swap the picture in place (no redraw, so the colors keep flowing): fade the old one out, fade the new one in */
 function phSetSrc(v){
-  try{localStorage.setItem('pb_artsrc',v==='am'?'am':'sp')}catch(e){}
+  try{localStorage.setItem('pb_artsrc2',v==='am'?'am':'sp')}catch(e){}
   const h=document.querySelector('.head.hero.hx'),a=h&&(S.music||[]).find(x=>x.id===h.dataset.aid);if(!a)return;
   h.querySelectorAll('.hsrc button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===(v==='am'?'am':'sp'))));
   const im=h.querySelector('.hphoto img'),u=phPick(a);if(!im||!u||im.getAttribute('src')===u)return;
@@ -8125,7 +8127,7 @@ async function phAmLoad(){
     if(!j||!/^https:\/\/is\d+-ssl\.mzstatic\.com\//.test(j.base||'')){a.aimgTry=Date.now();save();return}
     a.aimg=j.base;delete a.aimgTry;save();
     const cur=document.querySelector('.head.hero.hx[data-aid="'+a.id+'"]');       /* still on this artist: slide the switch in */
-    if(cur&&!cur.querySelector('.hsrc')){const act=cur.querySelector('.hxact'),html=hxSrcHtml(a);if(act&&html)act.insertAdjacentHTML('afterend',html)}
+    if(cur&&!cur.querySelector('.hsrc')){const pn=cur.querySelector('.hxpanel'),html=hxSrcHtml(a);if(pn&&html)pn.insertAdjacentHTML('afterbegin',html)}   /* the switch lives in Details */
     if(cur&&phSrcPref()==='am')phSetSrc('am');
   }catch(e){a.aimgTry=Date.now()-13*864e5}   /* a hiccup (offline, Apple busy) tries again tomorrow, not in two weeks */
   finally{PHAM.busy=false}
