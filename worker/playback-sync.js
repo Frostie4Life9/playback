@@ -50,7 +50,7 @@
    Every response carries x-pb-worker: 5 so the app knows what this Worker
    can do (2 = compressed sync, 3 = Spotify plays, 4 = Spotify catalog too,
    5 = the morning-brief list, 6 = Discogs pressing search, 7 = Discogs pressing photos, 8 = your own record photos,
-   11 = Google accounts, friends and friends' ratings, 12 = a capped copy of a friend's log under their Google account, 13 = the owner can sign in with Google instead of pasting the sync key, 14 = profile picture and account color, 15 = the owner can list every account: GET /users, see the accounts section above the export, 16 = Apple Music artist photos: GET /apple/art, 20 = those photos saved for everyone and open to signed-in friends: GET /acct/apple/art).
+   11 = Google accounts, friends and friends' ratings, 12 = a capped copy of a friend's log under their Google account, 13 = the owner can sign in with Google instead of pasting the sync key, 14 = profile picture and account color, 15 = the owner can list every account: GET /users, see the accounts section above the export, 16 = Apple Music artist photos: GET /apple/art, 20 = those photos saved for everyone and open to signed-in friends: GET /acct/apple/art, 21 = &fresh=1 skips the saved copy).
 
    MORNING BRIEF (version 5)
    The app keeps a tiny list of the next episode of each show you follow
@@ -118,7 +118,7 @@ const CORS = {
   'Access-Control-Allow-Headers': 'content-type, x-sync-key, authorization',
   'Access-Control-Expose-Headers': 'x-pb-worker, retry-after, x-pb-cache',
   'Access-Control-Max-Age': '86400',
-  'x-pb-worker': '20'
+  'x-pb-worker': '21'
 };
 const JSON_H = Object.assign({ 'content-type': 'application/json', 'cache-control': 'no-store' }, CORS);
 const GZ_H = Object.assign({ 'content-type': 'application/gzip', 'cache-control': 'no-store' }, CORS);
@@ -231,7 +231,8 @@ async function appleArtCached(env, url, who) {
   const id = (url.searchParams.get('id') || '').replace(/\D/g, '');
   if (!id || id.length > 12 || !env.CATALOG) return appleArt(url);
   const ck = 'aart:' + id;
-  const hit = await env.CATALOG.prepare('SELECT v FROM catalog WHERE k = ?1 AND exp > ?2').bind(ck, Date.now()).first('v').catch(() => null);
+  const fresh = url.searchParams.get('fresh') === '1';   /* a new release came out: skip the saved copy once (version 21) */
+  const hit = fresh ? null : await env.CATALOG.prepare('SELECT v FROM catalog WHERE k = ?1 AND exp > ?2').bind(ck, Date.now()).first('v').catch(() => null);
   if (hit) return hit === 'none' ? reply({ error: 'none' }, 404) : reply({ base: hit });
   if (who !== 'owner') { await acctInit(env); if (!(await rlHit(env, 'aart:' + who, AART_CAP, 86400))) return reply({ error: 'daily limit' }, 429); }
   const r = await appleArt(url);
