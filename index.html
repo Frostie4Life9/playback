@@ -2666,6 +2666,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-v', note:'CLOSING AN ALBUM NO LONGER SNAPS THE PAGE: when you closed an album the space the open jacket held vanished all at once and the page jumped back toward the top, which made the cover\u2019s trip home hard to follow. Now, as the jacket shuts and the cover flies home, the empty space closes up smoothly while the page eases back to where it was before you opened the album, and the \u201cTap a record to open it\u201d line comes back without nudging anything.'},
   {v:'2026.11.19-u', note:'GATEFOLD OPENING, TAKE THREE: the cover used to slide behind the row\u2019s sleeves (they sat on a higher layer than the jacket); it now stays in front of the whole row. The motion is new too: the cover lifts off the shelf at the size of its sleeve with a soft shadow, drops down out of the row first, then slides across and swells to full size as it comes to rest (position and size now ease separately, and there is no more tilting). The record goes with it, so the sleeve left in the row sits empty, sunk and darker, with a brighter glow in the album\u2019s color and the notch pointing at the jacket. Closing plays it in reverse: the cover returns, the record slides back out of its sleeve and the sleeve rises up as it lands.'},
   {v:'2026.11.19-t', note:'GATEFOLD: THE COVER NOW LOOKS PULLED OFF ITS SLEEVE: the album in the Releases row stays put, but when you open it the cover pops up toward you, tilts and swings out along an arc instead of sliding straight over its own tile. The sleeve it left sinks and darkens, glows in the album\u2019s color, and a small notch under it points down at the open jacket. Closing plays it in reverse: the cover arcs back and the sleeve rises up again as it lands.'},
   {v:'2026.11.19-s', note:'GATEFOLD: NO MORE FADE-AWAY AND POP-BACK: the album in the Releases row used to vanish the moment you tapped it, then fade back in halfway through the opening, so it looked like it blinked. It now stays put the whole time. The cover that flies out is a copy of it, and the row\u2019s sleeve keeps its lifted, ringed look while the record is open; closing flies the cover back onto it.'},
@@ -9220,9 +9221,30 @@ function gfClose(){const el=document.querySelector('.group.sleeve.gf');
   if(!el||noMotion()){done();return}
   if(UI.gfClosing)return;UI.gfClosing=true;
   el.classList.remove('gfopen');
-  try{const p=gfRun(el,true);if(!p)return done();p.then(done,done)}catch(e){done()}}
+  try{const p=gfRun(el,true);if(!p)return done();
+    /* the jacket is shut and the cover is flying home: close up the space it held smoothly, and ease the page back, instead of the page dropping out from under you at the end */
+    setTimeout(()=>gfCollapse(el,1750*.42+30),1750*.58);
+    p.then(done,done)}catch(e){done()}}
+function gfCollapse(el,ms){
+  if(!el.isConnected)return;
+  const cs=getComputedStyle(el),f=v=>parseFloat(v)||0,h=el.offsetHeight,mt=f(cs.marginTop),mb=f(cs.marginBottom),pt=f(cs.paddingTop),pb=f(cs.paddingBottom);
+  /* once the album is closed the "Tap a record to open it" hint comes back under the row, so leave exactly its room behind: the page then doesn't shift when it reappears */
+  let extra=0;const rel=document.querySelector('.hx .hxrel');
+  if(rel){const pr=document.createElement('p');pr.className='hxhint';pr.textContent='Tap a record to open it';pr.style.cssText='position:absolute;visibility:hidden;animation:none;left:0;right:0';rel.appendChild(pr);
+    extra=pr.offsetHeight+f(getComputedStyle(pr).marginTop)-f(getComputedStyle(el.parentElement).rowGap);pr.remove()}
+  const hf=Math.max(extra,0),mf=Math.min(extra,0);
+  const y0=scrollY,doc=document.documentElement,M1=Math.max(0,doc.scrollHeight-(h+mt+mb)+extra-innerHeight);
+  const y1=Math.min(y0,Math.max(0,UI.gfS0==null?y0:UI.gfS0),M1);   /* back to where the page was before the album opened, never further down than the shorter page allows */
+  el.style.boxSizing='border-box';el.style.minHeight='0';
+  const t0=performance.now(),ease=t=>.5-.5*Math.cos(Math.PI*t);
+  const step=now=>{if(!el.isConnected)return;const t=Math.min(1,(now-t0)/ms),e=ease(t),k=1-e;
+    el.style.height=(hf+(h-hf)*k).toFixed(1)+'px';el.style.marginTop=(mf+(mt-mf)*k).toFixed(1)+'px';el.style.marginBottom=(mb*k).toFixed(1)+'px';el.style.paddingTop=(pt*k).toFixed(1)+'px';el.style.paddingBottom=(pb*k).toFixed(1)+'px';
+    window.scrollTo(0,y0+(y1-y0)*e);
+    if(t<1)requestAnimationFrame(step)};
+  requestAnimationFrame(step)}
 /* bring a freshly opened album into view: keep the Releases row just under the top bar with the sleeve opening below it */
 function gfShow(el){if(!el)return;
+  UI.gfS0=scrollY;   /* where the page was, so closing can ease back to it */
   const on=document.querySelector('.hxsl.on'),rw=on&&on.parentNode;   /* slide the Releases row so the open record is showing */
   if(on&&rw){const L=on.offsetLeft-rw.offsetLeft,R=L+on.offsetWidth+60;if(L<rw.scrollLeft||R>rw.scrollLeft+rw.clientWidth)rw.scrollTo({left:Math.max(0,L-24),behavior:'auto'})}
   const r=el.getBoundingClientRect();
