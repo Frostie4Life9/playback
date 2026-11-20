@@ -1553,29 +1553,53 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 @keyframes hxAddOut{to{opacity:0;transform:translateY(-10px) scale(.97)}}
 /* Delete artist sits at the bottom of Details */
 .hxpdel{display:flex;padding-top:12px;border-top:1px solid rgb(255 255 255 / .12)}
-/* Fans also spin: a slim bar, opening to a crate of records */
-.hx .hxmore .simbox.crate{display:block}
+/* Fans also spin: sits right on the artist's color field like the Releases row (no grey card), a heading with a glass
+   Show/Hide pill, opening to a row of records that bleeds off the right edge just like Releases does */
+.hx .hxmore .simbox.crate{display:block;margin:0;padding:0;border:0;border-radius:0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+.simh{display:flex;align-items:center;justify-content:space-between;gap:12px 18px;flex-wrap:wrap}
+.simtt{min-width:0}
+.simtt .hxlbl{margin:0;color:#fff}
+.simtt small{display:block;margin-top:3px;font-size:13px;color:rgb(255 255 255 / .62)}
+.simctl{display:flex;align-items:center;gap:10px}
+.simtg,.simar{display:inline-flex;align-items:center;justify-content:center;border:1px solid rgb(255 255 255 / .14);background:rgb(0 0 0 / .24);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:#fff;font:inherit;cursor:pointer;transition:background .2s,border-color .2s,opacity .25s,transform .3s cubic-bezier(.2,.8,.2,1)}
+.simtg{gap:9px;min-height:40px;padding:0 16px;border-radius:999px;font-size:13px;font-weight:600}
+.simtg i{width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translate(-1px,-1px);transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.simbox.open .simtg i{transform:rotate(-135deg) translate(-1px,-1px)}
+.simar{width:40px;height:40px;padding:0;border-radius:50%}
+.simar svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.simtg:hover,.simar:hover:not(:disabled){background:rgb(255 255 255 / .16);border-color:rgb(255 255 255 / .3)}
+.simar:active:not(:disabled){transform:scale(.92)}
+.simar:disabled{opacity:.35;cursor:default}
+.simnav{display:flex;gap:8px;animation:simNavIn .4s cubic-bezier(.2,.8,.2,1) both}
+@keyframes simNavIn{from{opacity:0;transform:translateX(10px)}}
 .simbox.crate .simbody{padding:0;min-width:0}
-.simbox.crate .simhead{min-height:52px;padding:0 18px}
-.simbox.crate .simhead small{display:block;font-size:12px;font-weight:400;color:var(--muted);margin-top:1px}
-.simrow{display:flex;gap:26px;overflow-x:auto;scrollbar-width:none;padding:6px 18px 18px;scroll-snap-type:x proximity}
+.simbox.crate .simbody>.note{color:rgb(255 255 255 / .7);margin:14px 0 0}
+/* the row: starts lined up with the Releases records, runs edge to edge when scrolled (soft fade at both sides), with room above and below so
+   the records' lift and shadow are not clipped; scroll-padding keeps the first record from snapping onto the edge */
+.simrow{display:flex;gap:30px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;scroll-snap-type:x proximity;scroll-padding-inline:var(--hxpad);
+  margin:4px calc(-1 * var(--hxpad)) -18px;padding:14px var(--hxpad) 26px;
+  -webkit-mask-image:linear-gradient(to right,transparent,#000 var(--hxpad) calc(100% - var(--hxpad)),transparent);mask-image:linear-gradient(to right,transparent,#000 var(--hxpad) calc(100% - var(--hxpad)),transparent)}
 .simrow::-webkit-scrollbar{display:none}
-.simt{flex:none;width:118px;border:0;background:none;padding:0;color:var(--ink);font:inherit;text-align:left;cursor:pointer;scroll-snap-align:start}
-.simd{position:relative;display:grid;place-items:center;width:118px;height:118px;border-radius:50%;box-shadow:0 10px 22px rgb(0 0 0 / .35);
-  background:radial-gradient(circle,transparent 0 30%,#0d0d0d 30.5% 32%,transparent 32.5%),repeating-radial-gradient(circle,#191919 0 1.6px,#0b0b0b 1.6px 3.4px);transition:transform .7s cubic-bezier(.2,.8,.2,1)}
-.simd::before{content:"";position:absolute;width:60%;height:60%;border-radius:50%;background:var(--sc)}
-.simd img{position:absolute;z-index:1;width:60%;height:60%;border-radius:50%;object-fit:cover}
-.simd b{position:relative;font:800 26px/1 var(--body);color:rgb(255 255 255 / .75)}
-.simt:hover .simd,.simt:focus-visible .simd{transform:rotate(40deg) translateY(-3px)}
-.simn{display:block;margin-top:10px;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sims{display:block;font-size:12px;color:var(--muted);white-space:nowrap}
-.sims em{font-style:normal;color:var(--accent);font-weight:600}
+@media (hover:hover){.simrow{scroll-snap-type:none}}   /* snapping fights wheel and arrow scrolling on a PC */
+.simt{flex:none;width:128px;border:0;background:none;padding:0;color:#fff;font:inherit;text-align:left;cursor:pointer;scroll-snap-align:start}
+.simd{position:relative;display:grid;place-items:center;width:128px;height:128px;border-radius:50%;box-shadow:0 14px 28px rgb(0 0 0 / .32);
+  background:radial-gradient(circle,transparent 0 30%,#0d0b0b 30.5% 32%,transparent 32.5%),conic-gradient(from 30deg,rgb(255 255 255 / 0) 0 10%,rgb(255 255 255 / .07) 14%,rgb(255 255 255 / 0) 20% 60%,rgb(255 255 255 / .06) 64%,rgb(255 255 255 / 0) 70%),repeating-radial-gradient(circle,#1b1717 0 1px,#0c0a0a 1px 3px);
+  transition:transform .7s cubic-bezier(.2,.8,.2,1),box-shadow .4s}
+.simd::before{content:"";position:absolute;width:40%;height:40%;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgb(255 255 255 / .22),transparent 60%),var(--sc);box-shadow:inset 0 0 0 1px rgb(0 0 0 / .25)}
+.simd::after{content:"";position:absolute;width:4%;height:4%;border-radius:50%;background:#0c0a0a;z-index:2}
+.simd img{position:absolute;z-index:1;width:40%;height:40%;border-radius:50%;object-fit:cover}
+.simd b{position:relative;top:-11%;font:800 15px/1 var(--body);color:rgb(255 255 255 / .9);letter-spacing:.02em}
+.simd:has(img) b{display:none}
+.simt:hover .simd,.simt:focus-visible .simd{transform:rotate(40deg) translateY(-4px);box-shadow:0 20px 34px rgb(0 0 0 / .4)}
+.simn{display:block;margin-top:12px;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sims{display:block;margin-top:2px;font-size:12px;color:rgb(255 255 255 / .62);white-space:nowrap}
+.sims em{font-style:normal;color:#fff;font-weight:700}
 .simrow.sim-in .simt{animation:simUp .5s cubic-bezier(.2,.8,.2,1) calc(var(--i) * 45ms) backwards}
 .simrow.sim-in .simd{animation:simSpin .9s cubic-bezier(.2,.8,.2,1) calc(var(--i) * 45ms) backwards}
 @keyframes simUp{from{opacity:0;transform:translateY(16px)}}
 @keyframes simSpin{from{transform:rotate(-120deg)}}
-@media (max-width:760px){.simt,.simd{width:96px}.simd{height:96px}.simrow{gap:18px}}
-@media (prefers-reduced-motion:reduce){.simrow.sim-in .simt,.simrow.sim-in .simd,.hxaddp.in,.hxaddp.out{animation:none}}
+@media (max-width:760px){.simt,.simd{width:100px}.simd{height:100px}.simrow{gap:20px}.simnav{display:none}.simtt small{font-size:12px}}
+@media (prefers-reduced-motion:reduce){.simnav,.simrow.sim-in .simt,.simrow.sim-in .simd,.hxaddp.in,.hxaddp.out{animation:none}}
 @media (prefers-reduced-motion:no-preference){.sheet.swin .hxmore{animation:swUp .62s cubic-bezier(.2,.8,.2,1) .3s backwards}}
 
 /* THE GATEFOLD: an opened album, drawn as a real open gatefold jacket. On a wide screen it is two square panels of
@@ -2715,6 +2739,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-ac', note:'FANS ALSO SPIN, RESTYLED AND SCROLLABLE: the grey card is gone, so the section now sits right on the artist\u2019s color like Releases, with a glass Show/Hide pill and records lined up with the Releases row, running off the right edge with a soft fade. On a PC it now scrolls: arrow buttons next to Show/Hide (they dim at the ends) and the normal mouse wheel moves the row sideways. Also fixed the first record sitting flush against the left edge (it was snapping past the row\u2019s padding).'},
   {v:'2026.11.19-ab', note:'ARTIST PAGE BOTTOM, CRATE STYLE: Similar artists is now \u201cFans also spin\u201d, a slim bar that stays collapsed until you tap it, then opens to a row of records (artists in your log show their photo on the label and open when tapped; new ones show their initial and tap to add). Add a release is an empty sleeve at the end of the Releases row that opens the form in a panel, and Delete artist moved into Details (\u24d8). Also fixed the last jump when closing an album: the gap above the next item now closes up smoothly instead of vanishing at the end.'},
   {v:'2026.11.19-aa', note:'ARTIST PHOTO AND OPEN ALBUM TIDY-UP: the artist header now uses Apple Music\u2019s sharper photo by default, and the Spotify / Apple Music switch moved off the header into Details (the \u24d8 button). The open album no longer repeats its cover on the inside left: it is already in the Releases row and printed across the jacket.'},
   {v:'2026.11.19-z', note:'CLOSING AN ALBUM: THE RELEASES ROW NO LONGER JUMPS AT THE END (found from your screen recording): the \u201cTap a record to open it\u201d line under the row was taken out while an album was open. The row sits at the bottom of the artist header, so it dropped by that line\u2019s height when an album opened, then jumped back up in one frame when closing finished. The line now keeps its space while hidden, so the row never moves. The Spotify / Apple Music photo switch also no longer replays its fade-in on every redraw.'},
@@ -8074,7 +8099,7 @@ function hxObserve(){
   if(!hxIO)hxIO=new IntersectionObserver(es=>{for(const e of es){const t=e.target,k=t.dataset.g;if(!k)continue;
     if(e.isIntersecting&&!HXSEEN.has(k)){HXSEEN.add(k);const v=t.querySelector('.vgr');if(v&&v.querySelector('i.on')){v.classList.remove('rip');void v.offsetWidth;v.classList.add('rip');clearTimeout(v._t);v._t=setTimeout(()=>v.classList.remove('rip'),2200)}}
     else if(!e.isIntersecting)HXSEEN.delete(k)}},{threshold:.7});
-  hxIO.disconnect();document.querySelectorAll('.hxrow .hxsl[data-g]').forEach(el=>hxIO.observe(el))}
+  hxIO.disconnect();document.querySelectorAll('.hxrow .hxsl[data-g]').forEach(el=>hxIO.observe(el));simNavSync()}
 /* the record peeking out of each sleeve in the Releases row: one groove per song (long releases fold songs together),
    lit for the songs you have heard, faint for ones carried over from an earlier listen */
 function hxRings(g){const rs=slRings(g),R=rs.length;
@@ -9070,16 +9095,34 @@ function simBody(e,type,ctx){
   if(!e.rows||!e.rows.length)return `<p class="note">Nothing found. Last.fm may not know this ${type==='t'?'song':'artist'} well enough yet.</p>`;
   const an=e.anim?' sim-in':'';e.anim=false;
   return `<ul class="sim-l${an}">${e.rows.slice(0,type==='t'?15:20).map((x,i)=>simRow(x,i,type)).join('')}</ul><p class="note sim-src">Matches from Last.fm listening data.</p>`}
+/* Fans also spin scrolling on a PC: the row's scrollbar is hidden, so the arrow buttons page it, a normal (vertical) mouse
+   wheel over the row moves it sideways while there is more to see (at either end the wheel goes back to scrolling the
+   page), and the arrows dim at the ends. */
+function simNavSync(){document.querySelectorAll('.simbox.crate').forEach(bx=>{const r=bx.querySelector('.simrow');if(!r)return;
+  const max=r.scrollWidth-r.clientWidth,[l,rt]=bx.querySelectorAll('.simar');if(!l)return;
+  l.disabled=r.scrollLeft<=2;rt.disabled=r.scrollLeft>=max-2})}
+document.addEventListener('click',ev=>{const b=ev.target.closest('[data-simscroll]');if(!b)return;
+  const r=b.closest('.simbox')?.querySelector('.simrow');if(!r)return;
+  r.scrollBy({left:(+b.dataset.simscroll)*Math.max(200,r.clientWidth*.8),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})});
+document.addEventListener('scroll',ev=>{if(ev.target.classList&&ev.target.classList.contains('simrow'))simNavSync()},true);
+document.addEventListener('wheel',ev=>{const r=ev.target.closest&&ev.target.closest('.simrow');if(!r||ev.ctrlKey)return;
+  if(Math.abs(ev.deltaX)>Math.abs(ev.deltaY))return;   /* trackpads already scroll sideways on their own */
+  const max=r.scrollWidth-r.clientWidth;if(max<=0)return;
+  const d=ev.deltaY*(ev.deltaMode===1?32:ev.deltaMode===2?r.clientWidth:1);
+  if((d<0&&r.scrollLeft<=0)||(d>0&&r.scrollLeft>=max-1))return;
+  ev.preventDefault();r.scrollLeft+=d},{passive:false});
+addEventListener('resize',()=>simNavSync());
 /* Fans also spin: collapsed to one slim bar until tapped, then a crate of records, one per similar artist, the label
    showing the artist's photo when they are in your log (tap to open them) or their initial when not (tap to add them) */
 function simBox(a){
   const open=UI.simOpen===a.id,ao=open&&UI.simAnim?' sim-opening':'';if(open)UI.simAnim=false;
-  const e=SIM[simKey('a',a.name)],body=open?(e&&!e.busy&&!e.err&&e.rows&&e.rows.length?simCrate(e,ao):simBody(e,'a',{artist:a.name})):'';
-  return `<div class="simbox crate${open?' open':''}"><button class="simhead" data-act="simtog" data-a="${a.id}" aria-expanded="${open}"><span>Fans also spin<small>${open?'Similar artists, from Last.fm':'Similar artists'}</small></span><i aria-hidden="true"></i></button>${open?`<div class="simbody${ao}">${body}</div>`:''}</div>`}
+  const e=SIM[simKey('a',a.name)],ok=e&&!e.busy&&!e.err&&e.rows&&e.rows.length,body=open?(ok?simCrate(e,ao):simBody(e,'a',{artist:a.name})):'';
+  const arr=open&&ok?`<span class="simnav"><button class="simar" data-simscroll="-1" aria-label="Scroll left" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button><button class="simar" data-simscroll="1" aria-label="Scroll right"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button></span>`:'';
+  return `<section class="simbox crate${open?' open':''}"><div class="simh"><div class="simtt"><h3 class="hxlbl">Fans also spin</h3><small>${open?'Similar artists, from Last.fm':'Similar artists, from Last.fm listening'}</small></div><div class="simctl">${arr}<button class="simtg" data-act="simtog" data-a="${a.id}" aria-expanded="${open}">${open?'Hide':'Show'}<i aria-hidden="true"></i></button></div></div>${open?`<div class="simbody${ao}">${body}</div>`:''}</section>`}
 function simCrate(e,ao){const an=e.anim||ao?' sim-in':'';e.anim=false;
   return `<div class="simrow${an}">${e.rows.slice(0,20).map((x,i)=>{const a=rtArtist([x.n]),ph=a?(spPhoto(a)||(a.aimg?a.aimg+'/300x300bb.jpg':'')):'',pc=Math.round((x.m||0)*100);
     const st=a?pct(artistItems(a).map(y=>y.id))+'% heard':pc+'% match';
-    return `<button class="simt" style="--i:${Math.min(i,12)};--sc:hsl(${colHash(x.n)%360} 42% 40%)" data-act="${a?'llgo':'simadd'}" ${a?`data-a="${esc(a.id)}"`:`data-n="${esc(x.n)}"`} aria-label="${a?'Open':'Add'} ${esc(x.n)}"><span class="simd" aria-hidden="true">${ph?`<img src="${esc(ph)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}<b>${esc(String(x.n).trim().charAt(0).toUpperCase())}</b></span><span class="simn">${esc(x.n)}</span><span class="sims">${a?'':'<em>Add</em> \u00b7 '}${esc(st)}</span></button>`}).join('')}</div>`}
+    return `<button class="simt" style="--i:${Math.min(i,12)};--sc:hsl(${colHash(x.n)%360} 34% 46%)" data-act="${a?'llgo':'simadd'}" ${a?`data-a="${esc(a.id)}"`:`data-n="${esc(x.n)}"`} aria-label="${a?'Open':'Add'} ${esc(x.n)}"><span class="simd" aria-hidden="true">${ph?`<img src="${esc(ph)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}<b>${esc(String(x.n).trim().charAt(0).toUpperCase())}</b></span><span class="simn">${esc(x.n)}</span><span class="sims">${a?'':'<em>Add</em> \u00b7 '}${esc(st)}</span></button>`}).join('')}</div>`}
 function simSong(a,i,t){
   const open=UI.simSong===i.id,ao=open&&UI.simAnim?' sim-opening':'';if(open)UI.simAnim=false;
   return `<div class="simsong"><button class="link" data-act="simsong" data-id="${i.id}" data-art="${esc(a.name)}" data-ttl="${esc(t)}" aria-expanded="${open}">${open?'Hide similar songs':'Similar songs'}</button>${open?`<div class="simbody${ao}">${simBody(SIM[simKey('t',a.name,t)],'t',{artist:a.name,title:t})}</div>`:''}</div>`}
