@@ -2201,6 +2201,88 @@ button.st-t:hover{color:var(--accent);text-decoration:underline}
   .start>*:nth-child(2){animation-delay:.06s}.start>*:nth-child(3){animation-delay:.12s}.start>*:nth-child(4){animation-delay:.18s}.start>*:nth-child(5){animation-delay:.24s}
   .start-v{animation:startspin 14s linear infinite}
 }
+
+/* ===== 2026.11.19-af: artist page polish pass (from the screen recording) ===== */
+/* the colors always fill the window, so a short page (Fans also spin hidden, an album just closed) never shows a dark strip at the bottom */
+.head.hero.hx{min-height:100vh;min-height:100lvh}
+@media (max-width:760px){.head.hero.hx{min-height:100vh;min-height:100lvh}}
+/* Details (i) floats over the page as a popover instead of pushing the Releases row down; it grows out of its button and folds back into it */
+.hxact{position:relative}
+.hxpanel{position:absolute;left:0;top:calc(100% + 14px);z-index:40;margin:0;width:min(520px,calc(100vw - 2 * var(--hxpad)));animation:none;transform-origin:240px 0;box-shadow:0 24px 60px rgb(0 0 0 / .32);background:rgb(16 16 18 / .6);-webkit-backdrop-filter:blur(24px) saturate(1.3);backdrop-filter:blur(24px) saturate(1.3);border:1px solid rgb(255 255 255 / .1)}
+.hxpanel.in{animation:hxPopIn .34s cubic-bezier(.2,.8,.2,1) both}
+.hxpanel.out{animation:hxPopOut .2s cubic-bezier(.4,0,1,1) forwards;pointer-events:none}
+@keyframes hxPopIn{from{opacity:0;transform:translateY(-10px) scale(.95)}}
+@keyframes hxPopOut{to{opacity:0;transform:translateY(-8px) scale(.96)}}
+@media (max-width:760px){.hxpanel{left:50%;translate:-50% 0;width:calc(100vw - 2 * var(--hxpad));transform-origin:50% 0}}
+/* the round header buttons give a little press-and-spring when they switch */
+.hcirc.pop{animation:hcPop .45s cubic-bezier(.3,1.5,.5,1)}
+.hcirc.pop svg{animation:hcIco .45s cubic-bezier(.2,.8,.2,1)}
+@keyframes hcPop{35%{transform:scale(.84)}}
+@keyframes hcIco{from{transform:rotate(-14deg) scale(.8);opacity:.4}}
+/* "Tap a record to open it" eases in once (opening an artist, or coming back after an album closes), not on every redraw */
+.hxhint.seen{animation:none}
+.hxhint{color:rgb(255 255 255 / .78)}
+/* the row lines its first record up with the padding, so it no longer snaps a little left when every release is showing */
+.hx .hxrow{scroll-padding-inline:22px var(--hxpad)}
+/* easier to read release details */
+.hxy{color:rgb(255 255 255 / .82);font-size:12.5px;margin-top:2px}
+.simsub,.sims{color:rgb(255 255 255 / .76)}
+/* softer grooves: hard 1px stripes shimmered and broke into dots on the smaller records */
+.hxv{background:radial-gradient(circle,var(--c) 0 19%,#0d0d0d 19.5% 21%,transparent 21.5%),repeating-radial-gradient(circle,#0b0b0b 0,#1d1d1d 1.1px,#0b0b0b 2.3px,#0b0b0b 3.4px)}
+.gf-vr{background:radial-gradient(circle,transparent 0 31%,#0d0b0b 31.5% 33%,transparent 33.5%),repeating-radial-gradient(circle,#0c0a0a 0,#1e1a1a 1px,#0c0a0a 2px,#0c0a0a 3px)}
+.simd{background:radial-gradient(circle,transparent 0 30%,#0d0b0b 30.5% 32%,transparent 32.5%),conic-gradient(from 30deg,rgb(255 255 255 / 0) 0 10%,rgb(255 255 255 / .07) 14%,rgb(255 255 255 / 0) 20% 60%,rgb(255 255 255 / .06) 64%,rgb(255 255 255 / 0) 70%),repeating-radial-gradient(circle,#0c0a0a 0,#1e1a1a 1px,#0c0a0a 2px,#0c0a0a 3px)}
+.simlit{background:repeating-radial-gradient(circle,color-mix(in srgb,var(--sc) 22%,#0c0a0a) 0,color-mix(in srgb,var(--sc) 80%,#111) 1px,color-mix(in srgb,var(--sc) 22%,#0c0a0a) 2px,color-mix(in srgb,var(--sc) 22%,#0c0a0a) 3px)}
+/* Fans also spin: the grooves and the light on them hold still while the label spins (like a real record), so they stay crisp */
+.simd,.simrow.sim-in .simd{animation:none}
+.simd::before{content:none}
+.simlab{position:absolute;z-index:2;inset:30%;border-radius:50%;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 35% 30%,rgb(255 255 255 / .22),transparent 60%),var(--sc);box-shadow:inset 0 0 0 1px rgb(0 0 0 / .25)}
+.simlab img{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;object-fit:cover;z-index:0;box-shadow:none}
+.simlab b{position:relative;top:-18%;z-index:1;font:800 15px/1 var(--body);color:rgb(255 255 255 / .9);letter-spacing:.02em}
+.simlab:has(img) b{display:none}
+@media (prefers-reduced-motion:no-preference){.simlab{animation:simRot var(--rot) linear infinite}.simrow.sim-in .simlab{animation:simSpin .9s cubic-bezier(.2,.8,.2,1) calc(var(--i) * 45ms) backwards,simRot var(--rot) linear infinite}}
+.simt:hover .simd,.simt:focus-visible .simd{transform:translateY(-5px)}
+/* the opening reveal used to leave a clipping box behind the row (its shadows were cut off in a rectangle) */
+.simbox.crate.open .simbody.sim-opening{animation:simGrow2 .45s cubic-bezier(.2,.8,.2,1) backwards}
+@keyframes simGrow2{from{opacity:0;clip-path:inset(0 -100vw 100% -100vw);transform:translateY(-8px)}to{opacity:1;clip-path:inset(-80px -100vw -120px -100vw);transform:none}}
+/* the arrows slide in when the row opens, not again on every redraw */
+.simnav{animation:none}
+.simnav.in{animation:simNavIn .4s cubic-bezier(.2,.8,.2,1) both}
+/* the open album's sleeve in the row sinks once, when it opens; a redraw no longer makes it pop up and sink again */
+.hxsl.on:not(.sink) .hxc,.hxsl.on:not(.sink) .hxv,.hxsl.on:not(.sink) .hxc::after,.hxsl.on:not(.sink)::after{animation:none}
+/* the gatefold's records: only the jacket edge hides them, so their shadows and round bottoms are no longer cut off flat */
+@media (min-width:1100px){.gf-pk{overflow:visible}.gf-pk.r{clip-path:inset(-80px -200px -120px 0)}.gf-pk.l{clip-path:inset(-80px 0 -120px -200px)}}
+/* Listen again sits under the album name instead of on top of long titles */
+.gf .sl-hero{position:relative}
+.gf .sl-hero>.sl-bar{position:static;order:3;align-self:flex-start;margin-top:-6px}
+.gf .sl-hero>.sl-bar .sl-ic{position:relative;top:auto;right:auto;left:auto}
+/* one font for the numbers in the ratings line */
+.sl-rate .avg{font-family:var(--body);font-variant-numeric:tabular-nums}
+.sl-note .diff{font:600 12.5px var(--body);font-variant-numeric:tabular-nums}
+/* the sort menu: a glass pill that opens a matching menu (the browser's own white list clashed with the page) */
+.rsel{position:relative;display:inline-flex}
+.rsel-b{display:inline-flex;align-items:center;gap:10px;min-height:40px;padding:0 15px 0 16px;border-radius:999px;border:1px solid rgb(255 255 255 / .14);background:rgb(0 0 0 / .24);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:#fff;font:600 13px var(--body);cursor:pointer;white-space:nowrap;transition:background .2s,border-color .2s}
+.rsel-b:hover,.rsel.open .rsel-b{background:rgb(255 255 255 / .16);border-color:rgb(255 255 255 / .3)}
+.rsel-b i{width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translate(-1px,-1px);transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.rsel.open .rsel-b i{transform:rotate(-135deg) translate(-1px,-1px)}
+.rsel-b span{display:inline-block}
+.rsel-b span.rsw{animation:rselSw .35s cubic-bezier(.2,.8,.2,1)}
+@keyframes rselSw{from{opacity:0;transform:translateY(6px)}}
+.rsel-m{position:absolute;right:0;top:calc(100% + 8px);z-index:45;min-width:230px;padding:6px;border-radius:16px;display:flex;flex-direction:column;gap:1px;transform-origin:100% 0;
+  background:rgb(18 18 20 / .72);-webkit-backdrop-filter:blur(22px) saturate(1.4);backdrop-filter:blur(22px) saturate(1.4);border:1px solid rgb(255 255 255 / .12);box-shadow:0 22px 50px rgb(0 0 0 / .4)}
+.rsel-m button{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:38px;padding:0 12px;border:0;border-radius:10px;background:none;color:rgb(255 255 255 / .82);font:500 14px var(--body);text-align:left;cursor:pointer;transition:background .15s,color .15s}
+.rsel-m button:hover,.rsel-m button:focus-visible{background:rgb(255 255 255 / .1);color:#fff;outline:none}
+.rsel-m button[aria-checked="true"]{color:#fff;font-weight:650}
+.rsel-m button[aria-checked="true"]::after{content:"";flex:none;width:5px;height:10px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translate(-2px,-2px)}
+.rsel-m.in{animation:rselIn .24s cubic-bezier(.2,.8,.2,1) both}
+.rsel-m.in button{animation:rselItem .32s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(var(--i) * 22ms)}
+.rsel-m.out{animation:rselOut .16s cubic-bezier(.4,0,1,1) forwards;pointer-events:none}
+@keyframes rselIn{from{opacity:0;transform:translateY(-6px) scale(.96)}}
+@keyframes rselItem{from{opacity:0;transform:translateY(-4px)}}
+@keyframes rselOut{to{opacity:0;transform:translateY(-4px) scale(.97)}}
+@media (max-width:760px){.rsel-b{min-height:44px;font-size:14px}.rsel-m{max-width:calc(100vw - 32px)}.rsel-m button{min-height:44px;font-size:15px}}
+/* phones: the open album has no cover inside any more, so the record that sat beside it landed on top of the album name; it stays tucked away there */
+@media (max-width:1099px){.gf .gf-pk.l{display:none}}
+@media (prefers-reduced-motion:reduce){.hxpanel.in,.hxpanel.out,.hcirc.pop,.hcirc.pop svg,.rsel-m.in,.rsel-m.in button,.rsel-m.out,.rsel-b span.rsw,.simnav.in{animation:none}}
 </style>
 
 <!-- suite:css v10 · shared by Kitchen, Grocery, Lift, DishLog, Protocol, Rail, Game Log, Playback — edit tools/suite.py in the kitchen repo, not here -->
@@ -2755,6 +2837,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-af', note:'ARTIST PAGE POLISH (from your screen recording): Still to hear now animates: the button gives a little press and the releases that stay glide into place while the rest drop out. Details (ⓘ) is now a popover that grows out of its button and folds back into it when you close it (or tap anywhere else, or press Escape) instead of pushing the Releases row down. Closing an album: the page holds still while the cover flies home, so it lands right on its sleeve, and only then does the space close up and the page ease back. The open album’s inside fades as the cover swings over it, so no buttons peek out beside a half-shut cover; its sleeve in the row no longer pops up and sinks again whenever the page redraws; the records in the open jacket are no longer cut off flat at the bottom; and Listen again sits under the album name instead of on top of long titles. “Tap a record to open it” eases in only when it first shows or comes back after an album closes, not on every redraw. The sort menu is now a glass pill with a matching menu instead of the browser’s white list, and a new sort order dips the records out and brings them back one after another instead of sliding them through each other. Fans also spin: no more box behind the row, the grooves hold still while the label spins so they stay crisp (softer grooves on every small record too), the arrows and mouse wheel move by whole records so none is left half cut off, and a redraw no longer throws the row back to the start or nudges the page. Also: the first record no longer shifts sideways between All and a filter, release details are easier to read, the artist colors always fill the window (no dark strip at the bottom of a short page), the ratings line uses one font, and on a phone the record that landed on top of an open album’s name is tucked away.'},
   {v:'2026.11.19-ae', note:'FANS ALSO SPIN, MATCH ON THE RECORD: each record now shows how close a match it is in its grooves, lit up in the label color from the rim inward (a 100% match is fully lit), filling in as the row opens, and it slowly spins, closer matches a little faster. Artists not in your log now get their Apple Music photo on the label, looked up once each and saved, fading in as they arrive (yours only, like the artist header photo). Show/Hide now sits right next to the heading, and the closed subtitle is just \u201cSimilar artists\u201d.'},
   {v:'2026.11.19-ad', note:'FANS ALSO SPIN, SMOOTHER: Hide now folds the row shut (the records drop and spin back, the arrows slide away) instead of vanishing, Show slides it open, and the mouse wheel now glides the row along smoothly like the arrow buttons do instead of jumping.'},
   {v:'2026.11.19-ac', note:'FANS ALSO SPIN, RESTYLED AND SCROLLABLE: the grey card is gone, so the section now sits right on the artist\u2019s color like Releases, with a glass Show/Hide pill and records lined up with the Releases row, running off the right edge with a soft fade. On a PC it now scrolls: arrow buttons next to Show/Hide (they dim at the ends) and the normal mouse wheel moves the row sideways. Also fixed the first record sitting flush against the left edge (it was snapping past the row\u2019s padding).'},
@@ -6411,9 +6494,12 @@ function render(){
   const mT=(()=>{const oh=document.querySelector('.hero[data-aid]'),m=oh&&oh.querySelector('.hmesh:not(.hghost)');if(!m)return null;
     return{aid:oh.dataset.aid,d:[...m.querySelectorAll('.fl,.fb')].map(n=>{const an=n.getAnimations&&n.getAnimations()[0];return an?(an.effect.getTiming().delay||0)-(an.currentTime||0):null})}})();
   const swK=!UI.view?UI.tab+':'+(UI.sel[UI.tab]||''):null,swGo=!!(swK&&UI.swKey&&UI.swKey!==swK);if(swK)UI.swKey=swK;
+  /* a redraw of the same page keeps where you were: the page's scroll, and how far the Releases and Fans also spin rows are slid along
+     (a background redraw used to throw Fans also spin back to its first record and could nudge the page) */
+  const keepY=vPrev===vk&&!swGo?scrollY:null,keepRow=k=>{const e=document.querySelector(k);return e&&!swGo?e.scrollLeft:null},keepHx=keepRow('.hx .hxrow'),keepSim=keepRow('.simrow');
   /* a filter or sort change: tiles and release cards that stay glide to their new spots, new ones rise in one after another */
   const flipOn=UI.flip&&!noMotion()&&window.SX&&typeof SX.flip==='function';UI.flip=false;
-  if(flipOn)SX.flip(document.body,'#llist .tile,.sheet .group.sleeve,.hxrow .hxsl',()=>keepImgs(renderMain),{dur:420,key:el=>el.dataset.acol?'g'+el.dataset.acol:el.dataset.g?'a'+el.dataset.g:el.dataset.id?'t'+el.dataset.id:null});
+  if(flipOn)SX.flip(document.body,'#llist .tile,.sheet .group.sleeve,.hxrow .hxsl,.hxrow .hxprog',()=>keepImgs(renderMain),{dur:420,key:el=>el.dataset.sxk?'k'+el.dataset.sxk:el.dataset.acol?'g'+el.dataset.acol:el.dataset.g?'a'+el.dataset.g:el.dataset.id?'t'+el.dataset.id:null});
   else keepImgs(()=>{const top=topHTML();if(!paneSwap(top))renderMain(top)});   /* the top bar is built once per draw: building it clears the one-shot animation flags of the sheets in it */
   if(gfS){const g=document.querySelector('.group.sleeve.gf[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(gfS.id):gfS.id)+'"]');if(g){const r=g.querySelector('.gf-rs'),l=g.querySelector('.gf-ls');if(r)r.scrollTop=gfS.r;if(l)l.scrollTop=gfS.l}}
   if(mT){const nh=document.querySelector('.hero[data-aid]'),nm=nh&&nh.dataset.aid===mT.aid&&nh.querySelector('.hmesh:not(.hghost)');
@@ -6432,6 +6518,9 @@ function render(){
   slFxResume();
   if(!document.querySelector('.hero.hx[data-aid]'))PHSEEN='';
   phPull();
+  if(keepY!=null&&Math.abs(scrollY-keepY)>1)window.scrollTo(0,keepY);
+  if(keepHx){const e=document.querySelector('.hx .hxrow');if(e&&!e.scrollLeft)e.scrollLeft=keepHx}
+  if(keepSim){const e=document.querySelector('.simrow');if(e&&!e.scrollLeft)e.scrollLeft=keepSim}
   phHiLoad();
   phAmLoad();
   tdPaint();
@@ -8122,18 +8211,23 @@ function hxObserve(){
    lit for the songs you have heard, faint for ones carried over from an earlier listen */
 function hxRings(g){const rs=slRings(g),R=rs.length;
   return rs.map((st,j)=>`<i class="${st===2?'on':st===1?'on fade':''}" style="--d:${(94-j*(50/Math.max(R,1))).toFixed(1)}%;--o:${R-1-j}"></i>`).join('')}
+let HXSINK=null;const HXHINT={aid:null,off:false};
 function heroX(a,all,done,rated,p,phUrl,more){
   const rs=all.map(i=>rating(i.id)).filter(Boolean),avg=rs.length?(rs.reduce((x,y)=>x+y,0)/rs.length/2).toFixed(1):'';
   const sub=[done+' of '+all.length+' heard',rated?rated+' rated':'',avg?'avg '+avg:''].filter(Boolean).join(' · ');
   const og=gfOpenId(a),rl=relList(a).filter(g=>UI.filter!=='open'||String(g.id)===og||g.items.some(i=>!isDone(i.id)));
   const rel=rl.map(g=>{const sArt=g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-250':''),
       col=acolFor(g.id,sArt,g),kind=/single/i.test(g.kind||'')?'Single':/^ep$/i.test(g.kind||'')?'EP':/^studio album$/i.test(g.kind||'')?'Album':(g.kind||'');
-    const on=String(g.id)===og;return `<button class="hxsl${on?' on':''}" data-act="hjump" data-g="${esc(g.id)}" style="--c:${esc(col)}" aria-pressed="${on}" aria-label="${on?'Close':'Open'} ${esc(g.title)}"><span class="hxv vgr" aria-hidden="true">${hxRings(g)}</span><span class="hxc" aria-hidden="true">${sArt?`<img src="${esc(sArt)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span><span class="hxt">${esc(g.title)}</span><span class="hxy">${esc([kind,g.year].filter(Boolean).join(' · '))}</span></button>`}).join('');
+    const on=String(g.id)===og;return `<button class="hxsl${on?' on':''}${on&&HXSINK===String(g.id)?' sink':''}" data-act="hjump" data-g="${esc(g.id)}" style="--c:${esc(col)}" aria-pressed="${on}" aria-label="${on?'Close':'Open'} ${esc(g.title)}"><span class="hxv vgr" aria-hidden="true">${hxRings(g)}</span><span class="hxc" aria-hidden="true">${sArt?`<img src="${esc(sArt)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span><span class="hxt">${esc(g.title)}</span><span class="hxy">${esc([kind,g.year].filter(Boolean).join(' · '))}</span></button>`}).join('');
   const ico={back:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
     play:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.8v14.4L19 12z"/></svg>',
     ear:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="6.5" rx="1.6"/><rect x="16.5" y="14" width="4.5" height="6.5" rx="1.6"/></svg>',
     info:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.2"/></svg>'};
-  const open=UI.filter==='open';
+  const open=UI.filter==='open',pop=UI.hcPop;UI.hcPop=null;
+  /* the hint eases in when it first shows for this artist or comes back after an album closes; any other redraw keeps it still */
+  const hintSeen=!og&&HXHINT.aid===a.id&&!HXHINT.off;HXHINT.aid=a.id;HXHINT.off=!!og;
+  const pin=UI.hinfoIn;UI.hinfoIn=false;
+  const panel=UI.hinfo?`<div class="hxpanel${UI.hinfoOut?' out':pin?' in':''}" role="dialog" aria-label="Artist details">${hxSrcHtml(a)}<div class="hstats"><div><b>${done}<small> /${all.length}</small></b><span>tracks heard</span></div><div><b>${rated}</b><span>rated</span></div><div><b>${a.groups.length}</b><span>releases</span></div></div>${mbArtistBar(a)}<div class="hxpdel">${delBtn(a.id,'Delete artist')}</div></div>`:'';
   return `<div class="head hero hx${hClear()?' hclear':''}${phUrl?'':' nophoto'}" data-aid="${esc(a.id)}" style="${esc(heroStyle(a))}"><div class="hxbg" aria-hidden="true"><div class="hmesh"><i class="hbase"></i><i class="fl fl0"><i class="fb b0"></i><i class="fb b3"></i></i><i class="fl fl1"><i class="fb b1"></i><i class="fb b4"></i></i><i class="fl fl2"><i class="fb b2"></i><i class="fb b5"></i></i></div></div>
     <div class="hxtop">
     ${phUrl?`<div class="hphoto${a.aimg&&phUrl===amPhoto(a)?' am':''}" aria-hidden="true"><img src="${esc(phUrl)}" alt="" decoding="async"${PHSEEN===a.id+'|'+phUrl?' style="animation:none"':''} onload="phSeen(this)" onerror="this.parentNode.remove()"></div>`:''}<i class="hscrim" aria-hidden="true"></i>
@@ -8143,16 +8237,16 @@ function heroX(a,all,done,rated,p,phUrl,more){
       <p class="hxsub">${esc(sub)}</p>
       <div class="hxact">
         <a class="hpbtn" href="${esc(spOpenUrl(a))}" target="_blank" rel="noopener noreferrer">${ico.play}Play</a>
-        <button class="hcirc" data-act="filter" data-v="${open?'all':'open'}" aria-pressed="${open}" aria-label="${open?'Showing songs still to hear. Show everything':'Show only songs still to hear'}" title="Still to hear">${ico.ear}</button>
-        <button class="hcirc" data-act="hinfo" aria-expanded="${!!UI.hinfo}" aria-label="Artist details" title="Details">${ico.info}</button>
+        <button class="hcirc${pop==='filter'?' pop':''}" data-act="filter" data-v="${open?'all':'open'}" aria-pressed="${open}" aria-label="${open?'Showing songs still to hear. Show everything':'Show only songs still to hear'}" title="Still to hear">${ico.ear}</button>
+        <button class="hcirc${pop==='hinfo'?' pop':''}" data-act="hinfo" aria-expanded="${!!UI.hinfo&&!UI.hinfoOut}" aria-label="Artist details" title="Details">${ico.info}</button>
+        ${panel}
       </div>
-      ${UI.hinfo?`<div class="hxpanel">${hxSrcHtml(a)}<div class="hstats"><div><b>${done}<small> /${all.length}</small></b><span>tracks heard</span></div><div><b>${rated}</b><span>rated</span></div><div><b>${a.groups.length}</b><span>releases</span></div></div>${mbArtistBar(a)}<div class="hxpdel">${delBtn(a.id,'Delete artist')}</div></div>`:''}
     </div>
     <div class="hxrel"><div class="hxrh"><h3 class="hxlbl">Releases</h3>${relBar(a)}</div><div class="hxrow">
-      <div class="hxprog"><div class="hrec"><div class="hring" style="--p:${p}"><div class="hdisc"><div class="hspin"></div><div class="hlab"><b${p>=100?' class="s"':''}>${p}%</b><span>heard</span></div></div></div>${HARM}</div><span class="hxt">Your progress</span><span class="hxy">${done} of ${all.length} songs</span></div>
+      <div class="hxprog" data-sxk="prog"><div class="hrec"><div class="hring" style="--p:${p}"><div class="hdisc"><div class="hspin"></div><div class="hlab"><b${p>=100?' class="s"':''}>${p}%</b><span>heard</span></div></div></div>${HARM}</div><span class="hxt">Your progress</span><span class="hxy">${done} of ${all.length} songs</span></div>
       ${rel||`<p class="hxnone">${UI.filter==='open'?'Nothing left to hear here.':'No releases of that kind here.'}</p>`}
-      <button class="hxsl hxadd" data-act="reladd" data-a="${esc(a.id)}" aria-expanded="${UI.relAdd===a.id}" aria-label="Add a release by hand"><span class="hxc" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><span class="hxt">Add a release</span><span class="hxy">By hand</span></button>
-    </div><p class="hxhint${og?' off':''}"${og?' aria-hidden="true"':''}>Tap a record to open it</p></div>
+      <button class="hxsl hxadd" data-sxk="add" data-act="reladd" data-a="${esc(a.id)}" aria-expanded="${UI.relAdd===a.id}" aria-label="Add a release by hand"><span class="hxc" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><span class="hxt">Add a release</span><span class="hxy">By hand</span></button>
+    </div><p class="hxhint${og?' off':''}${hintSeen?' seen':''}"${og?' aria-hidden="true"':''}>Tap a record to open it</p></div>
     </div>
     <div class="hxmore">${more||''}</div>
   </div>`}
@@ -9121,7 +9215,11 @@ function simNavSync(){document.querySelectorAll('.simbox.crate').forEach(bx=>{co
   l.disabled=r.scrollLeft<=2;rt.disabled=r.scrollLeft>=max-2})}
 document.addEventListener('click',ev=>{const b=ev.target.closest('[data-simscroll]');if(!b)return;
   const r=b.closest('.simbox')?.querySelector('.simrow');if(!r)return;
-  r.scrollBy({left:(+b.dataset.simscroll)*Math.max(200,r.clientWidth*.8),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})});
+  const st=simStride(r),max=r.scrollWidth-r.clientWidth,n=Math.max(1,Math.floor(r.clientWidth*.8/st));
+  let to=Math.round((r.scrollLeft+(+b.dataset.simscroll)*n*st)/st)*st;to=Math.max(0,Math.min(max,to));
+  r.scrollTo({left:to,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})});
+/* the distance from one record to the next in the row */
+function simStride(r){const t=r.querySelectorAll('.simt');return t.length>1?Math.max(40,t[1].offsetLeft-t[0].offsetLeft):Math.max(200,r.clientWidth*.8)}
 document.addEventListener('scroll',ev=>{if(ev.target.classList&&ev.target.classList.contains('simrow'))simNavSync()},true);
 /* the wheel glides: each notch adds to a target and the row eases toward it (same feel as the arrow buttons) */
 const SIMW={r:null,t:0,raf:0};
@@ -9136,7 +9234,8 @@ document.addEventListener('wheel',ev=>{const r=ev.target.closest&&ev.target.clos
   if((d<0&&from<=0)||(d>0&&from>=max-1))return;   /* at an end: let the page scroll */
   ev.preventDefault();
   if(matchMedia('(prefers-reduced-motion: reduce)').matches){r.scrollLeft=Math.max(0,Math.min(max,from+d));return}
-  SIMW.r=r;SIMW.t=Math.max(0,Math.min(max,from+d*1.4));if(!SIMW.raf)SIMW.raf=requestAnimationFrame(simGlide)},{passive:false});
+  const st=simStride(r),raw=from+d*1.4,snap=d>0?Math.ceil((raw-1)/st)*st:Math.floor((raw+1)/st)*st;
+  SIMW.r=r;SIMW.t=Math.max(0,Math.min(max,snap));if(!SIMW.raf)SIMW.raf=requestAnimationFrame(simGlide)},{passive:false});
 /* Hide: the records drop back and the row folds shut before the page redraws, instead of vanishing */
 document.addEventListener('click',ev=>{const b=ev.target.closest('.simtg[aria-expanded="true"]');if(!b||b._closing)return;
   const bx=b.closest('.simbox'),body=bx&&bx.querySelector('.simbody');
@@ -9151,7 +9250,7 @@ addEventListener('resize',()=>simNavSync());
 function simBox(a){
   const open=UI.simOpen===a.id,ao=open&&UI.simAnim?' sim-opening':'';if(open)UI.simAnim=false;
   const e=SIM[simKey('a',a.name)],ok=e&&!e.busy&&!e.err&&e.rows&&e.rows.length,body=open?(ok?simCrate(e,ao):simBody(e,'a',{artist:a.name})):'';
-  const arr=open&&ok?`<span class="simnav"><button class="simar" data-simscroll="-1" aria-label="Scroll left" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button><button class="simar" data-simscroll="1" aria-label="Scroll right"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button></span>`:'';
+  const arr=open&&ok?`<span class="simnav${ao?' in':''}"><button class="simar" data-simscroll="-1" aria-label="Scroll left" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button><button class="simar" data-simscroll="1" aria-label="Scroll right"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button></span>`:'';
   return `<section class="simbox crate${open?' open':''}"><div class="simh"><h3 class="hxlbl">Fans also spin</h3><button class="simtg" data-act="simtog" data-a="${a.id}" aria-expanded="${open}">${open?'Hide':'Show'}<i aria-hidden="true"></i></button>${arr}</div><small class="simsub">${open?'Similar artists, from Last.fm':'Similar artists'}</small>${open?`<div class="simbody${ao}">${body}</div>`:''}</section>`}
 function simCrate(e,ao){const an=e.anim||ao?' sim-in':'';e.anim=false;
   const rows=e.rows.slice(0,20),C=simArtCache(),need=[];
@@ -9159,7 +9258,7 @@ function simCrate(e,ao){const an=e.anim||ao?' sim-in':'';e.anim=false;
     let ph=a?(a.aimg?a.aimg+'/300x300bb.jpg':spPhoto(a)):'';
     if(!ph){const c=C[k];if(c&&c[0])ph=c[0]+'/300x300bb.jpg';else if(!c||(!c[0]&&c[1]<Date.now()-12096e5))need.push(x.n)}
     const st=a?pct(artistItems(a).map(y=>y.id))+'% heard':pc+'% match';
-    return `<button class="simt" data-k="${esc(k)}" style="--i:${Math.min(i,12)};--m:${m.toFixed(3)};--rot:${(9+(1-m)*14).toFixed(1)}s;--sc:hsl(${colHash(x.n)%360} 46% 52%)" data-act="${a?'llgo':'simadd'}" ${a?`data-a="${esc(a.id)}"`:`data-n="${esc(x.n)}"`} aria-label="${a?'Open':'Add'} ${esc(x.n)}, ${pc}% match"><span class="simd" aria-hidden="true"><i class="simlit"></i>${ph?`<img src="${esc(ph)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}<b>${esc(String(x.n).trim().charAt(0).toUpperCase())}</b></span><span class="simn">${esc(x.n)}</span><span class="sims">${a?'':'<em>Add</em> \u00b7 '}${esc(st)}</span></button>`}).join('');
+    return `<button class="simt" data-k="${esc(k)}" style="--i:${Math.min(i,12)};--m:${m.toFixed(3)};--rot:${(9+(1-m)*14).toFixed(1)}s;--sc:hsl(${colHash(x.n)%360} 46% 52%)" data-act="${a?'llgo':'simadd'}" ${a?`data-a="${esc(a.id)}"`:`data-n="${esc(x.n)}"`} aria-label="${a?'Open':'Add'} ${esc(x.n)}, ${pc}% match"><span class="simd" aria-hidden="true"><i class="simlit"></i><span class="simlab">${ph?`<img src="${esc(ph)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}<b>${esc(String(x.n).trim().charAt(0).toUpperCase())}</b></span></span><span class="simn">${esc(x.n)}</span><span class="sims">${a?'':'<em>Add</em> \u00b7 '}${esc(st)}</span></button>`}).join('');
   if(need.length)setTimeout(()=>simArtLoad(need),400);
   return `<div class="simrow${an}">${html}</div>`}
 /* Apple Music photos for the Fans also spin artists who are not in your log (owner only, like the artist header photo).
@@ -9187,7 +9286,7 @@ async function simArtLoad(names){
       }
       C[k]=[base,Date.now()];simArtSave();
       if(base)document.querySelectorAll('.simt[data-k="'+CSS.escape(k)+'"] .simd').forEach(d=>{if(d.querySelector('img'))return;
-        const im=new Image();im.alt='';im.className='simin';im.decoding='async';im.onload=()=>d.insertBefore(im,d.querySelector('b'));im.src=base+'/300x300bb.jpg'});
+        const lab=d.querySelector('.simlab')||d,im=new Image();im.alt='';im.className='simin';im.decoding='async';im.onload=()=>lab.insertBefore(im,lab.querySelector('b'));im.src=base+'/300x300bb.jpg'});
       await mbSleep(NR_GAP);
     }
   }catch(e){if(e&&e.code==='limited'){try{localStorage.setItem('pb_simartcool',String(Date.now()+6e5))}catch(_){}}}
@@ -9258,10 +9357,12 @@ function relList(a){const k=relKind(a),so=relSort();let L=a.groups.filter(g=>k==
     rhi:(x,y)=>(!relScore(x))-(!relScore(y))||relScore(y)-relScore(x)||relAvg(y)-relAvg(x),rlo:(x,y)=>(!relScore(x))-(!relScore(y))||relScore(x)-relScore(y)||(!relAvg(x))-(!relAvg(y))||relAvg(x)-relAvg(y),
     heard:(x,y)=>hp(y)-hp(x),left:(x,y)=>hp(x)-hp(y),az:(x,y)=>String(x.title).localeCompare(String(y.title),undefined,{sensitivity:'base'})}[so];
   return L.slice().sort((x,y)=>cmp(x,y)||ix.get(x)-ix.get(y))}
+let RSELSW=false;
 function relBar(a){if(a.groups.length<2)return '';
+  const sw=RSELSW;RSELSW=false;
   const n={all:a.groups.length,alb:0,ep:0,sin:0,oth:0};a.groups.forEach(g=>n[relKindOf(g)]++);const k=relKind(a),so=relSort();
   return `<div class="relbar"><div class="rseg" role="group" aria-label="Kind of release">${Object.entries(REL_KINDS).filter(([v])=>v==='all'||n[v]||v===k).map(([v,t])=>`<button data-act="relkind" data-v="${v}" aria-pressed="${k===v}">${t}<span class="c">${n[v]}</span></button>`).join('')}</div>
-    <label class="lsort rsort"><select id="rsort" aria-label="Sort releases">${Object.entries(REL_SORTS).map(([v,t])=>`<option value="${v}"${so===v?' selected':''}>${t}</option>`).join('')}</select></label></div>`}
+    <div class="rsel" data-rsel><button type="button" class="rsel-b" data-rselb aria-haspopup="listbox" aria-expanded="false" aria-label="Sort releases: ${esc(REL_SORTS[so])}"><span${sw?' class="rsw"':''}>${esc(REL_SORTS[so])}</span><i aria-hidden="true"></i></button></div></div>`}
 /* THE GATEFOLD: the Releases row is the discography. Tapping a record opens that one album like a gatefold sleeve:
    the front cover swings open on its spine, album info on the inside left, your ratings on the inside right.
    One album is open at a time; tapping it again (or the close button) folds it shut. */
@@ -9323,7 +9424,7 @@ function artistView(a){heroLook(a.id);
   if(UI.toAlb&&a.groups.some(g=>String(g.id)===String(UI.toAlb))){UI.alb={aid:a.id,g:String(UI.toAlb)};UI.gfAnim=String(UI.toAlb)}
   const all=artistItems(a),done=all.filter(i=>isDone(i.id)).length,rated=all.filter(i=>rating(i.id)).length,p=pct(all.map(i=>i.id));
   const og=gfOpenId(a),og2=og&&a.groups.find(g=>String(g.id)===og),gf=og2?gfHtml(a,og2):'';
-  UI.dxAnim=null;UI.gfAnim=null;                     /* the switch and opening animations play once, on the draw they were asked for */
+  HXSINK=UI.gfAnim;UI.dxAnim=null;UI.gfAnim=null;                     /* the switch and opening animations play once, on the draw they were asked for */
   const phUrl=phOn()?phPick(a):'';
   const addIn=UI.relAddAnim;UI.relAddAnim=false;
   const addP=UI.relAdd===a.id?`<div class="hxaddp${addIn?' in':''}" role="region" aria-label="Add a release">
@@ -9346,7 +9447,7 @@ let GFP=null,RSOON=0;
 function renderSoon(){
   if(!GFP){render();return}
   if(RSOON)return;RSOON=1;
-  GFP.then(()=>{RSOON=0;render()},()=>{RSOON=0;render()})}
+  GFP.then(()=>{RSOON=0;renderSoon()},()=>{RSOON=0;renderSoon()})}   /* if another motion took over meanwhile (the space closing up after a close), wait for that too */
 /* THE GATEFOLD'S MOTION. Opening: the record's cover lifts out of the Releases row and flies down into place (as just
    the cover), the sleeve unfolds to full length, then the front cover swings open toward you on the spine like a real
    gatefold, darkening as it tilts away from the light and casting a shadow on the inside. Closing plays it all backwards:
@@ -9396,6 +9497,8 @@ function gfRun(el,back){
     sh('.gf-r>.gf-sh',[{opacity:.5,offset:0},{opacity:.5,offset:W},{opacity:.28,offset:.72},{opacity:0,offset:1}]);
     sh('.gf-lb>.gf-sh',[{opacity:0,offset:0},{opacity:0,offset:W},{opacity:.55,offset:.71},{opacity:.55,offset:1}]);
     sh('.gf-lf>.gf-sh',[{opacity:.5,offset:0},{opacity:.5,offset:.71},{opacity:0,offset:1}]);
+    sh('.gf-rs',[{opacity:0,offset:0},{opacity:0,offset:W+.1},{opacity:1,offset:.88},{opacity:1,offset:1}]);
+    sh('.gf-ls',[{opacity:0,offset:0},{opacity:0,offset:W+.14},{opacity:1,offset:.9},{opacity:1,offset:1}]);
     /* the left record rides inside the cover; once open it slides a little further out of its sleeve, then settles */
     const ld=el.querySelector('.gf-pk.l .sl-disc');if(ld)a.push(ld.animate([{translate:'0 0',offset:0},{translate:'0 0',offset:.8},{translate:'-10% 0',offset:.9},{translate:'0 0',offset:1}],o));
   }
@@ -9413,9 +9516,26 @@ function gfClose(){const el=document.querySelector('.group.sleeve.gf');
   if(UI.gfClosing)return;UI.gfClosing=true;
   el.classList.remove('gfopen');
   try{const p=gfRun(el,true);if(!p)return done();
-    /* the jacket is shut and the cover is flying home: close up the space it held smoothly, and ease the page back, instead of the page dropping out from under you at the end */
-    setTimeout(()=>gfCollapse(el,1750*.42+30),1750*.58);
-    p.then(done,done)}catch(e){done()}}
+    /* the page holds perfectly still while the cover flies home, so it lands exactly on its sleeve (closing up the space and
+       scrolling back during the flight moved the sleeve out from under it, so the cover landed off and then jumped). Once it has
+       landed, the space the jacket held closes up smoothly and the page eases back to where it was before the album opened. */
+    const fin=()=>gfSettle(el,done);p.then(fin,fin)}catch(e){done()}}
+function gfSettle(el,done){
+  const host=el.parentElement,y0=scrollY;
+  if(!host||!el.isConnected||noMotion()){done();return}
+  const cs=getComputedStyle(el),gap=parseFloat(getComputedStyle(host).rowGap)||0,h=el.offsetHeight+(parseFloat(cs.marginTop)||0)+(parseFloat(cs.marginBottom)||0);
+  const y1=Math.max(0,Math.min(y0,UI.gfS0==null?y0:UI.gfS0));
+  done();
+  const mh=document.querySelector('.hx .hxmore');if(!mh){window.scrollTo(0,y1);return}
+  const sp=document.createElement('div');sp.setAttribute('aria-hidden','true');sp.style.cssText='flex:none;height:'+h+'px;margin-bottom:0;pointer-events:none';
+  mh.insertBefore(sp,mh.firstChild);window.scrollTo(0,y0);
+  const ms=560,t0=performance.now(),ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+  let res;const mine=GFP=new Promise(r=>res=r);
+  const step=now=>{const t=Math.min(1,(now-t0)/ms),e=ease(t);
+    if(sp.isConnected){sp.style.height=(h*(1-e)).toFixed(1)+'px';sp.style.marginBottom=(-gap*e).toFixed(1)+'px'}
+    window.scrollTo(0,y0+(y1-y0)*e);
+    if(t<1)requestAnimationFrame(step);else{sp.remove();if(GFP===mine)GFP=null;res()}};
+  requestAnimationFrame(step)}
 function gfCollapse(el,ms){
   if(!el.isConnected)return;
   const cs=getComputedStyle(el),f=v=>parseFloat(v)||0,h=el.offsetHeight,mt=f(cs.marginTop),mb=f(cs.marginBottom),pt=f(cs.paddingTop),pb=f(cs.paddingBottom);
@@ -9444,6 +9564,44 @@ function gfShow(el){if(!el)return;
   const row=document.querySelector('.hx .hxrel'),rt=row?row.getBoundingClientRect().top:r.top;
   const top=Math.max(0,Math.min(scrollY+rt-84,scrollY+r.top-90));
   window.scrollTo({top,behavior:noMotion()?'auto':'smooth'})}
+
+/* Details (i): folds back into its button, then the page redraws without it. Tapping anywhere else, or Escape, closes it too. */
+function hinfoClose(){if(!UI.hinfo||UI.hinfoOut)return;
+  const p=document.querySelector('.hxpanel');
+  if(!p||noMotion()){UI.hinfo=false;UI.hinfoOut=false;render();return}
+  UI.hinfoOut=true;p.classList.remove('in');p.classList.add('out');
+  const bt=document.querySelector('.hcirc[data-act="hinfo"]');if(bt){bt.setAttribute('aria-expanded','false');bt.classList.remove('pop');void bt.offsetWidth;bt.classList.add('pop')}
+  setTimeout(()=>{UI.hinfo=false;UI.hinfoOut=false;render()},200)}
+document.addEventListener('pointerdown',ev=>{if(!UI.hinfo||UI.hinfoOut)return;const t=ev.target;
+  if(t.closest&&(t.closest('.hxpanel')||t.closest('[data-act="hinfo"]')||t.closest('.sheet-ov,.modal,.dlg')))return;hinfoClose()},true);
+/* the Releases sort menu */
+function rselClose(m,now){m=m||document.querySelector('.rsel-m');if(!m)return;const r=m.closest('.rsel');if(r){r.classList.remove('open');const b=r.querySelector('.rsel-b');if(b)b.setAttribute('aria-expanded','false')}
+  if(now||noMotion()){m.remove();return}m.classList.remove('in');m.classList.add('out');setTimeout(()=>m.remove(),170)}
+function rselOpen(r){const so=relSort(),m=document.createElement('div');m.className='rsel-m in';m.setAttribute('role','listbox');m.setAttribute('aria-label','Sort releases');
+  m.innerHTML=Object.entries(REL_SORTS).map(([v,t],i)=>`<button type="button" role="option" data-rselv="${v}" aria-checked="${so===v}" style="--i:${i}">${esc(t)}</button>`).join('');
+  r.appendChild(m);r.classList.add('open');const b=r.querySelector('.rsel-b');if(b)b.setAttribute('aria-expanded','true');
+  const cur=m.querySelector('[aria-checked="true"]')||m.querySelector('button');if(cur)cur.focus({preventScroll:true})}
+document.addEventListener('click',ev=>{const t=ev.target;if(!t.closest)return;
+  const v=t.closest('[data-rselv]');
+  if(v){ev.preventDefault();const val=v.dataset.rselv;rselClose(null);if(val!==relSort())relShuffle(()=>{try{localStorage.setItem(KEY+'_relsort',val)}catch(e){}RSELSW=true;render()});return}
+  const b=t.closest('[data-rselb]');
+  if(b){ev.preventDefault();const m=document.querySelector('.rsel-m');if(m&&!m.classList.contains('out'))rselClose(m);else{if(m)m.remove();rselOpen(b.closest('.rsel'))}return}
+  if(!t.closest('.rsel-m'))rselClose(null)});
+document.addEventListener('keydown',ev=>{
+  const m=document.querySelector('.rsel-m:not(.out)');
+  if(m){const bs=[...m.querySelectorAll('button')],i=bs.indexOf(document.activeElement);
+    if(ev.key==='Escape'){ev.preventDefault();rselClose(m);const b=document.querySelector('.rsel-b');if(b)b.focus({preventScroll:true});return}
+    if(ev.key==='ArrowDown'||ev.key==='ArrowUp'){ev.preventDefault();const n=bs[(i+(ev.key==='ArrowDown'?1:-1)+bs.length)%bs.length];if(n)n.focus({preventScroll:true});return}
+    if(ev.key==='Tab'){rselClose(m,true);return}}
+  if(ev.key==='Escape'&&UI.hinfo&&!UI.hinfoOut)hinfoClose()});
+/* a new sort order: the records dip out together, then come back in their new order one after another, instead of sliding
+   through each other (which piled covers and labels on top of one another mid-way) */
+function relShuffle(fn){const row=document.querySelector('.hx .hxrow');
+  if(!row||noMotion()){fn();return}
+  const els=[...row.querySelectorAll('.hxsl:not(.hxadd)')],E='cubic-bezier(.4,0,1,1)';
+  els.forEach((el,i)=>el.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateY(12px) scale(.94)'}],{duration:170,delay:i*14,easing:E,fill:'forwards'}));
+  setTimeout(()=>{fn();const r2=document.querySelector('.hx .hxrow');if(!r2)return;
+    [...r2.querySelectorAll('.hxsl:not(.hxadd)')].forEach((el,i)=>el.animate([{opacity:0,transform:'translateY(16px) scale(.94)'},{opacity:1,transform:'none'}],{duration:460,delay:40+i*50,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}))},180+els.length*14)}
 
 /* where this artist's list came from, and the button to (re)import it */
 function mbArtistBar(a){
@@ -9592,7 +9750,7 @@ document.addEventListener('click',ev=>{
   else if(act==='nrclear'){S.nr.list=[];touch();briefPush()}
   else if(act==='llclose'){UI.llOpen=false}
   else if(act==='addart'){UI.libOpen=false;UI.addOpen=true;UI.toAdd=true}
-  else if(act==='hinfo'){UI.hinfo=!UI.hinfo}
+  else if(act==='hinfo'){if(UI.hinfo){hinfoClose();return}UI.hinfo=true;UI.hinfoIn=true;UI.hinfoOut=false;UI.hcPop='hinfo'}
   else if(act==='hjump'){if(UI.alb&&UI.alb.g===String(b.dataset.g)&&document.querySelector('.group.sleeve.gf')){gfClose();return}UI.rOpen=null;UI.toAlb=b.dataset.g}
   else if(act==='gfclose'){gfClose();return}
   else if(act==='hback'){UI.libOpen=true;UI.libAnim=true}
@@ -9679,7 +9837,7 @@ document.addEventListener('click',ev=>{
   else if(act==='lqx'){UI.lq[UI.tab]='';lRedraw();const i=document.getElementById('lq');if(i){i.value='';i.focus()}return}
   else if(act==='go'){UI.view=null;UI.rOpen=null;UI.tab=b.dataset.tab;UI.sel[UI.tab]=id;UI.filter='all'}
   else if(act==='statgo'){UI.view=null;UI.tab=b.dataset.tab;UI.sel[UI.tab]=id;UI.filter='all';UI.toSheet=true;window.scrollTo({top:0,behavior:'smooth'})}
-  else if(act==='filter'){UI.filter=b.dataset.v}
+  else if(act==='filter'){UI.filter=b.dataset.v;UI.flip=true;UI.hcPop='filter'}
   else if(act==='relkind'){UI.flip=true;const h=document.querySelector('.hero[data-aid]');UI.rel=h?{aid:h.dataset.aid,kind:b.dataset.v}:null}
   else if(act==='epx'){UI.epOpen[id]=!UI.epOpen[id]}
   else if(act==='tog'){const wc=lsOwn(id),was=isDone(id)&&!wc;   /* tapping a carried-over song confirms it for this listen */
