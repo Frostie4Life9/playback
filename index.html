@@ -2668,6 +2668,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-y', note:'CLOSING AN ALBUM: THE PAGE NO LONGER SNAPS AT THE END: the snap was the artist\u2019s color background, not the cover. Closing an album rebuilds the artist page, and the rebuilt background started its slowly turning color pools over from the beginning, so the whole page behind everything lurched into a new position the moment the album finished closing (opening one did the same, hidden under the flying cover). The colors now carry on from exactly where they were through any redraw of the same artist, including ratings and background syncs.'},
   {v:'2026.11.19-x', note:'Closing an album: the cover now lands exactly on the sleeve (it was aiming at the sunk size, so it ended a few pixels off and then jumped), with a gentler lift so the hand-off is seamless.'},
   {v:'2026.11.19-w', note:'CLOSING AN ALBUM: NO MORE SNAP AT THE VERY END: the last step of closing swapped the flying cover for the real sleeve underneath, and the two didn\u2019t match (the cover was a touch darker and its record looked different; the sleeve\u2019s drop shadow came back all at once; a page that was scrolled sideways in the Releases row jumped back to the start; the page below shifted by a pixel). The cover now fades out over the sleeve as it lands, the sleeve eases back to exactly how a resting sleeve looks (shadow, record and all), the row keeps its scroll position, and the page height is matched to the pixel, so the redraw at the end changes nothing you can see.'},
   {v:'2026.11.19-v', note:'CLOSING AN ALBUM NO LONGER SNAPS THE PAGE: when you closed an album the space the open jacket held vanished all at once and the page jumped back toward the top, which made the cover\u2019s trip home hard to follow. Now, as the jacket shuts and the cover flies home, the empty space closes up smoothly while the page eases back to where it was before you opened the album, and the \u201cTap a record to open it\u201d line comes back without nudging anything.'},
@@ -6311,12 +6312,19 @@ function render(){
       so.forEach((n,i)=>{const an=n.getAnimations&&n.getAnimations()[0],d=sd[i];
         if(an&&d)d.style.animationDelay=((an.effect.getTiming().delay||0)-(an.currentTime||0))+'ms'});
       ohg=g}}
+  /* the same artist redrawn (closing an album, a rating, a reply from the server): its color pools carry on from where they were.
+     A rebuilt hero starts every pool's spin and wobble over from zero, and because the pools fill the whole page behind
+     everything, that read as the entire page snapping into place at the end of closing an album. */
+  const mT=(()=>{const oh=document.querySelector('.hero[data-aid]'),m=oh&&oh.querySelector('.hmesh:not(.hghost)');if(!m)return null;
+    return{aid:oh.dataset.aid,d:[...m.querySelectorAll('.fl,.fb')].map(n=>{const an=n.getAnimations&&n.getAnimations()[0];return an?(an.effect.getTiming().delay||0)-(an.currentTime||0):null})}})();
   const swK=!UI.view?UI.tab+':'+(UI.sel[UI.tab]||''):null,swGo=!!(swK&&UI.swKey&&UI.swKey!==swK);if(swK)UI.swKey=swK;
   /* a filter or sort change: tiles and release cards that stay glide to their new spots, new ones rise in one after another */
   const flipOn=UI.flip&&!noMotion()&&window.SX&&typeof SX.flip==='function';UI.flip=false;
   if(flipOn)SX.flip(document.body,'#llist .tile,.sheet .group.sleeve,.hxrow .hxsl',()=>keepImgs(renderMain),{dur:420,key:el=>el.dataset.acol?'g'+el.dataset.acol:el.dataset.g?'a'+el.dataset.g:el.dataset.id?'t'+el.dataset.id:null});
   else keepImgs(()=>{const top=topHTML();if(!paneSwap(top))renderMain(top)});   /* the top bar is built once per draw: building it clears the one-shot animation flags of the sheets in it */
   if(gfS){const g=document.querySelector('.group.sleeve.gf[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(gfS.id):gfS.id)+'"]');if(g){const r=g.querySelector('.gf-rs'),l=g.querySelector('.gf-ls');if(r)r.scrollTop=gfS.r;if(l)l.scrollTop=gfS.l}}
+  if(mT){const nh=document.querySelector('.hero[data-aid]'),nm=nh&&nh.dataset.aid===mT.aid&&nh.querySelector('.hmesh:not(.hghost)');
+    if(nm){const ns=nm.querySelectorAll('.fl,.fb');if(ns.length===mT.d.length)ns.forEach((n,i)=>{if(mT.d[i]!=null)n.style.animationDelay=mT.d[i].toFixed(0)+'ms'})}}
   slObserve();slPulseNow();UI.rAnim=null;accAfter();pfFit();
   if(vlT!=null&&vPrev===vk){const el=document.querySelector('.vl-spin'),an=el&&el.getAnimations&&el.getAnimations()[0];if(an)an.currentTime=vlT}
   if(vPrev&&vPrev!==vk&&!noMotion())pageIn(Math.sign((VORD[vk]??0)-(VORD[vPrev]??0)));
