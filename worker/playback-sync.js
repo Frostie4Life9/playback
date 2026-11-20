@@ -50,7 +50,7 @@
    Every response carries x-pb-worker: 5 so the app knows what this Worker
    can do (2 = compressed sync, 3 = Spotify plays, 4 = Spotify catalog too,
    5 = the morning-brief list, 6 = Discogs pressing search, 7 = Discogs pressing photos, 8 = your own record photos,
-   11 = Google accounts, friends and friends' ratings, 12 = a capped copy of a friend's log under their Google account, 13 = the owner can sign in with Google instead of pasting the sync key, 14 = profile picture and account color, 15 = the owner can list every account: GET /users, see the accounts section above the export, 16 = Apple Music artist photos: GET /apple/art).
+   11 = Google accounts, friends and friends' ratings, 12 = a capped copy of a friend's log under their Google account, 13 = the owner can sign in with Google instead of pasting the sync key, 14 = profile picture and account color, 15 = the owner can list every account: GET /users, see the accounts section above the export, 16 = Apple Music artist photos: GET /apple/art, 20 = those photos saved for everyone and open to signed-in friends: GET /acct/apple/art).
 
    MORNING BRIEF (version 5)
    The app keeps a tiny list of the next episode of each show you follow
@@ -118,7 +118,7 @@ const CORS = {
   'Access-Control-Allow-Headers': 'content-type, x-sync-key, authorization',
   'Access-Control-Expose-Headers': 'x-pb-worker, retry-after, x-pb-cache',
   'Access-Control-Max-Age': '86400',
-  'x-pb-worker': '16'
+  'x-pb-worker': '20'
 };
 const JSON_H = Object.assign({ 'content-type': 'application/json', 'cache-control': 'no-store' }, CORS);
 const GZ_H = Object.assign({ 'content-type': 'application/gzip', 'cache-control': 'no-store' }, CORS);
@@ -223,6 +223,25 @@ const CAT_TTL = 30 * 86400;
    music.apple.com names one in its page metadata (og:image). A browser cannot read that page across sites, so this reads
    it here and hands back only the picture's address minus its size, so the app can ask Apple for the size it wants.
    Owner only (it sits behind the sync key like everything else), one call per artist: the app remembers the answer. */
+/* Apple Music artist photos for everyone (version 20): each artist's picture address is saved for 60 days (a miss for 7) in the
+   CATALOG table, so the page is only read from Apple once per artist for the whole app, owner and friends alike. A signed-in
+   friend may ask for at most AART_CAP fresh ones a day; saved answers are free. */
+const AART_TTL = 60 * 86400, AART_MISS_TTL = 7 * 86400, AART_CAP = 120;
+async function appleArtCached(env, url, who) {
+  const id = (url.searchParams.get('id') || '').replace(/\D/g, '');
+  if (!id || id.length > 12 || !env.CATALOG) return appleArt(url);
+  const ck = 'aart:' + id;
+  const hit = await env.CATALOG.prepare('SELECT v FROM catalog WHERE k = ?1 AND exp > ?2').bind(ck, Date.now()).first('v').catch(() => null);
+  if (hit) return hit === 'none' ? reply({ error: 'none' }, 404) : reply({ base: hit });
+  if (who !== 'owner') { await acctInit(env); if (!(await rlHit(env, 'aart:' + who, AART_CAP, 86400))) return reply({ error: 'daily limit' }, 429); }
+  const r = await appleArt(url);
+  if (r.status === 200 || r.status === 404) {
+    let v = 'none';
+    if (r.status === 200) { try { v = (await r.clone().json()).base || 'none'; } catch (e) {} }
+    try { await env.CATALOG.prepare('INSERT OR REPLACE INTO catalog (k, v, exp) VALUES (?1, ?2, ?3)').bind(ck, v, Date.now() + (v === 'none' ? AART_MISS_TTL : AART_TTL) * 1000).run(); } catch (e) { /* skip saving */ }
+  }
+  return r;
+}
 async function appleArt(url) {
   const id = (url.searchParams.get('id') || '').replace(/\D/g, '');
   if (!id || id.length > 12) return reply({ error: 'bad id' }, 400);
@@ -540,6 +559,7 @@ async function sugOwner(request, env, url) {
    DELETE /acct/friends?uid=  removes a friend, declines a request or cancels one
    GET    /acct/feed          -> {rows:[{uid,name,hue,kind,k,t,r,n,a,i,d,rv}]}  the 60 newest ratings from friends who are sharing (version 18)
    GET    /acct/similar?type=artist&artist=X  (or type=track&artist=X&track=Y) -> {rows:[{n,m}] or [{t,a,m}]}  similar artists or songs from Last.fm, saved 30 days, capped per person per day (version 19; the owner's sync key uses GET /similar the same way). Needs the LASTFM_KEY secret.
+   GET    /acct/apple/art?id=&c=  -> {base}  an artist's Apple Music photo address, saved 60 days for everyone, capped per person per day (version 20)
    GET    /acct/profile?uid=  -> {profile:{name, friends, items}}  your own page, or a friend's who is sharing
    POST   /acct/friends/ratings {kind, ks:[], ts:[]} -> {rows:[{uid,name,k,t,r}]}  accepted friends only
    GET    /acct/sync          -> {mtime, b64} (a person's own gzipped log, base64) or null   (version 12)
@@ -879,6 +899,9 @@ async function acct(request, env, url) {
   /* similar artists or songs from Last.fm (version 19); any signed-in account, saved answers are free, fresh ones are capped per person */
   if (path === '/similar' && M === 'GET') return similarGet(env, url, me.uid);
 
+  /* an artist's Apple Music photo (version 20): saved for everyone, capped per person per day */
+  if (path === '/apple/art' && M === 'GET') return appleArtCached(env, url, me.uid);
+
   /* what friends rated lately: newest rating days first, only friends who are sharing, only ratings that have a day (version 18) */
   if (path === '/feed' && M === 'GET') {
     const rows = (await env.CATALOG.prepare(
@@ -951,7 +974,7 @@ export default {
       if (request.method === 'GET') return new Response((await env.STATE.get('rating-dates')) || '[]', { headers: JSON_H });
       return reply({ error: 'method not allowed' }, 405);
     }
-    if (url.pathname === '/apple/art') return request.method === 'GET' ? appleArt(url) : reply({ error: 'method not allowed' }, 405);
+    if (url.pathname === '/apple/art') return request.method === 'GET' ? appleArtCached(env, url, 'owner') : reply({ error: 'method not allowed' }, 405);
     if (url.pathname === '/spotify/api') return request.method === 'GET' ? spCatalog(env, url) : reply({ error: 'method not allowed' }, 405);
     if (url.pathname === '/photo') {
       if (request.method === 'PUT') return photoPut(request, env, url);

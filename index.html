@@ -1569,8 +1569,12 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .hxsl.sg .hxscore{--hxst:40px;font-size:12px;padding:2px 7px;top:calc(var(--hxst) + 6px);left:6px}
 @media (prefers-reduced-motion:no-preference){.hxscore{animation:hxScore .45s cubic-bezier(.2,.9,.3,1.3) .25s backwards}@keyframes hxScore{from{opacity:0;transform:scale(.6)}}}
 
-/* while an album is open, its era stays lit and the rest step back a little */
-.hxrow.eras:has(.hxsl.on) .hxera:not(:has(.hxsl.on)){opacity:.5}
+/* while an album is open it floats over the shelf (see hxPlaceGf): its era stays lit and everything else steps well back */
+.hxrel{position:relative}
+.hxrel>.group.sleeve.gf.ov{position:absolute;z-index:6;margin:0;box-sizing:border-box}
+.hxrel .hxera,.hxrel .hxrow>*,.hx .hxmore,.hxrel .hxhint{transition:opacity .45s ease}
+.hxrel.gfov .hxera:not(:has(.hxsl.on)),.hxrel.gfov .hxrow:not(.eras)>:not(.on),.hx:has(.hxrel.gfov) .hxmore{opacity:.18}
+.hxrel.gfov .hxera:has(.hxsl.on) .hxer>:not(.on):not(.hxdiv){opacity:.45}
 /* a stack of loose 7-inch singles: tap to fan them out */
 .hxstk,.hxbox,.hxfold{flex:none;position:relative;background:none;border:0;padding:0;text-align:left;color:#fff;cursor:pointer}
 .hxstk{width:104px;padding-top:40px}
@@ -2118,6 +2122,7 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
   details.addart{order:-1;border-radius:20px}
   details.addart:not([open]){display:none}
 }
+.libbody>details.addart{flex:none;max-height:min(70vh,640px);overflow:auto;margin-bottom:4px}
 @media (max-width:760px){
   .tact{width:44px;height:44px}
   .tact.tmob{display:grid}
@@ -2528,6 +2533,82 @@ button.st-t:hover{color:var(--accent);text-decoration:underline}
   .hxsl.on .hxv{animation-name:hxTuckL}.hxsl.sg.on .hxv{animation-name:hxTuckSL}}
 @keyframes hxTuckL{from{left:62px}}
 @keyframes hxTuckSL{from{left:43px}}
+
+/* ===== 2026.11.20: the open album's inside, the album rating row, and fixes ===== */
+/* the colored bar behind each rated song: --rc is a registered property that does not pass to children on its own, so the bar
+   lost its color (and the gradient disappeared). The song's children now take it from the song. */
+.track.sl-t *{--rc:inherit}
+/* the open album's panels scroll; nothing in them may be squeezed to fit (that squashed the rater to a thin bar) */
+.gf-rs>*,.gf-ls>*{flex-shrink:0}
+.gf .gf-rs>.rater{margin:2px 22px 6px 30px;background:color-mix(in srgb,var(--acsw) 18%,var(--jk));border-color:color-mix(in srgb,var(--ink) 12%,transparent)}
+@media (max-width:1099px){.gf .gf-rs>.rater{margin:2px 14px 6px 18px}}
+/* the album rating row */
+.gf .gfra{padding:0 22px 0 30px;align-items:center}
+@media (max-width:1099px){.gf .gfra{padding:0 14px 0 18px}}
+.sl-rate.gfr{--gv:color-mix(in srgb,var(--acsw) 35%,#ffd9a8);position:relative;overflow:hidden;isolation:isolate;min-height:68px;padding:8px 8px 8px 20px;gap:14px;border:1px solid color-mix(in srgb,var(--acsw) 40%,rgb(255 255 255 / .12));background:color-mix(in srgb,var(--acsw) 16%,rgb(0 0 0 / .18));box-shadow:inset 0 1px 0 rgb(255 255 255 / .06),0 8px 22px rgb(0 0 0 / .18);cursor:pointer;transition:border-color .25s,background-color .25s,transform .15s ease-out}
+@supports (color:oklch(from red l c h)){.sl-rate.gfr{--gv:oklch(from var(--acsw) .86 calc(c*.7) h)}}
+.sl-rate.gfr:hover,.sl-rate.gfr.open{border-color:color-mix(in srgb,var(--gv) 70%,transparent)}
+.sl-rate.gfr:active{transform:scale(.985)}
+.gfr-w{position:absolute;z-index:-1;left:0;top:0;bottom:0;pointer-events:none;background:linear-gradient(90deg,color-mix(in srgb,var(--acsw) 72%,transparent),color-mix(in srgb,var(--acsw) 38%,transparent) 55%,color-mix(in srgb,var(--acsw) 16%,transparent));-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent)}
+@media (prefers-reduced-motion:no-preference){.gfr-w{transition:width .5s cubic-bezier(.2,.8,.2,1)}.gf.gfopen .gfr-w{animation:gfrW .9s cubic-bezier(.2,.8,.2,1) 1.45s backwards}@keyframes gfrW{from{width:0}}}
+.sl-rate.gfr .t{display:flex;flex-direction:column;gap:3px;color:var(--ink)}
+.sl-rate.gfr .t b{font:650 16px var(--body);letter-spacing:-.005em}
+.sl-rate.gfr .t small{font-size:12.5px;font-weight:500;color:color-mix(in srgb,var(--ink) 66%,transparent)}
+.gfr-avg{flex:none;display:grid;grid-template-columns:auto auto;align-items:baseline;column-gap:6px;row-gap:2px;text-align:right;color:color-mix(in srgb,var(--ink) 70%,transparent);font-size:11px;font-weight:600;letter-spacing:.02em}
+.gfr-avg b{font:650 18px Archivo,var(--display);color:var(--ink);font-variant-numeric:tabular-nums}
+.gfr-avg em{grid-column:1/-1;justify-self:end;display:inline-flex;align-items:center;gap:3px;font-style:normal;font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums;color:color-mix(in srgb,var(--ink) 80%,transparent)}
+.gfr-avg em svg{width:9px;height:9px;fill:var(--gv)}
+.gfr-avg em.even{opacity:.7}
+.gfr-rec{position:relative;flex:none;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,transparent 0 33%,#0d0b0b 33.5% 35%,transparent 35.5%),repeating-radial-gradient(circle,#1d1919 0 1px,#0c0a0a 1px 3px);box-shadow:0 4px 12px rgb(0 0 0 / .4),0 0 0 2px color-mix(in srgb,var(--gv) 55%,transparent)}
+.gfr-rec i{position:absolute;inset:30%;border-radius:50%;background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--acsw) 60%,#fff),var(--acsw))}
+.gfr-rec b.v{position:relative;font:800 17px Archivo,var(--display);color:#fff;text-shadow:0 1px 3px rgb(0 0 0 / .45);font-variant-numeric:tabular-nums}
+.sl-rate.gfr:not(.set) .gfr-rec b.v{font-weight:500;font-size:22px;opacity:.85}
+@media (prefers-reduced-motion:no-preference){.gfr-rec{transition:transform .6s cubic-bezier(.2,.8,.2,1)}.sl-rate.gfr:hover .gfr-rec{transform:rotate(25deg)}.sl-rate.gfr:hover .gfr-rec b.v{transform:rotate(-25deg);transition:transform .6s cubic-bezier(.2,.8,.2,1)}}
+.sl-rate.gfr.carry .gfr-w{opacity:.3}
+@media (max-width:520px){.gfr-avg span,.sl-rate.gfr .t small{display:none}.sl-rate.gfr{gap:10px;padding-left:16px;min-height:60px}.sl-rate.gfr .t b{white-space:nowrap}.gfr-rec{width:46px;height:46px}}
+/* on a phone the album's facts stay short so the ratings are not pushed far down; the listen arrows above already step through listens */
+@media (max-width:1099px){.gfi{gap:14px}.gfi-g{gap:8px}.gfi-f{padding:10px 12px}.gfi-f b{font-size:20px}.gfi-b:has(.gfi-ls){display:none}}
+/* the inside left */
+.gfi{display:flex;flex-direction:column;gap:18px;padding:0 calc(var(--P) * .07)}
+@media (max-width:1099px){.gfi{padding:0 22px}}
+.gfi-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.gfi-f:last-child:nth-child(odd){grid-column:1/-1}
+.gfi-f{display:flex;flex-direction:column;gap:2px;min-width:0;padding:12px 14px;border-radius:14px;background:color-mix(in srgb,var(--ink) 6%,transparent);border:1px solid color-mix(in srgb,var(--ink) 8%,transparent)}
+.gfi-f>span{font:700 10.5px var(--body);letter-spacing:.09em;text-transform:uppercase;color:color-mix(in srgb,var(--ink) 62%,transparent)}
+.gfi-f b{font:700 24px/1.1 Archivo,var(--display);color:var(--ink);font-variant-numeric:tabular-nums}
+.gfi-f b i{font:500 14px var(--body);font-style:normal;color:color-mix(in srgb,var(--ink) 66%,transparent)}
+.gfi-f b.up{color:color-mix(in srgb,var(--ink) 55%,var(--done))}.gfi-f b.down{color:color-mix(in srgb,var(--ink) 60%,var(--warn))}
+.gfi-f small{font-size:12.5px;color:color-mix(in srgb,var(--ink) 74%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gfi-b h4{margin:0 0 8px;font:700 11px var(--body);letter-spacing:.1em;text-transform:uppercase;color:color-mix(in srgb,var(--ink) 62%,transparent)}
+.gfi-ls{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.gfi-ls button{width:100%;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:baseline;padding:8px 12px;border:0;border-radius:10px;background:transparent;color:var(--ink);font:500 14px var(--body);text-align:left;cursor:pointer;transition:background-color .2s}
+.gfi-ls button:hover{background:color-mix(in srgb,var(--ink) 6%,transparent)}
+.gfi-ls li.on button{background:color-mix(in srgb,var(--acsw) 30%,transparent)}
+.gfi-ls time{font-size:13px;color:color-mix(in srgb,var(--ink) 66%,transparent)}
+.gfi-ls b{font:700 15px Archivo,var(--display);font-variant-numeric:tabular-nums}
+.gfi .rvw{margin:0;background:color-mix(in srgb,var(--ink) 5%,transparent);border-color:color-mix(in srgb,var(--ink) 10%,transparent)}
+.gfi .rvw blockquote{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:5;overflow:hidden;cursor:pointer}
+.gfi .rvw blockquote.all{display:block}
+.gfi .rv-add,.gfi .rv-f{margin:0}
+.gfi .rv-add{display:inline-flex;align-items:center;min-height:40px;padding:0 16px;border-radius:999px;border:1px dashed color-mix(in srgb,var(--ink) 28%,transparent);text-decoration:none}
+.gfi .frs{margin:0}
+.gfi-k{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.gfi .sl-share,.gfi-a{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 16px 0 13px;border-radius:999px;border:1px solid color-mix(in srgb,var(--ink) 22%,transparent);background:transparent;color:var(--ink);font:600 14px var(--body);text-decoration:none;cursor:pointer;transition:background-color .2s,transform .15s}
+.gfi .sl-share:hover,.gfi-a:hover{background:color-mix(in srgb,var(--ink) 8%,transparent)}
+.gfi .sl-share:active,.gfi-a:active{transform:scale(.97)}
+.gfi-a svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@media (prefers-reduced-motion:no-preference){.gf.gfopen .gfi>*{animation:gfFade .5s cubic-bezier(.2,.8,.2,1) backwards;animation-delay:calc(1.6s + var(--gj,0) * 80ms)}
+  .gf.gfopen .gfi>:nth-child(2){--gj:1}.gf.gfopen .gfi>:nth-child(3){--gj:2}.gf.gfopen .gfi>:nth-child(4){--gj:3}.gf.gfopen .gfi>:nth-child(n+5){--gj:4}}
+
+/* sorted by rating: albums, EPs and singles each get their own run on the shelf, with a heading */
+.hxgrp{flex:0 0 100%;display:flex;align-items:baseline;gap:10px;margin:14px 0 -14px;color:#fff;font-size:18px;font-weight:700;letter-spacing:-.01em;text-shadow:0 1px 14px rgb(0 0 0 / .22)}
+.hxgrp.first{margin-top:0}
+.hxgrp:has(+.hxsl.sg){margin-bottom:-52px}
+.hxgrp span{font-size:13px;font-weight:600;color:rgb(255 255 255 / .62);font-variant-numeric:tabular-nums}
+@media (max-width:760px){.hx .hxrow.flat .hxgrp{flex:0 0 auto;align-self:stretch;flex-direction:column;justify-content:center;gap:2px;margin:0 -12px 0 0;padding:0 14px 0 4px;border-left:2px solid rgb(255 255 255 / .28);font-size:15px}}
+@media (prefers-reduced-motion:no-preference){.hxgrp{animation:hxIn .45s cubic-bezier(.2,.8,.2,1) backwards}}
+.gf-ls{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 30px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 30px),transparent)}
+@media (max-width:1099px){.gf-ls{-webkit-mask-image:none;mask-image:none}}
 </style>
 
 <!-- suite:css v10 · shared by Kitchen, Grocery, Lift, DishLog, Protocol, Rail, Game Log, Playback — edit tools/suite.py in the kitchen repo, not here -->
@@ -3082,6 +3163,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.20-a', note:'FROM A FRIEND\u2019S FEEDBACK. THE OPEN ALBUM FLOATS: tapping a record no longer pushes the rest of the timeline down the page. The open album lies on top of the records below its row, the rest of the shelf steps back behind it, and closing it puts the page back where it was. MORE ON THE INSIDE LEFT: the open album now shows your total plays, where it ranks among that artist\u2019s albums (or EPs), its best and weakest song, every listen with its date and score, a preview of your review (tap it to read all of it), friends\u2019 scores, and Share and Find on RYM buttons, all moved over from the ratings side. YOUR ALBUM RATING: the grey pill is now a bar in the album\u2019s own colors that fills as far as your score, like the songs do. A small record at its end shows the number, and the gap to your song average is a small arrow beside it instead of the red and blue line. FIXES: the album rating slider often opened as a thin squashed strip on long albums, so it looked like it did not open. It opens fully now. The colored bars behind rated songs are back. Add artist (top bar and the Fans also spin records) opens the Add an artist box. Before, the box stayed hidden and you only saw the artist page again. Artist search ranks exact names first and copes with small typos. SORTING BY RATING keeps albums, EPs and singles in their own groups with headings. Fans also spin starts open (Hide folds it away and is remembered). ARTIST PHOTOS FOR FRIENDS: signed-in friends now get the Apple Music artist photo too. Your Worker saves each photo for everyone for 60 days, so each artist is only looked up once (Worker 20, it updates itself from GitHub).'},
   {v:'2026.11.19-an', note:'ARTIST PAGE DESIGN PASS: singles now open as a small 7-inch picture sleeve instead of a full gatefold. The cover flies down out of the row, then the record slides out of the sleeve\u2019s open edge with the song average on its label, and the song or two sit inside. Each timeline row is now headed by the era\u2019s name, with the year beside it, so two eras from the same year no longer both read \u201c2020\u201d. The year column is gone, so the timeline is narrower. On a wide screen (1400px and up), every record, single, stack and box set is about a quarter bigger, so the timeline fills more of the width. Add a release is now a button beside the filters, and its form opens right under the Releases heading. It no longer takes up a whole empty row at the bottom. The chip that stacks fanned-out singles back up now says Collapse instead of \u2039 Stack.'},
   {v:'2026.11.19-am', note:'TIMELINE FIXES (from your screen recording): the timeline now stays when you pick Albums, EPs or Singles, or Newest first. Each era just shows the releases of that kind, an era with none drops out, and Newest first runs from the latest era down. Sorting by your rating, by how much you have heard, or A to Z puts the records on a grid that wraps onto new rows instead of running off the right edge, and each record shows its number (your rating, or the percent heard) so you can see why it is where it is. An open album now sits to the right of the year column instead of covering it, and the timeline line runs past it. Closing an album no longer leaves a blank gap for a moment after the cover lands. The space starts closing as soon as it lands. Changing the sort now brings back whole eras one after another, with no lone Stack button or stray line showing first, and quickly even for a long discography. Picking an artist from the artist menu clears the menu faster, so its tiles no longer sit over the artist page. Still to hear now shows a white Still to hear tag next to Releases that you tap to turn it off. When everything is heard it says so, with a Show all releases button, and the Tap a record hint is hidden when there are no records. Fans also spin records whose Apple Music photo is still loading now shimmer instead of looking empty (Apple only allows one lookup every few seconds, so a new row fills in left to right the first time). Fixed: right after Playback opened, the first sort change or album opened could throw the page back to the top.'},
   {v:'2026.11.19-al', note:'ERAS AS A TIMELINE: the Releases shelf now runs top to bottom like a timeline. Each era is its own row: the year sits on the left on a line that runs down through the whole discography, with a dot where each era starts, the album\u2019s name heads the row and its records run to the right. Eras ease in as you scroll to them. On a phone it works the same way, with each era\u2019s records swiping sideways, and an opened album unfolds right under its era there too.'},
@@ -4788,10 +4870,18 @@ async function mbSearch(q){
   if(MBX.busy||MBX.searching)return;
   Object.assign(MBX,{q,err:'',report:'',results:null,pick:null,searching:true,errWhere:'side'});render();
   try{
-    const lq=q.replace(/([+\-&|!(){}\[\]^"~*?:\\\/])/g,'\\$1');
-    const j=await mbGet('artist',{query:lq,limit:8});
+    /* a better search: the exact name (or one of the artist's other names) counts most, then the words in any order, then a
+       forgiving spelling, so a small typo still finds them. The list is then ordered with exact matches first and, among
+       the rest, by how well known the artist is (how many releases MusicBrainz lists), so the famous one tops a common name. */
+    const t=q.trim().replace(/\s+/g,' '),lq=t.replace(/([+\-&|!(){}\[\]^"~*?:\\\/])/g,'\\$1'),ws=lq.split(' ').filter(Boolean);
+    const query=`artist:"${lq}"^6 OR alias:"${lq}"^4 OR artistaccent:"${lq}"^4 OR (${ws.join(' AND ')})^2 OR (${ws.map(w=>w.length>3?w+'~':w).join(' AND ')})`;
+    let j={};try{j=await mbGet('artist',{query,limit:15})}catch(e){if(e&&e.code==='cancel')throw e}   /* if MusicBrainz ever refuses the fancier search, the plain one below still runs */
+    if(!(j.artists||[]).length)j=await mbGet('artist',{query:lq,limit:15});
     const list=j.artists||[];if(!list.length)throw MBError('nomatch');
-    MBX.results=list.map(x=>({id:x.id,name:x.name,dis:x.disambiguation||'',country:x.country||(x.area&&x.area.name)||'',type:x.type||'',aka:mbAkas(x),begin:String((x['life-span']&&x['life-span'].begin)||'').slice(0,4)}));
+    const nq=nArtist(t),ex=x=>nArtist(x.name)===nq||(x.aliases||[]).some(y=>nArtist(y.name||'')===nq)||nArtist(x['sort-name']||'')===nq;
+    const pop=x=>(x.tags||[]).length+((x['life-span']||{}).begin?1:0)+(x.country?1:0)+(x.disambiguation?1:0);
+    list.sort((x,y)=>(ex(y)-ex(x))||((y.score||0)-(x.score||0))||(pop(y)-pop(x)));
+    MBX.results=list.slice(0,8).map(x=>({id:x.id,name:x.name,dis:x.disambiguation||'',country:x.country||(x.area&&x.area.name)||'',type:x.type||'',aka:mbAkas(x),begin:String((x['life-span']&&x['life-span'].begin)||'').slice(0,4)}));
   }catch(e){MBX.err=mbMessage(e,q)}
   MBX.searching=false;MBX.cancel=false;render();
 }
@@ -4865,7 +4955,7 @@ function mbSide(){
   if(MBX.busy&&MBX.where==='side')return mbProgHtml();
   let h=`<form class="add" data-form="mbsearch">
     <label class="label" for="mb-q">Import a discography</label>
-    <div class="row2"><input id="mb-q" name="q" placeholder="Search MusicBrainz" value="${esc(MBX.q)}" required autocomplete="off" ${MBX.busy?'disabled':''}>
+    <div class="row2"><input id="mb-q" name="q" placeholder="Artist name, like Daniel Caesar" value="${esc(MBX.q)}" enterkeyhint="search" autocapitalize="words" required autocomplete="off" ${MBX.busy?'disabled':''}>
       <button class="btn primary" ${MBX.searching||MBX.busy?'disabled':''}>${MBX.searching?'Searching…':'Search'}</button></div></form>`;
   if(MBX.err&&MBX.errWhere==='side')h+=`<p class="mberr" role="alert">${esc(MBX.err)}</p>${mbFallbackBtn()}`;
   if(MBX.pick){const x=MBX.pick,have=S.music.find(a=>a.mbid===x.id)||S.music.find(a=>a.id===sid('artist',x.name)&&!a.mbid)||S.music.find(a=>!a.mbid&&nArtist(a.name)===nArtist(x.name));
@@ -6755,6 +6845,7 @@ function render(){
   if(flipOn)SX.flip(document.body,'#llist .tile,.sheet .group.sleeve,.hxrow .hxsl',()=>keepImgs(renderMain),{dur:420,key:el=>el.dataset.sxk?'k'+el.dataset.sxk:el.dataset.acol?'g'+el.dataset.acol:el.dataset.g?'a'+el.dataset.g:el.dataset.id?'t'+el.dataset.id:null});
   else keepImgs(()=>{const top=topHTML();if(!paneSwap(top))renderMain(top)});
   if(swK)UI.swKey=UI.tab+':'+(UI.sel[UI.tab]||'');   /* the draw itself may have picked the artist (first launch): remember that one, or the next redraw (a sort change, opening an album) thinks the artist changed and jumps to the top */
+  hxPlaceGf();   /* the open album is pinned over the shelf before the page's scroll is put back */
   libGhostRun();   /* the top bar is built once per draw: building it clears the one-shot animation flags of the sheets in it */
   if(gfS){const g=document.querySelector('.group.sleeve.gf[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(gfS.id):gfS.id)+'"]');if(g){const r=g.querySelector('.gf-rs'),l=g.querySelector('.gf-ls');if(r)r.scrollTop=gfS.r;if(l)l.scrollTop=gfS.l}}
   if(mT){const nh=document.querySelector('.hero[data-aid]'),nm=nh&&nh.dataset.aid===mT.aid&&nh.querySelector('.hmesh:not(.hghost)');
@@ -6785,20 +6876,24 @@ function render(){
   const nl=document.getElementById('llist');
   if(nl){if(ll&&llTab===UI.tab)nl.scrollTop=llTop;
     else{const c=nl.querySelector('[aria-current="true"]');if(c)nl.scrollTop=c.offsetTop-nl.clientHeight/3}}
-  if(UI.toAdd){UI.toAdd=false;const ad=document.getElementById('addart');if(ad)ad.scrollIntoView({behavior:'smooth',block:'start'})}
+  if(UI.toAdd){UI.toAdd=false;const ad=document.getElementById('addart');if(ad){ad.scrollIntoView({behavior:'smooth',block:'start'});const q=document.getElementById('mb-q');if(q&&!q.value&&matchMedia('(hover:hover)').matches)q.focus({preventScroll:true})}}
   if(UI.toAlb){const gid=UI.toAlb;UI.toAlb=null;
     const al=document.querySelector('.group.sleeve[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(gid):gid)+'"]');
     if(al){gfShow(al);if(al.classList.contains('gfopen')&&!noMotion()){try{gfRun(al,false)}catch(e){}}slRipple(al,1900)}}
   if(UI.toSheet){UI.toSheet=false;const sh=document.querySelector('.sheet');if(sh)sh.scrollIntoView({behavior:'smooth',block:'start'})}
 }
 let LIBIN=false;   /* set by renderMain for the one draw that opens the artist menu */
-function mainAside(e,list){return `<aside class="side ${UI.libOpen||!e?'libopen':''}${UI.libOpen&&e?' libfull':''}${LIBIN&&UI.libOpen&&e?' libin':''}">
+function mainAside(e,list){const full=!!(UI.libOpen&&e);   /* in the full artist menu the Add an artist box sits inside it (on a phone the menu covers the page, so a box outside it could never be seen) */
+  return `<aside class="side ${UI.libOpen||!e?'libopen':''}${UI.libOpen&&e?' libfull':''}${LIBIN&&UI.libOpen&&e?' libin':''}">
       ${e?`<button class="libbtn" data-act="lib" aria-expanded="${!!UI.libOpen}"><span class="label">${UI.tab==='music'?'Artists':'Shows & films'} \u00b7 ${list.length}</span><b>${esc(e.name||e.title)}</b><span class="libsw">${UI.libOpen?'Close':'Switch'}</span></button>`:''}
       <div class="libbody">
       ${sideFinder(list)}
+      ${full&&UI.tab==='music'?addArtHtml():''}
       <div class="lwrap"><div class="llist${UI.tab==='music'?' wall':''}" id="llist">${sideList(list,e)}</div><div class="lrail" id="lrail">${lRailHTML()}</div></div>
       </div>
-      ${UI.tab==='music'?`
+      ${UI.tab==='music'?(full?'':addArtHtml()):tmSide()}
+    </aside>`}
+function addArtHtml(){return `
       <details class="addart" id="addart" ${UI.addOpen||MBX.busy||MBX.results||MBX.pick||MBX.report||MBX.err?'open':''}>
         <summary>Add an artist</summary>
         ${mbSide()}
@@ -6807,8 +6902,7 @@ function mainAside(e,list){return `<aside class="side ${UI.libOpen||!e?'libopen'
           <input id="new-artist" name="name" placeholder="e.g. Thom Yorke" required>
           <button class="btn primary">Add artist</button>
         </form>
-      </details>`:tmSide()}
-    </aside>`}
+      </details>`}
 function mainSheet(e){return `<section class="sheet" aria-live="polite">${e?(UI.tab==='music'?backLibBtn()+artistView(e):e.type==='film'?filmView(e):showView(e)):(UI.tab==='music'?startView():'<p class="empty">Tap Add artist or the + button to add your first one.</p>')}</section>`}
 function mainView(e,list,out){const a=mainAside(e,list);if(out)out.aside=a;return `
 
@@ -8558,14 +8652,34 @@ function hxEras(a,rl,sleeve,og,NEW){
     /* releases from before the first album */
     h+=`<div class="hxera loose" data-era="${ix}"><div class="hxyr" aria-hidden="true"></div><div class="hxeb"><div class="hxeh"><b>Before the first album</b>${hxYears(e.items)?`<span>${esc(hxYears(e.items))}</span>`:''}</div><div class="hxer">${looseHtml(e.items)}</div></div></div>`}
   return h}
-/* On a PC the Eras shelf wraps onto several rows, so an open album's jacket is moved up to sit right under the row its
-   record is on (full width), instead of below the whole discography where it was off the screen. */
-function hxPlaceGf(){const row=document.querySelector('.hxrow.eras'),gf=document.querySelector('.hx .group.sleeve.gf');
-  if(!row||!gf)return;
-  const on=row.querySelector('.hxsl.on'),era=on&&on.closest('.hxera');if(!era)return;
-  const top=era.offsetTop;let last=era,n=era.nextElementSibling;
-  while(n&&n.classList.contains('hxera')&&Math.abs(n.offsetTop-top)<4){last=n;n=n.nextElementSibling}
-  last.after(gf);gf.classList.add('inrow')}
+/* THE OPEN ALBUM FLOATS OVER THE SHELF: the jacket lies on top of the records right under the row (or era) its record is on,
+   instead of pushing everything below it down the page. It is moved into the Releases block and pinned there in pixels; the
+   rest of the shelf steps back behind it (class gfov), and the page only grows if the jacket reaches past the end of it. */
+function hxPlaceGf(){const rel=document.querySelector('.hx .hxrel'),gf=document.querySelector('.hx .group.sleeve.gf');
+  if(rel&&!gf){rel.classList.remove('gfov');rel.style.paddingBottom='';return}
+  if(!rel||!gf)return;
+  const on=rel.querySelector('.hxsl.on');if(!on)return;
+  if(gf.parentElement!==rel)rel.appendChild(gf);
+  gf.classList.remove('inrow');gf.classList.add('ov');
+  /* the shelf steps back: at once on a redraw, as a fade on the draw that opens the album */
+  if(!rel.classList.contains('gfov')){if(HXSINK)requestAnimationFrame(()=>{if(rel.isConnected&&!UI.gfClosing)rel.classList.add('gfov')});else rel.classList.add('gfov')}
+  hxPinGf(rel,gf,on);
+  if(window.ResizeObserver&&!gf._ro){gf._ro=new ResizeObserver(()=>{const o=rel.querySelector('.hxsl.on');if(gf.isConnected&&o&&!UI.gfClosing)hxPinGf(rel,gf,o,true)});gf._ro.observe(gf)}}
+function hxPinGf(rel,gf,on,keep){
+  const R=rel.getBoundingClientRect(),era=on.closest('.hxera'),row=on.closest('.hxrow'),wide=matchMedia('(min-width:761px)').matches;
+  let bot;
+  if(era)bot=era.getBoundingClientRect().bottom;
+  else if(wide&&row&&row.classList.contains('flat')){const t=on.offsetTop;bot=on.getBoundingClientRect().bottom;
+    for(const s of row.children)if(Math.abs(s.offsetTop-t)<4)bot=Math.max(bot,s.getBoundingClientRect().bottom)}
+  else bot=(row||on).getBoundingClientRect().bottom;
+  const eb=era&&wide&&era.querySelector('.hxeb'),L=eb?eb.getBoundingClientRect().left-R.left:0,
+        pr=parseFloat(getComputedStyle(rel).paddingRight)||0;
+  const top=bot-R.top+(era?18:14);
+  gf.style.top=top.toFixed(1)+'px';gf.style.left=L.toFixed(1)+'px';gf.style.width=Math.max(0,R.width-L-pr).toFixed(1)+'px';
+  /* grow the page only by however far the jacket reaches past the end of the artist page */
+  const hero=rel.closest('.hero');if(!hero)return;
+  const cur=parseFloat(rel.style.paddingBottom)||0,hb=hero.getBoundingClientRect().bottom-cur,gb=R.top+top+gf.offsetHeight+48;
+  rel.style.paddingBottom=Math.max(0,gb-hb).toFixed(0)+'px'}
 /* on a phone the eras scroll sideways one at a time; a rail of years above jumps to one */
 function hxRail(E){const ys=E.map((e,i)=>{const y=e.t==='era'?parseInt(e.a.year,10):e.t==='box'?NaN:parseInt(hxYears(e.items),10);return [i,e.t==='box'?'Box':isNaN(y)?'•':'’'+String(y).slice(-2)]});
   return `<div class="hxrail" role="group" aria-label="Jump to an era">${ys.map(([i,t],n)=>`<button type="button" data-act="hxrail" data-i="${i}"${n===0?' class="on"':''}>${esc(t)}</button>`).join('')}</div>`}
@@ -8586,7 +8700,8 @@ function heroX(a,all,done,rated,p,phUrl,more,addP){
   const so=relSort(),scoreOf=so==='rhi'||so==='rlo'?g=>{const v=relScore(g);return v?(Math.round(v*10)/10).toString():''}:so==='heard'||so==='left'?g=>g.items.length?Math.round(100*g.items.filter(i=>isDone(i.id)).length/g.items.length)+'%':'':null;
   const sleeve=(g,ni)=>{const {sArt,col,kind}=hxArt(g);
     const on=String(g.id)===og,sc=scoreOf?scoreOf(g):'';return `<button class="hxsl${ni!=null?' hxin':''}${kind==='Single'?' sg':''}${on?' on':''}${on&&HXSINK===String(g.id)?' sink':''}" data-act="hjump" data-g="${esc(g.id)}" style="--c:${esc(col)}${ni!=null?';--i:'+ni:''}" aria-pressed="${on}" aria-label="${on?'Close':'Open'} ${esc(g.title)}"><span class="hxv vgr" aria-hidden="true">${hxRings(g)}</span><span class="hxc" aria-hidden="true">${sArt?`<img src="${esc(sArt)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span>${sc?`<b class="hxscore${/%$/.test(sc)?' pct':''}" aria-hidden="true">${esc(sc)}</b>`:''}<span class="hxt">${esc(g.title)}</span><span class="hxy">${esc([kind,g.year].filter(Boolean).join(' · '))}</span></button>`};
-  const eras=hxErasOn(a,rl),rel=eras?hxEras(a,rl,sleeve,og,NEW):rl.map(g=>sleeve(g)).join('');
+  const eras=hxErasOn(a,rl),grp=!eras&&(so==='rhi'||so==='rlo')&&relKind(a)==='all'&&new Set(rl.map(relKindOf)).size>1;
+  let lastK=null;const rel=eras?hxEras(a,rl,sleeve,og,NEW):rl.map(g=>{const k=relKindOf(g),h=grp&&k!==lastK?`<div class="hxgrp${lastK?'':' first'}" role="heading" aria-level="4"><b>${esc(REL_KINDS[k])}</b><span>${rl.filter(x=>relKindOf(x)===k).length}</span></div>`:'';lastK=k;return h+sleeve(g)}).join('');
   const ico={back:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
     play:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.8v14.4L19 12z"/></svg>',
     ear:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="6.5" rx="1.6"/><rect x="16.5" y="14" width="4.5" height="6.5" rx="1.6"/></svg>',
@@ -8656,25 +8771,33 @@ function phSetSrc(v){
   t.onload=()=>setTimeout(go,still?0:200);t.onerror=()=>{im.style.opacity='1'};t.src=u;
 }
 /* Apple's artist photo: once per artist, the first time their page opens (the owner only; one Apple lookup if the Apple id is not known yet, then one Worker call) */
+/* Apple's photo for an artist id, through your own Worker (owner) or, for a signed-in friend, through Playback's server
+   (Worker 20 keeps every answer for everyone, so each artist is only looked up once for the whole app) */
+const amArtCan=()=>READY&&((ownSync()&&!!SY.url)||accOn());
+async function amArtFetch(id){
+  const q='/apple/art?id='+encodeURIComponent(id)+'&c='+amCountry();
+  if(ownSync()&&SY.url){const r=await fetch(SY.url.replace(/\/+$/,'')+q,{cache:'no-store',headers:{...syH()}});
+    const wv=+(r.headers.get('x-pb-worker')||0);if(wv>(SY.wv||0)){SY.wv=wv;saveSync()}
+    const j=await r.json().catch(()=>null);return{status:r.status,j:j||{},old:wv<16}}
+  const x=await accApi('GET',q);return{status:x.status,j:x.j,old:x.status===404&&x.j&&x.j.error==='not found'}}
 async function phAmLoad(){
   const h=document.querySelector('.head.hero.hx');if(!h)return;
   const a=(S.music||[]).find(x=>x.id===h.dataset.aid);
-  if(!a||a.aimg||(a.aimgTry&&a.aimgTry>Date.now()-12096e5)||PHAM.busy||!READY||!ownSync())return;   /* no Worker-version check: the number saved here only refreshes on a full sync, so it can lag a Worker that was just updated */
+  if(!a||a.aimg||(a.aimgTry&&a.aimgTry>Date.now()-12096e5)||PHAM.busy||!amArtCan())return;   /* no Worker-version check: the number saved here only refreshes on a full sync, so it can lag a Worker that was just updated */
   PHAM.busy=true;
   try{
     let id=String(a.amid||a.aamid||'');
     if(!id){id=await nrFindId(a);if(id)a.aamid=id}
     if(!id){a.aimgTry=Date.now();save();return}
-    const r=await fetch(SY.url.replace(/\/+$/,'')+'/apple/art?id='+encodeURIComponent(id)+'&c='+amCountry(),{cache:'no-store',headers:{...syH()}});
-    const wv=+(r.headers.get('x-pb-worker')||0);if(wv>(SY.wv||0)){SY.wv=wv;saveSync()}
-    if(r.status===404){const j0=await r.json().catch(()=>null);
-      if(wv<16||(j0&&j0.error==='not found')){a.aimgTry=Date.now()-12096e5+36e5;return}   /* an older Worker: ask again in an hour, not in two weeks */
+    const {status,j,old}=await amArtFetch(id);
+    if(status===404){
+      if(old||(j&&j.error==='not found')){a.aimgTry=Date.now()-12096e5+36e5;return}   /* an older Worker: ask again in an hour, not in two weeks */
       a.aimgTry=Date.now();save();return}
-    if(!r.ok)throw 0;
-    const j=await r.json().catch(()=>null);
+    if(status!==200)throw 0;
     if(!j||!/^https:\/\/is\d+-ssl\.mzstatic\.com\//.test(j.base||'')){a.aimgTry=Date.now();save();return}
     a.aimg=j.base;delete a.aimgTry;save();
     const cur=document.querySelector('.head.hero.hx[data-aid="'+a.id+'"]');       /* still on this artist: slide the switch in */
+    if(cur&&!cur.querySelector('.hphoto')){renderSoon();return}   /* the page had no photo at all: draw it with one */
     if(cur&&!cur.querySelector('.hsrc')){const pn=cur.querySelector('.hxpanel'),html=hxSrcHtml(a);if(pn&&html)pn.insertAdjacentHTML('afterbegin',html)}   /* the switch lives in Details */
     if(cur&&phSrcPref()==='am')phSetSrc('am');
   }catch(e){a.aimgTry=Date.now()-13*864e5}   /* a hiccup (offline, Apple busy) tries again tomorrow, not in two weeks */
@@ -9429,12 +9552,13 @@ function yrOpen(year){
   o.querySelectorAll('[data-yr]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.yr===cur)return;cur=b.dataset.yr;o.querySelectorAll('[data-yr]').forEach(z=>z.setAttribute('aria-pressed',z===b));make()}));
   make();
 }
-function albumBar(g,a,full,n){
+function albumBar(g,a,full,n,gfm){
   if(!RATEABLE.includes(g.kind))return '';   /* singles and the like have no album rating, so no empty row: their buttons sit in the header */
   const can=RATEABLE.includes(g.kind),dx=dxOn(g),its=dx?g.items:stdItems(g),rid=dx?dxId(g):g.id,rs=its.map(i=>rating(i.id)).filter(Boolean),rn=rs.length,r=can?rating(rid):0;
   const avg=rn?rs.reduce((x,y)=>x+y,0)/rn:0,d=r&&rn?r-avg:null,f1=v=>v.toFixed(1);
   const on=llOn(a.name,g.title),sg=stdItems(g),heard=(sg.length>0&&sg.every(i=>isDone(i.id)))||!!rating(g.id),ll=on||!heard;
   const what=dx?'deluxe':g.kind==='EP'?'EP':'album';
+  if(gfm)return gfRateBar(g,a,full,n,{dx,its,rid,rn,r,avg,d,what});
   return `<div class="sl-acts">
     ${can?`<button class="sl-rate ${r?'set':''}${lsCar(g,rid)?' carry':''}${UI.rLand===rid?' landing':''}" data-act="ropen" data-id="${rid}" aria-expanded="${UI.rOpen===rid}"><span class="t">${r?'Your '+what:'Rate the '+what}</span>${r?`<b class="v">${fmt(r)}</b>`:''}<span class="avg">${rn?`<b>${f1(avg)}</b>song avg`:'<b>\u2013</b>song avg'}</span></button>`:'<span class="sl-sp"></span>'}
     ${n?`<button class="sl-ic" data-act="grpall" data-a="${a.id}" data-g="${g.id}" aria-label="${full?'Clear all checkmarks':'Mark all heard'}" title="${full?'Clear all':'Mark all heard'}" aria-pressed="${full}">${ICO.all}</button>`:''}
@@ -9446,7 +9570,7 @@ function albumBar(g,a,full,n){
 function reviewHtml(rid){
   const rv=reviewOf(rid),ro=LSV!==null;
   if(UI.rvEdit===rid&&!ro)return `<form class="rv-f rv-in" data-form="grev" data-id="${rid}"><label class="label" for="rv-${rid}">Your review</label><textarea id="rv-${rid}" name="rv" maxlength="${REVMAX}" rows="4" placeholder="What stood out? Friends you share your page with can read this.">${esc(rv)}</textarea><div class="rv-r"><span class="rv-c">${rv.length} / ${REVMAX}</span><span class="rv-b">${rv?`<button type="button" class="link" data-act="rvdel" data-id="${rid}">Delete</button>`:''}<button type="button" class="btn" data-act="rvcancel">Cancel</button><button class="btn primary">Save</button></span></div></form>`;
-  if(rv)return `<figure class="rvw${UI.rvAnim===rid?' rv-in':''}"><blockquote>${esc(rv)}</blockquote>${ro?'':`<button type="button" class="link" data-act="rvedit" data-id="${rid}">Edit review</button>`}</figure>`;
+  if(rv)return `<figure class="rvw${UI.rvAnim===rid?' rv-in':''}"><blockquote onclick="this.classList.toggle('all')">${esc(rv)}</blockquote>${ro?'':`<button type="button" class="link" data-act="rvedit" data-id="${rid}">Edit review</button>`}</figure>`;
   return ro?'':`<button type="button" class="link rv-add" data-act="rvedit" data-id="${rid}">Write a review</button>`;
 }
 function rdLine(g,dx){
@@ -9648,8 +9772,11 @@ document.addEventListener('click',ev=>{const b=ev.target.closest('.simtg[aria-ex
 addEventListener('resize',()=>simNavSync());
 /* Fans also spin: collapsed to one slim bar until tapped, then a crate of records, one per similar artist, the label
    showing the artist's photo when they are in your log (tap to open them) or their initial when not (tap to add them) */
+function simShown(){try{return localStorage.getItem(KEY+'_simhide')!=='1'}catch(e){return true}}
 function simBox(a){
-  const open=UI.simOpen===a.id,ao=open&&UI.simAnim?' sim-opening':'';if(open)UI.simAnim=false;
+  /* open from the start (a friend found it hidden away); Hide folds it up and that choice is remembered on this device */
+  const open=simShown(),ao=open&&UI.simAnim?' sim-opening':'';if(open)UI.simAnim=false;
+  if(open&&!SIM[simKey('a',a.name)])setTimeout(()=>simLoad('a',a.name),0);
   const e=SIM[simKey('a',a.name)],ok=e&&!e.busy&&!e.err&&e.rows&&e.rows.length,body=open?(ok?simCrate(e,ao):simBody(e,'a',{artist:a.name})):'';
   const arr=open&&ok?`<span class="simnav${ao?' in':''}"><button class="simar" data-simscroll="-1" aria-label="Scroll left" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button><button class="simar" data-simscroll="1" aria-label="Scroll right"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button></span>`:'';
   return `<section class="simbox crate${open?' open':''}"><div class="simh"><h3 class="hxlbl">Fans also spin</h3><button class="simtg" data-act="simtog" data-a="${a.id}" aria-expanded="${open}">${open?'Hide':'Show'}<i aria-hidden="true"></i></button>${arr}</div><small class="simsub">${open?'Similar artists, from Last.fm':'Similar artists'}</small>${open?`<div class="simbody${ao}">${body}</div>`:''}</section>`}
@@ -9672,7 +9799,7 @@ const SIMART_KEY='pb_simart';let SIMART=null,SIMART_RUN=false;
 function simArtCache(){if(!SIMART){try{SIMART=JSON.parse(localStorage.getItem(SIMART_KEY)||'{}')||{}}catch(e){SIMART={}}}return SIMART}
 function simArtSave(){try{localStorage.setItem(SIMART_KEY,JSON.stringify(SIMART))}catch(e){}}
 /* can photos be looked up right now? (if not, the records just keep their letter instead of a loading shimmer) */
-function simArtCan(){if(!READY||!ownSync()||!SY.url)return false;let cool=0;try{cool=+localStorage.getItem('pb_simartcool')||0}catch(e){}return cool<=Date.now()}
+function simArtCan(){if(!amArtCan())return false;let cool=0;try{cool=+localStorage.getItem('pb_simartcool')||0}catch(e){}return cool<=Date.now()}
 async function simArtLoad(names){
   if(SIMART_RUN||!simArtCan())return;
   const C=simArtCache();SIMART_RUN=true;
@@ -9683,9 +9810,9 @@ async function simArtLoad(names){
       let base='';
       const hit=(await nrGet('search',{term:n,entity:'musicArtist',limit:5})).find(x=>x&&x.artistId&&nArtist(x.artistName)===k);
       if(hit){
-        const r=await fetch(SY.url.replace(/\/+$/,'')+'/apple/art?id='+encodeURIComponent(hit.artistId)+'&c='+amCountry(),{cache:'no-store',headers:{...syH()}});
-        if(r.ok){const j=await r.json().catch(()=>null);if(j&&/^https:\/\/is\d+-ssl\.mzstatic\.com\//.test(j.base||''))base=j.base}
-        else if(r.status!==404)throw AMError('http',r.status);
+        const {status,j}=await amArtFetch(hit.artistId);
+        if(status===200){if(j&&/^https:\/\/is\d+-ssl\.mzstatic\.com\//.test(j.base||''))base=j.base}
+        else if(status!==404)throw AMError('http',status);
       }
       C[k]=[base,Date.now()];simArtSave();
       document.querySelectorAll('.simt[data-k="'+CSS.escape(k)+'"]').forEach(t=>t.classList.remove('wait'));
@@ -9760,7 +9887,10 @@ function relList(a){const k=relKind(a),so=relSort();let L=a.groups.filter(g=>k==
   const cmp={new:(x,y)=>(!yr(x))-(!yr(y))||(yr(x)<yr(y)?1:yr(x)>yr(y)?-1:0),old:(x,y)=>(!yr(x))-(!yr(y))||(yr(x)<yr(y)?-1:yr(x)>yr(y)?1:0),
     rhi:(x,y)=>(!relScore(x))-(!relScore(y))||relScore(y)-relScore(x)||relAvg(y)-relAvg(x),rlo:(x,y)=>(!relScore(x))-(!relScore(y))||relScore(x)-relScore(y)||(!relAvg(x))-(!relAvg(y))||relAvg(x)-relAvg(y),
     heard:(x,y)=>hp(y)-hp(x),left:(x,y)=>hp(x)-hp(y),az:(x,y)=>String(x.title).localeCompare(String(y.title),undefined,{sensitivity:'base'})}[so];
-  return L.slice().sort((x,y)=>cmp(x,y)||ix.get(x)-ix.get(y))}
+  /* sorted by your rating, albums, EPs and singles each keep to their own group: an 8 for an album and an 8 for a single mean different things */
+  const gk=(so==='rhi'||so==='rlo')&&k==='all'?g=>REL_GORD.indexOf(relKindOf(g)):()=>0;
+  return L.slice().sort((x,y)=>gk(x)-gk(y)||cmp(x,y)||ix.get(x)-ix.get(y))}
+const REL_GORD=['alb','ep','sin','oth'];
 let RSELSW=false;
 function relBar(a){if(a.groups.length<2)return '';
   const sw=RSELSW;RSELSW=false;
@@ -9770,6 +9900,41 @@ function relBar(a){if(a.groups.length<2)return '';
 /* THE GATEFOLD: the Releases row is the discography. Tapping a record opens that one album like a gatefold sleeve:
    the front cover swings open on its spine, album info on the inside left, your ratings on the inside right.
    One album is open at a time; tapping it again (or the close button) folds it shut. */
+/* THE OPEN ALBUM'S RATING: one row in the album's own colors. The fill runs as far as your score like a song's bar, the
+   record at the end wears the number, and the song average sits beside it with how far your score is from it. */
+function gfRateBar(g,a,full,n,v){const {dx,its,rid,rn,r,avg,d,what}=v,f1=x=>x.toFixed(1);
+  const dir=d===null?'':Math.abs(d)<.05?'even':d>0?'up':'down';
+  const dl=d===null?'':Math.abs(d)<.05?'level with songs':(d>0?'+':'−')+f1(Math.abs(d))+' vs songs';
+  const arr=dir==='up'?'<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 2l3.5 5h-7z"/></svg>':dir==='down'?'<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 8L1.5 3h7z"/></svg>':'';
+  return `<div class="sl-acts gfra">
+    <button class="sl-rate gfr ${r?'set':''}${lsCar(g,rid)?' carry':''}${UI.rLand===rid?' landing':''}${UI.rOpen===rid?' open':''}" data-act="ropen" data-id="${rid}" aria-expanded="${UI.rOpen===rid}" aria-label="${r?'Your '+what+' rating, '+fmt(r)+'. Change it':'Rate the '+what}">
+      ${r?`<span class="gfr-w" style="width:${r*10}%" aria-hidden="true"></span>`:''}
+      <span class="t"><b>${r?'Your '+what:'Rate the '+what}</b><small>${rn?rn+' of '+its.length+' songs rated':'No songs rated yet'}</small></span>
+      ${rn?`<span class="gfr-avg"><b>${f1(avg)}</b><span>song avg</span>${dl?`<em class="${dir}">${arr}${dl}</em>`:''}</span>`:''}
+      <span class="gfr-rec" aria-hidden="true"><i></i><b class="v">${r?fmt(r):'+'}</b></span>
+    </button>
+    ${n?`<button class="sl-ic" data-act="grpall" data-a="${a.id}" data-g="${g.id}" aria-label="${full?'Clear all checkmarks':'Mark all heard'}" title="${full?'Clear all':'Mark all heard'}" aria-pressed="${full}">${ICO.all}</button>`:''}
+  </div>
+  ${UI.rOpen===rid?rateMeter(rid,(dx?dxName(g):g.title)):''}`}
+/* THE INSIDE LEFT OF THE OPEN ALBUM: what the album has been to you. Plays, where it ranks among this artist's records,
+   its best and weakest songs, every listen, your review, friends' scores, and the links (share, RYM, listen list). */
+function gfInfo(a,g,dx,shown){
+  const can=RATEABLE.includes(g.kind),rid=dx?dxId(g):g.id,rt=shown.map(i=>({i,r:rating(i.id)})).filter(x=>x.r);
+  const plays=shown.reduce((t,i)=>t+plN(i.id),0),facts=[];
+  if(plays)facts.push(`<div class="gfi-f"><span>Plays</span><b>${plays.toLocaleString()}</b><small>${shown.filter(i=>plN(i.id)).length} of ${shown.length} songs played</small></div>`);
+  if(can&&rating(g.id)){const gk=relKindOf(g),kin=a.groups.filter(x=>RATEABLE.includes(x.kind)&&relKindOf(x)===gk&&rating(x.id));   /* ranked against its own kind: albums against albums, EPs against EPs */
+    if(kin.length>1){const me=rating(g.id),hi=kin.filter(x=>rating(x.id)>me).length,tie=kin.filter(x=>rating(x.id)===me).length>1;
+      facts.push(`<div class="gfi-f"><span>Rank</span><b>#${hi+1}<i> of ${kin.length}</i></b><small>${tie?'tied, ':''}among ${esc(a.name)}’s rated ${esc((REL_KINDS[gk]||'records').toLowerCase())}</small></div>`)}}
+  if(rt.length>1){const so=rt.slice().sort((x,y)=>y.r-x.r||shown.indexOf(x.i)-shown.indexOf(y.i)),b=so[0],w=so[so.length-1];
+    if(b.r!==w.r){const tl=x=>esc(songShow(x.i).t);
+      facts.push(`<div class="gfi-f gfi-s"><span>Best song</span><b class="up">${fmt(b.r)}</b><small>${tl(b)}</small></div>`);
+      facts.push(`<div class="gfi-f gfi-s"><span>Weakest song</span><b class="down">${fmt(w.r)}</b><small>${tl(w)}</small></div>`)}}
+  const L=can?lsList(g.id):[],k=L.length?lsIdx(g.id):-1;
+  const lis=L.length>1?`<div class="gfi-b"><h4>Listens</h4><ol class="gfi-ls">${L.map((x,j)=>`<li${j===k?' class="on"':''}><button type="button" data-act="lsgo" data-g="${esc(g.id)}" data-k="${j}"${j===k?' aria-current="true"':''}><span>Listen ${j+1}</span><time>${x.d?esc(fmtRd(x.d)):'No date'}</time><b>${x.r?fmt(x.r):'–'}</b></button></li>`).join('')}</ol></div>`:'';
+  const rv=can&&rating(rid)?reviewHtml(rid):'';
+  const fr=friendStrip(g,a,dx);
+  const links=`<div class="gfi-k">${shareBtn(g,a).replace('<span></span>','')}<a class="gfi-a" href="${esc(rymSearchUrl(a,g))}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>Find on RYM</a></div>`;
+  return `<div class="gfi">${facts.length?`<div class="gfi-g">${facts.join('')}</div>`:''}${lis}${rv?`<div class="gfi-b gfi-rv">${rv}</div>`:''}${fr}${links}</div>`}
 function gfOpenId(a){return UI.alb&&UI.alb.aid===a.id&&a.groups.some(g=>String(g.id)===UI.alb.g)?UI.alb.g:''}
 function gfHtml(a,g){return lsWith(g,()=>{
 
@@ -9807,6 +9972,7 @@ function gfHtml(a,g){return lsWith(g,()=>{
             <div class="sl-meta"><span class="sl-kind">${esc(g.kind)} · ${esc(g.year)}</span><h3>${esc(dx?dxName(g):g.title)}</h3>${dx?'<span class="dxbadge">Deluxe</span>':''}${g.w&&g.w.length?`<span class="sl-w">with ${esc(g.w.join(' & '))}</span>`:''}<span class="sl-sub">${gd} of ${shown.length} heard</span>${rdLine(g,dx)}${lsPager(g)}${UI.wEdit===g.id?`<form class="sl-wf" data-form="gwith" data-a="${a.id}" data-g="${g.id}"><input name="w" value="${esc((g.w||[]).join(' & '))}" placeholder="Other artist, like Kenny Beats" aria-label="Collab with" autocomplete="off" autocapitalize="words"><button>Save</button></form>`:''}</div>
           </div>
           ${dxs.length?`<div class="dxseg" role="group" aria-label="Edition" data-dx="${dx?1:0}"><button type="button" data-act="dxsel" data-g="${g.id}" data-v="0" aria-pressed="${!dx}">Standard<span class="mono">${sd}/${std.length}</span></button><button type="button" class="dx" data-act="dxsel" data-g="${g.id}" data-v="1" aria-pressed="${dx}">Deluxe<span class="mono">${dd}/${g.items.length}</span></button></div>`:''}
+          ${gfInfo(a,g,dx,shown)}
           </div>
         </div>
         <div class="gf-lb" aria-hidden="true"><i class="gf-sh"></i>${sArt?`<img class="gf-lbg" src="${esc(sArt)}" alt="" decoding="async" onerror="this.remove()"><img src="${esc(sArt)}" alt="" decoding="async" onerror="this.remove()">`:''}<span>${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div>
@@ -9815,12 +9981,11 @@ function gfHtml(a,g){return lsWith(g,()=>{
         <div class="gf-pk r" aria-hidden="true"><div class="gf-vr vgr" style="--vc:var(--ac)">${vgr}<span class="gf-vl">${vrLab}</span></div></div>
         <div class="gf-rs">
         <div class="gf-rh"><span class="gf-lbl">${RATEABLE.includes(g.kind)?'Your ratings':'Songs'}</span><button type="button" class="gf-x" data-act="gfclose" aria-label="Close ${esc(g.title)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-        ${albumBar(g,a,full,shown.length)}
-        ${friendStrip(g,a,dx)}
+        ${albumBar(g,a,full,shown.length,true)}
         ${g.items.length?'':'<p class="note">No songs listed yet. Tap the details button (i) up top to fill them in; your album rating stays.</p>'}
         ${g.items.length&&!rows.length?'<p class="note gf-none">Every song here is heard. Tap the ear button up top to show them all.</p>':''}
         <div class="tlist">${trackRows}</div>
-        <div class="sl-foot">${shareBtn(g,a)}<details class="gmore"${UI.armed===g.id?' open':''}><summary aria-label="More for this album">⋯</summary>${moreBtns(g,dx)}${delGBtn(g,a)}</details></div>
+        <div class="sl-foot"><span></span><details class="gmore"${UI.armed===g.id?' open':''}><summary aria-label="More for this album">⋯</summary>${moreBtns(g,dx)}${delGBtn(g,a)}</details></div>
         </div>
       </div>
       </div>
@@ -9947,6 +10112,7 @@ function gfClose(){const el=document.querySelector('.group.sleeve.gf');
   if(!el||noMotion()){done();return}
   if(UI.gfClosing)return;UI.gfClosing=true;
   el.classList.remove('gfopen');
+  {const rel=el.closest('.hxrel');if(rel)rel.classList.remove('gfov')}
   try{const p=gfRun(el,true);if(!p)return done();
     /* the page holds perfectly still while the cover flies home, so it lands exactly on its sleeve (closing up the space and
        scrolling back during the flight moved the sleeve out from under it, so the cover landed off and then jumped). Once it has
@@ -9955,6 +10121,14 @@ function gfClose(){const el=document.querySelector('.group.sleeve.gf');
 function gfSettle(el,done){
   const host=el.parentElement,y0=scrollY;
   if(!host||!el.isConnected||noMotion()){done();return}
+  if(el.classList.contains('ov')){   /* floating over the shelf: nothing to close up, only any room it added at the end of the page, while the page eases back */
+    const rel=el.closest('.hxrel'),p0=rel?parseFloat(rel.style.paddingBottom)||0:0,y1=Math.max(0,UI.gfS0==null?y0:UI.gfS0);
+    el.style.visibility='hidden';
+    const ms=420,t0=performance.now(),ease=t=>1-Math.pow(1-t,3);let res;const mine=GFP=new Promise(r=>res=r);
+    const step=now=>{const t=Math.min(1,(now-t0)/ms),e=ease(t);if(rel)rel.style.paddingBottom=(p0*(1-e)).toFixed(1)+'px';
+      window.scrollTo(0,y0+(y1-y0)*e);if(t<1)requestAnimationFrame(step);else{done();if(GFP===mine)GFP=null;res()}};
+    if(Math.abs(y1-y0)<2&&p0<1){done();if(GFP===mine)GFP=null;res();return}
+    requestAnimationFrame(step);return}
   const cs=getComputedStyle(el),gap=parseFloat(getComputedStyle(host).rowGap)||0,h=el.offsetHeight+(parseFloat(cs.marginTop)||0)+(parseFloat(cs.marginBottom)||0);
   const y1=Math.max(0,Math.min(y0,UI.gfS0==null?y0:UI.gfS0));
   const inRow=el.classList.contains('inrow'),pe=inRow&&el.previousElementSibling?el.previousElementSibling.dataset.era:null;
@@ -9994,7 +10168,7 @@ function gfShow(el){if(!el)return;
   const on=document.querySelector('.hxsl.on'),rw=on&&on.closest('.hxrow');   /* slide the Releases row so the open record is showing (on a PC the Eras shelf wraps instead, so there is nothing to slide) */
   if(on&&rw&&rw.scrollWidth>rw.clientWidth+2){const L=on.getBoundingClientRect().left-rw.getBoundingClientRect().left+rw.scrollLeft,R=L+on.offsetWidth+60;if(L<rw.scrollLeft||R>rw.scrollLeft+rw.clientWidth)rw.scrollTo({left:Math.max(0,L-24),behavior:'auto'})}
   const r=el.getBoundingClientRect();
-  if(el.classList.contains('inrow')&&on){const er=(on.closest('.hxera')||on).getBoundingClientRect();
+  if((el.classList.contains('inrow')||el.classList.contains('ov'))&&on){const er=(on.closest('.hxera')||on).getBoundingClientRect();
     if(er.top>70&&r.top<innerHeight*.55)return;
     window.scrollTo({top:Math.max(0,scrollY+er.top-90),behavior:noMotion()?'auto':'smooth'});return}
   if(r.top>60&&r.top<innerHeight*.5)return;
@@ -10039,7 +10213,7 @@ document.addEventListener('keydown',ev=>{
 function relShuffle(fn){const row=document.querySelector('.hx .hxrow');
   if(!row||noMotion()){fn();return}
   const pick=r=>{const vis=el=>{const b=el.getBoundingClientRect();return b.bottom>0&&b.top<innerHeight};
-    const els=r.classList.contains('eras')?[...r.querySelectorAll(':scope>.hxera:not(.hxera-add)')]:[...r.querySelectorAll(':scope>.hxsl:not(.hxadd),:scope>.hxstk,:scope>.hxfold')];
+    const els=r.classList.contains('eras')?[...r.querySelectorAll(':scope>.hxera:not(.hxera-add)')]:[...r.querySelectorAll(':scope>.hxsl:not(.hxadd),:scope>.hxstk,:scope>.hxfold,:scope>.hxgrp')];
     return els.filter(vis)};
   const out=pick(row),E='cubic-bezier(.4,0,1,1)',st=Math.min(14,120/Math.max(1,out.length));
   out.forEach((el,i)=>el.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateY(12px) scale(.97)'}],{duration:170,delay:i*st,easing:E,fill:'forwards'}));
@@ -10193,7 +10367,7 @@ document.addEventListener('click',ev=>{
   else if(act==='nrx'){S.nr.list=nrList().filter(y=>y.id!==b.dataset.id);touch();briefPush()}
   else if(act==='nrclear'){S.nr.list=[];touch();briefPush()}
   else if(act==='llclose'){UI.llOpen=false}
-  else if(act==='addart'){UI.libOpen=false;UI.addOpen=true;UI.toAdd=true}
+  else if(act==='addart'){UI.libOpen=!!UI.sel[UI.tab]||UI.libOpen;UI.libAnim=UI.libOpen;UI.addOpen=true;UI.toAdd=true}   /* on an artist's page the Add an artist box sits in the artist menu, so open the menu (it used to stay shut, which looked like nothing happened) */
   else if(act==='hinfo'){if(UI.hinfo){hinfoClose();return}UI.hinfo=true;UI.hinfoIn=true;UI.hinfoOut=false;UI.hcPop='hinfo'}
   else if(act==='hjump'){if(UI.alb&&UI.alb.g===String(b.dataset.g)&&document.querySelector('.group.sleeve.gf')){gfClose();return}UI.rOpen=null;UI.toAlb=b.dataset.g}
   else if(act==='gfclose'){gfClose();return}
@@ -10303,10 +10477,10 @@ document.addEventListener('click',ev=>{
     if(on&&pn&&!noMotion()){if(pn.classList.contains('out'))return;pn.classList.add('out');document.querySelectorAll('.hxadd,.hxaddb').forEach(x=>x.setAttribute('aria-expanded','false'));setTimeout(()=>{UI.relAdd=null;render()},220);return}
     UI.relAdd=on?null:aid;UI.relAddAnim=!on;
     if(!on){if(UI.alb)UI.alb=null;setTimeout(()=>{const p=document.querySelector('.hxaddp');if(!p)return;const r=p.getBoundingClientRect();if(r.top<70||r.bottom>innerHeight)p.scrollIntoView({behavior:noMotion()?'auto':'smooth',block:'center'});const t=p.querySelector('input');if(t)t.focus({preventScroll:true})},80)}}
-  else if(act==='simtog'){UI.simOpen=UI.simOpen===b.dataset.a?null:b.dataset.a;UI.simAnim=!!UI.simOpen;if(UI.simOpen){const ar=S.music.find(x=>x.id===UI.simOpen);if(ar)simLoad('a',ar.name)}}
+  else if(act==='simtog'){const o=!simShown();try{localStorage.setItem(KEY+'_simhide',o?'0':'1')}catch(e){}UI.simAnim=o;if(o){const ar=S.music.find(x=>x.id===b.dataset.a);if(ar)simLoad('a',ar.name)}}
   else if(act==='simsong'){UI.simSong=UI.simSong===id?null:id;UI.simAnim=!!UI.simSong;if(UI.simSong)simLoad('t',b.dataset.art,b.dataset.ttl)}
   else if(act==='simretry'){const t=b.dataset.type;SIM[simKey(t,b.dataset.art,b.dataset.ttl)]=null;simLoad(t,b.dataset.art,b.dataset.ttl)}
-  else if(act==='simadd'){UI.libOpen=false;UI.addOpen=true;UI.toAdd=true;mbSearch(b.dataset.n);return}   /* the same Add an artist search, started for this name */
+  else if(act==='simadd'){UI.libOpen=true;UI.libAnim=true;UI.addOpen=true;UI.toAdd=true;mbSearch(b.dataset.n);return}   /* the same Add an artist search, started for this name, in the open artist menu */   /* the same Add an artist search, started for this name */
   else if(act==='rtimport'){rtImport()}
   else if(act==='spgo'){spConnect().catch(()=>{SPX.err='This browser could not start the Spotify sign-in.';render()});return}
   else if(act==='spnow'){spPoll(true);return}
