@@ -1295,6 +1295,24 @@ body{overflow-x:clip}
 @keyframes flSpin{to{rotate:360deg}}
 @keyframes flWob{0%{scale:.88 1.08}50%{scale:1.05 .95}100%{scale:1.18 .86}}
 .hoff .fl,.hoff .fl>.fb{animation-play-state:paused}
+/* 2026.11.20-n: Fans also spin records pause while their row is off screen */
+.simrow.soff .simd,.simrow.soff .simlab{animation-play-state:paused}
+/* 2026.11.20-n LITE MODE (html.lite, see liteRead): cheaper versions of the heaviest effects for slower devices.
+   The artist colors hold still (the pools keep the spots their offsets put them in, so the page is still covered) */
+html.lite .fl,html.lite .fl>.fb{animation:none;will-change:auto}
+/* no frosted glass except the top bar (which then blurs a still background, so it costs little); the pills get a deeper tint instead */
+html.lite :not(.top):not(.top *):not(.shr){-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+html.lite .hx :is(.rseg,.rsort select,.hxfold,.simtg,.simar,.rsel-b,.hxaddb){background-color:rgb(0 0 0 / .36)}
+@media (max-width:760px){html.lite .hxback{background:rgb(0 0 0 / .42)}}
+html.lite .hsrc{background:rgb(0 0 0 / .3)}
+html.lite .hxpanel{background:rgb(16 16 18 / .86)}
+html.lite .rsel-m{background:rgb(18 18 20 / .94)}
+html.lite .gfscrim{background:color-mix(in srgb,var(--acsw,#000) 18%,rgb(6 5 10 / .78))}
+/* Fans also spin: records still spin in when the row opens, then hold still until hovered */
+@media (prefers-reduced-motion:no-preference){
+  html.lite .simd,html.lite .simlab{animation:none}
+  html.lite .simrow.sim-in .simd,html.lite .simrow.sim-in .simlab{animation:simSpin .9s cubic-bezier(.2,.8,.2,1) calc(var(--i) * 45ms) backwards}
+  html.lite .simt:hover .simd,html.lite .simt:hover .simlab,html.lite .simt:focus-visible .simd,html.lite .simt:focus-visible .simlab{animation:simRot var(--rot) linear infinite}}
 @media (prefers-reduced-motion:reduce){.fl,.fl>.fb{animation:none}}
 .hrec{position:relative;width:220px;height:220px;flex:0 0 auto}
 .hring{width:220px;height:220px;border-radius:50%;display:grid;place-items:center;
@@ -3316,6 +3334,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.20-n', note:'LITE MODE FOR SLOWER DEVICES: a friend found the artist page laggy on his MacBook. Playback now times its frames on the artist page, and if a device keeps dropping them it switches to lite mode on that device: the artist colors hold still, the buttons on the artist page get a flat tint instead of frosted glass (the top bar keeps its blur), the liquid record skips its blur, records spin up on the turntable instead of flying out of their sleeve, and Fans also spin records only turn on hover. Settings > Lite mode has Auto, Always on and Always off; ?lite=1 previews it for one visit. For everyone: a normal record now spins on the browser\u2019s own animation once it\u2019s up to speed instead of a script every frame, and the record and Fans also spin pause while scrolled out of view. Desktops that keep up look exactly as before.'},
   {v:'2026.11.20-m', note:'PHONE ALBUMS OPEN LIKE A GATEFOLD: on a phone, an opened album is now the open jacket instead of a plain sheet. The cover flies down out of the Releases row onto your rating record, then swings open toward you on its spine and away to the left, showing the inside of the jacket as it turns, while the record spins up underneath and the songs fade in. Inside are two pages side by side with the spine crease between them and a sliver of the other page showing at the edge: Ratings (where it opens: the rating record, the title, your album rating and every song) and Details (the cover with your progress record half out of it, plays, rank, best and weakest songs, listens, review, friends, Share and Find on RYM). Swipe between them or tap Details / Ratings at the top. Closing from Ratings swings the cover shut over the record before it flies home onto its sleeve. The page you are on and how far you scrolled stay put when you rate a song, and drag down, tap the dimmed page or the X still close it. Singles keep their 7-inch sheet. PC and tablet are unchanged.'},
   {v:'2026.11.20-l', note:'PHONE ARTIST PHOTO ENDS IN ONE CURVE: the photo now stays solid right down to a single curved edge (lowest in the middle, rising toward the sides) with only a short soft falloff, instead of a long fade with a curve laid over it. The shade behind the name follows the same curve instead of running straight across, and the moving artist colors no longer show through the photo as you scroll.'},
   {v:'2026.11.20-k', note:'PHONE ARTIST PHOTO, STRONGER CURVE: the curved bottom fade on the artist photo bends much more now, so the photo clearly reaches lowest in the middle and melts away well before the bottom at the sides.'},
@@ -7039,6 +7058,7 @@ function render(){
   tdPaint();
   hxObserve();
   hxPlaceGf();
+  simWatch();LITE.rt=performance.now();liteProbe();
   const nl=document.getElementById('llist');
   if(nl){if(ll&&llTab===UI.tab)nl.scrollTop=llTop;
     else{const c=nl.querySelector('[aria-current="true"]');if(c)nl.scrollTop=c.offsetTop-nl.clientHeight/3}}
@@ -8431,6 +8451,7 @@ function settingsView(){
     ${acct.trim()?`<div class="set-col set-acct"><h3 class="set-gh">Account &amp; community</h3>${acct}</div>`:''}
     <div class="set-col set-data"><h3 class="set-gh">Your data</h3>
     <div class="setcard"><h3>Artist page</h3><p class="note">The artist's photo fades into their colors at the top of their page, with a Play on Spotify button. Turn it off to get the plain color header back. Saved on this device.</p><div class="tools"><button class="btn" data-act="phtog" aria-pressed="${phOn()}">${phOn()?'Turn off artist photo':'Turn on artist photo'}</button></div></div>
+    <div class="setcard"><h3>Lite mode</h3><p class="note">${liteNote()}</p><div class="rseg" role="group" aria-label="Lite mode">${[['auto','Auto'],['on','Always on'],['off','Always off']].map(([v,t])=>`<button data-act="litepick" data-v="${v}" aria-pressed="${LITE.pref===v}">${t}</button>`).join('')}</div></div>
     <div class="setcard"><h3>How Playback works</h3><p class="note">A short tour of the buttons and tabs.</p><div class="tools"><button class="btn" data-act="tourgo">Show the tour</button></div></div>
     <div class="setcard"><h3>Sync &amp; data</h3>
     <details id="syncpanel" ${UI.syncOpen?'open':''}>
@@ -8698,11 +8719,12 @@ function liqParts(P,aid){const rnd=hrng(hseed(aid+':9')),NB=22,Q=P.slice(0,NB);l
   for(let k=0;k<16;k++){const r0=72+rnd()*54;u.push({an0:rnd()*2*Math.PI,r0,r1:72+(r0-72)*.6,r:[1.6,2.2,3,4,5.5][Math.floor(rnd()*5)],eps:.1+rnd()*.14,k:2.4+rnd()*1.6,om:0,lag:0})}
   return{b,u,base:liqBase(P)}}
 /* the record as drawn at rest; the turntable copy is then moved every frame by liqTick */
-function liqSvg(Lq,head){const D=180/Math.PI;
+function liqSvg(Lq,head,plain){   /* plain (lite mode): no gooey filter, so the splatters stay separate overlapping blobs and nothing is re-blurred every frame */
+const D=180/Math.PI;
   let glass='';for(const r of [135,136.6,138.2,56,57.6,59.2])glass+='<circle cx="140" cy="140" r="'+r+'" fill="none" stroke="rgba(255,255,255,.10)" stroke-width=".8"/>';
   glass+='<circle cx="140" cy="140" r="139" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.4"/><circle cx="140" cy="140" r="132" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.2"/><circle cx="140" cy="140" r="62" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.2"/>';
   return head+'<defs><mask id="lqm"><rect width="280" height="280" fill="black"/><circle cx="140" cy="140" r="132" fill="white"/><circle cx="140" cy="140" r="62" fill="black"/></mask><filter id="lqg" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9"/></filter></defs>'
-    +'<g mask="url(#lqm)"><rect width="280" height="280" fill="'+Lq.base+'"/><g filter="url(#lqg)">'
+    +'<g mask="url(#lqm)"><rect width="280" height="280" fill="'+Lq.base+'"/><g'+(plain?'':' filter="url(#lqg)"')+'>'
     +Lq.b.map(x=>{const cx=HC+Math.cos(x.an0)*x.r0,cy=HC+Math.sin(x.an0)*x.r0;return '<ellipse class="lb" fill="'+x.col+'" cx="'+hf(cx)+'" cy="'+hf(cy)+'" rx="'+hf(x.rad)+'" ry="'+hf(x.rad)+'" transform="rotate('+hf(x.an0*D+90)+' '+hf(cx)+' '+hf(cy)+')"/>'}).join('')+'</g>'
     +Lq.u.map(x=>'<g class="lu" transform="translate('+hf(HC+Math.cos(x.an0)*x.r0)+' '+hf(HC+Math.sin(x.an0)*x.r0)+')"><circle r="'+x.r+'" fill="rgba(255,255,255,.10)" stroke="rgba(255,255,255,.55)" stroke-width=".7"/><circle cx="'+hf(-x.r*.3)+'" cy="'+hf(-x.r*.35)+'" r="'+hf(x.r*.28)+'" fill="rgba(255,255,255,.85)"/></g>').join('')+'</g>'+glass+'</svg>'}
 function hLiquid(P,aid){return liqSvg(liqParts(P,aid),'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 280" width="280" height="280">')}
@@ -9253,7 +9275,7 @@ function heroPaint(){const el=document.querySelector('.hero[data-aid]');if(!el)r
   el.classList.toggle('hclear',hClear());liqMount(el,a)}
 /* The record spins up and the arm drops when an artist opens. A redraw of the same artist keeps spinning
    from where it was; leaving the Music tab and coming back opens it again. */
-const HERO={aid:null,ang:0,spd:0,raf:0,last:0,begin:0,el:null};
+const HERO={aid:null,ang:0,spd:0,raf:0,last:0,begin:0,el:null,hero:null,wa:null,wa0:0,wat:0};
 /* Liquid record: the paint is carried by the spin the way liquid in a spinning dish is. Each blob has its own
    speed that is dragged toward the record's speed, so when the record starts the paint is left behind and smears
    into arcs, then catches up; it is thrown outward as the speed builds; and it never quite matches the record,
@@ -9263,11 +9285,11 @@ function liqMount(hero,a){const spin=hero.querySelector('.hspin');if(!spin)retur
   const P=HSTY.n===9&&!noMotion()?heroPalette(a):[];
   if(!P.length){if(spin.firstChild)spin.textContent='';spin.classList.remove('liq');LIQ.svg=null;return}
   const sig=a.id+'|'+P.map(x=>x.col+x.w.toFixed(2)).join(','),Lq=liqParts(P,a.id),b=Lq.b,u=Lq.u;
-  if(LIQ.sig===sig){b.forEach((x,i)=>{if(LIQ.b[i]){x.om=LIQ.b[i].om;x.lag=LIQ.b[i].lag}});u.forEach((x,i)=>{if(LIQ.u[i]){x.om=LIQ.u[i].om;x.lag=LIQ.u[i].lag}})}
+  const sig2=sig+(LITE.on?'|lite':'');if(LIQ.sig===sig2){b.forEach((x,i)=>{if(LIQ.b[i]){x.om=LIQ.b[i].om;x.lag=LIQ.b[i].lag}});u.forEach((x,i)=>{if(LIQ.u[i]){x.om=LIQ.u[i].om;x.lag=LIQ.u[i].lag}})}
   else LIQ.c=0;
-  LIQ.sig=sig;LIQ.b=b;LIQ.u=u;
+  LIQ.sig=sig2;LIQ.b=b;LIQ.u=u;
   spin.classList.add('liq');
-  spin.innerHTML=liqSvg(Lq,'<svg class="hliq" viewBox="0 0 280 280" aria-hidden="true">');
+  spin.innerHTML=liqSvg(Lq,'<svg class="hliq" viewBox="0 0 280 280" aria-hidden="true">',LITE.on);
   LIQ.svg=spin.firstChild;LIQ.bn=[...LIQ.svg.querySelectorAll('.lb')];LIQ.un=[...LIQ.svg.querySelectorAll('.lu')];liqTick(0,HERO.spd,performance.now())}
 function liqTick(dt,spd,t){if(!LIQ.svg||!LIQ.svg.isConnected)return;
   const h=dt/1000,D=Math.PI/180;LIQ.c+=(Math.pow(spd/200,2)-LIQ.c)*Math.min(1,h*.8);
@@ -9281,6 +9303,49 @@ function liqTick(dt,spd,t){if(!LIQ.svg||!LIQ.svg.isConnected)return;
     b.om+=(spd*(1-b.eps)-b.om)*Math.min(1,h*b.k);b.lag=Math.max(-60,Math.min(60,b.lag+((b.om-spd)-b.lag*.6)*h));
     const an=b.an0+b.lag*D,rr=b.r0+(b.r1-b.r0)*LIQ.c;n.setAttribute('transform','translate('+(HC+Math.cos(an)*rr).toFixed(1)+' '+(HC+Math.sin(an)*rr).toFixed(1)+')')})}
 const noMotion=()=>!!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches);
+/* ===== 2026.11.20-n: lite mode. On a device that can't keep the artist page smooth (a friend's MacBook, a laptop on
+   battery), Playback swaps its heaviest effects for cheaper ones: the artist colors hold still, the frosted pills on the
+   artist page get a flat tint (the top bar keeps its blur), the liquid record drops its gooey blur, the record spins up
+   on the turntable instead of flying out of its sleeve, and Fans also spin records only spin on hover.
+   Auto (default): the app times frames on the artist page; two slow stretches in a row and it switches on for this
+   device and remembers it. Settings has Auto / Always on / Always off; ?lite=1 or ?lite=0 forces it for one visit. ===== */
+var LITE={pref:'auto',auto:false,force:null,on:false,probe:null,bad:0,done:false,rt:0};
+function liteRead(){
+  try{LITE.pref=localStorage.getItem('pb_lite')||'auto';LITE.auto=localStorage.getItem('pb_lite_auto')==='1'}catch(e){}
+  if(LITE.force===null){const q=new URLSearchParams(location.search).get('lite');LITE.force=q==='1'?true:q==='0'?false:undefined}
+  LITE.on=LITE.force!==undefined?LITE.force:LITE.pref==='on'?true:LITE.pref==='off'?false:LITE.auto;
+  document.documentElement.classList.toggle('lite',LITE.on)}
+liteRead();
+function liteSet(p){try{localStorage.setItem('pb_lite',p);if(p==='auto')localStorage.removeItem('pb_lite_auto')}catch(e){}   /* picking Auto again starts the timing over */
+  LITE.force=undefined;LITE.bad=0;LITE.done=false;LITE.probe=null;liteRead()}
+/* time the frames while an artist page is on screen: ~2 s stretches, ignoring the moment after a redraw (a tap) and any
+   gap from a hidden tab; a stretch is slow when over a third of its frames miss 40 fps and the typical frame does too */
+function liteProbe(){
+  if(LITE.on||LITE.done||LITE.probe||LITE.force!==undefined||LITE.pref!=='auto'||noMotion())return;
+  if(!document.querySelector('.hero.hx[data-aid]'))return;
+  const P=LITE.probe={d:[],sum:0,l:0};
+  const f=t=>{if(LITE.probe!==P)return;
+    if(document.hidden||!document.querySelector('.hero.hx[data-aid]')){LITE.probe=null;return}   /* picked up again on the next draw */
+    if(P.l&&t-P.l<250&&t-LITE.rt>700){P.d.push(t-P.l);P.sum+=t-P.l}
+    P.l=t;
+    if(P.sum>=2000&&P.d.length>=20){LITE.probe=null;
+      const s=P.d.slice().sort((a,b)=>a-b),n=s.length,slow=s.filter(x=>x>25).length/n,med=s[n>>1];
+      if(slow>.34&&med>20){if(++LITE.bad>=2){liteAuto();return}}
+      else{LITE.bad=0;LITE.done=true;return}   /* this device keeps up: stop timing for this visit */
+      liteProbe();return}
+    requestAnimationFrame(f)};
+  requestAnimationFrame(f)}
+function liteNote(){
+  const now=LITE.force!==undefined?(LITE.force?'On for this visit (from the link).':'Off for this visit (from the link).'):
+    LITE.pref==='on'?'On.':LITE.pref==='off'?'Off.':LITE.auto?'On: this device was dropping frames on artist pages.':'Off: this device is keeping up.';
+  return 'Swaps the heaviest effects for lighter ones so slower devices stay smooth: the artist colors hold still, buttons on the artist page get a flat tint instead of frosted glass, the liquid record skips its blur, and records spin up on the turntable instead of flying out of their sleeve. Auto turns it on by itself if this device can\u2019t keep up. Saved on this device. <b>'+now+'</b>'}
+function liteAuto(){try{localStorage.setItem('pb_lite_auto','1')}catch(e){}liteRead();heroPaint();
+  if(UI.view==='settings')render()}
+/* Fans also spin records stop turning while their row is off screen */
+let simIO=null;
+function simWatch(){if(!('IntersectionObserver' in window))return;
+  if(!simIO)simIO=new IntersectionObserver(es=>{for(const e of es)e.target.classList.toggle('soff',!e.isIntersecting)});
+  document.querySelectorAll('.simrow:not([data-sw])').forEach(r=>{r.dataset.sw='1';simIO.observe(r)})}
 /* Picking an artist on the wall: its record slides out of the sleeve, is carried over and set down on the
    turntable, then the arm comes across and it spins up. The record that was playing is lifted off and slid
    back into its own sleeve; its next pressing (the new look) slides out from inside, so the change of design
@@ -9318,7 +9383,7 @@ function flyAsk(b,id,fromLib){UI.fly=null;if(noMotion())return;
   const g=tileGeo(b);if(!g)return;
   let old=false;
   if(cur&&!fromLib&&!cur.classList.contains('drop')){const d=cur.querySelector('.hdisc'),sn=discSnap(cur);   /* from the full artist menu the old record is hidden under it, so it doesn't float out over the menu */
-    if(d&&sn){old=true;flyBack({sn,rect:d.getBoundingClientRect(),ang:HERO.ang,aid:cur.dataset.aid})}}
+    if(d&&sn){old=true;flyBack({sn,rect:d.getBoundingClientRect(),ang:heroAngNow(),aid:cur.dataset.aid})}}
   UI.fly={to:id,src:g,old}}
 function flyOut(F){
   const heroNow=()=>{const h=document.querySelector('.hero[data-aid]');return h&&h.dataset.aid===F.to?h:null};
@@ -9407,19 +9472,20 @@ function heroLook(aid){if(HSTY.aid===aid)return;const prev=HSTY.aid;HSTY.aid=aid
   if(prev){const o=HSTY.list.filter(x=>x!==HLOOK[prev]);HLOOK[prev]=o[Math.floor(Math.random()*o.length)];TD.lv++}}   /* the artist you left gets a new look for next time */
 function heroStart(){
   const el=document.querySelector('.hero[data-aid]');
-  if(!el){HERO.aid=null;HERO.el=null;HERO.spd=0;HSTY.aid=null;return}
+  if(!el){heroUnhand();HERO.aid=null;HERO.el=null;HERO.spd=0;HSTY.aid=null;return}
   heroWatch(el);
   const spin=el.querySelector('.hspin');if(!spin)return;
   if(HSTY.aid!==el.dataset.aid){heroLook(el.dataset.aid);heroPaint()}
   const F=UI.fly;UI.fly=null;
   {const a=S.music.find(x=>x.id===el.dataset.aid);if(a)liqMount(el,a)}
   if(noMotion()){el.classList.add('play');return}
-  const aid=el.dataset.aid;HERO.el=spin;
+  const aid=el.dataset.aid;HERO.el=spin;HERO.hero=el;
+  heroUnhand();
   if(HERO.aid===aid){
     if(FLY.active&&FLY.aid===aid)el.classList.add('drop');   /* redrawn while its record is still in the air */
     else{el.classList.add('play','nosw');spin.style.transform='rotate('+HERO.ang+'deg)'}}
   else{HERO.aid=aid;HERO.ang=0;HERO.spd=0;
-    if(F&&F.to===aid&&flyOut(F))HERO.begin=Infinity;   /* the spin and the arm wait for the record to land */
+    if(F&&F.to===aid&&!LITE.on&&flyOut(F))HERO.begin=Infinity;   /* the spin and the arm wait for the record to land (lite mode skips the flight: the record just spins up in place) */
     else{FLY.active=false;HERO.begin=performance.now()+500;
       requestAnimationFrame(()=>requestAnimationFrame(()=>{if(el.isConnected)el.classList.add('play')}))}}
   if(!HERO.raf){HERO.last=0;HERO.raf=requestAnimationFrame(heroTick)}}
@@ -9428,9 +9494,18 @@ function heroTick(t){
   const dt=HERO.last?Math.min(64,t-HERO.last):0;HERO.last=t;
   const q=Math.max(0,Math.min(1,(t-HERO.begin)/1600));HERO.spd=200*q*q*(3-2*q);
   HERO.ang=(HERO.ang+HERO.spd*dt/1000)%360;
-  el.style.transform='rotate('+HERO.ang.toFixed(2)+'deg)';
-  liqTick(dt,HERO.spd,t);
+  const liq=!!(LIQ.svg&&LIQ.svg.isConnected),off=document.hidden||!!(HERO.hero&&HERO.hero.classList.contains('hoff'));
+  /* 2026.11.20-n: once a plain record is up to speed, the browser's compositor takes over the spin (same speed, full
+     refresh rate, no script every frame). Only the liquid record keeps the script, for its paint physics. */
+  if(q>=1&&!liq&&el.animate){const a=HERO.ang;el.style.transform='rotate('+a.toFixed(2)+'deg)';
+    HERO.wa=el.animate([{transform:'rotate('+a+'deg)'},{transform:'rotate('+(a+360)+'deg)'}],{duration:1800,iterations:Infinity});
+    HERO.wa0=a;HERO.wat=performance.now();return}
+  if(!off){el.style.transform='rotate('+HERO.ang.toFixed(2)+'deg)';liqTick(dt,HERO.spd,t)}   /* scrolled away or tab hidden: keep time, skip the drawing */
   HERO.raf=requestAnimationFrame(heroTick)}
+/* where the record is right now, when the compositor is spinning it (200°/s = one turn in 1.8 s) */
+function heroAngNow(){if(HERO.wa)HERO.ang=(HERO.wa0+.2*(performance.now()-HERO.wat))%360;return HERO.ang}
+function heroUnhand(){if(!HERO.wa)return;const a=heroAngNow(),w=HERO.wa,tg=w.effect&&w.effect.target;HERO.wa=null;w.cancel();
+  if(tg&&tg.isConnected)tg.style.transform='rotate('+a.toFixed(2)+'deg)'}
 /* ===== 2026.11.19-a: navigation clarity. An empty log says what to do, the artist page has a labeled way back,
    and a short spotlight tour (first launch for friends, replayable from Settings) explains the buttons. ===== */
 function startView(){return `<div class="start">
@@ -10806,6 +10881,7 @@ document.addEventListener('click',ev=>{
   else if(act==='hxrail'){const row=document.querySelector('.hxrow.eras'),e=row&&row.querySelector('.hxera[data-era="'+b.dataset.i+'"]');
     if(e)row.scrollTo({left:e.getBoundingClientRect().left-row.getBoundingClientRect().left+row.scrollLeft-(parseFloat(getComputedStyle(row).paddingLeft)||0),behavior:noMotion()?'auto':'smooth'});return}
   else if(act==='hback'){UI.libOpen=true;UI.libAnim=true}
+  else if(act==='litepick'){liteSet(b.dataset.v);heroPaint()}
   else if(act==='phtog'){try{localStorage.setItem('pb_photohero',phOn()?'0':'1')}catch(e){}}
   else if(act==='tourgo'){UI.view=null;UI.tab='music';UI.libOpen=false;setTimeout(()=>tourOpen(0),120)}
   else if(act==='dcforget'){dcSetToken('');COL.tokMsg='Removed from this device.';UI.colTok=true}
