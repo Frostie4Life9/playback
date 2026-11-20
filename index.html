@@ -2609,6 +2609,95 @@ button.st-t:hover{color:var(--accent);text-decoration:underline}
 @media (prefers-reduced-motion:no-preference){.hxgrp{animation:hxIn .45s cubic-bezier(.2,.8,.2,1) backwards}}
 .gf-ls{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 30px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 30px),transparent)}
 @media (max-width:1099px){.gf-ls{-webkit-mask-image:none;mask-image:none}}
+
+/* ===== 2026.11.20-f: ON A PHONE THE OPEN ALBUM IS A SHEET =====
+   The jacket slides up from the bottom over a dimmed page, the cover flies out of the Releases row into it and its record
+   slides out from behind it. The page underneath never scrolls, so closing flies the cover straight back onto its sleeve.
+   Drag the sheet down, tap the dimmed page or the X to close. (gfRunPh and hxPlaceGf do the moving parts.) */
+@media (max-width:760px){
+  html.gfsh,html.gfsh body{overflow:hidden}
+  html.gfsh .head.hero.hx{position:relative;z-index:1000}
+  html.gfsh .tabs{translate:0 calc(100% + 48px);pointer-events:none}
+  .tabs{transition:translate .42s cubic-bezier(.2,.8,.2,1)}
+  .gfscrim{position:fixed;inset:0;z-index:5;background:color-mix(in srgb,var(--acsw,#000) 18%,rgb(6 5 10 / .6));-webkit-backdrop-filter:blur(6px) saturate(.9);backdrop-filter:blur(6px) saturate(.9);-webkit-tap-highlight-color:transparent}
+  .hxrel>.group.sleeve.gf.ov.phs{position:fixed;z-index:6;left:0;right:0;top:auto;bottom:0;width:auto;max-height:calc(100dvh - 54px - env(safe-area-inset-top,0px));overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;border-radius:26px 26px 0 0;background:var(--jk);box-shadow:0 -1px 0 rgb(255 255 255 / .14),0 -24px 70px rgb(0 0 0 / .5);touch-action:pan-y;will-change:transform}
+  .hxrel>.group.sleeve.gf.ov.phs::-webkit-scrollbar{display:none}
+  .hxrel.gfov .gf.phs{opacity:1}
+  .gf.phs .gf-sp{display:flex;flex-direction:column;width:auto;max-width:none;margin:0;padding:0 0 calc(28px + env(safe-area-inset-bottom,0px));perspective:none}
+  .gf.phs .gf-l{transform:none}
+  .gf.phs .gf-lf,.gf.phs .gf-r{border-radius:0;box-shadow:none;background-attachment:scroll}
+  .gf.phs .gf-lf::after,.gf.phs .gf-r::before{display:none}
+  .gf.phs .gf-lb,.gf.phs .gf-pk,.gf.phs .gf-lid{display:none}
+  .gf.phs .gf-sh{display:none}
+  /* the grabber and close button ride along the top of the sheet */
+  .gfgrab{position:sticky;top:0;z-index:9;height:0;pointer-events:none}
+  .gfgrab::before{content:"";position:absolute;left:0;right:0;top:0;height:64px;background:linear-gradient(to bottom,var(--jk) 52%,color-mix(in srgb,var(--jk) 0%,transparent));opacity:0;transition:opacity .25s}
+  .gf.phs.scr .gfgrab::before{opacity:1}
+  .gfgrab>i{position:absolute;left:50%;top:8px;width:40px;height:5px;margin-left:-20px;border-radius:3px;background:color-mix(in srgb,var(--ink) 34%,transparent)}
+  .gfgrab>.gf-x{position:absolute;top:12px;right:12px;pointer-events:auto;width:38px;height:38px;border:0;background:color-mix(in srgb,var(--ink) 12%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+  .gfgrab>.gf-x svg{width:18px;height:18px;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;fill:none}
+  .gfgrab>.gf-x:active{transform:scale(.9)}
+  .gf.phs .gf-rh .gf-x{display:none}
+  /* the front: the cover, its record half out to the right, the title under it */
+  .gf.phs .sl-hero{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:18px;padding:40px 22px 4px}
+  .gf.phs .sl-hero>.sl-bar{position:static;order:3;align-self:center;margin:-4px 0 0}
+  .gf.phs .sl-pack{--cv:min(48vw,200px);display:block;position:relative;flex:none;width:var(--cv);height:var(--cv);max-width:none;margin:0 calc(var(--cv) * .62) 0 0}
+  .gf.phs .sl-pack>.sl-cover,.gf.phs .sl-pack>.sg7-cv{position:absolute;inset:0;z-index:2;width:auto;height:auto;opacity:1;border-radius:6px;overflow:hidden;background:var(--acb,var(--acs));box-shadow:0 20px 40px rgb(0 0 0 / .42),inset 0 0 0 1px rgb(255 255 255 / .08)}
+  .gf.phs .sl-pack>.sl-cover img,.gf.phs .sl-pack>.sg7-cv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+  .gf.phs .sl-pack>.sg7-cv span,.gf.phs .sl-pack .sl-ph{font-size:calc(var(--cv) * .4)}
+  .gf.phs .sl-pack>.phdisc{position:absolute;z-index:1;top:3%;left:62%;width:94%;height:94%;translate:0 0;rotate:0deg;transition:none}
+  .gf.phs .sl-meta{display:flex;flex-direction:column;align-items:center;gap:4px;padding:0;width:100%}
+  .gf.phs .sl-meta h3{font-size:clamp(24px,7.4vw,34px);line-height:1.08;margin:2px 0;overflow-wrap:anywhere;text-wrap:balance}
+  .gf.phs .gf-ls{padding:0 0 18px;gap:18px}
+  .gf.phs .dxseg{margin:0 18px}
+  .gf.phs .gfi{padding:0 18px}
+  .gf.phs .gf-r{padding-top:4px}
+  .gf.phs .gf-rh{padding:16px 18px 6px;background:none}
+  /* a single: the same sheet, its 7-inch sleeve at the top */
+  .gf.phs.sg7 .gf-sp{--P:auto;display:flex;width:auto;max-width:none;padding-right:0}
+  .gf.phs.sg7 .gf-r{min-height:0;border-radius:0;background:linear-gradient(to bottom,color-mix(in srgb,var(--jk) 86%,transparent),var(--jk) 70%),var(--art,none) center top/cover no-repeat,var(--jk)}
+  .gf.phs.sg7 .sl-pack{--cv:min(42vw,170px);margin:40px auto 4px;translate:calc(var(--cv) * -.2) 0}
+  .gf.phs.sg7 .gf-rh{justify-content:center;padding:14px 18px 2px}
+  .gf.phs.sg7 .sg7-meta{text-align:center;padding:0 18px 8px;display:flex;flex-direction:column;align-items:center}
+  .gf.phs.sg7 .sg7-meta h3{font:800 clamp(24px,7.4vw,34px)/1.08 var(--display);letter-spacing:-.01em;margin:2px 0;overflow-wrap:anywhere;text-wrap:balance}
+  .gf.phs.sg7 .sg7-meta .sl-bar{position:static;align-self:center;margin-top:12px}
+  /* the album rating row: on a narrow phone the title and the averages shared one line and ran into each other */
+  .gf.phs .sl-rate.gfr .t b{white-space:nowrap}
+  .gf.phs .gfr-avg{grid-template-columns:auto;justify-items:end;row-gap:0}
+  .gf.phs .gfr-avg>span{display:none}
+  /* the inside fades up soon after the sheet lands, not on the long desktop gatefold schedule */
+  .gf.phs.gfopen .gf-ls>*{animation-delay:.34s}
+  .gf.phs.gfopen .gf-ls>.sl-hero{animation:none}
+  .gf.phs.gfopen .gf-rs>*{animation-delay:calc(.42s + var(--gi,0) * 55ms)}
+  .gf.phs.gfopen .gfi>*{animation-delay:calc(.4s + var(--gj,0) * 55ms)}
+  .gf.phs.gfopen .gfr-w{animation-delay:.6s}
+  .gf.phs.gfopen .sl-meta{animation:gfFade .45s cubic-bezier(.2,.8,.2,1) .3s backwards}
+}
+@media (max-width:760px) and (prefers-reduced-motion:reduce){.tabs{transition:none}}
+/* the rest of the artist page on a phone (2026.11.20-f) */
+.head.hero .hxpanel .hstats span,.head.hero .hxpanel .hstats b small,.head.hero .hxpanel .label,.head.hero .hxpanel .note{color:rgb(255 255 255 / .72)}
+@media (max-width:760px){
+  /* the words under the top buttons and the sync status sat dark on the artist photo and could not be read */
+  body:has(.head.hero.hx) .topr .tlab::after{color:rgb(255 255 255 / .92);text-shadow:0 1px 2px rgb(0 0 0 / .6),0 0 10px rgb(0 0 0 / .45)}
+  body:has(.head.hero.hx) .top .sync{color:rgb(255 255 255 / .85);text-shadow:0 1px 2px rgb(0 0 0 / .6)}
+  /* Releases filter: the four kinds share the full width, so Singles is never cut off at the edge */
+  .hx .hxtools>.relbar{width:100%}
+  .hx .rseg{width:100%;box-sizing:border-box}
+  .hx .rseg button{flex:1 1 auto;padding:0 8px}
+  /* the progress caption wraps instead of being cut off */
+  .hxrel .hxprog .hxt{white-space:normal;overflow:visible;text-overflow:clip}
+  .hxrel .hxprog .hxpt{flex:1 1 auto}
+}
+/* a short phone (iPhone SE and the like): a slightly shorter photo, so the name and Play sit above the dock */
+@media (max-width:760px) and (max-height:720px){
+  .head.hero.hx{--phh:clamp(270px,44vh,380px)}
+  .head.hero.hx.nophoto{--phh:180px}
+}
+@media (max-width:380px){
+  .hxrel .hxprog{gap:14px}
+  .hxrel .hxprog .hxt{font-size:17px}
+  .hx .rseg button .c{margin-left:4px}
+}
 </style>
 
 <!-- suite:css v10 · shared by Kitchen, Grocery, Lift, DishLog, Protocol, Rail, Game Log, Playback — edit tools/suite.py in the kitchen repo, not here -->
@@ -3163,6 +3252,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.20-f', note:'PHONE ALBUMS OPEN AS A SHEET: on a phone, tapping a record no longer stretches or jumps the page. The page dims, the album slides up from the bottom as a sheet, and its cover lifts off the sleeve in the Releases row and flies into the top of the sheet, landing as the sheet does; then its record slides out from behind it. Close with the X, by tapping the dimmed page, or by dragging the sheet down from the top; the record tucks back in and the cover flies straight home onto its sleeve. The page underneath never moves, which fixes closing landing you at the bottom of the page. Singles and EPs open the same way. The sheet keeps its place when you rate a song, the dock slides away while it is open, and a band fades in behind the X as you scroll so it never sits on your ratings. Also on phones: the album score no longer runs into its averages, the words under the top buttons and the sync status are readable on the artist photo, the Releases filter fits the full width (Singles is never cut off), Your progress wraps instead of cutting off, Details and the sort menu scroll up clear of the dock, and on short phones like the SE the name and Play sit above the dock. PC and tablet are unchanged.'},
   {v:'2026.11.20-e', note:'THREE-COLOR ARTISTS: an artist with no ratings now takes three colors from their newest album (the main cover color plus the next two strongest), so the moving color blend and mixed records show on every artist instead of one flat color. Once you rate one album, the three colors come from that album instead. With two or more rated albums it works as before, a blend of every rated cover weighted by rating. A cover with fewer than three real colors gets a lighter and a deeper shade of its main color.'},
   {v:'2026.11.20-d', note:'PHOTO CHECK ON NEW RELEASES: when Playback finds a new release for an artist (the daily new-release check, or Check for new releases on their page), their Apple Music photo is looked at again the next time you open them, right then and not after 60 days, because artists often change their photo with a new release. It skips the Worker\u2019s saved copy for that one check (Worker 21, it updates itself from GitHub). A failed check keeps your current photo.'},
   {v:'2026.11.20-c', note:'APPLE ARTIST PHOTOS RECHECK: an artist\u2019s Apple Music photo is now checked again every 60 days, when their page opens, so a new photo on Apple Music shows up by itself. Photos you already have start their 60 days today. If a recheck fails or Apple has nothing, your current photo stays and it tries again the next day.'},
@@ -6828,7 +6918,7 @@ function render(){
   const vk=UI.view||UI.tab,vPrev=UI.vKey;UI.vKey=vk;
   const vlT=(()=>{const el=document.querySelector('.vl-spin'),an=el&&el.getAnimations&&el.getAnimations()[0];return an?an.currentTime:null})();   /* where the record is in its slow spin, so a redraw does not snap it back to the start */
   const ll=document.getElementById('llist'),llTop=ll?ll.scrollTop:0,llTab=UI.llTab;UI.llTab=UI.tab;
-  const gfS=(()=>{const g=document.querySelector('.group.sleeve.gf');if(!g)return null;const r=g.querySelector('.gf-rs'),l=g.querySelector('.gf-ls');return{id:g.dataset.acol,r:r?r.scrollTop:0,l:l?l.scrollTop:0}})();   /* the open album's panels keep their scroll through a redraw */
+  const gfS=(()=>{const g=document.querySelector('.group.sleeve.gf');if(!g)return null;const r=g.querySelector('.gf-rs'),l=g.querySelector('.gf-ls');return{id:g.dataset.acol,r:r?r.scrollTop:0,l:l?l.scrollTop:0,s:g.scrollTop}})();   /* the open album's panels keep their scroll through a redraw */
   let ohg=null;{const oh=document.querySelector('.hero[data-aid]'),m=oh&&oh.querySelector('.hmesh');   /* the old artist's colors, to fade out from */
     if(m){const g=m.cloneNode(true);g.classList.add('hghost');g.dataset.aid=oh.dataset.aid;
       for(let i=0;i<oh.style.length;i++){const k=oh.style[i];if(/^--h(c\d|s\d|gb)$/.test(k))g.style.setProperty(k,oh.style.getPropertyValue(k))}
@@ -6852,7 +6942,7 @@ function render(){
   if(swK)UI.swKey=UI.tab+':'+(UI.sel[UI.tab]||'');   /* the draw itself may have picked the artist (first launch): remember that one, or the next redraw (a sort change, opening an album) thinks the artist changed and jumps to the top */
   hxPlaceGf();   /* the open album is pinned over the shelf before the page's scroll is put back */
   libGhostRun();   /* the top bar is built once per draw: building it clears the one-shot animation flags of the sheets in it */
-  if(gfS){const g=document.querySelector('.group.sleeve.gf[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(gfS.id):gfS.id)+'"]');if(g){const r=g.querySelector('.gf-rs'),l=g.querySelector('.gf-ls');if(r)r.scrollTop=gfS.r;if(l)l.scrollTop=gfS.l}}
+  if(gfS){const g=document.querySelector('.group.sleeve.gf[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(gfS.id):gfS.id)+'"]');if(g){const r=g.querySelector('.gf-rs'),l=g.querySelector('.gf-ls');if(r)r.scrollTop=gfS.r;if(l)l.scrollTop=gfS.l;if(gfS.s)g.scrollTop=gfS.s}}
   if(mT){const nh=document.querySelector('.hero[data-aid]'),nm=nh&&nh.dataset.aid===mT.aid&&nh.querySelector('.hmesh:not(.hghost)');
     if(nm){const ns=nm.querySelectorAll('.fl,.fb');if(ns.length===mT.d.length)ns.forEach((n,i)=>{if(mT.d[i]!=null)n.style.animationDelay=mT.d[i].toFixed(0)+'ms'})}
     if(nh&&nh.dataset.aid===mT.aid)nh.querySelectorAll('.hsrc').forEach(e=>e.style.animation='none')}   /* the photo toggle fades in once per artist, not on every redraw */
@@ -8716,15 +8806,100 @@ function hxEras(a,rl,sleeve,og,NEW){
    instead of pushing everything below it down the page. It is moved into the Releases block and pinned there in pixels; the
    rest of the shelf steps back behind it (class gfov), and the page only grows if the jacket reaches past the end of it. */
 function hxPlaceGf(){const rel=document.querySelector('.hx .hxrel'),gf=document.querySelector('.hx .group.sleeve.gf');
+  if(!gf){document.documentElement.classList.remove('gfsh');document.querySelectorAll('.gfscrim').forEach(s=>s.remove())}
   if(rel&&!gf){rel.classList.remove('gfov');rel.style.paddingBottom='';return}
   if(!rel||!gf)return;
   const on=rel.querySelector('.hxsl.on');if(!on)return;
   if(gf.parentElement!==rel)rel.appendChild(gf);
+  if(gfPh()){gfPhPlace(rel,gf);return}
+  gf.classList.remove('phs');document.documentElement.classList.remove('gfsh');rel.querySelectorAll('.gfscrim').forEach(s=>s.remove());
   gf.classList.remove('inrow');gf.classList.add('ov');
   /* the shelf steps back: at once on a redraw, as a fade on the draw that opens the album */
   if(!rel.classList.contains('gfov')){if(HXSINK)requestAnimationFrame(()=>{if(rel.isConnected&&!UI.gfClosing)rel.classList.add('gfov')});else rel.classList.add('gfov')}
   hxPinGf(rel,gf,on);
   if(window.ResizeObserver&&!gf._ro){gf._ro=new ResizeObserver(()=>{const o=rel.querySelector('.hxsl.on');if(gf.isConnected&&o&&!UI.gfClosing)hxPinGf(rel,gf,o,true)});gf._ro.observe(gf)}}
+/* ON A PHONE THE OPEN ALBUM IS A SHEET (2026.11.20-f). It is fixed to the bottom of the screen over a dimmed page that
+   does not scroll, so the record you opened stays exactly where it was and closing can fly the cover straight back onto it.
+   Its cover and record are gathered into one pack at the top (the record half out of the cover); a grabber and an X ride
+   along the top edge. Drag down from the top of the sheet, tap the dimmed page or the X to close. */
+const gfPh=()=>matchMedia('(max-width:760px)').matches;
+function gfPhPlace(rel,gf){
+  gf.classList.add('ov','phs');gf.classList.remove('inrow');gf.style.top='';gf.style.left='';gf.style.width='';rel.style.paddingBottom='';
+  rel.classList.add('gfov');document.documentElement.classList.add('gfsh');
+  if(gf._ro){gf._ro.disconnect();gf._ro=null}
+  let sc=rel.querySelector(':scope>.gfscrim');
+  if(!sc){sc=document.createElement('div');sc.className='gfscrim';sc.setAttribute('aria-hidden','true');sc.addEventListener('click',()=>gfClose())}
+  if(sc.nextElementSibling!==gf)rel.insertBefore(sc,gf);
+  if(!gf.querySelector(':scope>.gfgrab')){const lbl=gf.querySelector('.gf-x')?gf.querySelector('.gf-x').getAttribute('aria-label'):'Close';
+    const gb=document.createElement('div');gb.className='gfgrab';gb.innerHTML=`<i aria-hidden="true"></i><button type="button" class="gf-x" data-act="gfclose" aria-label="${esc(lbl)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>`;gf.insertBefore(gb,gf.firstChild)}
+  /* one pack at the top: the cover with its record behind it */
+  const sg=gf.classList.contains('sg7');
+  let pk=gf.querySelector('.sl-pack');
+  if(!pk&&sg){const rs=gf.querySelector('.gf-rs');if(rs){pk=document.createElement('div');pk.className='sl-pack';rs.insertBefore(pk,rs.firstChild)}}
+  if(pk){
+    const cv=pk.querySelector('.sl-cover,.sg7-cv')||gf.querySelector('.sg7-cv');if(cv&&cv.parentElement!==pk)pk.appendChild(cv);
+    const d=pk.querySelector('.phdisc')||gf.querySelector('.gf-pk.l .sl-disc')||gf.querySelector('.gf-pk.r .gf-vr');
+    if(d&&d.parentElement!==pk){d.classList.add('phdisc');pk.insertBefore(d,pk.firstChild)}}
+  if(!gf._phs){gf._phs=1;const f=()=>gf.classList.toggle('scr',gf.scrollTop>8);gf.addEventListener('scroll',f,{passive:true});requestAnimationFrame(f)}
+  if(!gf._phd)gfPhDrag(gf)}
+/* drag the sheet down from its top to close it; a short drag springs back */
+function gfPhDrag(gf){gf._phd=1;
+  let y0=0,x0=0,t0=0,dy=0,on=false,dead=false;
+  const sc=()=>gf.parentElement&&gf.parentElement.querySelector(':scope>.gfscrim');
+  gf.addEventListener('touchstart',e=>{if(e.touches.length!==1||UI.gfClosing){dead=true;return}
+    const t=e.target;dead=!!(t.closest&&t.closest('input,textarea,select,.rater,.rm,.gfr-rec,[data-drag]'));
+    y0=e.touches[0].clientY;x0=e.touches[0].clientX;t0=performance.now();dy=0;on=false},{passive:true});
+  gf.addEventListener('touchmove',e=>{if(dead)return;const y=e.touches[0].clientY,x=e.touches[0].clientX;dy=y-y0;
+    if(!on){if(gf.scrollTop>0||dy<8||Math.abs(x-x0)>Math.abs(dy))return;on=true;y0=y-1;dy=1;gf.style.transition='none'}
+    e.preventDefault();const d=Math.max(0,dy);gf.style.transform=`translateY(${d.toFixed(1)}px)`;
+    const s=sc();if(s)s.style.opacity=String(Math.max(0,1-d/(gf.offsetHeight*.9)))},{passive:false});
+  const end=()=>{if(!on||dead){on=false;return}on=false;
+    const v=dy/Math.max(1,performance.now()-t0);
+    if(dy>Math.min(140,gf.offsetHeight*.25)||(v>.55&&dy>40)){gfClose();return}
+    const s=sc();gf.style.transition='transform .42s cubic-bezier(.2,.9,.25,1.05)';gf.style.transform='';if(s){s.style.transition='opacity .3s';s.style.opacity=''}
+    setTimeout(()=>{gf.style.transition='';if(s)s.style.transition=''},450)};
+  gf.addEventListener('touchend',end);gf.addEventListener('touchcancel',end)}
+/* the motion. Opening: the page dims, the sheet rises, and a copy of the cover lifts off its sleeve in the row and flies
+   into its place at the top of the sheet, landing just as the sheet does; then the record slides out from behind it.
+   Closing: the record tucks back in, the sheet drops away and the cover flies home onto its sleeve, which rises to meet it. */
+function gfRunPh(el,back){
+  const sc=el.parentElement&&el.parentElement.querySelector(':scope>.gfscrim'),pk=el.querySelector('.sl-pack'),cv=pk&&pk.querySelector('.sl-cover,.sg7-cv'),dk=pk&&pk.querySelector('.phdisc');
+  const tile=document.querySelector('.hxsl.on .hxc'),a=[];
+  /* where the sleeve rests (not sunk): measured with its transform off */
+  let T=null;if(tile){const ps=tile.style.cssText;tile.style.animation='none';tile.style.transition='none';tile.style.transform='none';const r=tile.getBoundingClientRect();tile.style.cssText=ps;if(r.width)T=r}
+  const drag=back?(new DOMMatrixReadOnly(getComputedStyle(el).transform).m42||0):0;el.style.transform='';el.style.transition='';if(sc){sc.style.opacity='';sc.style.transition=''}
+  const C=cv?cv.getBoundingClientRect():null,H=el.getBoundingClientRect().height;
+  const rise='cubic-bezier(.16,1,.3,1)',drop='cubic-bezier(.5,0,.75,.2)';
+  /* the flying copy of the cover */
+  let fly=null;
+  if(T&&C&&C.width&&cv){fly=document.createElement('div');fly.className='gffly';fly.setAttribute('aria-hidden','true');
+    const ti=tile.querySelector('img'),ci=cv.querySelector('img'),im=ti&&ti.complete&&ti.naturalWidth?ti:ci,bg=getComputedStyle(cv).backgroundColor;
+    if(ci&&ci.loading==='lazy')ci.loading='eager';
+    fly.style.cssText=`position:fixed;left:0;top:0;width:${C.width}px;height:${C.height}px;z-index:1200;border-radius:6px;overflow:hidden;pointer-events:none;background:${bg};transform-origin:0 0;will-change:transform`;
+    fly.innerHTML=im&&im.complete&&im.naturalWidth?`<img src="${esc(im.currentSrc||im.src)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">`:'';
+    if(!fly.innerHTML){const l=cv.querySelector('span,.sl-ph');fly.innerHTML=`<span style="display:grid;place-items:center;width:100%;height:100%;font:800 ${(C.width*.4).toFixed(0)}px/1 var(--body);color:rgb(255 255 255 / .45)">${l?esc(l.textContent):''}</span>`}
+    document.body.appendChild(fly);cv.style.visibility='hidden'}
+  const at=(r,lift)=>`translate(${r.left.toFixed(1)}px,${(r.top-(lift||0)).toFixed(1)}px) scale(${(r.width/C.width).toFixed(4)})`;
+  if(!back){
+    if(sc)a.push(sc.animate([{opacity:0},{opacity:1}],{duration:340,easing:'ease-out',fill:'both'}));
+    a.push(el.animate([{transform:`translateY(${H.toFixed(0)}px)`},{transform:'translateY(0)'}],{duration:600,easing:rise,fill:'both'}));
+    if(fly){const M={left:(T.left+C.left)/2,top:Math.min(T.top,C.top)-26,width:(T.width+C.width)/2*1.06};
+      a.push(fly.animate([{transform:at(T),boxShadow:'0 0 0 rgb(0 0 0 / 0)',offset:0},{transform:at(M),boxShadow:'0 26px 44px rgb(0 0 0 / .45)',offset:.45,easing:'cubic-bezier(.3,0,.2,1)'},{transform:at(C),boxShadow:'0 20px 40px rgb(0 0 0 / .42)',offset:1}],{duration:640,easing:'cubic-bezier(.4,0,.2,1)',fill:'both'}))}
+    if(dk)a.push(dk.animate([{translate:'-42% 0',rotate:'-120deg',opacity:0},{translate:'-42% 0',rotate:'-120deg',opacity:1,offset:.01},{translate:'0 0',rotate:'0deg',opacity:1}],{duration:700,delay:560,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}));
+  }else{
+    if(dk)a.push(dk.animate([{translate:'0 0',rotate:'0deg',opacity:1},{translate:'-42% 0',rotate:'-90deg',opacity:1,offset:.85},{translate:'-42% 0',rotate:'-90deg',opacity:0}],{duration:240,easing:'cubic-bezier(.4,0,.6,1)',fill:'forwards'}));
+    if(sc)a.push(sc.animate([{opacity:sc.style.opacity||1},{opacity:0}],{duration:440,delay:120,easing:'ease-in',fill:'forwards'}));
+    a.push(el.animate([{transform:`translateY(${drag.toFixed(1)}px)`},{transform:`translateY(${H.toFixed(0)}px)`}],{duration:Math.max(260,460*(1-drag/H)),delay:drag?0:150,easing:drop,fill:'forwards'}));
+    if(fly){const S={left:C.left,top:C.top+drag,width:C.width},M={left:(T.left+S.left)/2,top:Math.min(T.top,S.top)-24,width:(T.width+S.width)/2*1.06};
+      fly.style.transform=at(S);
+      a.push(fly.animate([{transform:at(S),boxShadow:'0 20px 40px rgb(0 0 0 / .42)',offset:0},{transform:at(M),boxShadow:'0 26px 44px rgb(0 0 0 / .45)',offset:.5,easing:'cubic-bezier(.3,0,.2,1)'},{transform:at(T),boxShadow:'0 0 0 rgb(0 0 0 / 0)',offset:1}],{duration:620,delay:90,easing:'cubic-bezier(.45,0,.2,1)',fill:'both'}));
+      const hs=tile&&tile.closest('.hxsl');if(hs)setTimeout(()=>hs.classList.add('up'),470)}
+  }
+  const done=Promise.all(a.map(x=>x.finished)).then(()=>{},()=>{});
+  const mine=GFP=done.then(()=>new Promise(r=>setTimeout(r,30)));mine.then(()=>{if(GFP===mine)GFP=null});
+  done.then(()=>{if(!back){if(cv)cv.style.visibility='';if(fly)fly.remove();a.forEach(x=>{try{x.cancel()}catch(e){}})}
+    else if(fly){requestAnimationFrame(()=>requestAnimationFrame(()=>fly.remove()))}});
+  return done}
 function hxPinGf(rel,gf,on,keep){
   const R=rel.getBoundingClientRect(),era=on.closest('.hxera'),row=on.closest('.hxrow'),wide=matchMedia('(min-width:761px)').matches;
   let bot;
@@ -10118,6 +10293,7 @@ function renderSoon(){
    gatefold, darkening as it tilts away from the light and casting a shadow on the inside. Closing plays it all backwards:
    the cover swings shut, folds down to the cover and flies home into the row. back = closing. */
 function gfRun(el,back){
+  if(el.classList.contains('phs'))return gfRunPh(el,back);
   const sp=el.querySelector('.gf-sp'),l=el.querySelector('.gf-l'),r=el.querySelector('.gf-r'),sg=el.classList.contains('sg7');
   if(!sp||!r||(!l&&!sg))return null;
   const tile=document.querySelector('.hxsl.on .hxc'),z=getComputedStyle(el).getPropertyValue('--gfz').trim()||'rotateY(180deg)';
@@ -10187,6 +10363,7 @@ function gfClose(){const el=document.querySelector('.group.sleeve.gf');
   el.classList.remove('gfopen');
   {const rel=el.closest('.hxrel');if(rel)rel.classList.remove('gfov')}
   try{const p=gfRun(el,true);if(!p)return done();
+    if(el.classList.contains('phs')){p.then(done,done);return}   /* a phone sheet: the page never moved, so there is nothing to settle */
     /* the page holds perfectly still while the cover flies home, so it lands exactly on its sleeve (closing up the space and
        scrolling back during the flight moved the sleeve out from under it, so the cover landed off and then jumped). Once it has
        landed, the space the jacket held closes up smoothly and the page eases back to where it was before the album opened. */
@@ -10240,6 +10417,7 @@ function gfShow(el){if(!el)return;
   UI.gfS0=scrollY;   /* where the page was, so closing can ease back to it */
   const on=document.querySelector('.hxsl.on'),rw=on&&on.closest('.hxrow');   /* slide the Releases row so the open record is showing (on a PC the Eras shelf wraps instead, so there is nothing to slide) */
   if(on&&rw&&rw.scrollWidth>rw.clientWidth+2){const L=on.getBoundingClientRect().left-rw.getBoundingClientRect().left+rw.scrollLeft,R=L+on.offsetWidth+60;if(L<rw.scrollLeft||R>rw.scrollLeft+rw.clientWidth)rw.scrollTo({left:Math.max(0,L-24),behavior:'auto'})}
+  if(el.classList.contains('phs')){el.scrollTop=0;return}   /* a phone sheet comes up over the page: the page stays put */
   const r=el.getBoundingClientRect();
   if((el.classList.contains('inrow')||el.classList.contains('ov'))&&on){const er=(on.closest('.hxera')||on).getBoundingClientRect();
     if(er.top>70&&r.top<innerHeight*.55)return;
@@ -10258,6 +10436,13 @@ function hinfoClose(){if(!UI.hinfo||UI.hinfoOut)return;
   setTimeout(()=>{UI.hinfo=false;UI.hinfoOut=false;render()},200)}
 document.addEventListener('pointerdown',ev=>{if(!UI.hinfo||UI.hinfoOut)return;const t=ev.target;
   if(t.closest&&(t.closest('.hxpanel')||t.closest('[data-act="hinfo"]')||t.closest('.sheet-ov,.modal,.dlg')))return;hinfoClose()},true);
+/* on a phone, something that opens below its button (Details, the sort menu) is scrolled up clear of the dock */
+function phReveal(sel){if(!gfPh())return;const el=document.querySelector(sel);if(!el)return;
+  const r=el.getBoundingClientRect(),lim=innerHeight-104;if(r.bottom<=lim)return;
+  window.scrollBy({top:Math.max(0,Math.min(r.bottom-lim,r.top-72)),behavior:noMotion()?'auto':'smooth'})}
+document.addEventListener('click',ev=>{const t=ev.target;if(!t.closest)return;
+  if(t.closest('[data-act="hinfo"]'))setTimeout(()=>{if(UI.hinfo&&!UI.hinfoOut)phReveal('.hxpanel')},60);
+  else if(t.closest('[data-rselb]'))setTimeout(()=>phReveal('.rsel-m:not(.out)'),60)});
 /* the Releases sort menu */
 function rselClose(m,now){m=m||document.querySelector('.rsel-m');if(!m)return;const r=m.closest('.rsel');if(r){r.classList.remove('open');const b=r.querySelector('.rsel-b');if(b)b.setAttribute('aria-expanded','false')}
   if(now||noMotion()){m.remove();return}m.classList.remove('in');m.classList.add('out');setTimeout(()=>m.remove(),170)}
