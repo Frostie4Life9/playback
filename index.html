@@ -1498,7 +1498,14 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .hx .rseg button[aria-pressed="true"]{background:#fff;color:#111}
 .hx .rsort select{background-color:rgb(0 0 0 / .24);color:#fff;border:1px solid rgb(255 255 255 / .14);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
 .hx .rsort option{color:#111;background:#fff}
-.hxnone{align-self:center;margin:0;padding:40px 0;font-size:15px;color:rgb(255 255 255 / .8)}
+.hxnone{align-self:center;display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin:0;padding:32px 0;font-size:16px;font-weight:500;color:#fff}
+.hxnone p{margin:0}
+.hxshowall{border:0;border-radius:999px;padding:9px 16px;background:#fff;color:#111;font-weight:600;font-size:14px;cursor:pointer;transition:transform .15s}
+.hxshowall:active{transform:scale(.95)}
+/* while Still to hear is on, the Releases heading says so (tap it to show everything again) */
+.hxopen{display:inline-flex;align-items:center;gap:6px;vertical-align:middle;margin-left:12px;border:0;border-radius:999px;padding:5px 10px 5px 12px;background:#fff;color:#111;font:600 13px/1 var(--body);letter-spacing:0;cursor:pointer}
+.hxopen span{font-size:16px;line-height:1;opacity:.6}
+@media (prefers-reduced-motion:no-preference){.hxopen,.hxnone{animation:hxIn .35s cubic-bezier(.2,.8,.2,1) backwards}}
 .hxhint{margin:16px 0 0;font-size:13px;letter-spacing:.01em;color:rgb(255 255 255 / .72);animation:hxIn .4s ease .3s backwards}
 /* while an album is open the hint keeps its room (only hidden): the Releases row sits at the bottom of the header, so taking the line out pushed the row down, and bringing it back made the whole row jump up at the end of closing */
 .hxhint.off{visibility:hidden;animation:none}
@@ -1548,6 +1555,19 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .hxer>.hxsl:last-child{margin-right:0}
 .hxdiv{flex:none;align-self:stretch;width:1px;margin:40px -18px 46px -6px;background:linear-gradient(to bottom,transparent,rgb(255 255 255 / .28) 20%,rgb(255 255 255 / .28) 80%,transparent)}
 .hxrow.eras>.group.sleeve.gf.inrow{flex:none;width:100%;color:var(--ink);margin:0}
+/* on a PC the open jacket stands to the right of the year column, and the timeline line carries on past it */
+@media (min-width:761px){
+  .hxrow.eras>.group.sleeve.gf.inrow{--gut:104px;margin-left:var(--gut);width:calc(100% - var(--gut))}
+  .hxrow.eras>.group.sleeve.gf.inrow::before{content:"";position:absolute;left:-30px;top:-40px;bottom:-40px;width:2px;border-radius:1px;background:rgb(255 255 255 / .24);pointer-events:none}
+  .hxrow.eras>.group.sleeve.gf.inrow:last-child::before{bottom:50%}}
+/* PLAIN GRID (rating, heard and A-to-Z orders, or an artist with fewer than two albums): on a PC the records wrap onto
+   as many rows as they need instead of running off the right edge */
+@media (min-width:761px){.hx .hxrow.flat{flex-wrap:wrap;overflow-x:visible;row-gap:40px;column-gap:56px;scroll-snap-type:none}}
+/* the number a sleeve wears when the shelf is sorted by your rating (or heard %) */
+.hxscore{position:absolute;z-index:3;top:calc(var(--hxst,0px) + 8px);left:8px;min-width:30px;padding:3px 8px;border-radius:999px;background:rgb(10 12 14 / .62);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#fff;font:700 13px/1.15 var(--body);text-align:center;font-variant-numeric:tabular-nums;box-shadow:0 0 0 1px rgb(255 255 255 / .14),0 4px 10px rgb(0 0 0 / .3);pointer-events:none}
+.hxscore.pct{font-size:12px}
+.hxsl.sg .hxscore{--hxst:40px;font-size:12px;padding:2px 7px;top:calc(var(--hxst) + 6px);left:6px}
+@media (prefers-reduced-motion:no-preference){.hxscore{animation:hxScore .45s cubic-bezier(.2,.9,.3,1.3) .25s backwards}@keyframes hxScore{from{opacity:0;transform:scale(.6)}}}
 
 /* while an album is open, its era stays lit and the rest step back a little */
 .hxrow.eras:has(.hxsl.on) .hxera:not(:has(.hxsl.on)){opacity:.5}
@@ -2327,6 +2347,11 @@ button.st-t:hover{color:var(--accent);text-decoration:underline}
 .simlab img{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;object-fit:cover;z-index:0;box-shadow:none}
 .simlab b{position:relative;top:-18%;z-index:1;font:800 15px/1 var(--body);color:rgb(255 255 255 / .9);letter-spacing:.02em}
 .simlab:has(img) b{display:none}
+/* a photo still on its way (Apple allows one lookup every few seconds, so a new row fills in left to right the first time):
+   the label shimmers instead of looking empty */
+.simt.wait .simlab::after{content:"";position:absolute;inset:0;z-index:2;border-radius:50%;background:linear-gradient(110deg,transparent 30%,rgb(255 255 255 / .38) 50%,transparent 70%) 0 0/250% 100%;animation:simWait 1.3s linear infinite}
+@keyframes simWait{from{background-position:130% 0}to{background-position:-30% 0}}
+@media (prefers-reduced-motion:reduce){.simt.wait .simlab::after{animation:none;background:rgb(255 255 255 / .12)}}
 @media (prefers-reduced-motion:no-preference){.simlab{animation:simRot var(--rot) linear infinite}.simrow.sim-in .simlab{animation:simSpin .9s cubic-bezier(.2,.8,.2,1) calc(var(--i) * 45ms) backwards,simRot var(--rot) linear infinite}}
 .simt:hover .simd,.simt:focus-visible .simd{transform:translateY(-5px)}
 /* the opening reveal used to leave a clipping box behind the row (its shadows were cut off in a rectangle) */
@@ -2949,6 +2974,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-am', note:'TIMELINE FIXES (from your screen recording): the timeline now stays when you pick Albums, EPs or Singles, or Newest first. Each era just shows the releases of that kind, an era with none drops out, and Newest first runs from the latest era down. Sorting by your rating, by how much you have heard, or A to Z puts the records on a grid that wraps onto new rows instead of running off the right edge, and each record shows its number (your rating, or the percent heard) so you can see why it is where it is. An open album now sits to the right of the year column instead of covering it, and the timeline line runs past it. Closing an album no longer leaves a blank gap for a moment after the cover lands. The space starts closing as soon as it lands. Changing the sort now brings back whole eras one after another, with no lone Stack button or stray line showing first, and quickly even for a long discography. Picking an artist from the artist menu clears the menu faster, so its tiles no longer sit over the artist page. Still to hear now shows a white Still to hear tag next to Releases that you tap to turn it off. When everything is heard it says so, with a Show all releases button, and the Tap a record hint is hidden when there are no records. Fans also spin records whose Apple Music photo is still loading now shimmer instead of looking empty (Apple only allows one lookup every few seconds, so a new row fills in left to right the first time). Fixed: right after Playback opened, the first sort change or album opened could throw the page back to the top.'},
   {v:'2026.11.19-al', note:'ERAS AS A TIMELINE: the Releases shelf now runs top to bottom like a timeline. Each era is its own row: the year sits on the left on a line that runs down through the whole discography, with a dot where each era starts, the album\u2019s name heads the row and its records run to the right. Eras ease in as you scroll to them. On a phone it works the same way, with each era\u2019s records swiping sideways, and an opened album unfolds right under its era there too.'},
   {v:'2026.11.19-ak', note:'ERAS, TIDIER, AND ALBUMS OPEN WHERE YOU ARE: singles and EPs now find their album by their own title (a single only keeps its B-sides, since its A-side already lives on the album), so Creep, High & Dry, Street Spirit, Pyramid Song, Knives Out and the rest stand with their albums. A second disc released as its own album (In Rainbows Disk 2) stands beside the first disc. Anything left over joins the era before it past a thin divider, so there is one label per album instead of extra year groups. On a PC, an opened album now unfolds right under the row its record is on and the page brings that row into view, instead of opening below the whole discography. The artist photo no longer stretches down the page with a tall Releases shelf.'},
   {v:'2026.11.19-aj', note:'ERAS: in Default or Oldest-first order with All showing, an artist\u2019s Releases are now grouped into eras. Each album starts one, and the singles and EPs that came off it (matched by their songs, not their dates) stand next to it. Singles and EPs that are on no album stand between eras, and three or more of those singles in a row fold into a stack of 7-inches you tap to fan out. Live albums, remix albums and compilations go into a box set at the end that opens into its own era. On a PC the eras wrap onto as many shelves as they need instead of scrolling sideways, and while an album is open its era stays lit while the rest step back. On a phone the eras swipe one at a time, with a rail of years above to jump. Artists with fewer than two albums, other sort orders and the kind filters keep the plain shelf.'},
@@ -6619,6 +6645,7 @@ function render(){
   const flipOn=UI.flip&&!noMotion()&&window.SX&&typeof SX.flip==='function';UI.flip=false;
   if(flipOn)SX.flip(document.body,'#llist .tile,.sheet .group.sleeve,.hxrow .hxsl',()=>keepImgs(renderMain),{dur:420,key:el=>el.dataset.sxk?'k'+el.dataset.sxk:el.dataset.acol?'g'+el.dataset.acol:el.dataset.g?'a'+el.dataset.g:el.dataset.id?'t'+el.dataset.id:null});
   else keepImgs(()=>{const top=topHTML();if(!paneSwap(top))renderMain(top)});
+  if(swK)UI.swKey=UI.tab+':'+(UI.sel[UI.tab]||'');   /* the draw itself may have picked the artist (first launch): remember that one, or the next redraw (a sort change, opening an album) thinks the artist changed and jumps to the top */
   libGhostRun();   /* the top bar is built once per draw: building it clears the one-shot animation flags of the sheets in it */
   if(gfS){const g=document.querySelector('.group.sleeve.gf[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(gfS.id):gfS.id)+'"]');if(g){const r=g.querySelector('.gf-rs'),l=g.querySelector('.gf-ls');if(r)r.scrollTop=gfS.r;if(l)l.scrollTop=gfS.l}}
   if(mT){const nh=document.querySelector('.hero[data-aid]'),nm=nh&&nh.dataset.aid===mT.aid&&nh.querySelector('.hmesh:not(.hghost)');
@@ -8357,8 +8384,23 @@ function hxArt(g){const sArt=g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://cover
   return {sArt,col:acolFor(g.id,sArt,g),kind}}
 function hxSongKey(i){return String(songShow(i).t||i.title||'').toLowerCase().replace(/\s*[\(\[][^\)\]]*[\)\]]/g,'').replace(/\s+[-–—]\s+.*$/,'').replace(/[^a-z0-9À-￿]+/g,'')}
 function hxErasOn(a,rl){
-  if(relKind(a)!=='all'||!['def','old'].includes(relSort()))return null;
-  if(rl.filter(g=>g.kind==='Studio album').length<2)return null;
+  /* 2026.11.19-am: the timeline stays for the kind filters (Albums, EPs, Singles) and for Newest first too. The eras are
+     worked out from every release, then each era keeps only what the filter shows (an era left empty drops out), so a
+     single still stands in its album's era under Singles. Newest first runs the eras from the latest down. Rating, heard
+     and A-to-Z orders have nothing to do with dates, so those get the plain grid instead. */
+  const so=relSort();if(!['def','old','new'].includes(so))return null;
+  const og=gfOpenId(a),keep=new Set(rl);
+  const rlAll=a.groups.filter(g=>UI.filter!=='open'||String(g.id)===og||g.items.some(i=>!isDone(i.id)));
+  if(rlAll.filter(g=>g.kind==='Studio album').length<2)return null;
+  const out=hxErasBuild(a,rlAll),E=[];
+  for(const e of out){
+    if(e.t==='era'){const items=e.items.filter(g=>keep.has(g)),after=e.after.filter(g=>keep.has(g));if(items.length||after.length)E.push({...e,items,after})}
+    else{const items=e.items.filter(g=>keep.has(g));if(items.length)E.push({...e,items})}}
+  if(!E.length)return null;
+  if(so==='new'){const box=E.filter(e=>e.t==='box'),rest=E.filter(e=>e.t!=='box').reverse();
+    rest.forEach(e=>{if(e.t==='era')e.after=e.after.slice().reverse();else e.items=e.items.slice().reverse()});return [...rest,...box]}
+  return E}
+function hxErasBuild(a,rl){
   const ix=new Map(a.groups.map((g,i)=>[g,i])),yr=g=>{const y=parseInt(g.year,10);return isNaN(y)?1e9:y};
   const L=rl.slice().sort((x,y)=>yr(x)-yr(y)||ix.get(x)-ix.get(y));
   /* a second disc released as its own album ("In Rainbows (Disk 2)") stands beside its first disc instead of starting an era */
@@ -8431,8 +8473,10 @@ function heroX(a,all,done,rated,p,phUrl,more){
   const sub=[aAvg?'Albums '+aAvg:'',avg?'Songs '+avg:'',nRel+' release'+(nRel===1?'':'s')].filter(Boolean).join(' · ');
   const og=gfOpenId(a),rl=relList(a).filter(g=>UI.filter!=='open'||String(g.id)===og||g.items.some(i=>!isDone(i.id)));
   const NEW=UI.hxNew;UI.hxNew=null;
+  /* sorted by your rating or by how much you have heard: each sleeve wears that number, so the order explains itself */
+  const so=relSort(),scoreOf=so==='rhi'||so==='rlo'?g=>{const v=relScore(g);return v?(Math.round(v*10)/10).toString():''}:so==='heard'||so==='left'?g=>g.items.length?Math.round(100*g.items.filter(i=>isDone(i.id)).length/g.items.length)+'%':'':null;
   const sleeve=(g,ni)=>{const {sArt,col,kind}=hxArt(g);
-    const on=String(g.id)===og;return `<button class="hxsl${ni!=null?' hxin':''}${kind==='Single'?' sg':''}${on?' on':''}${on&&HXSINK===String(g.id)?' sink':''}" data-act="hjump" data-g="${esc(g.id)}" style="--c:${esc(col)}${ni!=null?';--i:'+ni:''}" aria-pressed="${on}" aria-label="${on?'Close':'Open'} ${esc(g.title)}"><span class="hxv vgr" aria-hidden="true">${hxRings(g)}</span><span class="hxc" aria-hidden="true">${sArt?`<img src="${esc(sArt)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span><span class="hxt">${esc(g.title)}</span><span class="hxy">${esc([kind,g.year].filter(Boolean).join(' · '))}</span></button>`};
+    const on=String(g.id)===og,sc=scoreOf?scoreOf(g):'';return `<button class="hxsl${ni!=null?' hxin':''}${kind==='Single'?' sg':''}${on?' on':''}${on&&HXSINK===String(g.id)?' sink':''}" data-act="hjump" data-g="${esc(g.id)}" style="--c:${esc(col)}${ni!=null?';--i:'+ni:''}" aria-pressed="${on}" aria-label="${on?'Close':'Open'} ${esc(g.title)}"><span class="hxv vgr" aria-hidden="true">${hxRings(g)}</span><span class="hxc" aria-hidden="true">${sArt?`<img src="${esc(sArt)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span>${sc?`<b class="hxscore${/%$/.test(sc)?' pct':''}" aria-hidden="true">${esc(sc)}</b>`:''}<span class="hxt">${esc(g.title)}</span><span class="hxy">${esc([kind,g.year].filter(Boolean).join(' · '))}</span></button>`};
   const eras=hxErasOn(a,rl),rel=eras?hxEras(a,rl,sleeve,og,NEW):rl.map(g=>sleeve(g)).join('');
   const ico={back:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
     play:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.8v14.4L19 12z"/></svg>',
@@ -8457,10 +8501,10 @@ function heroX(a,all,done,rated,p,phUrl,more){
         ${panel}
       </div>
     </div>
-    <div class="hxrel"><div class="hxprog"><div class="hrec"><div class="hring" style="--p:${p}"><div class="hdisc"><div class="hspin"></div><div class="hlab"><b${p>=100?' class="s"':''}>${p}%</b><span>heard</span></div></div></div>${HARM}</div><div class="hxpt"><span class="hxt">Your progress</span><span class="hxy">${done} of ${all.length} songs heard${p>=100?' \u00b7 finished':''}</span></div></div><div class="hxrh"><h3 class="hxlbl">Releases</h3>${relBar(a)}</div><div class="hxrow${eras?' eras':''}">
-      ${rel||`<p class="hxnone">${UI.filter==='open'?'Nothing left to hear here.':'No releases of that kind here.'}</p>`}
+    <div class="hxrel"><div class="hxprog"><div class="hrec"><div class="hring" style="--p:${p}"><div class="hdisc"><div class="hspin"></div><div class="hlab"><b${p>=100?' class="s"':''}>${p}%</b><span>heard</span></div></div></div>${HARM}</div><div class="hxpt"><span class="hxt">Your progress</span><span class="hxy">${done} of ${all.length} songs heard${p>=100?' \u00b7 finished':''}</span></div></div><div class="hxrh"><h3 class="hxlbl">Releases${open?' <button class="hxopen" data-act="filter" data-v="all" aria-label="Showing only what is still to hear. Show everything">Still to hear<span aria-hidden="true">\u00d7</span></button>':''}</h3>${relBar(a)}</div><div class="hxrow${eras?' eras':rel?' flat':''}">
+      ${rel||(UI.filter==='open'?`<div class="hxnone"><p>You have heard everything here.</p><button class="hxshowall" data-act="filter" data-v="all">Show all releases</button></div>`:`<div class="hxnone"><p>No releases of that kind here.</p></div>`)}
       ${eras?'<div class="hxera hxera-add"><div class="hxyr"></div><div class="hxeb"><div class="hxer">':''}<button class="hxsl hxadd" data-sxk="add" data-act="reladd" data-a="${esc(a.id)}" aria-expanded="${UI.relAdd===a.id}" aria-label="Add a release by hand"><span class="hxc" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><span class="hxt">Add a release</span><span class="hxy">By hand</span></button>${eras?'</div></div></div>':''}
-    </div><p class="hxhint${og?' off':''}${hintSeen?' seen':''}"${og?' aria-hidden="true"':''}>Tap a record to open it</p></div>
+    </div>${rel?`<p class="hxhint${og?' off':''}${hintSeen?' seen':''}"${og?' aria-hidden="true"':''}>Tap a record to open it</p>`:''}</div>
     </div>
     <div class="hxmore">${more||''}</div>
   </div>`}
@@ -8691,15 +8735,15 @@ function libGhostRun(){const L=UI.libGhost;UI.libGhost=null;if(!L)return;
   for(let n=pick;n&&n!==g;n=n.parentElement){const par=n.parentElement;if(!par)break;
     for(const s of par.children){if(s===n)continue;const r=s.getBoundingClientRect();if(!r.width&&!r.height)continue;
       if(r.bottom<0||r.top>innerHeight){s.style.opacity='0';continue}
-      const t=s.matches('.tile,.entry'),dl=t?Math.min(240,Math.hypot(r.left+r.width/2-cx,r.top+r.height/2-cy)*.22):0;
+      const t=s.matches('.tile,.entry'),dl=t?Math.min(90,Math.hypot(r.left+r.width/2-cx,r.top+r.height/2-cy)*.08):0;
       s.animate(t?[{opacity:1,transform:'none'},{opacity:0,transform:'translateY(12px) scale(.93)'}]:[{opacity:1},{opacity:0}],
-        {duration:t?300:200,delay:dl,easing:t?'cubic-bezier(.4,0,.7,.4)':'ease',fill:'forwards'})}}
+        {duration:t?190:150,delay:dl,easing:t?'cubic-bezier(.4,0,.7,.4)':'ease',fill:'forwards'})}}
   /* the menu's own backing (page color, list borders) fades away under the picked sleeve */
   for(let n=pick.parentElement;n;n=n===g?null:n.parentElement){const cs=getComputedStyle(n),a={},z={};
     if(!/rgba\(0, 0, 0, 0\)|transparent/.test(cs.backgroundColor)){a.backgroundColor=cs.backgroundColor;z.backgroundColor='rgba(0,0,0,0)'}
     if(parseFloat(cs.borderTopWidth)>0){a.borderColor=cs.borderTopColor;z.borderColor='rgba(0,0,0,0)'}
     if(cs.boxShadow!=='none'){a.boxShadow=cs.boxShadow;z.boxShadow='none'}
-    if(Object.keys(a).length)n.animate([a,z],{duration:480,delay:110,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'})}
+    if(Object.keys(a).length)n.animate([a,z],{duration:300,delay:170,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'})}
   pick.animate([{opacity:1,transform:'none',filter:'none'},{opacity:1,transform:'none',filter:'none',offset:.42},{opacity:0,transform:'translateY(10px) scale(.88)',filter:'blur(2px)'}],
     {duration:720,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'}).onfinish=done}
 let heroIO=null,heroWatched=null;
@@ -9505,9 +9549,10 @@ function simCrate(e,ao){const an=e.anim||ao?' sim-in':'';e.anim=false;
   const rows=e.rows.slice(0,20),C=simArtCache(),need=[];
   const html=rows.map((x,i)=>{const a=rtArtist([x.n]),k=nArtist(x.n),m=Math.max(0,Math.min(1,x.m||0)),pc=Math.round(m*100);
     let ph=a?(a.aimg?a.aimg+'/300x300bb.jpg':spPhoto(a)):'';
-    if(!ph){const c=C[k];if(c&&c[0])ph=c[0]+'/300x300bb.jpg';else if(!c||(!c[0]&&c[1]<Date.now()-12096e5))need.push(x.n)}
+    let wait=false;
+    if(!ph){const c=C[k];if(c&&c[0])ph=c[0]+'/300x300bb.jpg';else if(!c||(!c[0]&&c[1]<Date.now()-12096e5)){need.push(x.n);wait=simArtCan()}}
     const st=a?pct(artistItems(a).map(y=>y.id))+'% heard':pc+'% match';
-    return `<button class="simt" data-k="${esc(k)}" style="--i:${Math.min(i,12)};--m:${m.toFixed(3)};--rot:${(9+(1-m)*14).toFixed(1)}s;--sc:hsl(${colHash(x.n)%360} 46% 52%)" data-act="${a?'llgo':'simadd'}" ${a?`data-a="${esc(a.id)}"`:`data-n="${esc(x.n)}"`} aria-label="${a?'Open':'Add'} ${esc(x.n)}, ${pc}% match"><span class="simd" aria-hidden="true"><i class="simlit"></i><span class="simlab">${ph?`<img src="${esc(ph)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}<b>${esc(String(x.n).trim().charAt(0).toUpperCase())}</b></span></span><span class="simn">${esc(x.n)}</span><span class="sims">${a?'':'<em>Add</em> \u00b7 '}${esc(st)}</span></button>`}).join('');
+    return `<button class="simt${wait?' wait':''}" data-k="${esc(k)}" style="--i:${Math.min(i,12)};--m:${m.toFixed(3)};--rot:${(9+(1-m)*14).toFixed(1)}s;--sc:hsl(${colHash(x.n)%360} 46% 52%)" data-act="${a?'llgo':'simadd'}" ${a?`data-a="${esc(a.id)}"`:`data-n="${esc(x.n)}"`} aria-label="${a?'Open':'Add'} ${esc(x.n)}, ${pc}% match"><span class="simd" aria-hidden="true"><i class="simlit"></i><span class="simlab">${ph?`<img src="${esc(ph)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}<b>${esc(String(x.n).trim().charAt(0).toUpperCase())}</b></span></span><span class="simn">${esc(x.n)}</span><span class="sims">${a?'':'<em>Add</em> \u00b7 '}${esc(st)}</span></button>`}).join('');
   if(need.length)setTimeout(()=>simArtLoad(need),400);
   return `<div class="simrow${an}">${html}</div>`}
 /* Apple Music photos for the Fans also spin artists who are not in your log (owner only, like the artist header photo).
@@ -9518,9 +9563,10 @@ function simCrate(e,ao){const an=e.anim||ao?' sim-in':'';e.anim=false;
 const SIMART_KEY='pb_simart';let SIMART=null,SIMART_RUN=false;
 function simArtCache(){if(!SIMART){try{SIMART=JSON.parse(localStorage.getItem(SIMART_KEY)||'{}')||{}}catch(e){SIMART={}}}return SIMART}
 function simArtSave(){try{localStorage.setItem(SIMART_KEY,JSON.stringify(SIMART))}catch(e){}}
+/* can photos be looked up right now? (if not, the records just keep their letter instead of a loading shimmer) */
+function simArtCan(){if(!READY||!ownSync()||!SY.url)return false;let cool=0;try{cool=+localStorage.getItem('pb_simartcool')||0}catch(e){}return cool<=Date.now()}
 async function simArtLoad(names){
-  if(SIMART_RUN||!READY||!ownSync()||!SY.url)return;
-  let cool=0;try{cool=+localStorage.getItem('pb_simartcool')||0}catch(e){}if(cool>Date.now())return;
+  if(SIMART_RUN||!simArtCan())return;
   const C=simArtCache();SIMART_RUN=true;
   try{
     for(const n of names){
@@ -9534,12 +9580,13 @@ async function simArtLoad(names){
         else if(r.status!==404)throw AMError('http',r.status);
       }
       C[k]=[base,Date.now()];simArtSave();
+      document.querySelectorAll('.simt[data-k="'+CSS.escape(k)+'"]').forEach(t=>t.classList.remove('wait'));
       if(base)document.querySelectorAll('.simt[data-k="'+CSS.escape(k)+'"] .simd').forEach(d=>{if(d.querySelector('img'))return;
         const lab=d.querySelector('.simlab')||d,im=new Image();im.alt='';im.className='simin';im.decoding='async';im.onload=()=>lab.insertBefore(im,lab.querySelector('b'));im.src=base+'/300x300bb.jpg'});
       await mbSleep(NR_GAP);
     }
   }catch(e){if(e&&e.code==='limited'){try{localStorage.setItem('pb_simartcool',String(Date.now()+6e5))}catch(_){}}}
-  finally{SIMART_RUN=false}
+  finally{SIMART_RUN=false;if(!simArtCan())document.querySelectorAll('.simt.wait').forEach(t=>t.classList.remove('wait'))}
 }
 function simSong(a,i,t){
   const open=UI.simSong===i.id,ao=open&&UI.simAnim?' sim-opening':'';if(open)UI.simAnim=false;
@@ -9780,7 +9827,7 @@ function gfSettle(el,done){
   const sp=document.createElement('div');sp.setAttribute('aria-hidden','true');sp.style.cssText='flex:none;height:'+h+'px;margin-bottom:0;pointer-events:none'+(inRow?';width:100%':'');
   const pr=pe!=null&&document.querySelector('.hxrow.eras .hxera[data-era="'+pe+'"]');
   if(pr)pr.after(sp);else mh.insertBefore(sp,mh.firstChild);window.scrollTo(0,y0);
-  const ms=560,t0=performance.now(),ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+  const ms=440,t0=performance.now(),ease=t=>1-Math.pow(1-t,3);   /* eases out: the space starts closing the moment the cover lands, no dead pause */
   let res;const mine=GFP=new Promise(r=>res=r);
   const step=now=>{const t=Math.min(1,(now-t0)/ms),e=ease(t);
     if(sp.isConnected){sp.style.height=(h*(1-e)).toFixed(1)+'px';sp.style.marginBottom=(-gap*e).toFixed(1)+'px'}
@@ -9850,12 +9897,19 @@ document.addEventListener('keydown',ev=>{
   if(ev.key==='Escape'&&UI.hinfo&&!UI.hinfoOut)hinfoClose()});
 /* a new sort order: the records dip out together, then come back in their new order one after another, instead of sliding
    through each other (which piled covers and labels on top of one another mid-way) */
+/* a new sort order: what is on screen dips out, then the new order comes back. On the timeline whole eras come back one after
+   another (year, line, stacks and all, so no lone "Stack" chip or divider shows before its records); on the plain grid the
+   records do. The stagger is capped so a long discography still lands in well under a second. */
 function relShuffle(fn){const row=document.querySelector('.hx .hxrow');
   if(!row||noMotion()){fn();return}
-  const els=[...row.querySelectorAll('.hxsl:not(.hxadd)')],E='cubic-bezier(.4,0,1,1)';
-  els.forEach((el,i)=>el.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateY(12px) scale(.94)'}],{duration:170,delay:i*14,easing:E,fill:'forwards'}));
+  const pick=r=>{const vis=el=>{const b=el.getBoundingClientRect();return b.bottom>0&&b.top<innerHeight};
+    const els=r.classList.contains('eras')?[...r.querySelectorAll(':scope>.hxera:not(.hxera-add)')]:[...r.querySelectorAll(':scope>.hxsl:not(.hxadd),:scope>.hxstk,:scope>.hxfold')];
+    return els.filter(vis)};
+  const out=pick(row),E='cubic-bezier(.4,0,1,1)',st=Math.min(14,120/Math.max(1,out.length));
+  out.forEach((el,i)=>el.animate([{opacity:1,transform:'none'},{opacity:0,transform:'translateY(12px) scale(.97)'}],{duration:170,delay:i*st,easing:E,fill:'forwards'}));
   setTimeout(()=>{fn();const r2=document.querySelector('.hx .hxrow');if(!r2)return;
-    [...r2.querySelectorAll('.hxsl:not(.hxadd)')].forEach((el,i)=>el.animate([{opacity:0,transform:'translateY(16px) scale(.94)'},{opacity:1,transform:'none'}],{duration:460,delay:40+i*50,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}))},180+els.length*14)}
+    const inn=pick(r2),eras=r2.classList.contains('eras'),gap=Math.min(eras?70:45,(eras?380:420)/Math.max(1,inn.length));
+    inn.forEach((el,i)=>el.animate([{opacity:0,transform:'translateY(16px)'+(eras?'':' scale(.94)')},{opacity:1,transform:'none'}],{duration:440,delay:30+i*gap,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}))},190+out.length*st)}
 
 /* where this artist's list came from, and the button to (re)import it */
 function mbArtistBar(a){
