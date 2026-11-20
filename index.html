@@ -1301,14 +1301,14 @@ body{overflow-x:clip}
   background:conic-gradient(var(--accent) calc(var(--p)*1%),color-mix(in srgb,var(--ink) 16%,transparent) 0)}
 .hdisc{position:relative;width:206px;height:206px;border-radius:50%;display:grid;place-items:center;overflow:hidden;background:#0b0d0c}
 .hspin{position:absolute;inset:0;border-radius:50%;will-change:transform;
-  background:repeating-radial-gradient(circle,rgb(0 0 0 / .5) 0 1.5px,rgb(0 0 0 / 0) 1.5px 3.2px),radial-gradient(circle,rgb(0 0 0 / 0) 26%,rgb(0 0 0 / .34) 100%),var(--hdisc,none),#10140f;background-size:100% 100%}
+  background:repeating-radial-gradient(circle,rgb(0 0 0 / .1) 0,rgb(0 0 0 / .5) .8px,rgb(0 0 0 / .5) 1.4px,rgb(0 0 0 / 0) 2.2px,rgb(0 0 0 / 0) 3.2px),radial-gradient(circle,rgb(0 0 0 / 0) 26%,rgb(0 0 0 / .34) 100%),var(--hdisc,none),#10140f;background-size:100% 100%}
 .hdisc::after{content:"";position:absolute;inset:0;border-radius:50%;z-index:1;pointer-events:none;box-shadow:inset 0 0 0 1.5px rgb(255 255 255 / .2);
   background:conic-gradient(from 20deg,rgb(255 255 255 / 0),rgb(255 255 255 / .18) 12%,rgb(255 255 255 / 0) 26%,rgb(255 255 255 / 0) 50%,rgb(255 255 255 / .13) 62%,rgb(255 255 255 / 0) 76%)}
 /* clear vinyl (the two splatter looks): no black backing, so the glow behind the card shows through the record; only the grooves, a glassy rim and the paint remain */
 .hero.hclear .hring{background:none;position:relative}
 .hero.hclear .hring::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--p)*1%),color-mix(in srgb,var(--ink) 16%,transparent) 0);-webkit-mask:radial-gradient(circle closest-side,transparent 102px,#000 103px);mask:radial-gradient(circle closest-side,transparent 102px,#000 103px)}
 .hero.hclear .hdisc{background:color-mix(in srgb,var(--ink) 4%,transparent)}
-.hero.hclear .hspin{background:repeating-radial-gradient(circle,color-mix(in srgb,var(--ink) 14%,transparent) 0 1px,transparent 1px 3.2px),var(--hdisc,none);background-size:100% 100%;background-position:center;background-repeat:no-repeat}
+.hero.hclear .hspin{background:repeating-radial-gradient(circle,transparent 0,color-mix(in srgb,var(--ink) 14%,transparent) .6px,color-mix(in srgb,var(--ink) 14%,transparent) 1.1px,transparent 1.8px,transparent 3.2px),var(--hdisc,none);background-size:100% 100%;background-position:center;background-repeat:no-repeat}
 .hero.hclear .hdisc::after{background:conic-gradient(from 20deg,rgb(255 255 255 / 0),rgb(255 255 255 / .3) 12%,rgb(255 255 255 / 0) 26%,rgb(255 255 255 / 0) 50%,rgb(255 255 255 / .22) 62%,rgb(255 255 255 / 0) 76%);box-shadow:inset 0 0 0 1.5px rgb(255 255 255 / .45),inset 0 0 0 3px color-mix(in srgb,var(--ink) 10%,transparent)}
 .hlab{z-index:2;position:relative;width:90px;height:90px;border-radius:50%;background:var(--acb);color:var(--hi);display:flex;flex-direction:column;align-items:center;justify-content:center}
 .hlab b{font:800 26px/1 Archivo,var(--display);font-stretch:125%;letter-spacing:-.03em}
@@ -1698,10 +1698,10 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
    the ones you have heard. They ripple when you hover them; on a phone, when they come onto the screen. */
 .vgr{--vc:var(--c);--gv:color-mix(in srgb,var(--vc) 35%,#ffd9a8);--gp:color-mix(in srgb,var(--vc) 8%,#fff4e2)}
 @supports (color:oklch(from red l c h)){.vgr{--gv:oklch(from var(--vc) .86 calc(c*.7) h);--gp:oklch(from var(--vc) .96 calc(c*.25) h)}}
-.vgr i{position:absolute;left:calc(50% - var(--d)/2);top:calc(50% - var(--d)/2);width:var(--d);height:var(--d);border-radius:50%;border:1px solid rgb(255 255 255 / .07);box-sizing:border-box;pointer-events:none}
-.gf-vr.vgr i{border-width:1.5px}
-.vgr i.on{border-color:var(--gv)}
-.vgr i.on.fade{border-color:color-mix(in srgb,var(--gv) 24%,transparent)}
+.vgr i{position:absolute;left:calc(50% - var(--d)/2);top:calc(50% - var(--d)/2);width:var(--d);height:var(--d);border-radius:50%;--rw:1px;--rc:rgb(255 255 255 / .07);background:var(--ring);pointer-events:none}
+.gf-vr.vgr i{--rw:1.4px}
+.vgr i.on{--rc:var(--gv)}
+.vgr i.on.fade{--rc:color-mix(in srgb,var(--gv) 24%,transparent)}
 @media (prefers-reduced-motion:no-preference){
   .vgr.rip i.on:not(.fade){animation:slPulse .9s cubic-bezier(.4,0,.25,1) calc(var(--o,0)*42ms) backwards}
   .vgr.rip i.on.fade{animation:slPulseF .9s cubic-bezier(.4,0,.25,1) calc(var(--o,0)*42ms) backwards}
@@ -1768,24 +1768,27 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .sl-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
 .sl-ph{font:900 64px Archivo,var(--display);font-stretch:125%;color:color-mix(in srgb,var(--hi) 35%,transparent)}
 .sl-disc{position:absolute;left:112px;top:4px;width:160px;height:160px;border-radius:50%;background:#141111;box-shadow:0 12px 26px rgb(0 0 0 / .35);will-change:transform;backface-visibility:hidden;transform:translate3d(0,0,0)}
+@property --rc{syntax:'<color>';inherits:false;initial-value:transparent}
+/* a groove ring with soft, anti-aliased edges: a 1px border on a circle whose size lands between pixels drew lumpy, jagged rings */
+.vgr i,.sl-disc i{--ring:radial-gradient(circle closest-side,transparent calc(100% - var(--rw) - .8px),var(--rc) calc(100% - var(--rw) - .1px),var(--rc) calc(100% - .7px),transparent 100%)}
 @property --j{syntax:'<percentage>';inherits:false;initial-value:0%}
-.sl-disc i{position:absolute;left:calc(50% - (var(--d) + var(--j))/2);top:calc(50% - (var(--d) + var(--j))/2);width:calc(var(--d) + var(--j));height:calc(var(--d) + var(--j));border-radius:50%;border:1.5px solid rgb(255 255 255 / .09);box-sizing:border-box;will-change:transform}
+.sl-disc i{position:absolute;left:calc(50% - (var(--d) + var(--j))/2);top:calc(50% - (var(--d) + var(--j))/2);width:calc(var(--d) + var(--j));height:calc(var(--d) + var(--j));border-radius:50%;--rw:1.4px;--rc:rgb(255 255 255 / .09);background:var(--ring);will-change:transform}
 .sl-disc{--gv:color-mix(in srgb,var(--ac) 35%,#ffd9a8);--gp:color-mix(in srgb,var(--ac) 8%,#fff4e2);--gg:color-mix(in srgb,var(--ac) 70%,#ffd9a8)}
 /* grooves take the banner's own hue and amount of color: a gray cover gets pale gray grooves, a red one pale rose */
 @supports (color:oklch(from red l c h)){.sl-disc{--gv:oklch(from var(--ac) .86 calc(c*.7) h);--gp:oklch(from var(--ac) .96 calc(c*.25) h);--gg:oklch(from var(--ac) .7 calc(c*.9) h)}}
-.sl-disc i.on{border-color:var(--gv)}
-.sl-disc i.on.fade{border-color:color-mix(in srgb,var(--gv) 24%,transparent)}
-@media (prefers-reduced-motion:no-preference){.sl-disc i{transition:border-color .6s ease}}
+.sl-disc i.on{--rc:var(--gv)}
+.sl-disc i.on.fade{--rc:color-mix(in srgb,var(--gv) 24%,transparent)}
+@media (prefers-reduced-motion:no-preference){.sl-disc i{transition:--rc .6s ease}}
 /* the pulse: a ripple runs from the label outward through the grooves you have heard. Each groove swells
    a little (its real size, via --j, rather than a transform) and glows, then settles. Because it never
    becomes a transform it is never lifted onto its own layer, so there is nothing to snap when it ends.
    --rb is the start delay: the slide-out waits for the record to emerge. */
 @keyframes slPulse{
-  0%{transform:scale(1);border-color:var(--gv)}
-  30%{transform:scale(1.075);border-color:#fff}
-  65%{transform:scale(1.025);border-color:color-mix(in srgb,var(--gp) 60%,var(--gv))}
-  100%{transform:scale(1);border-color:var(--gv)}}
-@keyframes slPulseF{0%{transform:scale(1);border-color:color-mix(in srgb,var(--gv) 24%,transparent)}30%{transform:scale(1.04);border-color:color-mix(in srgb,var(--gv) 58%,transparent)}100%{transform:scale(1);border-color:color-mix(in srgb,var(--gv) 24%,transparent)}}
+  0%{transform:scale(1);--rc:var(--gv)}
+  30%{transform:scale(1.075);--rc:#fff}
+  65%{transform:scale(1.025);--rc:color-mix(in srgb,var(--gp) 60%,var(--gv))}
+  100%{transform:scale(1);--rc:var(--gv)}}
+@keyframes slPulseF{0%{transform:scale(1);--rc:color-mix(in srgb,var(--gv) 24%,transparent)}30%{transform:scale(1.04);--rc:color-mix(in srgb,var(--gv) 58%,transparent)}100%{transform:scale(1);--rc:color-mix(in srgb,var(--gv) 24%,transparent)}}
 @media (prefers-reduced-motion:no-preference){.group.sleeve.rip .sl-disc i.on.fade:not(.nr){animation:slPulseF .9s cubic-bezier(.4,0,.25,1) calc(var(--rb,0ms) + var(--o,0)*42ms) backwards}}
 @media (prefers-reduced-motion:no-preference){.group.sleeve.rip .sl-disc i.on:not(.fade):not(.nr){animation:slPulse .9s cubic-bezier(.4,0,.25,1) calc(var(--rb,0ms) + var(--o,0)*42ms) backwards}}
 .sl-lab{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:var(--acb);display:grid;place-items:center;font:800 12px Archivo,var(--display);color:var(--hi);font-variant-numeric:tabular-nums}
@@ -2021,10 +2024,10 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .sl-disc::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;opacity:0;will-change:transform,opacity;
   background:conic-gradient(from 0deg,transparent 0 45%,color-mix(in srgb,var(--gg) 55%,transparent) 80%,var(--gp) 98%,transparent 100%);
   -webkit-mask:radial-gradient(circle closest-side,transparent 35%,#000 36%,#000 var(--ld,100%),transparent calc(var(--ld,100%) + 1%));mask:radial-gradient(circle closest-side,transparent 35%,#000 36%,#000 var(--ld,100%),transparent calc(var(--ld,100%) + 1%))}
-@keyframes slLit{0%{transform:scale(1);border-color:rgb(255 255 255 / .09);box-shadow:0 0 0 0 transparent}
-  30%{transform:scale(1.13);border-color:#fff;box-shadow:0 0 14px 4px var(--gg)}
-  60%{transform:scale(1.04);border-color:var(--gp);box-shadow:0 0 8px 2px var(--gg)}
-  100%{transform:scale(1);border-color:var(--gv);box-shadow:0 0 0 0 transparent}}
+@keyframes slLit{0%{transform:scale(1);--rc:rgb(255 255 255 / .09);box-shadow:0 0 0 0 transparent}
+  30%{transform:scale(1.13);--rc:#fff;box-shadow:0 0 14px 4px var(--gg)}
+  60%{transform:scale(1.04);--rc:var(--gp);box-shadow:0 0 8px 2px var(--gg)}
+  100%{transform:scale(1);--rc:var(--gv);box-shadow:0 0 0 0 transparent}}
 @keyframes slSweep{0%{transform:rotate(-40deg);opacity:0}15%{opacity:1}50%{opacity:.8}100%{transform:rotate(500deg);opacity:0}}
 @keyframes slWave{0%{transform:scale(.3);opacity:0}12%{opacity:.95}55%{opacity:.5}100%{transform:scale(var(--ls,1));opacity:0}}
 .sl-disc::before{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;opacity:0;will-change:transform,opacity;border:3px solid #fff;box-shadow:0 0 12px 3px var(--gg)}
@@ -2056,7 +2059,7 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 /* ===== 2026.11.16-c ===== */
 /* liquid record on the turntable: the paint is real shapes inside the record, moved every frame (see liqTick) */
 .hspin .hliq{position:absolute;inset:0;width:100%;height:100%;display:block}
-.hspin.liq::after,.fly-s.liq::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;background:repeating-radial-gradient(circle,rgb(0 0 0 / .26) 0 1px,transparent 1px 3.2px)}
+.hspin.liq::after,.fly-s.liq::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;background:repeating-radial-gradient(circle,transparent 0,rgb(0 0 0 / .26) .6px,rgb(0 0 0 / .26) 1.1px,transparent 1.8px,transparent 3.2px)}
 .fly-s .hliq{position:absolute;inset:0;width:100%;height:100%;display:block}
 /* a dark album keeps its dark banner, but on the dark theme its song rows would wash black on black.
    The row wash is lifted to a mid tone of the same hue (a black album washes smoke gray), so the gradient shows. */
@@ -2283,6 +2286,30 @@ button.st-t:hover{color:var(--accent);text-decoration:underline}
 /* phones: the open album has no cover inside any more, so the record that sat beside it landed on top of the album name; it stays tucked away there */
 @media (max-width:1099px){.gf .gf-pk.l{display:none}}
 @media (prefers-reduced-motion:reduce){.hxpanel.in,.hxpanel.out,.hcirc.pop,.hcirc.pop svg,.rsel-m.in,.rsel-m.in button,.rsel-m.out,.rsel-b span.rsw,.simnav.in{animation:none}}
+
+/* ===== 2026.11.19-ag: the progress record sits above the Releases row ===== */
+.hxrel .hxprog{display:flex;align-items:center;gap:26px;width:auto;margin:0 0 38px;cursor:default;scroll-snap-align:none}
+.hxrel .hxprog .hrec{transform:none;margin:0;zoom:.84}
+.hxrel .hxprog .hring{box-shadow:0 16px 34px rgb(0 0 0 / .32)}
+.hxpt{display:flex;flex-direction:column;gap:4px;min-width:0}
+.hxrel .hxprog .hxt{margin:0;font-size:22px;font-weight:700;letter-spacing:-.01em;max-width:none;text-shadow:0 1px 14px rgb(0 0 0 / .28)}
+.hxrel .hxprog .hxy{font-size:15px;color:rgb(255 255 255 / .78)}
+@media (max-width:760px){
+  .hxrel .hxprog{width:auto;justify-content:center;gap:18px;margin:0 0 30px}
+  .hxrel .hxprog .hrec{zoom:.66}
+  .hxrel .hxprog .hxt{font-size:19px}.hxrel .hxprog .hxy{font-size:14px}
+}
+/* a new artist's page eases in piece by piece instead of popping in whole */
+@media (prefers-reduced-motion:no-preference){
+  .sheet.swin .hx .hxsub{animation:swUp .5s cubic-bezier(.2,.8,.2,1) .1s backwards}
+  .sheet.swin .hx .hxact{animation:swUp .5s cubic-bezier(.2,.8,.2,1) .16s backwards}
+  .sheet.swin .hx .hxrel>.hxprog{animation:swUp .55s cubic-bezier(.2,.8,.2,1) .2s backwards}
+  .sheet.swin .hx .hxrh{animation:swUp .5s cubic-bezier(.2,.8,.2,1) .28s backwards}
+  .sheet.swin .hx .hxrow>.hxsl{animation:swUp .55s cubic-bezier(.2,.8,.2,1) calc(.32s + var(--i,0)*45ms) backwards}
+}
+/* the still copy of the artist menu that dissolves as you leave it (see libGhostRun) */
+.side.libghost{position:fixed!important;inset:0;z-index:69!important;pointer-events:none;animation:none!important}
+.side.libghost *{animation:none!important;transition:none!important}
 </style>
 
 <!-- suite:css v10 · shared by Kitchen, Grocery, Lift, DishLog, Protocol, Rail, Game Log, Playback — edit tools/suite.py in the kitchen repo, not here -->
@@ -2837,6 +2864,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-ag', note:'PROGRESS RECORD MOVED UP, SMOOTHER MENU EXIT, CLEANER GROOVES: your progress record no longer sits in line with the albums. It is a bit bigger and has its own spot above Releases (with Your progress and your heard count beside it), and the Releases row moves down under it. Picking an artist from the full artist menu no longer makes the page pop up out of nowhere: every other sleeve dips away (nearest first), the menu fades to show the artist page underneath, and the sleeve you picked holds still while its record slides out and flies onto the progress turntable, then slips away itself. The new page eases in piece by piece (heard count, buttons, progress record, then the albums one after another). The lit grooves on every record (Releases row, open album, Fans also spin, album cards) are now drawn with soft edges, so they are smooth circles instead of lumpy, jagged rings, and the fine grooves on the big records no longer shimmer.'},
   {v:'2026.11.19-af', note:'ARTIST PAGE POLISH (from your screen recording): Still to hear now animates: the button gives a little press and the releases that stay glide into place while the rest drop out. Details (ⓘ) is now a popover that grows out of its button and folds back into it when you close it (or tap anywhere else, or press Escape) instead of pushing the Releases row down. Closing an album: the page holds still while the cover flies home, so it lands right on its sleeve, and only then does the space close up and the page ease back. The open album’s inside fades as the cover swings over it, so no buttons peek out beside a half-shut cover; its sleeve in the row no longer pops up and sinks again whenever the page redraws; the records in the open jacket are no longer cut off flat at the bottom; and Listen again sits under the album name instead of on top of long titles. “Tap a record to open it” eases in only when it first shows or comes back after an album closes, not on every redraw. The sort menu is now a glass pill with a matching menu instead of the browser’s white list, and a new sort order dips the records out and brings them back one after another instead of sliding them through each other. Fans also spin: no more box behind the row, the grooves hold still while the label spins so they stay crisp (softer grooves on every small record too), the arrows and mouse wheel move by whole records so none is left half cut off, and a redraw no longer throws the row back to the start or nudges the page. Also: the first record no longer shifts sideways between All and a filter, release details are easier to read, the artist colors always fill the window (no dark strip at the bottom of a short page), the ratings line uses one font, and on a phone the record that landed on top of an open album’s name is tucked away.'},
   {v:'2026.11.19-ae', note:'FANS ALSO SPIN, MATCH ON THE RECORD: each record now shows how close a match it is in its grooves, lit up in the label color from the rim inward (a 100% match is fully lit), filling in as the row opens, and it slowly spins, closer matches a little faster. Artists not in your log now get their Apple Music photo on the label, looked up once each and saved, fading in as they arrive (yours only, like the artist header photo). Show/Hide now sits right next to the heading, and the closed subtitle is just \u201cSimilar artists\u201d.'},
   {v:'2026.11.19-ad', note:'FANS ALSO SPIN, SMOOTHER: Hide now folds the row shut (the records drop and spin back, the arrows slide away) instead of vanishing, Show slides it open, and the mouse wheel now glides the row along smoothly like the arrow buttons do instead of jumping.'},
@@ -6499,8 +6527,9 @@ function render(){
   const keepY=vPrev===vk&&!swGo?scrollY:null,keepRow=k=>{const e=document.querySelector(k);return e&&!swGo?e.scrollLeft:null},keepHx=keepRow('.hx .hxrow'),keepSim=keepRow('.simrow');
   /* a filter or sort change: tiles and release cards that stay glide to their new spots, new ones rise in one after another */
   const flipOn=UI.flip&&!noMotion()&&window.SX&&typeof SX.flip==='function';UI.flip=false;
-  if(flipOn)SX.flip(document.body,'#llist .tile,.sheet .group.sleeve,.hxrow .hxsl,.hxrow .hxprog',()=>keepImgs(renderMain),{dur:420,key:el=>el.dataset.sxk?'k'+el.dataset.sxk:el.dataset.acol?'g'+el.dataset.acol:el.dataset.g?'a'+el.dataset.g:el.dataset.id?'t'+el.dataset.id:null});
-  else keepImgs(()=>{const top=topHTML();if(!paneSwap(top))renderMain(top)});   /* the top bar is built once per draw: building it clears the one-shot animation flags of the sheets in it */
+  if(flipOn)SX.flip(document.body,'#llist .tile,.sheet .group.sleeve,.hxrow .hxsl',()=>keepImgs(renderMain),{dur:420,key:el=>el.dataset.sxk?'k'+el.dataset.sxk:el.dataset.acol?'g'+el.dataset.acol:el.dataset.g?'a'+el.dataset.g:el.dataset.id?'t'+el.dataset.id:null});
+  else keepImgs(()=>{const top=topHTML();if(!paneSwap(top))renderMain(top)});
+  libGhostRun();   /* the top bar is built once per draw: building it clears the one-shot animation flags of the sheets in it */
   if(gfS){const g=document.querySelector('.group.sleeve.gf[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(gfS.id):gfS.id)+'"]');if(g){const r=g.querySelector('.gf-rs'),l=g.querySelector('.gf-ls');if(r)r.scrollTop=gfS.r;if(l)l.scrollTop=gfS.l}}
   if(mT){const nh=document.querySelector('.hero[data-aid]'),nm=nh&&nh.dataset.aid===mT.aid&&nh.querySelector('.hmesh:not(.hghost)');
     if(nm){const ns=nm.querySelectorAll('.fl,.fb');if(ns.length===mT.d.length)ns.forEach((n,i)=>{if(mT.d[i]!=null)n.style.animationDelay=mT.d[i].toFixed(0)+'ms'})}
@@ -6511,6 +6540,7 @@ function render(){
   if(swGo&&!UI.toAlb&&!UI.toSheet)window.scrollTo({top:0,behavior:noMotion()?'auto':'smooth'});   /* a different artist or title: start at the top, not wherever the last one was scrolled */
   if(swGo&&ohg&&!noMotion()){const nh=document.querySelector('.hero[data-aid]');
     if(nh&&nh.dataset.aid!==ohg.dataset.aid){const hb=nh.querySelector('.hxbg')||nh;hb.insertBefore(ohg,hb.firstChild);ohg.addEventListener('animationend',e=>{if(e.target===ohg)ohg.remove()})}}
+  if(swGo&&!noMotion())document.querySelectorAll('.hx .hxrow>.hxsl').forEach((e,i)=>e.style.setProperty('--i',Math.min(i,8)));
   if(swGo&&!noMotion()){const sh=document.querySelector('.sheet');   /* a different artist or title is open: its text and cards ease in, one after another */
     if(sh){[...sh.children].forEach((c,i)=>c.style.setProperty('--sw',Math.min(i,6)*70+'ms'));sh.classList.add('swin');clearTimeout(UI.swT);UI.swT=setTimeout(()=>sh.classList.remove('swin'),1500)}}
   clrPlay();
@@ -8242,8 +8272,7 @@ function heroX(a,all,done,rated,p,phUrl,more){
         ${panel}
       </div>
     </div>
-    <div class="hxrel"><div class="hxrh"><h3 class="hxlbl">Releases</h3>${relBar(a)}</div><div class="hxrow">
-      <div class="hxprog" data-sxk="prog"><div class="hrec"><div class="hring" style="--p:${p}"><div class="hdisc"><div class="hspin"></div><div class="hlab"><b${p>=100?' class="s"':''}>${p}%</b><span>heard</span></div></div></div>${HARM}</div><span class="hxt">Your progress</span><span class="hxy">${done} of ${all.length} songs</span></div>
+    <div class="hxrel"><div class="hxprog"><div class="hrec"><div class="hring" style="--p:${p}"><div class="hdisc"><div class="hspin"></div><div class="hlab"><b${p>=100?' class="s"':''}>${p}%</b><span>heard</span></div></div></div>${HARM}</div><div class="hxpt"><span class="hxt">Your progress</span><span class="hxy">${done} of ${all.length} songs heard${p>=100?' \u00b7 finished':''}</span></div></div><div class="hxrh"><h3 class="hxlbl">Releases</h3>${relBar(a)}</div><div class="hxrow">
       ${rel||`<p class="hxnone">${UI.filter==='open'?'Nothing left to hear here.':'No releases of that kind here.'}</p>`}
       <button class="hxsl hxadd" data-sxk="add" data-act="reladd" data-a="${esc(a.id)}" aria-expanded="${UI.relAdd===a.id}" aria-label="Add a release by hand"><span class="hxc" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><span class="hxt">Add a release</span><span class="hxy">By hand</span></button>
     </div><p class="hxhint${og?' off':''}${hintSeen?' seen':''}"${og?' aria-hidden="true"':''}>Tap a record to open it</p></div>
@@ -8406,11 +8435,11 @@ function flyClip(w,x,y,d,R){const f=w.firstChild;
   if(r<=0||l>=W||b<=0||t>=W){f.style.clipPath='';return}
   const B=W*3;f.style.clipPath="path(evenodd,'M"+(-B)+' '+(-B)+'H'+B+'V'+B+'H'+(-B)+'ZM'+l.toFixed(1)+' '+t.toFixed(1)+'H'+r.toFixed(1)+'V'+b.toFixed(1)+'H'+l.toFixed(1)+"Z')"}
 const coverR=aid=>{const T=document.querySelector('.tile[data-act="sel"][data-id="'+String(aid).replace(/["\\]/g,'\\$&')+'"]'),c=T&&T.querySelector('.tpack .tcov');if(!c)return null;const r=c.getBoundingClientRect();return r.width?{l:r.left-5,t:r.top-5,r:r.right+5,b:r.bottom+5}:null};
-function flyAsk(b,id){UI.fly=null;if(noMotion())return;
+function flyAsk(b,id,fromLib){UI.fly=null;if(noMotion())return;
   const cur=document.querySelector('.hero[data-aid]');if(cur&&cur.dataset.aid===id)return;
   const g=tileGeo(b);if(!g)return;
   let old=false;
-  if(cur&&!cur.classList.contains('drop')){const d=cur.querySelector('.hdisc'),sn=discSnap(cur);
+  if(cur&&!fromLib&&!cur.classList.contains('drop')){const d=cur.querySelector('.hdisc'),sn=discSnap(cur);   /* from the full artist menu the old record is hidden under it, so it doesn't float out over the menu */
     if(d&&sn){old=true;flyBack({sn,rect:d.getBoundingClientRect(),ang:HERO.ang,aid:cur.dataset.aid})}}
   UI.fly={to:id,src:g,old}}
 function flyOut(F){
@@ -8453,6 +8482,41 @@ function flyBack(O){
     else{w.remove();const dc=T.querySelector('.tdisc');void dc.offsetWidth;dc.classList.remove('tuck');return}
     requestAnimationFrame(step)};
   requestAnimationFrame(step)}
+
+/* ===== FROM THE ARTIST MENU TO THE ARTIST PAGE (2026.11.19-ag) =====
+   The full-window artist menu used to vanish in one frame. Now a still copy of it stays on top for a moment: every other
+   sleeve dips away (nearest first), the menu's backing fades to show the artist page underneath, and the sleeve you picked
+   holds still while its record slides out and flies to the progress turntable, then slips away itself. */
+function libGhostTake(b){
+  if(noMotion()||UI.tab!=='music'||UI.view)return null;const side=b.closest('.side.libfull');if(!side)return null;
+  const src=[side,...side.querySelectorAll('*')],sc=[];
+  src.forEach((e,i)=>{if(e.scrollTop||e.scrollLeft)sc.push([i,e.scrollTop,e.scrollLeft])});
+  return{g:side.cloneNode(true),sc,pi:src.indexOf(b),shell:!!(side.parentElement&&side.parentElement.classList.contains('shell'))&&matchMedia('(min-width:761px)').matches}   /* on a PC the menu's column rules hang off .shell, so the copy goes back in there; on a phone it sits on the page itself */}
+function libGhostRun(){const L=UI.libGhost;UI.libGhost=null;if(!L)return;
+  document.querySelectorAll('.libghost').forEach(e=>e.remove());
+  const g=L.g,cl=[g,...g.querySelectorAll('*')],pick=L.pi>0?cl[L.pi]:null;
+  g.classList.remove('libin');g.classList.add('libghost');g.setAttribute('aria-hidden','true');g.inert=true;
+  g.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));g.querySelectorAll('[data-act]').forEach(e=>e.removeAttribute('data-act'));
+  const sh=document.querySelector('.shell');(L.shell&&sh?sh:document.body).appendChild(g);
+  L.sc.forEach(([i,t,l])=>{const e=cl[i];if(e){e.scrollTop=t;e.scrollLeft=l}});
+  const done=()=>{if(g.isConnected)g.remove()};setTimeout(done,1600);
+  if(!pick){g.animate([{opacity:1},{opacity:0}],{duration:320,easing:'ease',fill:'forwards'}).onfinish=done;return}
+  const td=pick.querySelector('.tdisc');if(td)td.style.visibility='hidden';   /* its record is the one in the air */
+  const pr=pick.getBoundingClientRect(),cx=pr.left+pr.width/2,cy=pr.top+pr.height/2;
+  for(let n=pick;n&&n!==g;n=n.parentElement){const par=n.parentElement;if(!par)break;
+    for(const s of par.children){if(s===n)continue;const r=s.getBoundingClientRect();if(!r.width&&!r.height)continue;
+      if(r.bottom<0||r.top>innerHeight){s.style.opacity='0';continue}
+      const t=s.matches('.tile,.entry'),dl=t?Math.min(240,Math.hypot(r.left+r.width/2-cx,r.top+r.height/2-cy)*.22):0;
+      s.animate(t?[{opacity:1,transform:'none'},{opacity:0,transform:'translateY(12px) scale(.93)'}]:[{opacity:1},{opacity:0}],
+        {duration:t?300:200,delay:dl,easing:t?'cubic-bezier(.4,0,.7,.4)':'ease',fill:'forwards'})}}
+  /* the menu's own backing (page color, list borders) fades away under the picked sleeve */
+  for(let n=pick.parentElement;n;n=n===g?null:n.parentElement){const cs=getComputedStyle(n),a={},z={};
+    if(!/rgba\(0, 0, 0, 0\)|transparent/.test(cs.backgroundColor)){a.backgroundColor=cs.backgroundColor;z.backgroundColor='rgba(0,0,0,0)'}
+    if(parseFloat(cs.borderTopWidth)>0){a.borderColor=cs.borderTopColor;z.borderColor='rgba(0,0,0,0)'}
+    if(cs.boxShadow!=='none'){a.boxShadow=cs.boxShadow;z.boxShadow='none'}
+    if(Object.keys(a).length)n.animate([a,z],{duration:480,delay:110,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'})}
+  pick.animate([{opacity:1,transform:'none',filter:'none'},{opacity:1,transform:'none',filter:'none',offset:.42},{opacity:0,transform:'translateY(10px) scale(.88)',filter:'blur(2px)'}],
+    {duration:720,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'}).onfinish=done}
 let heroIO=null,heroWatched=null;
 function heroWatch(el){   /* stop the color drift while the artist card is scrolled out of view */
   if(!('IntersectionObserver' in window))return;
@@ -9829,7 +9893,7 @@ document.addEventListener('click',ev=>{
   else if(act==='mmgo'){UI.tab='music';UI.rOpen=null;
     if(b.dataset.v==='history'){UI.view='history';UI.hAnim=true;UI.hEdit=null}else if(b.dataset.v==='stats'){UI.view='stats';UI.stAnim=true;UI.stR=null;UI.stN=25}else UI.view=null;
     try{localStorage.setItem(KEY+'_tab','music')}catch(e){}window.scrollTo({top:0})}
-  else if(act==='sel'){if(UI.tab==='music'&&!UI.view)flyAsk(b,id);UI.sel[UI.tab]=id;UI.libOpen=false;UI.rOpen=null;
+  else if(act==='sel'){const lg=libGhostTake(b);if(UI.tab==='music'&&!UI.view)flyAsk(b,id,!!lg);UI.libGhost=lg;UI.sel[UI.tab]=id;UI.libOpen=false;UI.rOpen=null;
     if(matchMedia('(max-width:760px)').matches)UI.toSheet=true}
   else if(act==='selalb'){UI.rel=null;UI.tab='music';UI.sel.music=id;UI.libOpen=false;UI.rOpen=null;UI.filter='all';UI.toAlb=b.dataset.g}
   else if(act==='lsort'||act==='lshow'){UI.flip=true;const P=lPrefs();P[act==='lsort'?'sort':'show']=b.dataset.v;lSave(P);UI.llTab=null}
