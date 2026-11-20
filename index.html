@@ -1528,6 +1528,54 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 @media (max-width:760px){.hx .hxrow{padding-left:var(--hxpad);margin-left:calc(-1 * var(--hxpad))}.hxsl.on.up .hxv{left:44px}}
 .hx .group.sleeve.gf{position:relative;z-index:2}   /* the jacket (and the cover flying out of the row) sits above the row's sleeves, never behind them */
 .hxsl.on .hxv{left:84px}
+/* ERAS SHELF (see hxEras): on a PC the eras wrap onto as many shelves as they need, no sideways scrolling */
+.hxrow.eras{flex-wrap:wrap;overflow:visible;gap:30px 30px;scroll-snap-type:none}
+.hxera{flex:none;display:flex;flex-direction:column;padding-right:46px;transition:opacity .4s ease}
+.hxeh{font-size:12px;letter-spacing:.02em;color:rgb(255 255 255 / .74);padding-bottom:7px;margin-bottom:18px;border-bottom:1px solid rgb(255 255 255 / .26);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;width:0;min-width:100%}
+.hxera.loose .hxeh{border-bottom-style:dashed}
+.hxer{display:flex;align-items:flex-start;gap:46px}
+.hxer>.hxsl:not(.sg):not(.hxadd){margin-right:16px}
+.hxer>.hxsl:last-child{margin-right:0}
+.hxera-add{padding-right:0}.hxera-add .hxeh{border-color:transparent}
+/* while an album is open, its era stays lit and the rest step back a little */
+.hxrow.eras:has(.hxsl.on) .hxera:not(:has(.hxsl.on)){opacity:.5}
+/* a stack of loose 7-inch singles: tap to fan them out */
+.hxstk,.hxbox,.hxfold{flex:none;position:relative;background:none;border:0;padding:0;text-align:left;color:#fff;cursor:pointer}
+.hxstk{width:104px;padding-top:40px}
+.hxsc{position:relative;display:block;width:96px;height:96px}
+.hxsc i{position:absolute;inset:0;border-radius:4px;overflow:hidden;background:var(--c);box-shadow:0 8px 18px rgb(0 0 0 / .34);transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+.hxsc i img{width:100%;height:100%;object-fit:cover;display:block}
+.hxsc .c0{transform:translate(-6px,6px) rotate(-7deg)}.hxsc .c1{transform:translate(3px,2px) rotate(4deg)}.hxsc .c2{transform:none}
+.hxstk:hover .c0,.hxstk:focus-visible .c0{transform:translate(-16px,4px) rotate(-13deg)}
+.hxstk:hover .c1,.hxstk:focus-visible .c1{transform:translate(12px,0) rotate(9deg)}
+.hxstk:hover .c2,.hxstk:focus-visible .c2{transform:translateY(-6px)}
+.hxfold{align-self:center;display:inline-flex;align-items:center;gap:4px;margin-top:30px;padding:8px 14px 8px 10px;border-radius:999px;background:rgb(0 0 0 / .24);border:1px solid rgb(255 255 255 / .16);font-size:13px;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);transition:background .2s}
+.hxfold:hover{background:rgb(0 0 0 / .36)}.hxfold svg{width:16px;height:16px}
+/* the box set: live albums, remixes, compilations. Opens into its own era */
+.hxbox{width:136px}
+.hxbx{display:flex;gap:4px;width:136px;height:136px;box-sizing:border-box;padding:12px;border-radius:6px;background:#1a1a1a;box-shadow:0 12px 26px rgb(0 0 0 / .38),inset 0 0 0 1px rgb(255 255 255 / .08);transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.hxbx i{flex:1;border-radius:2px;background:var(--c);transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.hxbox:hover .hxbx i,.hxbox:focus-visible .hxbx i{transform:translateY(-6px)}
+.hxbox:hover .hxbx i:nth-child(even){transform:translateY(-10px)}
+.hxbox[aria-expanded="true"] .hxbx{transform:translateY(-4px);box-shadow:0 0 0 2px rgb(255 255 255 / .7),0 16px 30px rgb(0 0 0 / .4)}
+.hxbox[aria-expanded="true"] .hxbx i{transform:translateY(-12px)}
+.hxera-box .hxer>.hxbox{margin-right:16px}
+@media (prefers-reduced-motion:no-preference){
+  .hxsl.hxin{animation:hxFan .5s cubic-bezier(.2,.8,.2,1) calc(var(--i,0)*55ms) backwards}
+  .hxstk.hxin{animation:hxFan .45s cubic-bezier(.2,.8,.2,1) backwards}}
+@keyframes hxFan{from{opacity:0;transform:translateX(-46px) scale(.85) rotate(-6deg)}}
+.hxrail{display:none}
+@media (max-width:760px){
+  .hxrow.eras{flex-wrap:nowrap;overflow-x:auto;gap:22px;scroll-snap-type:x mandatory}
+  .hxera{scroll-snap-align:start;padding-right:30px}
+  .hxer{gap:40px}
+  .hxer>.hxsl:not(.sg):not(.hxadd){margin-right:10px}
+  .hxstk{width:90px;padding-top:34px}.hxsc{width:82px;height:82px}
+  .hxbox,.hxbx{width:116px}.hxbx{height:116px}
+  .hxrail{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin:-4px 0 12px}
+  .hxrail::-webkit-scrollbar{display:none}
+  .hxrail button{flex:none;background:none;border:0;padding:6px 7px;font:500 12px/1 var(--body);color:rgb(255 255 255 / .6);border-bottom:2px solid transparent;cursor:pointer;transition:color .2s,border-color .2s}
+  .hxrail button.on{color:#fff;border-bottom-color:#fff}}
 /* SINGLES ARE 7-INCH: a single's sleeve and record are about 70% of an album's, standing on the same shelf line (bottoms
    lined up, so every title sits on one row). Same pull-out, tuck and glow as the albums, just scaled down. */
 .hxsl.sg{width:96px;padding-top:40px}
@@ -2882,6 +2930,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-aj', note:'ERAS: in Default or Oldest-first order with All showing, an artist\u2019s Releases are now grouped into eras. Each album starts one, and the singles and EPs that came off it (matched by their songs, not their dates) stand next to it. Singles and EPs that are on no album stand between eras, and three or more of those singles in a row fold into a stack of 7-inches you tap to fan out. Live albums, remix albums and compilations go into a box set at the end that opens into its own era. On a PC the eras wrap onto as many shelves as they need instead of scrolling sideways, and while an album is open its era stays lit while the rest step back. On a phone the eras swipe one at a time, with a rail of years above to jump. Artists with fewer than two albums, other sort orders and the kind filters keep the plain shelf.'},
   {v:'2026.11.19-ai', note:'ARTIST STATS LINE: the line under an artist\u2019s name now reads like \u201cAlbums 8.4 \u00b7 Songs 7.6 \u00b7 28 releases\u201d: your average album rating next to your average song rating (both out of 10), then the release count. The heard count is no longer repeated there, since the progress record already shows it.'},
   {v:'2026.11.19-ah', note:'SINGLES AS 7-INCH RECORDS, PLAY OPENS THE SPOTIFY APP, RATING FIX: singles in the Releases row are now about 70% the size of albums, like a real 7-inch, standing on the same line so all the titles still sit in one row; they pull out, open and glow just like albums. On a PC the Play button now opens the artist in the Spotify desktop app (the first time, your browser may ask to allow it; if the app isn\u2019t installed, the web player opens instead). The average under the artist name was being halved (it showed out of 5); it now reads out of 10 like everywhere else.'},
   {v:'2026.11.19-ag', note:'PROGRESS RECORD MOVED UP, SMOOTHER MENU EXIT, CLEANER GROOVES: your progress record no longer sits in line with the albums. It is a bit bigger and has its own spot above Releases (with Your progress and your heard count beside it), and the Releases row moves down under it. Picking an artist from the full artist menu no longer makes the page pop up out of nowhere: every other sleeve dips away (nearest first), the menu fades to show the artist page underneath, and the sleeve you picked holds still while its record slides out and flies onto the progress turntable, then slips away itself. The new page eases in piece by piece (heard count, buttons, progress record, then the albums one after another). The lit grooves on every record (Releases row, open album, Fans also spin, album cards) are now drawn with soft edges, so they are smooth circles instead of lumpy, jagged rings, and the fine grooves on the big records no longer shimmer.'},
@@ -8266,6 +8315,7 @@ function spOpenUrl(a){return a.spid?'https://open.spotify.com/artist/'+encodeURI
    time it scrolls in, not on every redraw. */
 let hxIO=null;const HXSEEN=new Set();
 function hxObserve(){
+  hxRailSync();
   if(!('IntersectionObserver' in window)||!matchMedia('(hover:none),(max-width:760px)').matches)return;
   if(!hxIO)hxIO=new IntersectionObserver(es=>{for(const e of es){const t=e.target,k=t.dataset.g;if(!k)continue;
     if(e.isIntersecting&&!HXSEEN.has(k)){HXSEEN.add(k);const v=t.querySelector('.vgr');if(v&&v.querySelector('i.on')){v.classList.remove('rip');void v.offsetWidth;v.classList.add('rip');clearTimeout(v._t);v._t=setTimeout(()=>v.classList.remove('rip'),2200)}}
@@ -8275,6 +8325,65 @@ function hxObserve(){
    lit for the songs you have heard, faint for ones carried over from an earlier listen */
 function hxRings(g){const rs=slRings(g),R=rs.length;
   return rs.map((st,j)=>`<i class="${st===2?'on':st===1?'on fade':''}" style="--d:${(94-j*(50/Math.max(R,1))).toFixed(1)}%;--o:${R-1-j}"></i>`).join('')}
+/* ERAS: in release order (Default or Oldest first, all kinds showing), the Releases row is grouped into eras. Each studio
+   album starts one; the singles and EPs that come off it (matched by their songs, not their dates) stand next to it.
+   Singles and EPs that are on no album stand on their own between eras, and three or more of those singles in a row fold
+   into a stack of 7-inches you tap to fan out. Live albums, remix albums, compilations and the rest go into one box set
+   at the end that opens into its own era. An artist with fewer than two albums gets the plain shelf. */
+function hxArt(g){const sArt=g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-250':''),
+  kind=/single/i.test(g.kind||'')?'Single':/^ep$/i.test(g.kind||'')?'EP':/^studio album$/i.test(g.kind||'')?'Album':(g.kind||'');
+  return {sArt,col:acolFor(g.id,sArt,g),kind}}
+function hxSongKey(i){return String(songShow(i).t||i.title||'').toLowerCase().replace(/\s*[\(\[][^\)\]]*[\)\]]/g,'').replace(/\s+[-–—]\s+.*$/,'').replace(/[^a-z0-9À-￿]+/g,'')}
+function hxErasOn(a,rl){
+  if(relKind(a)!=='all'||!['def','old'].includes(relSort()))return null;
+  const nAlb=rl.filter(g=>g.kind==='Studio album').length;if(nAlb<2)return null;
+  const ix=new Map(a.groups.map((g,i)=>[g,i])),yr=g=>{const y=parseInt(g.year,10);return isNaN(y)?1e9:y};
+  const L=rl.slice().sort((x,y)=>yr(x)-yr(y)||ix.get(x)-ix.get(y));
+  const albs=L.filter(g=>g.kind==='Studio album'),keys=new Map(albs.map(g=>[g,new Set(g.items.map(hxSongKey).filter(Boolean))]));
+  const home=new Map();
+  for(const g of L){if(g.kind!=='Single'&&g.kind!=='EP')continue;
+    const ks=[...new Set(g.items.map(hxSongKey).filter(Boolean))];if(!ks.length)continue;
+    let best=null,bn=0;
+    for(const al of albs){const n=ks.filter(k=>keys.get(al).has(k)).length;
+      if(!n||(g.kind==='EP'&&n<Math.ceil(ks.length/2)))continue;
+      if(n>bn||(n===bn&&best&&Math.abs(yr(al)-yr(g))<Math.abs(yr(best)-yr(g)))){best=al;bn=n}}
+    if(best)home.set(g,best)}
+  const extras=L.filter(g=>!['Studio album','EP','Single'].includes(g.kind)),boxed=extras.length>=2?new Set(extras):new Set();
+  const out=[];let loose=null;
+  for(const g of L){if(boxed.has(g)||home.has(g))continue;
+    if(g.kind==='Studio album'){loose=null;out.push({t:'era',a:g,items:[g,...L.filter(x=>home.get(x)===g)]})}
+    else{if(!loose){loose={t:'loose',items:[]};out.push(loose)}loose.items.push(g)}}
+  if(boxed.size)out.push({t:'box',items:[...boxed]});
+  return out}
+function hxYears(items){const ys=items.map(g=>parseInt(g.year,10)).filter(y=>!isNaN(y));if(!ys.length)return '';const lo=Math.min(...ys),hi=Math.max(...ys);return lo===hi?String(lo):lo+'–'+hi}
+function hxEras(a,rl,sleeve,og,NEW){
+  const E=hxErasOn(a,rl);if(!E)return rl.map(g=>sleeve(g)).join('');
+  const open=k=>UI.hxOpen&&UI.hxOpen.aid===a.id&&UI.hxOpen.k.includes(k),has=(items)=>items.some(g=>String(g.id)===og);
+  let h='',ei=0;
+  for(const e of E){const ix=ei++;
+    if(e.t==='era'){h+=`<div class="hxera" data-era="${ix}"><div class="hxeh">${esc(e.a.title)}${e.a.year?' · '+esc(e.a.year):''}</div><div class="hxer">${e.items.map(g=>sleeve(g)).join('')}</div></div>`;continue}
+    if(e.t==='box'){const k='box',o=open(k)||has(e.items),sp=e.items.slice(0,6).map(g=>`<i style="--c:${esc(hxArt(g).col)}"></i>`).join('');
+      h+=`<div class="hxera hxera-box${o?' open':''}" data-era="${ix}"><div class="hxeh">Live, remixes and extras</div><div class="hxer"><button class="hxbox" data-act="hxfold" data-k="${k}" aria-expanded="${o}" aria-label="${o?'Close':'Open'} the box set: ${e.items.length} releases"><span class="hxbx" aria-hidden="true">${sp}</span><span class="hxt">Box set</span><span class="hxy">${e.items.length} releases</span></button>${o?e.items.map((g,i)=>sleeve(g,NEW===k?i:null)).join(''):''}</div></div>`;continue}
+    /* loose singles and EPs between eras: runs of three or more singles fold into a stack */
+    let inner='',run=[];
+    const flush=()=>{if(!run.length)return;
+      if(run.length<3){inner+=run.map(g=>sleeve(g)).join('')}
+      else{const k='s'+run[0].id,o=open(k)||has(run);
+        if(o)inner+=run.map((g,i)=>sleeve(g,NEW===k?i:null)).join('')+`<button class="hxfold" data-act="hxfold" data-k="${esc(k)}" aria-label="Stack these ${run.length} singles back up"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>Stack</button>`;
+        else{const cv=run.slice(-3).map((g,i)=>{const r=hxArt(g);return `<i class="c${i}" style="--c:${esc(r.col)}">${r.sArt?`<img src="${esc(r.sArt)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</i>`}).join('');
+          inner+=`<button class="hxstk${NEW==='x'+k?' hxin':''}" data-act="hxfold" data-k="${esc(k)}" aria-expanded="false" aria-label="Fan out ${run.length} singles"><span class="hxsc" aria-hidden="true">${cv}</span><span class="hxt">${run.length} singles</span><span class="hxy">${esc(hxYears(run))}</span></button>`}}
+      run=[]};
+    for(const g of e.items){if(g.kind==='Single')run.push(g);else{flush();inner+=sleeve(g)}}
+    flush();
+    h+=`<div class="hxera loose" data-era="${ix}"><div class="hxeh">${esc(hxYears(e.items))||'&nbsp;'}</div><div class="hxer">${inner}</div></div>`}
+  return h}
+/* on a phone the eras scroll sideways one at a time; a rail of years above jumps to one */
+function hxRail(E){const ys=E.map((e,i)=>{const y=e.t==='era'?parseInt(e.a.year,10):e.t==='box'?NaN:parseInt(hxYears(e.items),10);return [i,e.t==='box'?'Box':isNaN(y)?'•':'’'+String(y).slice(-2)]});
+  return `<div class="hxrail" role="group" aria-label="Jump to an era">${ys.map(([i,t],n)=>`<button type="button" data-act="hxrail" data-i="${i}"${n===0?' class="on"':''}>${esc(t)}</button>`).join('')}</div>`}
+function hxRailSync(){const row=document.querySelector('.hxrow.eras'),rail=document.querySelector('.hxrail');if(!row||!rail||row._rs)return;row._rs=1;
+  let t=0;row.addEventListener('scroll',()=>{cancelAnimationFrame(t);t=requestAnimationFrame(()=>{const x=row.getBoundingClientRect().left+24;let cur=0;
+    row.querySelectorAll('.hxera[data-era]').forEach(e=>{if(e.getBoundingClientRect().left<=x)cur=e.dataset.era});
+    rail.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.i===String(cur)))})},{passive:true})}
 let HXSINK=null;const HXHINT={aid:null,off:false};
 function heroX(a,all,done,rated,p,phUrl,more){
   /* the line under the name: your album average next to your song average (both out of 10), then how many releases.
@@ -8283,9 +8392,10 @@ function heroX(a,all,done,rated,p,phUrl,more){
   const avg=mean(all.map(i=>rating(i.id)).filter(Boolean)),aAvg=mean(a.groups.map(g=>rating(g.id)).filter(Boolean)),nRel=a.groups.length;
   const sub=[aAvg?'Albums '+aAvg:'',avg?'Songs '+avg:'',nRel+' release'+(nRel===1?'':'s')].filter(Boolean).join(' · ');
   const og=gfOpenId(a),rl=relList(a).filter(g=>UI.filter!=='open'||String(g.id)===og||g.items.some(i=>!isDone(i.id)));
-  const rel=rl.map(g=>{const sArt=g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-250':''),
-      col=acolFor(g.id,sArt,g),kind=/single/i.test(g.kind||'')?'Single':/^ep$/i.test(g.kind||'')?'EP':/^studio album$/i.test(g.kind||'')?'Album':(g.kind||'');
-    const on=String(g.id)===og;return `<button class="hxsl${kind==='Single'?' sg':''}${on?' on':''}${on&&HXSINK===String(g.id)?' sink':''}" data-act="hjump" data-g="${esc(g.id)}" style="--c:${esc(col)}" aria-pressed="${on}" aria-label="${on?'Close':'Open'} ${esc(g.title)}"><span class="hxv vgr" aria-hidden="true">${hxRings(g)}</span><span class="hxc" aria-hidden="true">${sArt?`<img src="${esc(sArt)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span><span class="hxt">${esc(g.title)}</span><span class="hxy">${esc([kind,g.year].filter(Boolean).join(' · '))}</span></button>`}).join('');
+  const NEW=UI.hxNew;UI.hxNew=null;
+  const sleeve=(g,ni)=>{const {sArt,col,kind}=hxArt(g);
+    const on=String(g.id)===og;return `<button class="hxsl${ni!=null?' hxin':''}${kind==='Single'?' sg':''}${on?' on':''}${on&&HXSINK===String(g.id)?' sink':''}" data-act="hjump" data-g="${esc(g.id)}" style="--c:${esc(col)}${ni!=null?';--i:'+ni:''}" aria-pressed="${on}" aria-label="${on?'Close':'Open'} ${esc(g.title)}"><span class="hxv vgr" aria-hidden="true">${hxRings(g)}</span><span class="hxc" aria-hidden="true">${sArt?`<img src="${esc(sArt)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span><span class="hxt">${esc(g.title)}</span><span class="hxy">${esc([kind,g.year].filter(Boolean).join(' · '))}</span></button>`};
+  const eras=hxErasOn(a,rl),rel=eras?hxEras(a,rl,sleeve,og,NEW):rl.map(g=>sleeve(g)).join('');
   const ico={back:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
     play:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.8v14.4L19 12z"/></svg>',
     ear:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="6.5" rx="1.6"/><rect x="16.5" y="14" width="4.5" height="6.5" rx="1.6"/></svg>',
@@ -8309,9 +8419,9 @@ function heroX(a,all,done,rated,p,phUrl,more){
         ${panel}
       </div>
     </div>
-    <div class="hxrel"><div class="hxprog"><div class="hrec"><div class="hring" style="--p:${p}"><div class="hdisc"><div class="hspin"></div><div class="hlab"><b${p>=100?' class="s"':''}>${p}%</b><span>heard</span></div></div></div>${HARM}</div><div class="hxpt"><span class="hxt">Your progress</span><span class="hxy">${done} of ${all.length} songs heard${p>=100?' \u00b7 finished':''}</span></div></div><div class="hxrh"><h3 class="hxlbl">Releases</h3>${relBar(a)}</div><div class="hxrow">
+    <div class="hxrel"><div class="hxprog"><div class="hrec"><div class="hring" style="--p:${p}"><div class="hdisc"><div class="hspin"></div><div class="hlab"><b${p>=100?' class="s"':''}>${p}%</b><span>heard</span></div></div></div>${HARM}</div><div class="hxpt"><span class="hxt">Your progress</span><span class="hxy">${done} of ${all.length} songs heard${p>=100?' \u00b7 finished':''}</span></div></div><div class="hxrh"><h3 class="hxlbl">Releases</h3>${relBar(a)}</div>${eras?hxRail(eras):''}<div class="hxrow${eras?' eras':''}">
       ${rel||`<p class="hxnone">${UI.filter==='open'?'Nothing left to hear here.':'No releases of that kind here.'}</p>`}
-      <button class="hxsl hxadd" data-sxk="add" data-act="reladd" data-a="${esc(a.id)}" aria-expanded="${UI.relAdd===a.id}" aria-label="Add a release by hand"><span class="hxc" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><span class="hxt">Add a release</span><span class="hxy">By hand</span></button>
+      ${eras?'<div class="hxera hxera-add"><div class="hxeh">&nbsp;</div><div class="hxer">':''}<button class="hxsl hxadd" data-sxk="add" data-act="reladd" data-a="${esc(a.id)}" aria-expanded="${UI.relAdd===a.id}" aria-label="Add a release by hand"><span class="hxc" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span><span class="hxt">Add a release</span><span class="hxy">By hand</span></button>${eras?'</div></div>':''}
     </div><p class="hxhint${og?' off':''}${hintSeen?' seen':''}"${og?' aria-hidden="true"':''}>Tap a record to open it</p></div>
     </div>
     <div class="hxmore">${more||''}</div>
@@ -9658,8 +9768,8 @@ function gfCollapse(el,ms){
 /* bring a freshly opened album into view: keep the Releases row just under the top bar with the sleeve opening below it */
 function gfShow(el){if(!el)return;
   UI.gfS0=scrollY;   /* where the page was, so closing can ease back to it */
-  const on=document.querySelector('.hxsl.on'),rw=on&&on.parentNode;   /* slide the Releases row so the open record is showing */
-  if(on&&rw){const L=on.offsetLeft-rw.offsetLeft,R=L+on.offsetWidth+60;if(L<rw.scrollLeft||R>rw.scrollLeft+rw.clientWidth)rw.scrollTo({left:Math.max(0,L-24),behavior:'auto'})}
+  const on=document.querySelector('.hxsl.on'),rw=on&&on.closest('.hxrow');   /* slide the Releases row so the open record is showing (on a PC the Eras shelf wraps instead, so there is nothing to slide) */
+  if(on&&rw&&rw.scrollWidth>rw.clientWidth+2){const L=on.getBoundingClientRect().left-rw.getBoundingClientRect().left+rw.scrollLeft,R=L+on.offsetWidth+60;if(L<rw.scrollLeft||R>rw.scrollLeft+rw.clientWidth)rw.scrollTo({left:Math.max(0,L-24),behavior:'auto'})}
   const r=el.getBoundingClientRect();
   if(r.top>60&&r.top<innerHeight*.5)return;
   const row=document.querySelector('.hx .hxrel'),rt=row?row.getBoundingClientRect().top:r.top;
@@ -9854,6 +9964,12 @@ document.addEventListener('click',ev=>{
   else if(act==='hinfo'){if(UI.hinfo){hinfoClose();return}UI.hinfo=true;UI.hinfoIn=true;UI.hinfoOut=false;UI.hcPop='hinfo'}
   else if(act==='hjump'){if(UI.alb&&UI.alb.g===String(b.dataset.g)&&document.querySelector('.group.sleeve.gf')){gfClose();return}UI.rOpen=null;UI.toAlb=b.dataset.g}
   else if(act==='gfclose'){gfClose();return}
+  else if(act==='hxfold'){const aid=(document.querySelector('.hero[data-aid]')||{}).dataset?.aid,k=b.dataset.k;if(!aid||!k)return;
+    const cur=UI.hxOpen&&UI.hxOpen.aid===aid?UI.hxOpen.k:[],o=cur.includes(k);
+    if(o&&UI.alb&&b.closest('.hxera')&&b.closest('.hxera').querySelector('.hxsl.on')){gfClose()}
+    UI.hxOpen={aid,k:o?cur.filter(x=>x!==k):[...cur,k]};UI.hxNew=o?'x'+k:k;render();return}
+  else if(act==='hxrail'){const row=document.querySelector('.hxrow.eras'),e=row&&row.querySelector('.hxera[data-era="'+b.dataset.i+'"]');
+    if(e)row.scrollTo({left:e.getBoundingClientRect().left-row.getBoundingClientRect().left+row.scrollLeft-(parseFloat(getComputedStyle(row).paddingLeft)||0),behavior:noMotion()?'auto':'smooth'});return}
   else if(act==='hback'){UI.libOpen=true;UI.libAnim=true}
   else if(act==='phtog'){try{localStorage.setItem('pb_photohero',phOn()?'0':'1')}catch(e){}}
   else if(act==='tourgo'){UI.view=null;UI.tab='music';UI.libOpen=false;setTimeout(()=>tourOpen(0),120)}
