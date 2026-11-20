@@ -1499,6 +1499,8 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .hx .rsort option{color:#111;background:#fff}
 .hxnone{align-self:center;margin:0;padding:40px 0;font-size:15px;color:rgb(255 255 255 / .8)}
 .hxhint{margin:16px 0 0;font-size:13px;letter-spacing:.01em;color:rgb(255 255 255 / .72);animation:hxIn .4s ease .3s backwards}
+/* while an album is open the hint keeps its room (only hidden): the Releases row sits at the bottom of the header, so taking the line out pushed the row down, and bringing it back made the whole row jump up at the end of closing */
+.hxhint.off{visibility:hidden;animation:none}
 /* the open record in the row: lifted, ringed, its record pulled further out */
 .hxsl .hxc{transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s}
 .hxsl.on{--hxg:color-mix(in srgb,var(--c) 38%,#fff)}
@@ -2668,6 +2670,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-z', note:'CLOSING AN ALBUM: THE RELEASES ROW NO LONGER JUMPS AT THE END (found from your screen recording): the \u201cTap a record to open it\u201d line under the row was taken out while an album was open. The row sits at the bottom of the artist header, so it dropped by that line\u2019s height when an album opened, then jumped back up in one frame when closing finished. The line now keeps its space while hidden, so the row never moves. The Spotify / Apple Music photo switch also no longer replays its fade-in on every redraw.'},
   {v:'2026.11.19-y', note:'CLOSING AN ALBUM: THE PAGE NO LONGER SNAPS AT THE END: the snap was the artist\u2019s color background, not the cover. Closing an album rebuilds the artist page, and the rebuilt background started its slowly turning color pools over from the beginning, so the whole page behind everything lurched into a new position the moment the album finished closing (opening one did the same, hidden under the flying cover). The colors now carry on from exactly where they were through any redraw of the same artist, including ratings and background syncs.'},
   {v:'2026.11.19-x', note:'Closing an album: the cover now lands exactly on the sleeve (it was aiming at the sunk size, so it ended a few pixels off and then jumped), with a gentler lift so the hand-off is seamless.'},
   {v:'2026.11.19-w', note:'CLOSING AN ALBUM: NO MORE SNAP AT THE VERY END: the last step of closing swapped the flying cover for the real sleeve underneath, and the two didn\u2019t match (the cover was a touch darker and its record looked different; the sleeve\u2019s drop shadow came back all at once; a page that was scrolled sideways in the Releases row jumped back to the start; the page below shifted by a pixel). The cover now fades out over the sleeve as it lands, the sleeve eases back to exactly how a resting sleeve looks (shadow, record and all), the row keeps its scroll position, and the page height is matched to the pixel, so the redraw at the end changes nothing you can see.'},
@@ -6324,7 +6327,8 @@ function render(){
   else keepImgs(()=>{const top=topHTML();if(!paneSwap(top))renderMain(top)});   /* the top bar is built once per draw: building it clears the one-shot animation flags of the sheets in it */
   if(gfS){const g=document.querySelector('.group.sleeve.gf[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(gfS.id):gfS.id)+'"]');if(g){const r=g.querySelector('.gf-rs'),l=g.querySelector('.gf-ls');if(r)r.scrollTop=gfS.r;if(l)l.scrollTop=gfS.l}}
   if(mT){const nh=document.querySelector('.hero[data-aid]'),nm=nh&&nh.dataset.aid===mT.aid&&nh.querySelector('.hmesh:not(.hghost)');
-    if(nm){const ns=nm.querySelectorAll('.fl,.fb');if(ns.length===mT.d.length)ns.forEach((n,i)=>{if(mT.d[i]!=null)n.style.animationDelay=mT.d[i].toFixed(0)+'ms'})}}
+    if(nm){const ns=nm.querySelectorAll('.fl,.fb');if(ns.length===mT.d.length)ns.forEach((n,i)=>{if(mT.d[i]!=null)n.style.animationDelay=mT.d[i].toFixed(0)+'ms'})}
+    if(nh&&nh.dataset.aid===mT.aid)nh.querySelectorAll('.hsrc').forEach(e=>e.style.animation='none')}   /* the photo toggle fades in once per artist, not on every redraw */
   slObserve();slPulseNow();UI.rAnim=null;accAfter();pfFit();
   if(vlT!=null&&vPrev===vk){const el=document.querySelector('.vl-spin'),an=el&&el.getAnimations&&el.getAnimations()[0];if(an)an.currentTime=vlT}
   if(vPrev&&vPrev!==vk&&!noMotion())pageIn(Math.sign((VORD[vk]??0)-(VORD[vPrev]??0)));
@@ -8058,7 +8062,7 @@ function heroX(a,all,done,rated,p,phUrl,more){
     <div class="hxrel"><div class="hxrh"><h3 class="hxlbl">Releases</h3>${relBar(a)}</div><div class="hxrow">
       <div class="hxprog"><div class="hrec"><div class="hring" style="--p:${p}"><div class="hdisc"><div class="hspin"></div><div class="hlab"><b${p>=100?' class="s"':''}>${p}%</b><span>heard</span></div></div></div>${HARM}</div><span class="hxt">Your progress</span><span class="hxy">${done} of ${all.length} songs</span></div>
       ${rel||`<p class="hxnone">${UI.filter==='open'?'Nothing left to hear here.':'No releases of that kind here.'}</p>`}
-    </div>${og?'':`<p class="hxhint">Tap a record to open it</p>`}</div>
+    </div><p class="hxhint${og?' off':''}"${og?' aria-hidden="true"':''}>Tap a record to open it</p></div>
     </div>
     <div class="hxmore">${more||''}</div>
   </div>`}
@@ -9249,7 +9253,7 @@ function gfCollapse(el,ms){
   const cs=getComputedStyle(el),f=v=>parseFloat(v)||0,h=el.offsetHeight,mt=f(cs.marginTop),mb=f(cs.marginBottom),pt=f(cs.paddingTop),pb=f(cs.paddingBottom);
   /* once the album is closed the "Tap a record to open it" hint comes back under the row, so leave exactly its room behind: the page then doesn't shift when it reappears */
   let extra=0;const rel=document.querySelector('.hx .hxrel');
-  if(rel){const pr=document.createElement('p');pr.className='hxhint';pr.textContent='Tap a record to open it';pr.style.cssText='position:absolute;visibility:hidden;animation:none;left:0;right:0';rel.appendChild(pr);
+  if(rel&&!rel.querySelector('.hxhint')){const pr=document.createElement('p');pr.className='hxhint';pr.textContent='Tap a record to open it';pr.style.cssText='position:absolute;visibility:hidden;animation:none;left:0;right:0';rel.appendChild(pr);
     extra=pr.getBoundingClientRect().height+f(getComputedStyle(pr).marginTop)-f(getComputedStyle(el.parentElement).rowGap);pr.remove()}
   const hf=Math.max(extra,0),mf=Math.min(extra,0);
   const y0=scrollY,doc=document.documentElement,M1=Math.max(0,doc.scrollHeight-(h+mt+mb)+extra-innerHeight);
