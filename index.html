@@ -1528,6 +1528,24 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 @media (max-width:760px){.hx .hxrow{padding-left:var(--hxpad);margin-left:calc(-1 * var(--hxpad))}.hxsl.on.up .hxv{left:44px}}
 .hx .group.sleeve.gf{position:relative;z-index:2}   /* the jacket (and the cover flying out of the row) sits above the row's sleeves, never behind them */
 .hxsl.on .hxv{left:84px}
+/* SINGLES ARE 7-INCH: a single's sleeve and record are about 70% of an album's, standing on the same shelf line (bottoms
+   lined up, so every title sits on one row). Same pull-out, tuck and glow as the albums, just scaled down. */
+.hxsl.sg{width:96px;padding-top:40px}
+.hxsl.sg .hxc{width:96px;height:96px;font-size:38px;border-radius:4px}
+.hxsl.sg .hxv{top:44px;width:88px;height:88px;left:35px}
+.hxsl.sg:hover .hxv,.hxsl.sg:focus-visible .hxv,.hxsl.sg.on.up:hover .hxv,.hxsl.sg.on.up:focus-visible .hxv{left:51px}
+.hxsl.sg.on:not(.up) .hxv{left:4px}
+.hxsl.sg.on.up .hxv{left:35px}
+.hxsl.sg .hxt{width:128px;max-width:128px}
+@media (prefers-reduced-motion:no-preference){.hxsl.sg.on .hxv{animation-name:hxTuckS}}
+@keyframes hxTuckS{from{left:35px}}
+@media (max-width:760px){
+  .hxsl.sg{width:82px;padding-top:34px}
+  .hxsl.sg .hxc{width:82px;height:82px;font-size:32px}
+  .hxsl.sg .hxv{top:38px;width:74px;height:74px;left:31px}
+  .hxsl.sg.on.up .hxv{left:31px}
+  .hxsl.sg .hxt{width:110px;max-width:110px}
+  @keyframes hxTuckS{from{left:31px}}}
 .hx .hxrow{padding:26px var(--hxpad) 26px 22px;margin:-22px calc(-1 * var(--hxpad)) -20px -22px}   /* room around the row so a sleeve's glow is not cut off */
 .hxmore{position:relative;text-align:left;display:flex;flex-direction:column;gap:22px;padding:8px var(--hxpad) calc(64px + var(--tail,0px));color:var(--ink)}
 .hx .hxmore .simbox{margin:0;background:color-mix(in srgb,var(--surface) 86%,transparent);border-color:rgb(255 255 255 / .12);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
@@ -2864,6 +2882,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-ah', note:'SINGLES AS 7-INCH RECORDS, PLAY OPENS THE SPOTIFY APP, RATING FIX: singles in the Releases row are now about 70% the size of albums, like a real 7-inch, standing on the same line so all the titles still sit in one row; they pull out, open and glow just like albums. On a PC the Play button now opens the artist in the Spotify desktop app (the first time, your browser may ask to allow it; if the app isn\u2019t installed, the web player opens instead). The average under the artist name was being halved (it showed out of 5); it now reads out of 10 like everywhere else.'},
   {v:'2026.11.19-ag', note:'PROGRESS RECORD MOVED UP, SMOOTHER MENU EXIT, CLEANER GROOVES: your progress record no longer sits in line with the albums. It is a bit bigger and has its own spot above Releases (with Your progress and your heard count beside it), and the Releases row moves down under it. Picking an artist from the full artist menu no longer makes the page pop up out of nowhere: every other sleeve dips away (nearest first), the menu fades to show the artist page underneath, and the sleeve you picked holds still while its record slides out and flies onto the progress turntable, then slips away itself. The new page eases in piece by piece (heard count, buttons, progress record, then the albums one after another). The lit grooves on every record (Releases row, open album, Fans also spin, album cards) are now drawn with soft edges, so they are smooth circles instead of lumpy, jagged rings, and the fine grooves on the big records no longer shimmer.'},
   {v:'2026.11.19-af', note:'ARTIST PAGE POLISH (from your screen recording): Still to hear now animates: the button gives a little press and the releases that stay glide into place while the rest drop out. Details (ⓘ) is now a popover that grows out of its button and folds back into it when you close it (or tap anywhere else, or press Escape) instead of pushing the Releases row down. Closing an album: the page holds still while the cover flies home, so it lands right on its sleeve, and only then does the space close up and the page ease back. The open album’s inside fades as the cover swings over it, so no buttons peek out beside a half-shut cover; its sleeve in the row no longer pops up and sinks again whenever the page redraws; the records in the open jacket are no longer cut off flat at the bottom; and Listen again sits under the album name instead of on top of long titles. “Tap a record to open it” eases in only when it first shows or comes back after an album closes, not on every redraw. The sort menu is now a glass pill with a matching menu instead of the browser’s white list, and a new sort order dips the records out and brings them back one after another instead of sliding them through each other. Fans also spin: no more box behind the row, the grooves hold still while the label spins so they stay crisp (softer grooves on every small record too), the arrows and mouse wheel move by whole records so none is left half cut off, and a redraw no longer throws the row back to the start or nudges the page. Also: the first record no longer shifts sideways between All and a filter, release details are easier to read, the artist colors always fill the window (no dark strip at the bottom of a short page), the ratings line uses one font, and on a phone the record that landed on top of an open album’s name is tucked away.'},
   {v:'2026.11.19-ae', note:'FANS ALSO SPIN, MATCH ON THE RECORD: each record now shows how close a match it is in its grooves, lit up in the label color from the rim inward (a 100% match is fully lit), filling in as the row opens, and it slowly spins, closer matches a little faster. Artists not in your log now get their Apple Music photo on the label, looked up once each and saved, fading in as they arrive (yours only, like the artist header photo). Show/Hide now sits right next to the heading, and the closed subtitle is just \u201cSimilar artists\u201d.'},
@@ -8226,6 +8245,20 @@ function tdPaint(){
       +(clear?';--tg:color-mix(in srgb,var(--ink) 16%,transparent);background-color:color-mix(in srgb,var(--ink) 6%,transparent);box-shadow:inset 0 0 0 1.5px rgb(255 255 255 / .4),0 6px 14px rgb(0 0 0 / .25)':'')+'}'}}
 /* artist photo header: on by default, turned off per device in Settings > Artist page */
 function phOn(){try{return localStorage.getItem('pb_photohero')!=='0'}catch(e){return true}}
+/* PLAY OPENS THE SPOTIFY APP ON A PC: a spotify: link hands the artist straight to the desktop app. If the app never takes
+   focus (not installed, or the browser's first-time "Open Spotify?" question is still up) the web player opens after a
+   moment instead. Once the app has answered on this device, the web fallback is skipped. Phones keep the normal link,
+   which already opens the Spotify app there. Ctrl/middle-click still opens the web page. */
+function spAppUri(a){return a.spid?'spotify:artist:'+a.spid:'spotify:search:'+encodeURIComponent(a.name||'')}
+function spApp(e,el){
+  if(e.button||e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return true;
+  if(!matchMedia('(hover:hover) and (pointer:fine)').matches||!el.dataset.uri)return true;
+  let ok=false;try{ok=localStorage.getItem('pb_spapp')==='1'}catch(x){}
+  let gone=false;const left=()=>{gone=true;try{localStorage.setItem('pb_spapp','1')}catch(x){}};
+  addEventListener('blur',left,{once:true});document.addEventListener('visibilitychange',left,{once:true});
+  location.href=el.dataset.uri;
+  if(!ok)setTimeout(()=>{removeEventListener('blur',left);if(!gone&&document.visibilityState==='visible'&&document.hasFocus())window.open(el.href,'_blank','noopener')},2600);
+  return false}
 function spOpenUrl(a){return a.spid?'https://open.spotify.com/artist/'+encodeURIComponent(a.spid):'https://open.spotify.com/search/'+encodeURIComponent(a.name||'')}
 /* the edge-to-edge photo header (see the ARTIST PHOTO HERO styles) */
 /* On a phone (no hover) the row's records ripple as they come onto the screen instead. Each one ripples once per
@@ -8243,12 +8276,12 @@ function hxRings(g){const rs=slRings(g),R=rs.length;
   return rs.map((st,j)=>`<i class="${st===2?'on':st===1?'on fade':''}" style="--d:${(94-j*(50/Math.max(R,1))).toFixed(1)}%;--o:${R-1-j}"></i>`).join('')}
 let HXSINK=null;const HXHINT={aid:null,off:false};
 function heroX(a,all,done,rated,p,phUrl,more){
-  const rs=all.map(i=>rating(i.id)).filter(Boolean),avg=rs.length?(rs.reduce((x,y)=>x+y,0)/rs.length/2).toFixed(1):'';
+  const rs=all.map(i=>rating(i.id)).filter(Boolean),avg=rs.length?(rs.reduce((x,y)=>x+y,0)/rs.length).toFixed(1):'';   /* song ratings are already out of 10 (this used to halve them) */
   const sub=[done+' of '+all.length+' heard',rated?rated+' rated':'',avg?'avg '+avg:''].filter(Boolean).join(' · ');
   const og=gfOpenId(a),rl=relList(a).filter(g=>UI.filter!=='open'||String(g.id)===og||g.items.some(i=>!isDone(i.id)));
   const rel=rl.map(g=>{const sArt=g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-250':''),
       col=acolFor(g.id,sArt,g),kind=/single/i.test(g.kind||'')?'Single':/^ep$/i.test(g.kind||'')?'EP':/^studio album$/i.test(g.kind||'')?'Album':(g.kind||'');
-    const on=String(g.id)===og;return `<button class="hxsl${on?' on':''}${on&&HXSINK===String(g.id)?' sink':''}" data-act="hjump" data-g="${esc(g.id)}" style="--c:${esc(col)}" aria-pressed="${on}" aria-label="${on?'Close':'Open'} ${esc(g.title)}"><span class="hxv vgr" aria-hidden="true">${hxRings(g)}</span><span class="hxc" aria-hidden="true">${sArt?`<img src="${esc(sArt)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span><span class="hxt">${esc(g.title)}</span><span class="hxy">${esc([kind,g.year].filter(Boolean).join(' · '))}</span></button>`}).join('');
+    const on=String(g.id)===og;return `<button class="hxsl${kind==='Single'?' sg':''}${on?' on':''}${on&&HXSINK===String(g.id)?' sink':''}" data-act="hjump" data-g="${esc(g.id)}" style="--c:${esc(col)}" aria-pressed="${on}" aria-label="${on?'Close':'Open'} ${esc(g.title)}"><span class="hxv vgr" aria-hidden="true">${hxRings(g)}</span><span class="hxc" aria-hidden="true">${sArt?`<img src="${esc(sArt)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span><span class="hxt">${esc(g.title)}</span><span class="hxy">${esc([kind,g.year].filter(Boolean).join(' · '))}</span></button>`}).join('');
   const ico={back:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
     play:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.8v14.4L19 12z"/></svg>',
     ear:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="6.5" rx="1.6"/><rect x="16.5" y="14" width="4.5" height="6.5" rx="1.6"/></svg>',
@@ -8266,7 +8299,7 @@ function heroX(a,all,done,rated,p,phUrl,more){
       <div class="meta"><h2>${esc(a.name)}</h2>${a.aka&&a.aka.length?`<span class="note">also ${esc(a.aka.slice(0,3).join(' · '))}</span>`:''}</div>
       <p class="hxsub">${esc(sub)}</p>
       <div class="hxact">
-        <a class="hpbtn" href="${esc(spOpenUrl(a))}" target="_blank" rel="noopener noreferrer">${ico.play}Play</a>
+        <a class="hpbtn" href="${esc(spOpenUrl(a))}" data-uri="${esc(spAppUri(a))}" onclick="return spApp(event,this)" target="_blank" rel="noopener noreferrer">${ico.play}Play</a>
         <button class="hcirc${pop==='filter'?' pop':''}" data-act="filter" data-v="${open?'all':'open'}" aria-pressed="${open}" aria-label="${open?'Showing songs still to hear. Show everything':'Show only songs still to hear'}" title="Still to hear">${ico.ear}</button>
         <button class="hcirc${pop==='hinfo'?' pop':''}" data-act="hinfo" aria-expanded="${!!UI.hinfo&&!UI.hinfoOut}" aria-label="Artist details" title="Details">${ico.info}</button>
         ${panel}
