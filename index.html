@@ -3163,6 +3163,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.20-c', note:'APPLE ARTIST PHOTOS RECHECK: an artist\u2019s Apple Music photo is now checked again every 60 days, when their page opens, so a new photo on Apple Music shows up by itself. Photos you already have start their 60 days today. If a recheck fails or Apple has nothing, your current photo stays and it tries again the next day.'},
   {v:'2026.11.20-b', note:'SORT MENU: Default order is gone from the Releases sort, since it was just oldest first. Oldest first is now the starting order (a device that had Default order saved switches to it), and the rest of the menu is unchanged.'},
   {v:'2026.11.20-a', note:'FROM A FRIEND\u2019S FEEDBACK. THE OPEN ALBUM FLOATS: tapping a record no longer pushes the rest of the timeline down the page. The open album lies on top of the records below its row, the rest of the shelf steps back behind it, and closing it puts the page back where it was. MORE ON THE INSIDE LEFT: the open album now shows your total plays, where it ranks among that artist\u2019s albums (or EPs), its best and weakest song, every listen with its date and score, a preview of your review (tap it to read all of it), friends\u2019 scores, and Share and Find on RYM buttons, all moved over from the ratings side. YOUR ALBUM RATING: the grey pill is now a bar in the album\u2019s own colors that fills as far as your score, like the songs do. A small record at its end shows the number, and the gap to your song average is a small arrow beside it instead of the red and blue line. FIXES: the album rating slider often opened as a thin squashed strip on long albums, so it looked like it did not open. It opens fully now. The colored bars behind rated songs are back. Add artist (top bar and the Fans also spin records) opens the Add an artist box. Before, the box stayed hidden and you only saw the artist page again. Artist search ranks exact names first and copes with small typos. SORTING BY RATING keeps albums, EPs and singles in their own groups with headings. Fans also spin starts open (Hide folds it away and is remembered). ARTIST PHOTOS FOR FRIENDS: signed-in friends now get the Apple Music artist photo too. Your Worker saves each photo for everyone for 60 days, so each artist is only looked up once (Worker 20, it updates itself from GitHub).'},
   {v:'2026.11.19-an', note:'ARTIST PAGE DESIGN PASS: singles now open as a small 7-inch picture sleeve instead of a full gatefold. The cover flies down out of the row, then the record slides out of the sleeve\u2019s open edge with the song average on its label, and the song or two sit inside. Each timeline row is now headed by the era\u2019s name, with the year beside it, so two eras from the same year no longer both read \u201c2020\u201d. The year column is gone, so the timeline is narrower. On a wide screen (1400px and up), every record, single, stack and box set is about a quarter bigger, so the timeline fills more of the width. Add a release is now a button beside the filters, and its form opens right under the Releases heading. It no longer takes up a whole empty row at the bottom. The chip that stacks fanned-out singles back up now says Collapse instead of \u2039 Stack.'},
@@ -8781,27 +8782,37 @@ async function amArtFetch(id){
     const wv=+(r.headers.get('x-pb-worker')||0);if(wv>(SY.wv||0)){SY.wv=wv;saveSync()}
     const j=await r.json().catch(()=>null);return{status:r.status,j:j||{},old:wv<16}}
   const x=await accApi('GET',q);return{status:x.status,j:x.j,old:x.status===404&&x.j&&x.j.error==='not found'}}
+/* An artist's Apple photo is looked up when their page opens, then checked again every 60 days (the same 60 days the Worker keeps it for), so a new
+   photo on Apple Music shows up on its own. A recheck that fails or finds nothing never touches the photo you already have. */
+const AM_RECHECK=60*864e5;
 async function phAmLoad(){
   const h=document.querySelector('.head.hero.hx');if(!h)return;
   const a=(S.music||[]).find(x=>x.id===h.dataset.aid);
-  if(!a||a.aimg||(a.aimgTry&&a.aimgTry>Date.now()-12096e5)||PHAM.busy||!amArtCan())return;   /* no Worker-version check: the number saved here only refreshes on a full sync, so it can lag a Worker that was just updated */
+  if(!a||PHAM.busy||!amArtCan())return;   /* no Worker-version check: the number saved here only refreshes on a full sync, so it can lag a Worker that was just updated */
+  const have=!!a.aimg;
+  if(have){
+    if(!a.aimgAt){a.aimgAt=Date.now();save();return}   /* a photo saved before rechecks existed: its 60 days start now, so none of them are all rechecked at once */
+    if(a.aimgAt>Date.now()-AM_RECHECK||(a.aimgTry&&a.aimgTry>Date.now()-864e5))return}
+  else if(a.aimgTry&&a.aimgTry>Date.now()-12096e5)return;
   PHAM.busy=true;
   try{
     let id=String(a.amid||a.aamid||'');
     if(!id){id=await nrFindId(a);if(id)a.aamid=id}
-    if(!id){a.aimgTry=Date.now();save();return}
+    if(!id){if(have)a.aimgAt=Date.now();else a.aimgTry=Date.now();save();return}
     const {status,j,old}=await amArtFetch(id);
     if(status===404){
-      if(old||(j&&j.error==='not found')){a.aimgTry=Date.now()-12096e5+36e5;return}   /* an older Worker: ask again in an hour, not in two weeks */
-      a.aimgTry=Date.now();save();return}
+      if(old||(j&&j.error==='not found')){a.aimgTry=have?Date.now()-864e5+36e5:Date.now()-12096e5+36e5;return}   /* an older Worker: ask again in an hour */
+      if(have)a.aimgAt=Date.now();else a.aimgTry=Date.now();save();return}
     if(status!==200)throw 0;
-    if(!j||!/^https:\/\/is\d+-ssl\.mzstatic\.com\//.test(j.base||'')){a.aimgTry=Date.now();save();return}
-    a.aimg=j.base;delete a.aimgTry;save();
+    if(!j||!/^https:\/\/is\d+-ssl\.mzstatic\.com\//.test(j.base||'')){if(have)a.aimgAt=Date.now();else a.aimgTry=Date.now();save();return}
+    const same=have&&a.aimg===j.base;
+    a.aimg=j.base;a.aimgAt=Date.now();delete a.aimgTry;save();
+    if(same)return;   /* checked, nothing new */
     const cur=document.querySelector('.head.hero.hx[data-aid="'+a.id+'"]');       /* still on this artist: slide the switch in */
     if(cur&&!cur.querySelector('.hphoto')){renderSoon();return}   /* the page had no photo at all: draw it with one */
     if(cur&&!cur.querySelector('.hsrc')){const pn=cur.querySelector('.hxpanel'),html=hxSrcHtml(a);if(pn&&html)pn.insertAdjacentHTML('afterbegin',html)}   /* the switch lives in Details */
-    if(cur&&phSrcPref()==='am')phSetSrc('am');
-  }catch(e){a.aimgTry=Date.now()-13*864e5}   /* a hiccup (offline, Apple busy) tries again tomorrow, not in two weeks */
+    if(cur&&phSrcPref()==='am')phSetSrc('am');   /* a changed photo fades in over the old one */
+  }catch(e){a.aimgTry=have?Date.now():Date.now()-13*864e5}   /* a hiccup (offline, Apple busy) tries again tomorrow */
   finally{PHAM.busy=false}
 }
 /* an artist added before this had only the mid-size photo saved: fetch the biggest once when their page opens (one Spotify call, never in bulk) */
