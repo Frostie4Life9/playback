@@ -1461,10 +1461,10 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
   .head.hero.hx{--hxpad:18px;--phh:clamp(330px,56vh,470px);min-height:0;align-items:center;text-align:center;
     padding:calc(var(--pull) + var(--phh) - 120px) var(--hxpad) 22px}
   .hx .hphoto{left:0;right:0;width:auto;bottom:auto;height:calc(var(--pull) + var(--phh));
-    /* the top edge is an arc: an oval anchored at the bottom, so the photo melts in highest in the middle and earlier toward
-       the corners, instead of stopping in a straight line under the status bar; it is crossed with the usual bottom fade */
-    -webkit-mask-image:radial-gradient(ellipse 140% 100% at 50% 100%,#000 84%,rgb(0 0 0 / .55) 93%,transparent 100%),linear-gradient(to bottom,#000 0,#000 50%,rgb(0 0 0 / .5) 74%,transparent 100%);-webkit-mask-composite:source-in;
-    mask-image:radial-gradient(ellipse 140% 100% at 50% 100%,#000 84%,rgb(0 0 0 / .55) 93%,transparent 100%),linear-gradient(to bottom,#000 0,#000 50%,rgb(0 0 0 / .5) 74%,transparent 100%);mask-composite:intersect}
+    /* the bottom fade is an arc: an oval anchored at the top, so the photo reaches lowest in the middle and melts away a little
+       earlier toward the sides, instead of ending in a straight line across the screen. The top edge stays as it was. */
+    -webkit-mask-image:radial-gradient(ellipse 170% 100% at 50% 0,#000 50%,rgb(0 0 0 / .5) 74%,transparent 100%);-webkit-mask-composite:source-over;
+    mask-image:radial-gradient(ellipse 170% 100% at 50% 0,#000 50%,rgb(0 0 0 / .5) 74%,transparent 100%);mask-composite:add}
   .hx .hphoto img{object-position:50% 22%}
   .hx .hscrim{background:linear-gradient(to bottom,rgb(0 0 0 / .18) 0,transparent calc(var(--pull) + 90px),transparent calc(var(--pull) + var(--phh) * .42),rgb(0 0 0 / .5) calc(var(--pull) + var(--phh) - 10px),rgb(0 0 0 / .28) calc(var(--pull) + var(--phh) + 140px),transparent 100%)}
   .hx .hfoot{height:16%}
@@ -3256,6 +3256,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.20-j', note:'PHONE ARTIST PHOTO, ROUNDED BOTTOM: the top of the photo is back to how it was. Instead, the bottom fade is now curved: the photo reaches lowest in the middle and melts away a little earlier toward the sides, so it no longer ends in a straight line behind the name.'},
   {v:'2026.11.20-i', note:'PHONE ARTIST PHOTO TOP EDGE, ROUNDED: the top of the artist photo on a phone now fades in along a gentle arc, highest in the middle and a little earlier toward the corners, so it no longer reads as a straight line under the status bar. The sides and the rest of the photo stay at full strength.'},
   {v:'2026.11.20-h', note:'PHONE ARTIST PHOTO TOP EDGE: on a phone, the top of the artist photo now melts into the artist color over about 100px instead of stopping in a straight line under the status bar. The rest of the photo is unchanged.'},
   {v:'2026.11.20-g', note:'ARTIST PHOTO FADE: on a PC or tablet, the Apple artist photo now keeps more of itself. Its left, top and bottom fades are narrower, so hands, shoulders and clothes near the edges stay at full strength, and where the fades meet they curve into each other instead of forming a square corner. The edge still melts into the artist color. Phones are unchanged.'},
