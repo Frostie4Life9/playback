@@ -1556,11 +1556,9 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 /* Fans also spin: sits right on the artist's color field like the Releases row (no grey card), a heading with a glass
    Show/Hide pill, opening to a row of records that bleeds off the right edge just like Releases does */
 .hx .hxmore .simbox.crate{display:block;margin:0;padding:0;border:0;border-radius:0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none}
-.simh{display:flex;align-items:center;justify-content:space-between;gap:12px 18px;flex-wrap:wrap}
-.simtt{min-width:0}
-.simtt .hxlbl{margin:0;color:#fff}
-.simtt small{display:block;margin-top:3px;font-size:13px;color:rgb(255 255 255 / .62)}
-.simctl{display:flex;align-items:center;gap:10px}
+.simh{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.simh .hxlbl{margin:0;color:#fff}
+.simsub{display:block;margin-top:4px;font-size:13px;color:rgb(255 255 255 / .62)}
 .simtg,.simar{display:inline-flex;align-items:center;justify-content:center;border:1px solid rgb(255 255 255 / .14);background:rgb(0 0 0 / .24);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:#fff;font:inherit;cursor:pointer;transition:background .2s,border-color .2s,opacity .25s,transform .3s cubic-bezier(.2,.8,.2,1)}
 .simtg{gap:9px;min-height:40px;padding:0 16px;border-radius:999px;font-size:13px;font-weight:600}
 .simtg i{width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translate(-1px,-1px);transition:transform .35s cubic-bezier(.2,.8,.2,1)}
@@ -1570,13 +1568,12 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .simtg:hover,.simar:hover:not(:disabled){background:rgb(255 255 255 / .16);border-color:rgb(255 255 255 / .3)}
 .simar:active:not(:disabled){transform:scale(.92)}
 .simar:disabled{opacity:.35;cursor:default}
-.simnav{display:flex;gap:8px;animation:simNavIn .4s cubic-bezier(.2,.8,.2,1) both}
+.simnav{display:flex;gap:8px;margin-left:auto;animation:simNavIn .4s cubic-bezier(.2,.8,.2,1) both}
 .simbox.crate .simbody{transition:height .38s cubic-bezier(.4,0,.2,1)}
 .simbox.sim-closing .simt{transition:opacity .25s,transform .35s cubic-bezier(.4,0,1,1);opacity:0;transform:translateY(12px)}
 .simbox.sim-closing .simd{transition:transform .38s cubic-bezier(.4,0,1,1);transform:rotate(-90deg)}
 .simbox.sim-closing .simnav{transition:opacity .2s,transform .25s;opacity:0;transform:translateX(10px)}
 .simbox.sim-closing .simtg i{transform:rotate(45deg) translate(-1px,-1px)}
-.simbox.crate .simtt small{transition:opacity .2s}
 .simbox.crate.open .simbody.sim-opening{animation:simGrow .45s cubic-bezier(.2,.8,.2,1) both}
 @keyframes simGrow{from{opacity:0;clip-path:inset(0 0 100% 0);transform:translateY(-8px)}to{opacity:1;clip-path:inset(0 0 -40px 0);transform:none}}
 @keyframes simNavIn{from{opacity:0;transform:translateX(10px)}}
@@ -1593,21 +1590,32 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .simd{position:relative;display:grid;place-items:center;width:128px;height:128px;border-radius:50%;box-shadow:0 14px 28px rgb(0 0 0 / .32);
   background:radial-gradient(circle,transparent 0 30%,#0d0b0b 30.5% 32%,transparent 32.5%),conic-gradient(from 30deg,rgb(255 255 255 / 0) 0 10%,rgb(255 255 255 / .07) 14%,rgb(255 255 255 / 0) 20% 60%,rgb(255 255 255 / .06) 64%,rgb(255 255 255 / 0) 70%),repeating-radial-gradient(circle,#1b1717 0 1px,#0c0a0a 1px 3px);
   transition:transform .7s cubic-bezier(.2,.8,.2,1),box-shadow .4s}
-.simd::before{content:"";position:absolute;width:40%;height:40%;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgb(255 255 255 / .22),transparent 60%),var(--sc);box-shadow:inset 0 0 0 1px rgb(0 0 0 / .25)}
-.simd::after{content:"";position:absolute;width:4%;height:4%;border-radius:50%;background:#0c0a0a;z-index:2}
-.simd img{position:absolute;z-index:1;width:40%;height:40%;border-radius:50%;object-fit:cover}
-.simd b{position:relative;top:-11%;font:800 15px/1 var(--body);color:rgb(255 255 255 / .9);letter-spacing:.02em}
+.simd::before{content:"";position:absolute;z-index:2;width:40%;height:40%;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgb(255 255 255 / .22),transparent 60%),var(--sc);box-shadow:inset 0 0 0 1px rgb(0 0 0 / .25)}
+.simd::after{content:"";position:absolute;width:4%;height:4%;border-radius:50%;background:#0c0a0a;z-index:4}
+.simd img{position:absolute;z-index:3;width:40%;height:40%;border-radius:50%;object-fit:cover;box-shadow:0 0 0 1px rgb(0 0 0 / .3)}
+.simd img.simin{animation:simImgIn .6s cubic-bezier(.2,.8,.2,1) both}
+@keyframes simImgIn{from{opacity:0;transform:scale(.7)}}
+.simd b{position:relative;z-index:3;top:-11%;font:800 15px/1 var(--body);color:rgb(255 255 255 / .9);letter-spacing:.02em}
 .simd:has(img) b{display:none}
+/* the match, in the grooves: they light up in the label color from the rim inward, a 100% match fully lit */
+@property --m{syntax:"<number>";inherits:true;initial-value:0}
+.simlit{position:absolute;inset:0;z-index:1;border-radius:50%;background:repeating-radial-gradient(circle,color-mix(in srgb,var(--sc) 78%,#111) 0 1px,color-mix(in srgb,var(--sc) 26%,#0c0a0a) 1px 3px);
+  -webkit-mask:radial-gradient(circle closest-side,transparent calc(97% - var(--m) * 55%),#000 calc(97.5% - var(--m) * 55%) 97%,transparent 97.5%);mask:radial-gradient(circle closest-side,transparent calc(97% - var(--m) * 55%),#000 calc(97.5% - var(--m) * 55%) 97%,transparent 97.5%)}
+.simrow.sim-in .simlit{animation:simFill 1.4s cubic-bezier(.2,.8,.2,1) calc(var(--i) * 70ms + .2s) backwards}
+@keyframes simFill{from{--m:0}}
+/* and it spins, closer matches a little faster */
+@media (prefers-reduced-motion:no-preference){.simd{animation:simRot var(--rot) linear infinite}}
+@keyframes simRot{to{rotate:360deg}}
 .simt:hover .simd,.simt:focus-visible .simd{transform:rotate(40deg) translateY(-4px);box-shadow:0 20px 34px rgb(0 0 0 / .4)}
 .simn{display:block;margin-top:12px;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sims{display:block;margin-top:2px;font-size:12px;color:rgb(255 255 255 / .62);white-space:nowrap}
 .sims em{font-style:normal;color:#fff;font-weight:700}
 .simrow.sim-in .simt{animation:simUp .5s cubic-bezier(.2,.8,.2,1) calc(var(--i) * 45ms) backwards}
-.simrow.sim-in .simd{animation:simSpin .9s cubic-bezier(.2,.8,.2,1) calc(var(--i) * 45ms) backwards}
+.simrow.sim-in .simd{animation:simSpin .9s cubic-bezier(.2,.8,.2,1) calc(var(--i) * 45ms) backwards,simRot var(--rot) linear infinite}
 @keyframes simUp{from{opacity:0;transform:translateY(16px)}}
 @keyframes simSpin{from{transform:rotate(-120deg)}}
-@media (max-width:760px){.simt,.simd{width:100px}.simd{height:100px}.simrow{gap:20px}.simnav{display:none}.simtt small{font-size:12px}}
-@media (prefers-reduced-motion:reduce){.simnav,.simrow.sim-in .simt,.simrow.sim-in .simd,.hxaddp.in,.hxaddp.out{animation:none}}
+@media (max-width:760px){.simt,.simd{width:100px}.simd{height:100px}.simrow{gap:20px}.simnav{display:none}.simsub{font-size:12px}}
+@media (prefers-reduced-motion:reduce){.simlit,.simd img.simin,.simnav,.simrow.sim-in .simt,.simrow.sim-in .simd,.hxaddp.in,.hxaddp.out{animation:none}}
 @media (prefers-reduced-motion:no-preference){.sheet.swin .hxmore{animation:swUp .62s cubic-bezier(.2,.8,.2,1) .3s backwards}}
 
 /* THE GATEFOLD: an opened album, drawn as a real open gatefold jacket. On a wide screen it is two square panels of
@@ -2747,6 +2755,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-ae', note:'FANS ALSO SPIN, MATCH ON THE RECORD: each record now shows how close a match it is in its grooves, lit up in the label color from the rim inward (a 100% match is fully lit), filling in as the row opens, and it slowly spins, closer matches a little faster. Artists not in your log now get their Apple Music photo on the label, looked up once each and saved, fading in as they arrive (yours only, like the artist header photo). Show/Hide now sits right next to the heading, and the closed subtitle is just \u201cSimilar artists\u201d.'},
   {v:'2026.11.19-ad', note:'FANS ALSO SPIN, SMOOTHER: Hide now folds the row shut (the records drop and spin back, the arrows slide away) instead of vanishing, Show slides it open, and the mouse wheel now glides the row along smoothly like the arrow buttons do instead of jumping.'},
   {v:'2026.11.19-ac', note:'FANS ALSO SPIN, RESTYLED AND SCROLLABLE: the grey card is gone, so the section now sits right on the artist\u2019s color like Releases, with a glass Show/Hide pill and records lined up with the Releases row, running off the right edge with a soft fade. On a PC it now scrolls: arrow buttons next to Show/Hide (they dim at the ends) and the normal mouse wheel moves the row sideways. Also fixed the first record sitting flush against the left edge (it was snapping past the row\u2019s padding).'},
   {v:'2026.11.19-ab', note:'ARTIST PAGE BOTTOM, CRATE STYLE: Similar artists is now \u201cFans also spin\u201d, a slim bar that stays collapsed until you tap it, then opens to a row of records (artists in your log show their photo on the label and open when tapped; new ones show their initial and tap to add). Add a release is an empty sleeve at the end of the Releases row that opens the form in a panel, and Delete artist moved into Details (\u24d8). Also fixed the last jump when closing an album: the gap above the next item now closes up smoothly instead of vanishing at the end.'},
@@ -9143,11 +9152,47 @@ function simBox(a){
   const open=UI.simOpen===a.id,ao=open&&UI.simAnim?' sim-opening':'';if(open)UI.simAnim=false;
   const e=SIM[simKey('a',a.name)],ok=e&&!e.busy&&!e.err&&e.rows&&e.rows.length,body=open?(ok?simCrate(e,ao):simBody(e,'a',{artist:a.name})):'';
   const arr=open&&ok?`<span class="simnav"><button class="simar" data-simscroll="-1" aria-label="Scroll left" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button><button class="simar" data-simscroll="1" aria-label="Scroll right"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button></span>`:'';
-  return `<section class="simbox crate${open?' open':''}"><div class="simh"><div class="simtt"><h3 class="hxlbl">Fans also spin</h3><small>${open?'Similar artists, from Last.fm':'Similar artists, from Last.fm listening'}</small></div><div class="simctl">${arr}<button class="simtg" data-act="simtog" data-a="${a.id}" aria-expanded="${open}">${open?'Hide':'Show'}<i aria-hidden="true"></i></button></div></div>${open?`<div class="simbody${ao}">${body}</div>`:''}</section>`}
+  return `<section class="simbox crate${open?' open':''}"><div class="simh"><h3 class="hxlbl">Fans also spin</h3><button class="simtg" data-act="simtog" data-a="${a.id}" aria-expanded="${open}">${open?'Hide':'Show'}<i aria-hidden="true"></i></button>${arr}</div><small class="simsub">${open?'Similar artists, from Last.fm':'Similar artists'}</small>${open?`<div class="simbody${ao}">${body}</div>`:''}</section>`}
 function simCrate(e,ao){const an=e.anim||ao?' sim-in':'';e.anim=false;
-  return `<div class="simrow${an}">${e.rows.slice(0,20).map((x,i)=>{const a=rtArtist([x.n]),ph=a?(spPhoto(a)||(a.aimg?a.aimg+'/300x300bb.jpg':'')):'',pc=Math.round((x.m||0)*100);
+  const rows=e.rows.slice(0,20),C=simArtCache(),need=[];
+  const html=rows.map((x,i)=>{const a=rtArtist([x.n]),k=nArtist(x.n),m=Math.max(0,Math.min(1,x.m||0)),pc=Math.round(m*100);
+    let ph=a?(a.aimg?a.aimg+'/300x300bb.jpg':spPhoto(a)):'';
+    if(!ph){const c=C[k];if(c&&c[0])ph=c[0]+'/300x300bb.jpg';else if(!c||(!c[0]&&c[1]<Date.now()-12096e5))need.push(x.n)}
     const st=a?pct(artistItems(a).map(y=>y.id))+'% heard':pc+'% match';
-    return `<button class="simt" style="--i:${Math.min(i,12)};--sc:hsl(${colHash(x.n)%360} 34% 46%)" data-act="${a?'llgo':'simadd'}" ${a?`data-a="${esc(a.id)}"`:`data-n="${esc(x.n)}"`} aria-label="${a?'Open':'Add'} ${esc(x.n)}"><span class="simd" aria-hidden="true">${ph?`<img src="${esc(ph)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}<b>${esc(String(x.n).trim().charAt(0).toUpperCase())}</b></span><span class="simn">${esc(x.n)}</span><span class="sims">${a?'':'<em>Add</em> \u00b7 '}${esc(st)}</span></button>`}).join('')}</div>`}
+    return `<button class="simt" data-k="${esc(k)}" style="--i:${Math.min(i,12)};--m:${m.toFixed(3)};--rot:${(9+(1-m)*14).toFixed(1)}s;--sc:hsl(${colHash(x.n)%360} 46% 52%)" data-act="${a?'llgo':'simadd'}" ${a?`data-a="${esc(a.id)}"`:`data-n="${esc(x.n)}"`} aria-label="${a?'Open':'Add'} ${esc(x.n)}, ${pc}% match"><span class="simd" aria-hidden="true"><i class="simlit"></i>${ph?`<img src="${esc(ph)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}<b>${esc(String(x.n).trim().charAt(0).toUpperCase())}</b></span><span class="simn">${esc(x.n)}</span><span class="sims">${a?'':'<em>Add</em> \u00b7 '}${esc(st)}</span></button>`}).join('');
+  if(need.length)setTimeout(()=>simArtLoad(need),400);
+  return `<div class="simrow${an}">${html}</div>`}
+/* Apple Music photos for the Fans also spin artists who are not in your log (owner only, like the artist header photo).
+   Each artist costs one iTunes search to find their Apple id plus one Worker call that reads the photo off their Apple page;
+   the answer is saved on this device, so an artist is only ever looked up once (a miss is tried again after two weeks).
+   Apple limits searches per minute, not per day, so they are spaced 3.5 s apart and the photos fade in as they arrive;
+   if Apple says slow down, it rests for ten minutes. */
+const SIMART_KEY='pb_simart';let SIMART=null,SIMART_RUN=false;
+function simArtCache(){if(!SIMART){try{SIMART=JSON.parse(localStorage.getItem(SIMART_KEY)||'{}')||{}}catch(e){SIMART={}}}return SIMART}
+function simArtSave(){try{localStorage.setItem(SIMART_KEY,JSON.stringify(SIMART))}catch(e){}}
+async function simArtLoad(names){
+  if(SIMART_RUN||!READY||!ownSync()||!SY.url)return;
+  let cool=0;try{cool=+localStorage.getItem('pb_simartcool')||0}catch(e){}if(cool>Date.now())return;
+  const C=simArtCache();SIMART_RUN=true;
+  try{
+    for(const n of names){
+      const k=nArtist(n),c=C[k];if(c&&(c[0]||c[1]>Date.now()-12096e5))continue;
+      if(!document.querySelector('.simrow'))break;   /* the row was closed: stop, pick up next time */
+      let base='';
+      const hit=(await nrGet('search',{term:n,entity:'musicArtist',limit:5})).find(x=>x&&x.artistId&&nArtist(x.artistName)===k);
+      if(hit){
+        const r=await fetch(SY.url.replace(/\/+$/,'')+'/apple/art?id='+encodeURIComponent(hit.artistId)+'&c='+amCountry(),{cache:'no-store',headers:{...syH()}});
+        if(r.ok){const j=await r.json().catch(()=>null);if(j&&/^https:\/\/is\d+-ssl\.mzstatic\.com\//.test(j.base||''))base=j.base}
+        else if(r.status!==404)throw AMError('http',r.status);
+      }
+      C[k]=[base,Date.now()];simArtSave();
+      if(base)document.querySelectorAll('.simt[data-k="'+CSS.escape(k)+'"] .simd').forEach(d=>{if(d.querySelector('img'))return;
+        const im=new Image();im.alt='';im.className='simin';im.decoding='async';im.onload=()=>d.insertBefore(im,d.querySelector('b'));im.src=base+'/300x300bb.jpg'});
+      await mbSleep(NR_GAP);
+    }
+  }catch(e){if(e&&e.code==='limited'){try{localStorage.setItem('pb_simartcool',String(Date.now()+6e5))}catch(_){}}}
+  finally{SIMART_RUN=false}
+}
 function simSong(a,i,t){
   const open=UI.simSong===i.id,ao=open&&UI.simAnim?' sim-opening':'';if(open)UI.simAnim=false;
   return `<div class="simsong"><button class="link" data-act="simsong" data-id="${i.id}" data-art="${esc(a.name)}" data-ttl="${esc(t)}" aria-expanded="${open}">${open?'Hide similar songs':'Similar songs'}</button>${open?`<div class="simbody${ao}">${simBody(SIM[simKey('t',a.name,t)],'t',{artist:a.name,title:t})}</div>`:''}</div>`}
