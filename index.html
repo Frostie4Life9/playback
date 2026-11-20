@@ -1463,8 +1463,8 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
   .hx .hphoto{left:0;right:0;width:auto;bottom:auto;height:calc(var(--pull) + var(--phh));
     /* the bottom fade is an arc: an oval anchored at the top, so the photo reaches lowest in the middle and melts away a little
        earlier toward the sides, instead of ending in a straight line across the screen. The top edge stays as it was. */
-    -webkit-mask-image:radial-gradient(ellipse 170% 100% at 50% 0,#000 50%,rgb(0 0 0 / .5) 74%,transparent 100%);-webkit-mask-composite:source-over;
-    mask-image:radial-gradient(ellipse 170% 100% at 50% 0,#000 50%,rgb(0 0 0 / .5) 74%,transparent 100%);mask-composite:add}
+    -webkit-mask-image:radial-gradient(ellipse 105% 100% at 50% 0,#000 52%,rgb(0 0 0 / .5) 76%,transparent 100%);-webkit-mask-composite:source-over;
+    mask-image:radial-gradient(ellipse 105% 100% at 50% 0,#000 52%,rgb(0 0 0 / .5) 76%,transparent 100%);mask-composite:add}
   .hx .hphoto img{object-position:50% 22%}
   .hx .hscrim{background:linear-gradient(to bottom,rgb(0 0 0 / .18) 0,transparent calc(var(--pull) + 90px),transparent calc(var(--pull) + var(--phh) * .42),rgb(0 0 0 / .5) calc(var(--pull) + var(--phh) - 10px),rgb(0 0 0 / .28) calc(var(--pull) + var(--phh) + 140px),transparent 100%)}
   .hx .hfoot{height:16%}
@@ -3256,6 +3256,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.20-k', note:'PHONE ARTIST PHOTO, STRONGER CURVE: the curved bottom fade on the artist photo bends much more now, so the photo clearly reaches lowest in the middle and melts away well before the bottom at the sides.'},
   {v:'2026.11.20-j', note:'PHONE ARTIST PHOTO, ROUNDED BOTTOM: the top of the photo is back to how it was. Instead, the bottom fade is now curved: the photo reaches lowest in the middle and melts away a little earlier toward the sides, so it no longer ends in a straight line behind the name.'},
   {v:'2026.11.20-i', note:'PHONE ARTIST PHOTO TOP EDGE, ROUNDED: the top of the artist photo on a phone now fades in along a gentle arc, highest in the middle and a little earlier toward the corners, so it no longer reads as a straight line under the status bar. The sides and the rest of the photo stay at full strength.'},
   {v:'2026.11.20-h', note:'PHONE ARTIST PHOTO TOP EDGE: on a phone, the top of the artist photo now melts into the artist color over about 100px instead of stopping in a straight line under the status bar. The rest of the photo is unchanged.'},
