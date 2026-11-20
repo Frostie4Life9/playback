@@ -1375,7 +1375,7 @@ body:has(.head.hero.hx) .backlib{display:none}
 .head.hero.hx{--hxpad:calc(1.5vw + 28px);--pull:0px;width:100vw;margin-left:calc(50% - 50vw);margin-right:0;border:0;border-radius:0;background:var(--bg);
   display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;flex-wrap:nowrap;gap:0;
   min-height:calc(var(--pull) + clamp(520px,72vh,800px));padding:calc(var(--pull) + 48px) var(--hxpad) 28px;color:#fff}
-.hx .hphoto{position:absolute;z-index:-1;top:0;right:0;bottom:0;width:min(66%,1250px);pointer-events:none;
+.hx .hphoto{position:absolute;z-index:-1;top:0;right:0;bottom:auto;height:calc(var(--pull) + clamp(520px,72vh,800px));width:min(66%,1250px);   /* header height only: the Releases shelf can make the header much taller, and the photo used to stretch down with it */pointer-events:none;
   -webkit-mask-image:linear-gradient(to right,transparent 0,rgb(0 0 0 / .45) 22%,#000 50%),linear-gradient(to bottom,#000 58%,transparent 97%);-webkit-mask-composite:source-in;
   mask-image:linear-gradient(to right,transparent 0,rgb(0 0 0 / .45) 22%,#000 50%),linear-gradient(to bottom,#000 58%,transparent 97%);mask-composite:intersect}
 .hx .hphoto img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 20%;animation:hPh .8s ease both}
@@ -1536,6 +1536,8 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .hxer{display:flex;align-items:flex-start;gap:46px}
 .hxer>.hxsl:not(.sg):not(.hxadd){margin-right:16px}
 .hxer>.hxsl:last-child{margin-right:0}
+.hxdiv{flex:none;align-self:stretch;width:1px;margin:40px -18px 46px -6px;background:linear-gradient(to bottom,transparent,rgb(255 255 255 / .28) 20%,rgb(255 255 255 / .28) 80%,transparent)}
+.hxrow.eras>.group.sleeve.gf.inrow{flex:0 0 100%;color:var(--ink);margin:4px 0 8px}
 .hxera-add{padding-right:0}.hxera-add .hxeh{border-color:transparent}
 /* while an album is open, its era stays lit and the rest step back a little */
 .hxrow.eras:has(.hxsl.on) .hxera:not(:has(.hxsl.on)){opacity:.5}
@@ -2930,6 +2932,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.19-ak', note:'ERAS, TIDIER, AND ALBUMS OPEN WHERE YOU ARE: singles and EPs now find their album by their own title (a single only keeps its B-sides, since its A-side already lives on the album), so Creep, High & Dry, Street Spirit, Pyramid Song, Knives Out and the rest stand with their albums. A second disc released as its own album (In Rainbows Disk 2) stands beside the first disc. Anything left over joins the era before it past a thin divider, so there is one label per album instead of extra year groups. On a PC, an opened album now unfolds right under the row its record is on and the page brings that row into view, instead of opening below the whole discography. The artist photo no longer stretches down the page with a tall Releases shelf.'},
   {v:'2026.11.19-aj', note:'ERAS: in Default or Oldest-first order with All showing, an artist\u2019s Releases are now grouped into eras. Each album starts one, and the singles and EPs that came off it (matched by their songs, not their dates) stand next to it. Singles and EPs that are on no album stand between eras, and three or more of those singles in a row fold into a stack of 7-inches you tap to fan out. Live albums, remix albums and compilations go into a box set at the end that opens into its own era. On a PC the eras wrap onto as many shelves as they need instead of scrolling sideways, and while an album is open its era stays lit while the rest step back. On a phone the eras swipe one at a time, with a rail of years above to jump. Artists with fewer than two albums, other sort orders and the kind filters keep the plain shelf.'},
   {v:'2026.11.19-ai', note:'ARTIST STATS LINE: the line under an artist\u2019s name now reads like \u201cAlbums 8.4 \u00b7 Songs 7.6 \u00b7 28 releases\u201d: your average album rating next to your average song rating (both out of 10), then the release count. The heard count is no longer repeated there, since the progress record already shows it.'},
   {v:'2026.11.19-ah', note:'SINGLES AS 7-INCH RECORDS, PLAY OPENS THE SPOTIFY APP, RATING FIX: singles in the Releases row are now about 70% the size of albums, like a real 7-inch, standing on the same line so all the titles still sit in one row; they pull out, open and glow just like albums. On a PC the Play button now opens the artist in the Spotify desktop app (the first time, your browser may ask to allow it; if the app isn\u2019t installed, the web player opens instead). The average under the artist name was being halved (it showed out of 5); it now reads out of 10 like everywhere else.'},
@@ -6624,6 +6627,7 @@ function render(){
   phAmLoad();
   tdPaint();
   hxObserve();
+  hxPlaceGf();
   const nl=document.getElementById('llist');
   if(nl){if(ll&&llTab===UI.tab)nl.scrollTop=llTop;
     else{const c=nl.querySelector('[aria-current="true"]');if(c)nl.scrollTop=c.offsetTop-nl.clientHeight/3}}
@@ -8336,36 +8340,37 @@ function hxArt(g){const sArt=g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://cover
 function hxSongKey(i){return String(songShow(i).t||i.title||'').toLowerCase().replace(/\s*[\(\[][^\)\]]*[\)\]]/g,'').replace(/\s+[-–—]\s+.*$/,'').replace(/[^a-z0-9À-￿]+/g,'')}
 function hxErasOn(a,rl){
   if(relKind(a)!=='all'||!['def','old'].includes(relSort()))return null;
-  const nAlb=rl.filter(g=>g.kind==='Studio album').length;if(nAlb<2)return null;
+  if(rl.filter(g=>g.kind==='Studio album').length<2)return null;
   const ix=new Map(a.groups.map((g,i)=>[g,i])),yr=g=>{const y=parseInt(g.year,10);return isNaN(y)?1e9:y};
   const L=rl.slice().sort((x,y)=>yr(x)-yr(y)||ix.get(x)-ix.get(y));
-  const albs=L.filter(g=>g.kind==='Studio album'),keys=new Map(albs.map(g=>[g,new Set(g.items.map(hxSongKey).filter(Boolean))]));
-  const home=new Map();
+  /* a second disc released as its own album ("In Rainbows (Disk 2)") stands beside its first disc instead of starting an era */
+  const base=t=>String(t||'').replace(/\s*[\(\[][^\)\]]*\b(dis[ck]|cd|vol(ume)?)\.?\s*\d+[^\)\]]*[\)\]]\s*$/i,'').replace(/\s*[-:]\s*(dis[ck]|cd)\s*\d+\s*$/i,'').trim().toLowerCase();
+  const all=L.filter(g=>g.kind==='Studio album'),home=new Map();
+  for(const g of all){const b=base(g.title);if(b!==String(g.title).trim().toLowerCase()){const m=all.find(x=>x!==g&&String(x.title).trim().toLowerCase()===b);if(m)home.set(g,m)}}
+  const albs=all.filter(g=>!home.has(g)),keys=new Map(albs.map(g=>[g,new Set(g.items.map(hxSongKey).filter(Boolean))]));
   for(const g of L){if(g.kind!=='Single'&&g.kind!=='EP')continue;
-    const ks=[...new Set(g.items.map(hxSongKey).filter(Boolean))];if(!ks.length)continue;
-    let best=null,bn=0;
-    for(const al of albs){const n=ks.filter(k=>keys.get(al).has(k)).length;
-      if(!n||(g.kind==='EP'&&n<Math.ceil(ks.length/2)))continue;
-      if(n>bn||(n===bn&&best&&Math.abs(yr(al)-yr(g))<Math.abs(yr(best)-yr(g)))){best=al;bn=n}}
+    /* songs shared between an album and its single live on the album only, so a single carries just its B-sides: match it by
+       its own title first ("High & Dry / Planet Telex" is two songs, "Com Lag: 2+2=5" ends in one), then by any shared songs */
+    const tk=[g.title,...String(g.title||'').split(/\s+\/\s+|\s*:\s+/)].map(t=>hxSongKey({title:t})).filter(Boolean);
+    const ks=[...new Set(g.items.map(hxSongKey).filter(Boolean))];
+    let best=null,bs=0;
+    for(const al of albs){const K=keys.get(al),t=tk.some(k=>K.has(k))?100:0,n=ks.filter(k=>K.has(k)).length;
+      const sc=t+(t||g.kind!=='EP'||n>=Math.ceil(ks.length/2)?n:0);if(!sc)continue;
+      if(sc>bs||(sc===bs&&best&&Math.abs(yr(al)-yr(g))<Math.abs(yr(best)-yr(g)))){best=al;bs=sc}}
     if(best)home.set(g,best)}
   const extras=L.filter(g=>!['Studio album','EP','Single'].includes(g.kind)),boxed=extras.length>=2?new Set(extras):new Set();
-  const out=[];let loose=null;
+  const out=[];let cur=null;
   for(const g of L){if(boxed.has(g)||home.has(g))continue;
-    if(g.kind==='Studio album'){loose=null;out.push({t:'era',a:g,items:[g,...L.filter(x=>home.get(x)===g)]})}
-    else{if(!loose){loose={t:'loose',items:[]};out.push(loose)}loose.items.push(g)}}
+    if(g.kind==='Studio album'){cur={t:'era',a:g,items:[g,...L.filter(x=>home.get(x)===g)],after:[]};out.push(cur)}
+    else if(cur)cur.after.push(g);
+    else{if(!out.length||out[0].t!=='loose')out.unshift({t:'loose',items:[]});out[0].items.push(g)}}
   if(boxed.size)out.push({t:'box',items:[...boxed]});
   return out}
 function hxYears(items){const ys=items.map(g=>parseInt(g.year,10)).filter(y=>!isNaN(y));if(!ys.length)return '';const lo=Math.min(...ys),hi=Math.max(...ys);return lo===hi?String(lo):lo+'–'+hi}
 function hxEras(a,rl,sleeve,og,NEW){
   const E=hxErasOn(a,rl);if(!E)return rl.map(g=>sleeve(g)).join('');
   const open=k=>UI.hxOpen&&UI.hxOpen.aid===a.id&&UI.hxOpen.k.includes(k),has=(items)=>items.some(g=>String(g.id)===og);
-  let h='',ei=0;
-  for(const e of E){const ix=ei++;
-    if(e.t==='era'){h+=`<div class="hxera" data-era="${ix}"><div class="hxeh">${esc(e.a.title)}${e.a.year?' · '+esc(e.a.year):''}</div><div class="hxer">${e.items.map(g=>sleeve(g)).join('')}</div></div>`;continue}
-    if(e.t==='box'){const k='box',o=open(k)||has(e.items),sp=e.items.slice(0,6).map(g=>`<i style="--c:${esc(hxArt(g).col)}"></i>`).join('');
-      h+=`<div class="hxera hxera-box${o?' open':''}" data-era="${ix}"><div class="hxeh">Live, remixes and extras</div><div class="hxer"><button class="hxbox" data-act="hxfold" data-k="${k}" aria-expanded="${o}" aria-label="${o?'Close':'Open'} the box set: ${e.items.length} releases"><span class="hxbx" aria-hidden="true">${sp}</span><span class="hxt">Box set</span><span class="hxy">${e.items.length} releases</span></button>${o?e.items.map((g,i)=>sleeve(g,NEW===k?i:null)).join(''):''}</div></div>`;continue}
-    /* loose singles and EPs between eras: runs of three or more singles fold into a stack */
-    let inner='',run=[];
+  const looseHtml=items=>{let inner='',run=[];
     const flush=()=>{if(!run.length)return;
       if(run.length<3){inner+=run.map(g=>sleeve(g)).join('')}
       else{const k='s'+run[0].id,o=open(k)||has(run);
@@ -8373,10 +8378,25 @@ function hxEras(a,rl,sleeve,og,NEW){
         else{const cv=run.slice(-3).map((g,i)=>{const r=hxArt(g);return `<i class="c${i}" style="--c:${esc(r.col)}">${r.sArt?`<img src="${esc(r.sArt)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</i>`}).join('');
           inner+=`<button class="hxstk${NEW==='x'+k?' hxin':''}" data-act="hxfold" data-k="${esc(k)}" aria-expanded="false" aria-label="Fan out ${run.length} singles"><span class="hxsc" aria-hidden="true">${cv}</span><span class="hxt">${run.length} singles</span><span class="hxy">${esc(hxYears(run))}</span></button>`}}
       run=[]};
-    for(const g of e.items){if(g.kind==='Single')run.push(g);else{flush();inner+=sleeve(g)}}
-    flush();
-    h+=`<div class="hxera loose" data-era="${ix}"><div class="hxeh">${esc(hxYears(e.items))||'&nbsp;'}</div><div class="hxer">${inner}</div></div>`}
+    for(const g of items){if(g.kind==='Single')run.push(g);else{flush();inner+=sleeve(g)}}
+    flush();return inner};
+  let h='',ei=0;
+  for(const e of E){const ix=ei++;
+    /* an era: the album, what came off it, then (past a thin divider) whatever else came out before the next album */
+    if(e.t==='era'){h+=`<div class="hxera" data-era="${ix}"><div class="hxeh">${esc(e.a.title)}${e.a.year?' \u00b7 '+esc(e.a.year):''}</div><div class="hxer">${e.items.map(g=>sleeve(g)).join('')}${e.after.length?`<i class="hxdiv" aria-hidden="true"></i>${looseHtml(e.after)}`:''}</div></div>`;continue}
+    if(e.t==='box'){const k='box',o=open(k)||has(e.items),sp=e.items.slice(0,6).map(g=>`<i style="--c:${esc(hxArt(g).col)}"></i>`).join('');
+      h+=`<div class="hxera hxera-box${o?' open':''}" data-era="${ix}"><div class="hxeh">Live, remixes and extras</div><div class="hxer"><button class="hxbox" data-act="hxfold" data-k="${k}" aria-expanded="${o}" aria-label="${o?'Close':'Open'} the box set: ${e.items.length} releases"><span class="hxbx" aria-hidden="true">${sp}</span><span class="hxt">Box set</span><span class="hxy">${e.items.length} releases</span></button>${o?e.items.map((g,i)=>sleeve(g,NEW===k?i:null)).join(''):''}</div></div>`;continue}
+    /* releases from before the first album */
+    h+=`<div class="hxera loose" data-era="${ix}"><div class="hxeh">${esc(hxYears(e.items))||'&nbsp;'}</div><div class="hxer">${looseHtml(e.items)}</div></div>`}
   return h}
+/* On a PC the Eras shelf wraps onto several rows, so an open album's jacket is moved up to sit right under the row its
+   record is on (full width), instead of below the whole discography where it was off the screen. */
+function hxPlaceGf(){const row=document.querySelector('.hxrow.eras'),gf=document.querySelector('.hx .group.sleeve.gf');
+  if(!row||!gf||getComputedStyle(row).flexWrap!=='wrap')return;
+  const on=row.querySelector('.hxsl.on'),era=on&&on.closest('.hxera');if(!era)return;
+  const top=era.offsetTop;let last=era,n=era.nextElementSibling;
+  while(n&&n.classList.contains('hxera')&&Math.abs(n.offsetTop-top)<4){last=n;n=n.nextElementSibling}
+  last.after(gf);gf.classList.add('inrow')}
 /* on a phone the eras scroll sideways one at a time; a rail of years above jumps to one */
 function hxRail(E){const ys=E.map((e,i)=>{const y=e.t==='era'?parseInt(e.a.year,10):e.t==='box'?NaN:parseInt(hxYears(e.items),10);return [i,e.t==='box'?'Box':isNaN(y)?'•':'’'+String(y).slice(-2)]});
   return `<div class="hxrail" role="group" aria-label="Jump to an era">${ys.map(([i,t],n)=>`<button type="button" data-act="hxrail" data-i="${i}"${n===0?' class="on"':''}>${esc(t)}</button>`).join('')}</div>`}
@@ -9736,10 +9756,12 @@ function gfSettle(el,done){
   if(!host||!el.isConnected||noMotion()){done();return}
   const cs=getComputedStyle(el),gap=parseFloat(getComputedStyle(host).rowGap)||0,h=el.offsetHeight+(parseFloat(cs.marginTop)||0)+(parseFloat(cs.marginBottom)||0);
   const y1=Math.max(0,Math.min(y0,UI.gfS0==null?y0:UI.gfS0));
+  const inRow=el.classList.contains('inrow'),pe=inRow&&el.previousElementSibling?el.previousElementSibling.dataset.era:null;
   done();
   const mh=document.querySelector('.hx .hxmore');if(!mh){window.scrollTo(0,y1);return}
-  const sp=document.createElement('div');sp.setAttribute('aria-hidden','true');sp.style.cssText='flex:none;height:'+h+'px;margin-bottom:0;pointer-events:none';
-  mh.insertBefore(sp,mh.firstChild);window.scrollTo(0,y0);
+  const sp=document.createElement('div');sp.setAttribute('aria-hidden','true');sp.style.cssText='flex:none;height:'+h+'px;margin-bottom:0;pointer-events:none'+(inRow?';flex-basis:100%':'');
+  const pr=pe!=null&&document.querySelector('.hxrow.eras .hxera[data-era="'+pe+'"]');
+  if(pr)pr.after(sp);else mh.insertBefore(sp,mh.firstChild);window.scrollTo(0,y0);
   const ms=560,t0=performance.now(),ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
   let res;const mine=GFP=new Promise(r=>res=r);
   const step=now=>{const t=Math.min(1,(now-t0)/ms),e=ease(t);
@@ -9771,6 +9793,9 @@ function gfShow(el){if(!el)return;
   const on=document.querySelector('.hxsl.on'),rw=on&&on.closest('.hxrow');   /* slide the Releases row so the open record is showing (on a PC the Eras shelf wraps instead, so there is nothing to slide) */
   if(on&&rw&&rw.scrollWidth>rw.clientWidth+2){const L=on.getBoundingClientRect().left-rw.getBoundingClientRect().left+rw.scrollLeft,R=L+on.offsetWidth+60;if(L<rw.scrollLeft||R>rw.scrollLeft+rw.clientWidth)rw.scrollTo({left:Math.max(0,L-24),behavior:'auto'})}
   const r=el.getBoundingClientRect();
+  if(el.classList.contains('inrow')&&on){const er=(on.closest('.hxera')||on).getBoundingClientRect();
+    if(er.top>70&&r.top<innerHeight*.55)return;
+    window.scrollTo({top:Math.max(0,scrollY+er.top-90),behavior:noMotion()?'auto':'smooth'});return}
   if(r.top>60&&r.top<innerHeight*.5)return;
   const row=document.querySelector('.hx .hxrel'),rt=row?row.getBoundingClientRect().top:r.top;
   const top=Math.max(0,Math.min(scrollY+rt-84,scrollY+r.top-90));
