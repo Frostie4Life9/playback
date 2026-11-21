@@ -1307,6 +1307,7 @@ html.lite .hx :is(.rseg,.rsort select,.hxfold,.simtg,.simar,.rsel-b,.hxaddb){bac
 html.lite .hsrc{background:rgb(0 0 0 / .3)}
 html.lite .hxpanel{background:rgb(16 16 18 / .86)}
 html.lite .rsel-m{background:rgb(18 18 20 / .94)}
+html.lite .gf-lb img.gf-lbg,html.lite .gf-lid img.gf-lbg{display:none}   /* 2026.11.20-o: no 36px blur layer on the cover's back */
 html.lite .gfscrim{background:color-mix(in srgb,var(--acsw,#000) 18%,rgb(6 5 10 / .78))}
 /* Fans also spin: records still spin in when the row opens, then hold still until hovered */
 @media (prefers-reduced-motion:no-preference){
@@ -3334,6 +3335,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.20-o', note:'NO MORE BLINKING OPEN ALBUM ON SLOWER LAPTOPS: on a friend\u2019s MacBook, checking songs off (or anything else that redraws the page) made the open album\u2019s jacket flash see-through for a moment and the left record half-draw. The open album is now updated in place on a redraw instead of being thrown away and rebuilt, so the jacket, its records and its grain stay put and only what changed (the heard count, a rating, a new button) updates. In lite mode the back of the cover also skips its heavy blurred-art layer. Nothing looks different on a desktop.'},
   {v:'2026.11.20-n', note:'LITE MODE FOR SLOWER DEVICES: a friend found the artist page laggy on his MacBook. Playback now times its frames on the artist page, and if a device keeps dropping them it switches to lite mode on that device: the artist colors hold still, the buttons on the artist page get a flat tint instead of frosted glass (the top bar keeps its blur), the liquid record skips its blur, records spin up on the turntable instead of flying out of their sleeve, and Fans also spin records only turn on hover. Settings > Lite mode has Auto, Always on and Always off; ?lite=1 previews it for one visit. For everyone: a normal record now spins on the browser\u2019s own animation once it\u2019s up to speed instead of a script every frame, and the record and Fans also spin pause while scrolled out of view. Desktops that keep up look exactly as before.'},
   {v:'2026.11.20-m', note:'PHONE ALBUMS OPEN LIKE A GATEFOLD: on a phone, an opened album is now the open jacket instead of a plain sheet. The cover flies down out of the Releases row onto your rating record, then swings open toward you on its spine and away to the left, showing the inside of the jacket as it turns, while the record spins up underneath and the songs fade in. Inside are two pages side by side with the spine crease between them and a sliver of the other page showing at the edge: Ratings (where it opens: the rating record, the title, your album rating and every song) and Details (the cover with your progress record half out of it, plays, rank, best and weakest songs, listens, review, friends, Share and Find on RYM). Swipe between them or tap Details / Ratings at the top. Closing from Ratings swings the cover shut over the record before it flies home onto its sleeve. The page you are on and how far you scrolled stay put when you rate a song, and drag down, tap the dimmed page or the X still close it. Singles keep their 7-inch sheet. PC and tablet are unchanged.'},
   {v:'2026.11.20-l', note:'PHONE ARTIST PHOTO ENDS IN ONE CURVE: the photo now stays solid right down to a single curved edge (lowest in the middle, rising toward the sides) with only a short soft falloff, instead of a long fade with a curve laid over it. The shade behind the name follows the same curve instead of running straight across, and the moving artist colors no longer show through the photo as you scroll.'},
@@ -7002,12 +7004,37 @@ function pageIn(dir){
     try{el.animate([{opacity:0,transform:`translate(${x}px,${y}px)`},{opacity:1,transform:'none'}],{duration:340,easing:'cubic-bezier(.2,.8,.2,1)'})}catch(e){}
   }
 }
+/* 2026.11.20-o: KEEP THE OPEN ALBUM THROUGH A REDRAW. Every redraw used to throw the open gatefold away and build a new one,
+   and each rebuild makes the browser set up the jacket's 3D panels, records and grain from scratch. A fast desktop does that
+   between two frames; a friend's MacBook could not, so checking songs off made the whole jacket blink see-through and the
+   left record half-draw. Now the new copy is only a blueprint: the album already on screen is patched to match it (text,
+   attributes, added or removed rows), so nothing that is still there gets rebuilt. Opening an album still builds it fresh. */
+function gfSame(a,b){if(a.nodeType!==b.nodeType)return false;if(a.nodeType!==1)return true;
+  if(a.tagName!==b.tagName||(a.classList[0]||'')!==(b.classList[0]||''))return false;
+  for(const k of ['data-id','data-g','data-acol','data-k','data-act'])if(a.getAttribute(k)!==b.getAttribute(k))return false;return true}
+function gfMorph(a,b){
+  if(a.nodeType!==1){if(a.nodeValue!==b.nodeValue)a.nodeValue=b.nodeValue;return}
+  for(const at of [...a.attributes])if(!b.hasAttribute(at.name))a.removeAttribute(at.name);
+  for(const at of [...b.attributes])if(a.getAttribute(at.name)!==at.value)a.setAttribute(at.name,at.value);
+  if(a.tagName==='DETAILS')a.open=b.open;
+  if((a.tagName==='INPUT'||a.tagName==='TEXTAREA'||a.tagName==='SELECT')&&a!==document.activeElement&&a.value!==b.value)a.value=b.value;
+  const ac=[...a.childNodes],bc=[...b.childNodes];
+  let j=0;   /* walk both lists; an old child with no match in the new list is dropped, a new one with no match is put in */
+  for(const n of bc){let k=j;while(k<ac.length&&!gfSame(ac[k],n))k++;
+    if(k<ac.length){while(j<k)ac[j++].remove();gfMorph(ac[j++],n)}else a.insertBefore(n,ac[j]||null)}
+  while(j<ac.length)ac[j++].remove()}
+function gfKeep(old){
+  if(!old||old.isConnected)return;
+  const id=old.dataset.acol,nw=id&&document.querySelector('.group.sleeve.gf[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(id):id)+'"]');
+  if(!nw||nw.classList.contains('gfopen'))return;   /* an album opening plays its own build-up */
+  try{gfMorph(old,nw);nw.replaceWith(old)}catch(e){}}
 function render(){
   if(!isOwnerUI()){if(UI.tab==='screen')UI.tab='music';if(UI.view==='collection')UI.view=null}   /* a saved tab or a stale link can never land a friend on a hidden page */
   lsHeal();
   const vk=UI.view||UI.tab,vPrev=UI.vKey;UI.vKey=vk;
   const vlT=(()=>{const el=document.querySelector('.vl-spin'),an=el&&el.getAnimations&&el.getAnimations()[0];return an?an.currentTime:null})();   /* where the record is in its slow spin, so a redraw does not snap it back to the start */
   const ll=document.getElementById('llist'),llTop=ll?ll.scrollTop:0,llTab=UI.llTab;UI.llTab=UI.tab;
+  const gfOld=document.querySelector('.group.sleeve.gf');   /* 2026.11.20-o: the open album is patched in place below, not rebuilt */
   const gfS=(()=>{const g=document.querySelector('.group.sleeve.gf');if(!g)return null;const r=g.querySelector('.gf-rs'),l=g.querySelector('.gf-ls');return{id:g.dataset.acol,r:r?r.scrollTop:0,l:l?l.scrollTop:0,s:g.scrollTop}})();   /* the open album's panels keep their scroll through a redraw */
   let ohg=null;{const oh=document.querySelector('.hero[data-aid]'),m=oh&&oh.querySelector('.hmesh');   /* the old artist's colors, to fade out from */
     if(m){const g=m.cloneNode(true);g.classList.add('hghost');g.dataset.aid=oh.dataset.aid;
@@ -7029,6 +7056,7 @@ function render(){
   const flipOn=UI.flip&&!noMotion()&&window.SX&&typeof SX.flip==='function';UI.flip=false;
   if(flipOn)SX.flip(document.body,'#llist .tile,.sheet .group.sleeve,.hxrow .hxsl',()=>keepImgs(renderMain),{dur:420,key:el=>el.dataset.sxk?'k'+el.dataset.sxk:el.dataset.acol?'g'+el.dataset.acol:el.dataset.g?'a'+el.dataset.g:el.dataset.id?'t'+el.dataset.id:null});
   else keepImgs(()=>{const top=topHTML();if(!paneSwap(top))renderMain(top)});
+  gfKeep(gfOld);
   if(swK)UI.swKey=UI.tab+':'+(UI.sel[UI.tab]||'');   /* the draw itself may have picked the artist (first launch): remember that one, or the next redraw (a sort change, opening an album) thinks the artist changed and jumps to the top */
   hxPlaceGf();   /* the open album is pinned over the shelf before the page's scroll is put back */
   libGhostRun();   /* the top bar is built once per draw: building it clears the one-shot animation flags of the sheets in it */
