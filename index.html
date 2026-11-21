@@ -2475,6 +2475,28 @@ button.st-t:hover{color:var(--accent);text-decoration:underline}
 /* "Collapse" (was "‹ Stack") on fanned-out singles */
 .hxfold svg{transition:transform .3s cubic-bezier(.2,.8,.2,1)}
 .hxfold:hover svg,.hxfold:focus-visible svg{transform:scaleX(.8)}
+/* 2026.11.20-q: fanned-out singles hang under a thin bracket; Collapse is its label, above the first single. The button
+   takes no room in the row (zero width, the gap after it cancelled), so the singles sit right after the album like before */
+.hxer{--hxcg:46px}
+.hxfold.top{align-self:flex-start;width:0;height:0;margin:0 calc(-1 * var(--hxcg)) 0 0;padding:0;border:0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;overflow:visible;z-index:3}
+.hxfold.top:hover{background:none}
+.hxfp{position:absolute;left:-2px;top:var(--fpy,4px);display:inline-flex;align-items:center;gap:5px;height:28px;box-sizing:border-box;padding:0 12px 0 9px;border-radius:999px;white-space:nowrap;background:rgb(0 0 0 / .3);border:1px solid rgb(255 255 255 / .2);font:600 12.5px var(--body);color:#fff;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);transition:background .2s,border-color .2s,transform .15s}
+.hxfp small{font:inherit;font-weight:500;color:rgb(255 255 255 / .62);margin-left:3px}
+.hxfp svg{width:15px;height:15px;flex:none}
+.hxfold.top:hover .hxfp,.hxfold.top:focus-visible .hxfp{background:rgb(0 0 0 / .44);border-color:rgb(255 255 255 / .34)}
+.hxfold.top:active .hxfp{transform:scale(.95)}
+.hxfold.top:focus-visible{outline:none}.hxfold.top:focus-visible .hxfp{outline:2px solid #fff;outline-offset:2px}
+.hxsl.hxfan::before{content:"";position:absolute;left:0;right:calc(-1 * var(--hxcg));top:calc(var(--fpy,4px) + 13px);height:1px;background:rgb(255 255 255 / .3);pointer-events:none}
+.hxsl.hxfan.l::before{right:-30px;height:9px;box-sizing:border-box;background:none;border:solid rgb(255 255 255 / .3);border-width:1px 1px 0 0;border-radius:0 6px 0 0}
+.hxsl.hxfan.on::before{opacity:.5}
+html.lite .hx .hxfp{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgb(0 0 0 / .4)}
+@media (prefers-reduced-motion:no-preference){
+  .hxfold.top.hxin .hxfp{animation:hxFpIn .45s cubic-bezier(.2,.8,.2,1) backwards}
+  .hxsl.hxfan.hxin::before{animation:hxBrIn .5s cubic-bezier(.2,.8,.2,1) calc(var(--i,0)*55ms + .1s) backwards;transform-origin:0 50%}}
+@keyframes hxFpIn{from{opacity:0;transform:translateY(6px) scale(.9)}}
+@keyframes hxBrIn{from{transform:scaleX(0);opacity:0}}
+@media (max-width:760px){.hxer{--hxcg:40px}.hxfp{--fpy:1px;height:26px;font-size:12px;padding:0 10px 0 8px}.hxsl.hxfan::before{top:14px}.hxsl.hxfan.l::before{right:-26px}}
+@media (min-width:1400px){.hxer{--hxcg:56px}.hxfp{top:8px}.hxsl.hxfan::before{top:21px}.hxsl.hxfan.l::before{right:-36px}}
 
 /* ADD RELEASE: a glass button beside the filters (the empty sleeve took a whole row at the bottom); its form opens right under the Releases heading */
 .hxtools{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;min-width:0}
@@ -3363,6 +3385,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.20-q', note:'PHONE ALBUM OPENS LIKE A REAL GATEFOLD, THEN ZOOMS IN: tapping a record on a phone now lifts its cover out of the row into the middle of the screen as a closed jacket, swings it open on its spine so you see the whole open album for a moment (both inside pages, the rating record peeking out of the right), then zooms into the inside left (Details) until it fills the screen. Swipe or tap Ratings for the right page like before. Closing plays it backwards from whichever page you are on: it zooms back out to the open jacket, the cover swings shut and flies home onto its sleeve. Dragging the sheet down still just drops it. COLLAPSE ON FANNED-OUT SINGLES: instead of a button standing in the row between the album and its singles, the fanned singles now hang under a thin bracket with Collapse and the singles count as its label, above the first one, so the singles sit right next to their album again.'},
   {v:'2026.11.20-p', note:'PHONE ALBUM MATCHES THE DESKTOP JACKET: the open album on a phone now follows the same design as the desktop gatefold, just one page at a time. Ratings opens with a \u201cYour ratings\u201d header, the title on the left like the desktop and the rating record sleeved in the outer edge, peeking in from the side of the screen; the giant centered record is gone. Details is the desktop\u2019s inside left as is: title, heard, rated date and Listen again left-aligned, then plays, rank (which now wraps instead of cutting off), best and weakest songs, your listen history (it was hidden on phones), review and friends. The cover printed on the jacket is zoomed like the desktop, so the Parental Advisory sticker and giant lettering no longer sit behind your songs. Your album says \u201csong avg\u201d next to the 7.7 again, so it is clear the 9 is the album rating. The band behind Details / Ratings is always there, so the title never slides under them. Write a review matches the jacket instead of the old teal. ALSO: the page behind an open album keeps the artist colors (it showed bare grey around the sheet and flashed grey while closing); Collapse on fanned-out singles now sits where the stack was instead of at the far end of the row; $uicideboy$ sorts under S instead of a U section above A; and the artist\u2019s other names stay on one line on a phone. NEW: LEAVE A SONG OUT OF THE SONG AVERAGE: open a song\u2019s rating and tap Leave out of song avg (for interludes and skits you rate low on purpose). It keeps its rating and its spot in the list, marked Not in song avg, but no longer counts toward the album\u2019s song average, the album\u2019s vs-songs difference, best and weakest song, the artist\u2019s Songs number or your song stats. Tap it again to count it.'},
   {v:'2026.11.20-o', note:'NO MORE BLINKING OPEN ALBUM ON SLOWER LAPTOPS: on a friend\u2019s MacBook, checking songs off (or anything else that redraws the page) made the open album\u2019s jacket flash see-through for a moment and the left record half-draw. The open album is now updated in place on a redraw instead of being thrown away and rebuilt, so the jacket, its records and its grain stay put and only what changed (the heard count, a rating, a new button) updates. In lite mode the back of the cover also skips its heavy blurred-art layer. Nothing looks different on a desktop.'},
   {v:'2026.11.20-n', note:'LITE MODE FOR SLOWER DEVICES: a friend found the artist page laggy on his MacBook. Playback now times its frames on the artist page, and if a device keeps dropping them it switches to lite mode on that device: the artist colors hold still, the buttons on the artist page get a flat tint instead of frosted glass (the top bar keeps its blur), the liquid record skips its blur, records spin up on the turntable instead of flying out of their sleeve, and Fans also spin records only turn on hover. Settings > Lite mode has Auto, Always on and Always off; ?lite=1 previews it for one visit. For everyone: a normal record now spins on the browser\u2019s own animation once it\u2019s up to speed instead of a script every frame, and the record and Fans also spin pause while scrolled out of view. Desktops that keep up look exactly as before.'},
@@ -8942,8 +8965,9 @@ function hxEras(a,rl,sleeve,og,NEW){
     const flush=()=>{if(!run.length)return;
       if(run.length<3){inner+=run.map(g=>sleeve(g)).join('')}
       else{const k='s'+run[0].id,o=open(k)||has(run);
-        /* 2026.11.20-p: Collapse sits where the stack was, in front of the singles, so it is always in reach on a phone */
-        if(o)inner+=`<button class="hxfold" data-act="hxfold" data-k="${esc(k)}" aria-label="Stack these ${run.length} singles back up"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h6M6 9l3 3-3 3M21 12h-6M18 9l-3 3 3 3"/></svg>Collapse</button>`+run.map((g,i)=>sleeve(g,NEW===k?i:null)).join('');
+        /* 2026.11.20-q: the fanned-out singles hang under a bracket, with Collapse as its label riding above the first one
+           (it used to stand in the row between the album and the singles, splitting them apart) */
+        if(o){const n=run.length-1;inner+=`<button class="hxfold top${NEW===k?' hxin':''}" data-act="hxfold" data-k="${esc(k)}" aria-label="Stack these ${run.length} singles back up"><span class="hxfp"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h6M6 9l3 3-3 3M21 12h-6M18 9l-3 3 3 3"/></svg>Collapse<small>${run.length} singles</small></span></button>`+run.map((g,i)=>sleeve(g,NEW===k?i:null).replace('class="hxsl','class="hxsl hxfan'+(i===n?' l':''))).join('')}
         else{const cv=run.slice(-3).map((g,i)=>{const r=hxArt(g);return `<i class="c${i}" style="--c:${esc(r.col)}">${r.sArt?`<img src="${esc(r.sArt)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</i>`}).join('');
           inner+=`<button class="hxstk${NEW==='x'+k?' hxin':''}" data-act="hxfold" data-k="${esc(k)}" aria-expanded="false" aria-label="Fan out ${run.length} singles"><span class="hxsc" aria-hidden="true">${cv}</span><span class="hxt">${run.length} singles</span><span class="hxy">${esc(hxYears(run))}</span></button>`}}
       run=[]};
@@ -9078,13 +9102,13 @@ function gfPgPlace(gf){
     p.innerHTML='<i aria-hidden="true"></i><button type="button" data-pg="0" aria-pressed="false">Details</button><button type="button" data-pg="1" aria-pressed="true">Ratings</button>';
     p.addEventListener('click',e=>{const b=e.target.closest('[data-pg]');if(!b)return;gfPgGo(gf,+b.dataset.pg)});
     gb.insertBefore(p,gb.querySelector('.gf-x'))}
-  if(gf.classList.contains('gfopen'))UI.gfPg=1;   /* a freshly opened album always lands on its ratings */
+  if(gf.classList.contains('gfopen'))UI.gfPg=0;   /* 2026.11.20-q: a freshly opened album zooms into its inside left (Details) */
   const pg=UI.gfPg==null?1:UI.gfPg;
   sp.style.scrollSnapType='none';sp.scrollLeft=pg?sp.scrollWidth:0;sp.style.scrollSnapType='';
   if(!sp._pg){sp._pg=1;sp.addEventListener('scroll',()=>gfPgSync(gf),{passive:true})}
   gfPgSync(gf)}
 function gfPgX(gf){const sp=gf.querySelector('.gf-sp'),m=sp?sp.scrollWidth-sp.clientWidth:0;return m>0?Math.min(1,Math.max(0,sp.scrollLeft/m)):1}
-function gfPgSync(gf){const x=gfPgX(gf),pg=x>.5?1:0,p=gf.querySelector('.gfpg');
+function gfPgSync(gf){if(gf._zm)return;const x=gfPgX(gf),pg=x>.5?1:0,p=gf.querySelector('.gfpg');
   if(!UI.gfClosing)UI.gfPg=pg;
   if(p){p.style.setProperty('--pgx',x.toFixed(3));p.querySelectorAll('[data-pg]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.pg===pg)))}
   gfPgScr(gf)}
@@ -9097,7 +9121,85 @@ function gfPgGo(gf,pg){const sp=gf.querySelector('.gf-sp');if(!sp)return;sp.scro
    the back of the jacket as it turns, while the record spins up underneath and the inside fades in.
    Closing: if the rating record is on screen the cover swings shut over it first; then the sheet drops away and the
    cover flies home onto its sleeve, which rises to meet it. */
+/* 2026.11.20-q: THE PHONE ALBUM OPENS LIKE THE DESKTOP, THEN ZOOMS IN. The cover comes out of its sleeve in the row and lands
+   in the middle of the screen as a closed jacket; it swings open on its spine, so the whole open gatefold sits there for a
+   beat (both inside pages, the rating record on the right), then the view zooms into the inside left (Details) until it
+   fills the screen. Closing runs it backwards from whichever page you are on: zoom out to the open jacket, the cover swings
+   shut, and it flies home onto its sleeve. The live sheet itself is what zooms (laid out two pages wide, scaled down and
+   clipped to the top square of each page), so what you see open is exactly what you land on. A drag-down close keeps the drop. */
+function gfZoomPg(el,back){
+  const sp=el.querySelector('.gf-sp'),lp=el.querySelector('.gf-l'),sc=el.parentElement&&el.parentElement.querySelector(':scope>.gfscrim');
+  const tile=document.querySelector('.hxsl.on .hxc'),gb=el.querySelector(':scope>.gfgrab'),rc=el.querySelector('.gfph-rec'),vr=rc&&rc.querySelector('.gf-vr');
+  if(!sp||!lp||!tile)return null;
+  const drag=back?(new DOMMatrixReadOnly(getComputedStyle(el).transform).m42||0):0;if(drag)return null;
+  let T=null;{const ps=tile.style.cssText;tile.style.animation='none';tile.style.transition='none';tile.style.transform='none';const r=tile.getBoundingClientRect();tile.style.cssText=ps;if(r.width)T=r}
+  if(!T)return null;
+  el.style.transform='';el.style.transition='';if(sc){sc.style.opacity='';sc.style.transition=''}
+  const E=el.getBoundingClientRect(),W=E.width,H=E.height,Y0=E.top,Pw=lp.getBoundingClientRect().width;if(!Pw||!H)return null;
+  const m=Math.max(0,2*Pw-W),X=back&&gfPgX(el)>.5?m:0;   /* how far the spread is scrolled right now */
+  /* the open jacket on screen: two squares side by side, a little above the middle */
+  const J=Math.min(W*.45,innerHeight*.3,260),s=J/Pw,Lx=(W-2*J)/2,Ty=Math.max(64,innerHeight*.42-J/2),r=(7/s).toFixed(1);
+  const S=`translate(${Lx.toFixed(1)}px,${(Ty-Y0).toFixed(1)}px) scale(${s.toFixed(4)})`,F=`translate(${(-X).toFixed(1)}px,0px) scale(1)`;
+  const bot=(H-Pw).toFixed(1),rr=`round ${r}px ${r}px ${r}px ${r}px`;
+  const cR=`inset(0px 0px ${bot}px ${Pw.toFixed(1)}px ${rr})`,cA=`inset(0px 0px ${bot}px 0px ${rr})`,cF=`inset(0px ${(m-X).toFixed(1)}px 0px ${X.toFixed(1)}px round 26px 26px 0px 0px)`;
+  /* lay the sheet out two pages wide for the move (put back once it is over) */
+  el._zm=1;el.style.width=(2*Pw).toFixed(1)+'px';el.style.right='auto';el.style.transformOrigin='0 0';el.style.overflow='hidden';sp.style.setProperty('--pw',Pw.toFixed(1)+'px');sp.style.overflow='hidden';sp.scrollLeft=0;
+  const C={left:Lx+J,top:Ty,width:J,height:J};
+  /* the cover: a copy of it, hinged on its left edge (the spine) */
+  const ci=el.querySelector('.sl-pack .sl-cover img'),ti=tile.querySelector('img'),im=ti&&ti.complete&&ti.naturalWidth?ti:ci&&ci.complete&&ci.naturalWidth?ci:null;
+  const pc=el.querySelector('.sl-pack .sl-cover'),hb=pc?getComputedStyle(pc).backgroundColor:'#333',hj=getComputedStyle(el).backgroundColor;
+  const fly=document.createElement('div');fly.className='gfhinge';fly.setAttribute('aria-hidden','true');
+  fly.style.cssText=`position:fixed;left:0;top:0;width:${J}px;height:${J}px;z-index:1200;pointer-events:none;transform-origin:0 0;perspective:${(J*3).toFixed(0)}px;perspective-origin:50% 50%;--hb:${hb};--hj:${hj};--hw:${J}px`;
+  const lt=(pc&&pc.querySelector('.sl-ph'))?pc.querySelector('.sl-ph').textContent:'';
+  fly.innerHTML=`<div class="gfh-l"><div class="gfh-f">${im?`<img src="${esc(im.currentSrc||im.src)}" alt="">`:`<span>${esc(lt)}</span>`}<i class="gfh-sh"></i></div><div class="gfh-b"><i class="gfh-sh"></i></div></div>`;
+  document.body.appendChild(fly);
+  const face=fly.firstChild,ff=face.querySelector('.gfh-f'),shF=face.querySelector('.gfh-f>.gfh-sh'),shB=face.querySelector('.gfh-b>.gfh-sh');
+  const at=q=>`translate(${q.left.toFixed(1)}px,${q.top.toFixed(1)}px) scale(${(q.width/J).toFixed(4)})`;
+  const M={left:(T.left+C.left)/2,top:Math.min(T.top,C.top)-30,width:(T.width+C.width)/2*1.06};
+  const sw='cubic-bezier(.45,0,.2,1)',zm='cubic-bezier(.65,0,.25,1)',a=[];
+  const O=(t,TT)=>Math.min(1,Math.max(0,t/TT));
+  if(!back){
+    /* 0 out of the sleeve · 560 landed · 620-1300 swings open · 1300 the inside left shows · 1580-2300 zoom into it */
+    const TT=2300;
+    if(sc)a.push(sc.animate([{opacity:0},{opacity:1}],{duration:380,easing:'ease-out',fill:'both'}));
+    a.push(el.animate([{opacity:0},{opacity:0,offset:.98},{opacity:1}],{duration:560,fill:'backwards'}));
+    a.push(el.animate([{transform:S,clipPath:cR,offset:0},{transform:S,clipPath:cR,offset:O(1290,TT)},{transform:S,clipPath:cA,offset:O(1300,TT)},{transform:S,clipPath:cA,offset:O(1580,TT),easing:zm},{transform:F,clipPath:cF,offset:1}],{duration:TT,fill:'both'}));
+    if(gb)a.push(gb.animate([{opacity:0},{opacity:0,offset:.82},{opacity:1}],{duration:TT,fill:'both'}));
+    a.push(fly.animate([{transform:at(T),offset:0},{transform:at(M),offset:.45,easing:'cubic-bezier(.3,0,.2,1)'},{transform:at(C),offset:1}],{duration:560,easing:'cubic-bezier(.4,0,.2,1)',fill:'both'}));
+    a.push(ff.animate([{boxShadow:'0 0 0 rgb(0 0 0 / 0)'},{boxShadow:'0 26px 44px rgb(0 0 0 / .45)',offset:.45},{boxShadow:'0 18px 38px rgb(0 0 0 / .42)'}],{duration:560,fill:'both'}));
+    a.push(face.animate([{transform:'rotateY(0deg)'},{transform:'translateZ(16px) rotateY(-96deg)',offset:.5},{transform:'rotateY(-180deg)'}],{duration:680,delay:620,easing:sw,fill:'both'}));
+    if(shF)a.push(shF.animate([{opacity:0},{opacity:.6}],{duration:340,delay:620,easing:'ease-in',fill:'both'}));
+    if(shB)a.push(shB.animate([{opacity:.55},{opacity:.08}],{duration:340,delay:960,easing:'ease-out',fill:'both'}));
+    a.push(fly.animate([{opacity:1},{opacity:0}],{duration:200,delay:1300,easing:'ease-out',fill:'forwards'}));
+    if(vr){a.push(vr.animate([{rotate:'-150deg',scale:'.94'},{rotate:'0deg',scale:'1'}],{duration:1300,delay:700,easing:'cubic-bezier(.2,.7,.2,1)',fill:'backwards'}));
+      setTimeout(()=>{if(!vr.isConnected)return;vr.classList.remove('rip');void vr.offsetWidth;vr.classList.add('rip');setTimeout(()=>vr.classList.remove('rip'),1800)},1100)}
+  }else{
+    /* 0-600 zoom out · 680-1300 the cover swings shut · 1300-1900 it flies home */
+    const TT=1300;
+    fly.style.opacity='0';face.style.transform='rotateY(-180deg)';fly.style.transform=at(C);
+    if(gb)a.push(gb.animate([{opacity:1},{opacity:0}],{duration:200,fill:'forwards'}));
+    a.push(el.animate([{transform:F,clipPath:cF,offset:0,easing:zm},{transform:S,clipPath:cA,offset:O(600,TT)},{transform:S,clipPath:cA,offset:O(680,TT)},{transform:S,clipPath:cR,offset:O(690,TT)},{transform:S,clipPath:cR,offset:1}],{duration:TT,fill:'forwards'}));
+    a.push(el.animate([{opacity:1},{opacity:0}],{duration:1,delay:TT,fill:'forwards'}));
+    a.push(fly.animate([{opacity:0},{opacity:1}],{duration:90,delay:600,fill:'both'}));
+    a.push(face.animate([{transform:'rotateY(-180deg)'},{transform:'translateZ(16px) rotateY(-84deg)',offset:.5},{transform:'rotateY(0deg)'}],{duration:620,delay:680,easing:sw,fill:'both'}));
+    if(shB)a.push(shB.animate([{opacity:.08},{opacity:.55}],{duration:300,delay:680,easing:'ease-in',fill:'both'}));
+    if(shF)a.push(shF.animate([{opacity:.6},{opacity:0}],{duration:320,delay:980,easing:'ease-out',fill:'both'}));
+    a.push(fly.animate([{transform:at(C),offset:0},{transform:at(M),offset:.5,easing:'cubic-bezier(.3,0,.2,1)'},{transform:at(T),offset:1}],{duration:600,delay:TT,easing:'cubic-bezier(.45,0,.2,1)',fill:'forwards'}));
+    a.push(ff.animate([{boxShadow:'0 18px 38px rgb(0 0 0 / .42)'},{boxShadow:'0 0 0 rgb(0 0 0 / 0)'}],{duration:600,delay:TT,easing:'ease-in',fill:'both'}));
+    if(sc)a.push(sc.animate([{opacity:1},{opacity:0}],{duration:440,delay:TT,easing:'ease-in',fill:'forwards'}));
+    const hs=tile.closest('.hxsl');if(hs)setTimeout(()=>hs.classList.add('up'),TT+380)
+  }
+  const done=Promise.all(a.map(x=>x.finished)).then(()=>{},()=>{});
+  const mine=GFP=done.then(()=>new Promise(r=>setTimeout(r,30)));mine.then(()=>{if(GFP===mine)GFP=null});
+  done.then(()=>{
+    if(!back){
+      el._zm=0;el.style.width='';el.style.right='';el.style.transformOrigin='';el.style.overflow='';sp.style.removeProperty('--pw');sp.style.overflow='';
+      sp.style.scrollSnapType='none';sp.scrollLeft=0;sp.style.scrollSnapType='';
+      a.forEach(x=>{try{x.cancel()}catch(e){}});fly.remove();UI.gfPg=0;gfPgSync(el)}
+    else requestAnimationFrame(()=>requestAnimationFrame(()=>fly.remove()))});
+  return done}
 function gfRunPg(el,back){
+  {const z=gfZoomPg(el,back);if(z)return z}
   const sc=el.parentElement&&el.parentElement.querySelector(':scope>.gfscrim'),rc=el.querySelector('.gfph-rec'),vr=rc&&rc.querySelector('.gf-vr');
   const tile=document.querySelector('.hxsl.on .hxc'),a=[];
   let T=null;if(tile){const ps=tile.style.cssText;tile.style.animation='none';tile.style.transition='none';tile.style.transform='none';const r=tile.getBoundingClientRect();tile.style.cssText=ps;if(r.width)T=r}
