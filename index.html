@@ -2813,6 +2813,7 @@ html.lite .hx .hxfp{-webkit-backdrop-filter:none;backdrop-filter:none;background
   @media (prefers-reduced-motion:no-preference){.gf.gfopen .gfnx{animation:gfFade .45s ease 1.9s backwards}}
   /* 2026.11.21-a: light mode for an album that once crashed this device: no cover print, no blur behind it */
   .gf.gfsafe{--art:none!important}
+  .gf.gfsafe img.gf-lbg{display:none!important}
   :has(>.gf.gfsafe)>.gfscrim{-webkit-backdrop-filter:none!important;backdrop-filter:none!important;background:rgb(0 0 0 / .6)}
   .gf.phs.pg .gf-lf{background-size:auto,auto 100%,auto;background-position:0 0,left center,0 0}
   .gf.phs.pg .gf-r{background-size:auto,auto 100%,auto;background-position:0 0,right center,0 0}
@@ -3459,6 +3460,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.21-f', note:'CRASH REPORTS SAY HOW FAR IT GOT: a second album (Skate Story: Vol. I) made the iPhone drop the page when opened, like Imaginal Disk. Both have deluxe tracks. The crash note now records each step of opening an album with the time since the tap (page built, sheet placed, cover in the air, zooming, then marks at 0.25, 0.7, 1.3, 2 and 3 seconds), so the next report shows exactly where it dies. Light mode for an album that crashed also drops the blurred copy of the cover on the back of the jacket.'},
   {v:'2026.11.21-e', note:'DELUXE STACKED BEHIND, A TIMELINE FOR EVERY ARTIST, COLOR DRIFT: an album with a deluxe edition now has the deluxe sleeve stacked behind it in the Releases row, peeking out above, and it stays there when the album opens. Switching Standard / Deluxe in an open album closes the record you have out (its cover flies home), the two sleeves trade places in the row, and the other edition is pulled out and swings open like any record, with its own cover, color and songs. Every artist now gets the timeline, even with one album or none (it used to need two albums); an artist with no albums has a Singles and EPs era. The artist color field now drifts up slowly as you scroll (15% of the scroll, at most a quarter of the screen) instead of staying glued in place; it is off in lite mode.'},
   {v:'2026.11.21-d', note:'FULL DATES, GROOVES BY RATING, CALMER FANS ALSO SPIN, SMOOTHER SINGLES STACK: releases on the timeline now show their full release date (Aug 3, 2018) instead of just the year. New imports keep the date; releases already in your log get theirs from Apple Music the first time each artist page opens (one lookup per artist) and from the daily new-release check. The lit lines on the records on the artist page now light for songs you have RATED, not just heard. Fans also spin records no longer restart their spin on every tap (the spin follows the clock), and each one takes its color from the artist\'s photo. Fanning out a singles stack deals the singles off the top of the stack one by one while the row slides over to make room; stacking them back gathers each one onto the stack. Best and weakest song ties are now settled by plays: the more-played song is the best, the less-played the weakest.'},
   {v:'2026.11.21-c', note:'DELUXE IS ITS OWN RECORD, LISTENS ARE PAGES, AND SMOOTHER CLOSING: in an open album, switching Standard / Deluxe now slides the record you had out down and away while the other edition rises out from behind it and comes forward, with its own cover, jacket print, color and songs. Going to a later listen turns the ratings page over like a booklet (on a phone, the page you are on), and going back turns the earlier page back over onto it. Closing an album before it has finished opening now folds it shut from wherever it was instead of snapping open first. The Spotify / Apple Music photo choice is now kept per artist (and synced), so switching one artist no longer switches everyone. The timeline\'s era years fade in once when an artist opens instead of flashing on every tap.'},
@@ -7308,7 +7310,8 @@ function render(){
   if(UI.toAdd){UI.toAdd=false;const ad=document.getElementById('addart');if(ad){ad.scrollIntoView({behavior:'smooth',block:'start'});const q=document.getElementById('mb-q');if(q&&!q.value&&matchMedia('(hover:hover)').matches)q.focus({preventScroll:true})}}
   if(UI.toAlb){const gid=UI.toAlb;UI.toAlb=null;
     const al=document.querySelector('.group.sleeve[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(gid):gid)+'"]');
-    if(al){gfShow(al);if(al.classList.contains('gfopen')&&!noMotion()){try{gfRun(al,false)}catch(e){}}slRipple(al,1900)}}
+    if(al){gfStep('dom');gfShow(al);gfStep('shown');if(al.classList.contains('gfopen')&&!noMotion()){try{gfRun(al,false)}catch(e){gfStep('err:'+String(e&&e.message||e).slice(0,40))}}gfStep('run');slRipple(al,1900);
+      requestAnimationFrame(()=>{gfStep('f1');requestAnimationFrame(()=>gfStep('f2'))});[250,700,1300,2000,3000].forEach(t=>setTimeout(()=>gfStep('t'+t),t))}}
   if(UI.toSheet){UI.toSheet=false;const sh=document.querySelector('.sheet');if(sh)sh.scrollIntoView({behavior:'smooth',block:'start'})}
   if(GFX)gfFxRun();
 }
@@ -9311,6 +9314,7 @@ function gfPgGo(gf,pg){const sp=gf.querySelector('.gf-sp');if(!sp)return;sp.scro
    shut, and it flies home onto its sleeve. The live sheet itself is what zooms (laid out two pages wide, scaled down and
    clipped to the top square of each page), so what you see open is exactly what you land on. A drag-down close keeps the drop. */
 function gfZoomPg(el,back){
+  if(!back)gfStep('zoom');
   if(gfSafe(el.dataset.acol))return null;   /* 2026.11.21-a: an album that once crashed this device opens with the plain rise */
   const sp=el.querySelector('.gf-sp'),lp=el.querySelector('.gf-l'),sc=el.parentElement&&el.parentElement.querySelector(':scope>.gfscrim');
   const tile=document.querySelector('.hxsl.on .hxc'),gb=el.querySelector(':scope>.gfgrab'),rc=el.querySelector('.gfph-rec'),vr=rc&&rc.querySelector('.gf-vr');
@@ -9336,7 +9340,7 @@ function gfZoomPg(el,back){
   fly.style.cssText=`position:fixed;left:0;top:0;width:${J}px;height:${J}px;z-index:1200;pointer-events:none;transform-origin:0 0;perspective:${(J*3).toFixed(0)}px;perspective-origin:50% 50%;--hb:${hb};--hj:${hj};--hw:${J}px`;
   const lt=(pc&&pc.querySelector('.sl-ph'))?pc.querySelector('.sl-ph').textContent:'';
   fly.innerHTML=`<div class="gfh-l"><div class="gfh-f">${im?`<img src="${esc(im.currentSrc||im.src)}" alt="">`:`<span>${esc(lt)}</span>`}<i class="gfh-sh"></i></div><div class="gfh-b"><i class="gfh-sh"></i></div></div>`;
-  document.body.appendChild(fly);
+  document.body.appendChild(fly);gfStep('hinge');
   const face=fly.firstChild,ff=face.querySelector('.gfh-f'),shF=face.querySelector('.gfh-f>.gfh-sh'),shB=face.querySelector('.gfh-b>.gfh-sh');
   const at=q=>`translate(${q.left.toFixed(1)}px,${q.top.toFixed(1)}px) scale(${(q.width/J).toFixed(4)})`;
   const M={left:(T.left+C.left)/2,top:Math.min(T.top,C.top)-30,width:(T.width+C.width)/2*1.06};
@@ -10948,13 +10952,18 @@ function gfGuard(a,g){if(!g)return;
     document.body.appendChild(el);el.querySelector('button').onclick=()=>{el.classList.remove('in');setTimeout(()=>el.remove(),350)};
     requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('in')));setTimeout(()=>{if(el.isConnected){el.classList.remove('in');setTimeout(()=>el.remove(),350)}},9000);
     /* the owner's own phone files the details in his Suggest box (friends' phones never send anything on their own) */
-    if(window.PB_OWNER)fetch(SUG_URL+'/suggest',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:'Crash guard',text:('[crash] '+JSON.stringify(o)+' · '+((navigator.userAgent.match(/(iPhone|iPad|Android|Macintosh|Windows|Linux)[^;)]*/)||[''])[0])).slice(0,600)})}).catch(()=>{});
+    if(window.PB_OWNER)fetch(SUG_URL+'/suggest',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:'Crash guard',text:('[crash] '+JSON.stringify({...o,art:o.art?o.art.replace(/^https?:\/\/([^/]+).*$/,'$1'):'',dxArt:o.dxArt?(o.dxArt===o.art?'same':o.dxArt.replace(/^https?:\/\/([^/]+).*$/,'$1')):''})+' · '+((navigator.userAgent.match(/(iPhone|iPad|Android|Macintosh|Windows|Linux)[^;)]*/)||[''])[0])).slice(0,600)})}).catch(()=>{});
   }catch(e){}},1400)})();
+/* 2026.11.21-f: WHERE IT DIED. Each step of opening an album is noted on the same note, with the time since the tap, so the
+   next crash report says how far it got (built the page, placed the sheet, cover in the air, zooming, timed marks) instead of
+   only which album it was. */
+function gfStep(s){try{const o=JSON.parse(localStorage.getItem(GFG_K)||'null');if(!o)return;o.st=(o.st?o.st+'>':'')+s+'@'+(Date.now()-o.t);localStorage.setItem(GFG_K,JSON.stringify(o))}catch(e){}}
 function gfCrashLog(){try{return JSON.parse(localStorage.getItem(GFC_K)||'[]')}catch(e){return[]}}
 function artistView(a){heroLook(a.id);
   if(UI.toAlb&&a.groups.some(g=>String(g.id)===String(UI.toAlb))){UI.alb={aid:a.id,g:String(UI.toAlb)};UI.gfAnim=String(UI.toAlb);gfGuard(a,a.groups.find(g=>String(g.id)===String(UI.toAlb)))}
   const all=artistItems(a),done=all.filter(i=>isDone(i.id)).length,rated=all.filter(i=>rating(i.id)).length,p=pct(all.map(i=>i.id));
   const og=gfOpenId(a),og2=og&&a.groups.find(g=>String(g.id)===og),gf=og2?gfHtml(a,og2):'';
+  if(UI.gfAnim)gfStep('html');
   HXSINK=UI.gfAnim;UI.dxAnim=null;UI.gfAnim=null;                     /* the switch and opening animations play once, on the draw they were asked for */
   const phUrl=phOn()?phPick(a):'';
   const addIn=UI.relAddAnim;UI.relAddAnim=false;
