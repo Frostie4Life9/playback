@@ -1755,14 +1755,14 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .simrow.sim-in .simlit{animation:simFill 1.4s cubic-bezier(.2,.8,.2,1) calc(var(--i) * 70ms + .2s) backwards}
 @keyframes simFill{from{--m:0}}
 /* and it spins, closer matches a little faster */
-@media (prefers-reduced-motion:no-preference){.simd{animation:simRot var(--rot) linear infinite}}
+@media (prefers-reduced-motion:no-preference){.simd{animation:simRot var(--rot) linear var(--rdl,0s) infinite}}
 @keyframes simRot{to{rotate:360deg}}
 .simt:hover .simd,.simt:focus-visible .simd{transform:rotate(40deg) translateY(-4px);box-shadow:0 20px 34px rgb(0 0 0 / .4)}
 .simn{display:block;margin-top:12px;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sims{display:block;margin-top:2px;font-size:12px;color:rgb(255 255 255 / .62);white-space:nowrap}
 .sims em{font-style:normal;color:#fff;font-weight:700}
 .simrow.sim-in .simt{animation:simUp .5s cubic-bezier(.2,.8,.2,1) calc(var(--i) * 45ms) backwards}
-.simrow.sim-in .simd{animation:simSpin .9s cubic-bezier(.2,.8,.2,1) calc(var(--i) * 45ms) backwards,simRot var(--rot) linear infinite}
+.simrow.sim-in .simd{animation:simSpin .9s cubic-bezier(.2,.8,.2,1) calc(var(--i) * 45ms) backwards,simRot var(--rot) linear var(--rdl,0s) infinite}
 @keyframes simUp{from{opacity:0;transform:translateY(16px)}}
 @keyframes simSpin{from{transform:rotate(-120deg)}}
 @media (max-width:760px){.simt,.simd{width:100px}.simd{height:100px}.simrow{gap:20px}.simnav{display:none}.simsub{font-size:12px}}
@@ -2420,7 +2420,7 @@ button.st-t:hover{color:var(--accent);text-decoration:underline}
 .simt.wait .simlab::after{content:"";position:absolute;inset:0;z-index:2;border-radius:50%;background:linear-gradient(110deg,transparent 30%,rgb(255 255 255 / .38) 50%,transparent 70%) 0 0/250% 100%;animation:simWait 1.3s linear infinite}
 @keyframes simWait{from{background-position:130% 0}to{background-position:-30% 0}}
 @media (prefers-reduced-motion:reduce){.simt.wait .simlab::after{animation:none;background:rgb(255 255 255 / .12)}}
-@media (prefers-reduced-motion:no-preference){.simlab{animation:simRot var(--rot) linear infinite}.simrow.sim-in .simlab{animation:simSpin .9s cubic-bezier(.2,.8,.2,1) calc(var(--i) * 45ms) backwards,simRot var(--rot) linear infinite}}
+@media (prefers-reduced-motion:no-preference){.simlab{animation:simRot var(--rot) linear var(--rdl,0s) infinite}.simrow.sim-in .simlab{animation:simSpin .9s cubic-bezier(.2,.8,.2,1) calc(var(--i) * 45ms) backwards,simRot var(--rot) linear var(--rdl,0s) infinite}}
 .simt:hover .simd,.simt:focus-visible .simd{transform:translateY(-5px)}
 /* the opening reveal used to leave a clipping box behind the row (its shadows were cut off in a rectangle) */
 .simbox.crate.open .simbody.sim-opening{animation:simGrow2 .45s cubic-bezier(.2,.8,.2,1) backwards}
@@ -3445,6 +3445,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.21-d', note:'FULL DATES, GROOVES BY RATING, CALMER FANS ALSO SPIN, SMOOTHER SINGLES STACK: releases on the timeline now show their full release date (Aug 3, 2018) instead of just the year. New imports keep the date; releases already in your log get theirs from Apple Music the first time each artist page opens (one lookup per artist) and from the daily new-release check. The lit lines on the records on the artist page now light for songs you have RATED, not just heard. Fans also spin records no longer restart their spin on every tap (the spin follows the clock), and each one takes its color from the artist\'s photo. Fanning out a singles stack deals the singles off the top of the stack one by one while the row slides over to make room; stacking them back gathers each one onto the stack. Best and weakest song ties are now settled by plays: the more-played song is the best, the less-played the weakest.'},
   {v:'2026.11.21-c', note:'DELUXE IS ITS OWN RECORD, LISTENS ARE PAGES, AND SMOOTHER CLOSING: in an open album, switching Standard / Deluxe now slides the record you had out down and away while the other edition rises out from behind it and comes forward, with its own cover, jacket print, color and songs. Going to a later listen turns the ratings page over like a booklet (on a phone, the page you are on), and going back turns the earlier page back over onto it. Closing an album before it has finished opening now folds it shut from wherever it was instead of snapping open first. The Spotify / Apple Music photo choice is now kept per artist (and synced), so switching one artist no longer switches everyone. The timeline\'s era years fade in once when an artist opens instead of flashing on every tap.'},
   {v:'2026.11.21-b', note:'ARTIST PHOTO FADE WITH NO LINE: on a bright photo against a dark artist color (Daft Punk) the left fade showed as a hard vertical line, because a straight fade has corners where it starts and where it changes speed. The left and bottom fades on Apple Music artist photos now ease in and out on an S-curve, so the photo melts into the colors with no edge; the top stays sharp.'},
   {v:'2026.11.21-a', note:'PHONE REVIEW FIXES + ONE SONG, SEVERAL ARTISTS. Crash guard: an album that makes the page reload when tapped (Imaginal Disk on iPhone) can no longer loop; the next start notices, says so, opens that album in light mode on that device (no zoom, cover print or blur), and files what it holds in your Suggest box so the cause can be found. Coming back: a reload puts you back where you were on the artist page, with the album you had open (never the one that crashed). Missing songs: a song whose title has no Latin letters (JPEGMAFIA\u2019s \u6295\u5f71\u306e\u82b8\u8853) was dropped on import; tap Check for new releases on the artist to bring it in. Shared songs: the same song on two artists\u2019 releases, where one credits the other (WASSUP on HYPERYOUTH and JPEGMAFIA\u2019s WASSUP single), is one song with one rating, checkmark and play count; the releases stay separate. Phone timeline: rows that scroll no longer sit 14px left of the others, and fade at the edge they continue past. Open album on a phone: Next record / Previous at the end of each page; the inside left no longer shows as a black block while closing; song discs no longer blank out while scrolling; the Details/Ratings labels stay readable mid-slide; Write a review and More are pills like Share. Artists list: tiles rise in right away and the letter headers fade into the list. Artist photo (wide screens): Apple Music photos fade like the Spotify banner, long and soft from the left and bottom, with a sharp top edge.'},
@@ -4878,6 +4879,34 @@ async function mbFetchCatalog(mbid){
   return rels;
 }
 const MB_KIND_ORDER=['Studio album','EP','Single','Compilation','Live','Other'];
+/* FULL RELEASE DATES (2026.11.21-d): a release keeps its date as g.dt ("2018-08-03", or "2018-08" when only the month is known).
+   Imports save it from now on. Releases imported before this are filled in from Apple Music: once per artist when their page
+   opens (one lookup of all their releases, plus one search the first time if their Apple id is not known), and by the daily
+   new-release check, which reads the same list anyway. A release Apple does not have keeps showing just its year. */
+function dtClean(d){const m=/^(\d{4})-(\d\d)(?:-(\d\d))?/.exec(String(d||''));if(!m||m[1]==='9999'||m[2]==='99')return '';return m[3]&&m[3]!=='99'?m[1]+'-'+m[2]+'-'+m[3]:m[1]+'-'+m[2]}
+function dtShow(g){const d=g&&g.dt;if(!d)return g&&g.year||'';const p=d.split('-').map(Number);
+  try{return new Date(Date.UTC(p[0],p[1]-1,p[2]||1)).toLocaleDateString('en-US',p[2]?{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'}:{month:'short',year:'numeric',timeZone:'UTC'})}catch(e){return g.year||''}}
+/* Apple's release list for an artist, matched onto the releases you have by title (an " - Single" / " - EP" ending dropped). Returns how many got a date. */
+function dtFill(a,res){let n=0;if(!a||!Array.isArray(res))return 0;
+  const by=new Map();for(const c of res){if(!c||c.wrapperType!=='collection'||!c.collectionName||!c.releaseDate)continue;
+    const k=nTitle(String(c.collectionName).replace(/\s-\s(single|ep)$/i,''));const d=String(c.releaseDate).slice(0,10);
+    if(!/^\d{4}-\d\d-\d\d$/.test(d))continue;if(!by.has(k)||by.get(k)>d)by.set(k,d)}   /* the earliest edition is the release date */
+  for(const g of a.groups){if(g.dt&&g.dt.length===10)continue;const k=nTitle(g.title),d=by.get(k)||(g.dxTitle?by.get(nTitle(g.dxTitle)):'');
+    if(d&&(!g.year||!/^\d{4}$/.test(String(g.year))||Math.abs(+d.slice(0,4)-+g.year)<=1)){g.dt=d;n++}}   /* a different year means a different record with the same name */
+  return n}
+const DTF={busy:false};
+async function dtLoad(){
+  const h=document.querySelector('.head.hero.hx');if(!h||DTF.busy||!READY||!window.fetch||!navigator.onLine)return;
+  const a=(S.music||[]).find(x=>x.id===h.dataset.aid);if(!a||a.example||!a.groups.some(g=>!g.dt||g.dt.length<10))return;
+  if(a.dtTry&&a.dtTry>Date.now()-14*864e5)return;   /* tried in the last two weeks */
+  DTF.busy=true;a.dtTry=Date.now();
+  try{const loc=nrLoc(),rec=loc.a[a.id]||(loc.a[a.id]={});
+    if(!rec.id&&a.amid)rec.id=String(a.amid);
+    if(!rec.id){rec.id=await nrFindId(a);nrSave(loc)}
+    if(rec.id){const n=dtFill(a,await nrGet('lookup',{id:rec.id,entity:'album',limit:200}));save();if(n&&document.querySelector('.head.hero.hx[data-aid="'+a.id+'"]'))renderSoon()}
+    else save()}
+  catch(e){a.dtTry=Date.now()-13*864e5}   /* Apple busy or offline: try again tomorrow */
+  finally{DTF.busy=false}}
 function mbDateKey(d){d=String(d||'');const p=d.split('-');return d?(p[0]||'9999')+'-'+(p[1]||'99')+'-'+(p[2]||'99'):'9999-99-99'}
 /* the longest other edition is "the deluxe": its title and cover (release-level cover art) */
 function mbDeluxeLook(eds,base){
@@ -5025,7 +5054,7 @@ function mbClaim(entries,versions){
   order.forEach(mbDeluxeOrder);
   return order.filter(E=>E.items.length)
     .sort((a,b)=>(MB_KIND_ORDER.indexOf(a.kind)-MB_KIND_ORDER.indexOf(b.kind))||(a.date<b.date?-1:a.date>b.date?1:0))
-    .map(E=>({rgid:E.rgid,title:E.title,year:E.year,kind:E.kind,img:E.img||'',...(E.dxImg?{dxImg:E.dxImg}:{}),...(E.dxTitle?{dxTitle:E.dxTitle}:{}),...(E.w&&E.w.length?{w:E.w}:{}),items:E.items}));
+    .map(E=>({rgid:E.rgid,title:E.title,year:E.year,kind:E.kind,img:E.img||'',...(dtClean(E.date)?{dt:dtClean(E.date)}:{}),...(E.dxImg?{dxImg:E.dxImg}:{}),...(E.dxTitle?{dxTitle:E.dxTitle}:{}),...(E.w&&E.w.length?{w:E.w}:{}),items:E.items}));
 }
 
 /* ---- merge into the log: safe to repeat, never drops a mark ---- */
@@ -5059,7 +5088,8 @@ function mbMerge(art,incoming,versions,tidy,sp){
     const items=[];
     for(const t of G.items){if(placed.has(t.k))continue;placed.add(t.k);items.push({id:idFor(t.k),title:t.title,k:t.k,...(t.f&&t.f.length?{f:t.f}:{}),...(t.dx?{dx:1}:{})})}
     const ow=(a.groups.find(x=>x.id===sid(a.id,'rg',G.rgid))||{}).w;
-    if(items.length)groups.push({id:sid(a.id,'rg',G.rgid),src:'mb',mbid:G.rgid,title:G.title,year:G.year,kind:G.kind,...(ow&&ow.length?{w:ow}:G.w&&G.w.length?{w:G.w}:{}),...(G.img?{img:G.img}:{}),...(G.dxImg?{dxImg:G.dxImg}:{}),...(G.dxTitle?{dxTitle:G.dxTitle}:{}),items});
+    const od=(a.groups.find(x=>x.id===sid(a.id,'rg',G.rgid))||{}).dt,nd=G.dt||dtClean(G.date)||od;
+    if(items.length)groups.push({id:sid(a.id,'rg',G.rgid),src:'mb',mbid:G.rgid,title:G.title,year:G.year,kind:G.kind,...(nd?{dt:nd}:{}),...(ow&&ow.length?{w:ow}:G.w&&G.w.length?{w:G.w}:{}),...(G.img?{img:G.img}:{}),...(G.dxImg?{dxImg:G.dxImg}:{}),...(G.dxTitle?{dxTitle:G.dxTitle}:{}),items});
   }
   /* A song with no exact match, when exactly ONE song on the new tracklists has the same title once a
      subtitle in brackets is ignored, moves onto that song with its checkmark and rating. Never when two
@@ -5180,7 +5210,7 @@ function undoApply(aid){
 }
 setTimeout(undoLoad,0);
 function mbTidy(a){
-  const inc=a.groups.filter(g=>g.src==='mb').map(g=>({rgid:g.mbid,title:g.title,year:g.year,kind:g.kind,img:g.img||'',...(g.dxImg?{dxImg:g.dxImg}:{}),...(g.dxTitle?{dxTitle:g.dxTitle}:{}),...(g.w&&g.w.length?{w:g.w}:{}),items:g.items.map(i=>({k:mbItemKey(i),title:i.title,...(i.f&&i.f.length?{f:i.f}:{}),...(i.dx?{dx:1}:{})}))}));
+  const inc=a.groups.filter(g=>g.src==='mb').map(g=>({rgid:g.mbid,title:g.title,year:g.year,kind:g.kind,img:g.img||'',...(g.dt?{dt:g.dt}:{}),...(g.dxImg?{dxImg:g.dxImg}:{}),...(g.dxTitle?{dxTitle:g.dxTitle}:{}),...(g.w&&g.w.length?{w:g.w}:{}),items:g.items.map(i=>({k:mbItemKey(i),title:i.title,...(i.f&&i.f.length?{f:i.f}:{}),...(i.dx?{dx:1}:{})}))}));
   mbMerge({id:a.mbid,name:a.name},inc,a.mbVersions,true);
 }
 function mbReportText(r){
@@ -7093,10 +7123,11 @@ function slRipple(sl,base,minJ,el){
   clearTimeout(sl._rt);sl._rt=setTimeout(()=>{sl.classList.remove('rip');sl.querySelectorAll('.sl-disc i.nr').forEach(e=>e.classList.remove('nr'))},Math.max(0,base+2600-el))}
 /* ask for a ripple on the next draw of this release (checking a song off, switching to Deluxe) */
 function slPulseAsk(gid,base){UI.pulse={g:String(gid),b:base||0}}
-/* which grooves a release has lit right now (the same folding the sleeve is drawn with) */
+/* which grooves a release has lit right now (the same folding the sleeve is drawn with). Since 2026.11.21-d a groove lights
+   for a RATED song, not just a heard one: the records show how much of a release you have rated. */
 function slRings(g){const shown=viewItems(g),R=Math.min(shown.length,22),rings=[];
   for(let j=0;j<R;j++){const lo=Math.floor(j*shown.length/R),hi=Math.max(lo+1,Math.floor((j+1)*shown.length/R)),seg=shown.slice(lo,hi);
-    rings.push(!seg.length||!seg.every(i=>isDone(i.id))?0:seg.some(i=>typeof lsCar==='function'&&lsCar(g,i.id))?1:2)}
+    rings.push(!seg.length||!seg.every(i=>rating(i.id))?0:seg.some(i=>typeof lsCar==='function'&&lsCar(g,i.id))?1:2)}
   return rings}
 const slEl=gid=>document.querySelector('.group.sleeve[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(String(gid)):gid)+'"]');
 /* a song was just heard or first rated: note which grooves that newly lights (the page has not redrawn yet, so the
@@ -7248,6 +7279,7 @@ function render(){
   if(keepSim){const e=document.querySelector('.simrow');if(e&&!e.scrollLeft)e.scrollLeft=keepSim}
   phHiLoad();
   phAmLoad();
+  dtLoad();
   tdPaint();
   hxObserve();
   hxPlaceGf();
@@ -9427,6 +9459,45 @@ function hxRailSync(){const row=document.querySelector('.hxrow.eras'),rail=docum
   let t=0;row.addEventListener('scroll',()=>{cancelAnimationFrame(t);t=requestAnimationFrame(()=>{const x=row.getBoundingClientRect().left+24;let cur=0;
     row.querySelectorAll('.hxera[data-era]').forEach(e=>{if(e.getBoundingClientRect().left<=x)cur=e.dataset.era});
     rail.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.i===String(cur)))})},{passive:true})}
+/* SINGLES STACK, FANNING OUT AND BACK (2026.11.21-d). Fanning out deals the singles off the top of the stack: each one starts
+   on the stack's cover (small, a little turned) and glides to its spot one after another, while every other record in the row
+   slides along to make room. Stacking them back gathers each single from where it sits onto the stack's cover, the newest landing last on top,
+   while the row closes up behind them; the stack settles in as the last one lands. */
+function hxFoldBefore(btn,k,opening){
+  const R=new Map();document.querySelectorAll('.hx .hxrow .hxsl[data-g],.hx .hxrow .hxstk[data-k]').forEach(el=>{const r=el.getBoundingClientRect();if(r.width)R.set(el.dataset.g?'g'+el.dataset.g:'k'+el.dataset.k,r)});
+  const fx={k,opening,R,fly:[]};
+  if(opening){const sc=btn.querySelector('.hxsc')||btn;fx.from=sc.getBoundingClientRect()}
+  else{let n=btn.nextElementSibling;
+    while(n&&n.classList.contains('hxfan')){const c=n.querySelector('.hxc');if(c){const r=c.getBoundingClientRect(),im=c.querySelector('img');
+        fx.fly.push({g:n.dataset.g,r,src:im&&im.complete&&im.naturalWidth?(im.currentSrc||im.src):'',bg:getComputedStyle(c).backgroundColor})}
+      n=n.nextElementSibling}}
+  return fx}
+function hxFoldAfter(fx){
+  const E='cubic-bezier(.22,.8,.24,1)',T=560,run=new Set();
+  const quiet=el=>{el.classList.remove('hxin');el.getAnimations().forEach(a=>{if(a.animationName==='hxFan')a.cancel()})};
+  const top=document.querySelector('.hx .hxfold.top[data-k="'+CSS.escape(fx.k)+'"]');
+  if(fx.opening&&top){let n=top.nextElementSibling,i=0;const L=[];while(n&&n.classList.contains('hxfan')){L.push(n);n=n.nextElementSibling}
+    L.forEach((el,j)=>{run.add('g'+el.dataset.g);quiet(el);const r=el.getBoundingClientRect(),c=el.querySelector('.hxc'),cr=c?c.getBoundingClientRect():r,f=fx.from;if(!f||!cr.width)return;
+      const dx=f.left+f.width/2-(cr.left+cr.width/2),dy=f.top+f.height/2-(cr.top+cr.height/2),s=Math.min(1,f.width/cr.width),rot=(j-L.length+1)*4;
+      const d=j*48;
+      if(c)c.animate([{transform:`translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px) scale(${s.toFixed(3)}) rotate(${rot}deg)`,boxShadow:'0 2px 6px rgb(0 0 0 / .3)'},{transform:'none',boxShadow:'0 12px 26px rgb(0 0 0 / .38)'}],{duration:T,delay:d,easing:E,fill:'backwards'});
+      [...el.children].filter(x=>x!==c).forEach(x=>x.animate([{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none'}],{duration:320,delay:d+T*.55,easing:'ease-out',fill:'backwards'}));
+      el.style.zIndex=String(30-j);setTimeout(()=>{el.style.zIndex=''},d+T)})}
+  /* everything else in the row glides from where it was */
+  document.querySelectorAll('.hx .hxrow .hxsl[data-g],.hx .hxrow .hxstk[data-k]').forEach(el=>{const key=el.dataset.g?'g'+el.dataset.g:'k'+el.dataset.k;if(run.has(key))return;
+    const o=fx.R.get(key);if(!o)return;const r=el.getBoundingClientRect(),dx=o.left-r.left,dy=o.top-r.top;if(Math.abs(dx)<1&&Math.abs(dy)<1)return;
+    el.animate([{translate:`${dx.toFixed(1)}px ${dy.toFixed(1)}px`},{translate:'0 0'}],{duration:T,easing:E})});
+  if(!fx.opening){const stk=document.querySelector('.hx .hxstk[data-k="'+CSS.escape(fx.k)+'"]');if(!stk)return;quiet(stk);
+    const sc=stk.querySelector('.hxsc')||stk,t=sc.getBoundingClientRect(),L=fx.fly.slice(),last=(L.length-1)*40+T*.9;
+    stk.animate([{opacity:0},{opacity:0,offset:.7},{opacity:1}],{duration:last+120,easing:'ease-out'});
+    L.forEach((f,j)=>{const d=document.createElement('div');d.setAttribute('aria-hidden','true');
+      d.style.cssText=`position:fixed;left:${f.r.left}px;top:${f.r.top}px;width:${f.r.width}px;height:${f.r.height}px;z-index:60;border-radius:6px;overflow:hidden;pointer-events:none;background:${f.bg};box-shadow:0 12px 26px rgb(0 0 0 / .38)`;
+      if(f.src)d.innerHTML=`<img src="${esc(f.src)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">`;
+      document.body.appendChild(d);
+      const dx=t.left+t.width/2-(f.r.left+f.r.width/2),dy=t.top+t.height/2-(f.r.top+f.r.height/2),s=Math.min(1,t.width/f.r.width),rot=(L.length-1-j)*-4;
+      const an=d.animate([{transform:'none',opacity:1},{transform:`translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px) scale(${s.toFixed(3)}) rotate(${rot}deg)`,opacity:1,offset:.92},{transform:`translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px) scale(${s.toFixed(3)}) rotate(${rot}deg)`,opacity:0}],{duration:T*.9,delay:j*40,easing:'cubic-bezier(.5,0,.2,1)',fill:'both'});
+      an.finished.then(()=>d.remove(),()=>d.remove());
+      addEventListener('scroll',()=>d.remove(),{once:true,passive:true})})}}
 let HXSINK=null;const HXHINT={aid:null,off:false};
 function heroX(a,all,done,rated,p,phUrl,more,addP){
   /* the line under the name: your album average next to your song average (both out of 10), then how many releases.
@@ -9439,7 +9510,7 @@ function heroX(a,all,done,rated,p,phUrl,more,addP){
   /* sorted by your rating or by how much you have heard: each sleeve wears that number, so the order explains itself */
   const so=relSort(),scoreOf=so==='rhi'||so==='rlo'?g=>{const v=relScore(g);return v?(Math.round(v*10)/10).toString():''}:so==='heard'||so==='left'?g=>g.items.length?Math.round(100*g.items.filter(i=>isDone(i.id)).length/g.items.length)+'%':'':null;
   const sleeve=(g,ni)=>{const {sArt,col,kind}=hxArt(g);
-    const on=String(g.id)===og,sc=scoreOf?scoreOf(g):'';return `<button class="hxsl${ni!=null?' hxin':''}${kind==='Single'?' sg':''}${on?' on':''}${on&&HXSINK===String(g.id)?' sink':''}" data-act="hjump" data-g="${esc(g.id)}" style="--c:${esc(col)}${ni!=null?';--i:'+ni:''}" aria-pressed="${on}" aria-label="${on?'Close':'Open'} ${esc(g.title)}"><span class="hxv vgr" aria-hidden="true">${hxRings(g)}</span><span class="hxc" aria-hidden="true">${sArt?`<img src="${esc(sArt)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span>${sc?`<b class="hxscore${/%$/.test(sc)?' pct':''}" aria-hidden="true">${esc(sc)}</b>`:''}<span class="hxt">${esc(g.title)}</span><span class="hxy">${esc([kind,g.year].filter(Boolean).join(' · '))}</span></button>`};
+    const on=String(g.id)===og,sc=scoreOf?scoreOf(g):'';return `<button class="hxsl${ni!=null?' hxin':''}${kind==='Single'?' sg':''}${on?' on':''}${on&&HXSINK===String(g.id)?' sink':''}" data-act="hjump" data-g="${esc(g.id)}" style="--c:${esc(col)}${ni!=null?';--i:'+ni:''}" aria-pressed="${on}" aria-label="${on?'Close':'Open'} ${esc(g.title)}"><span class="hxv vgr" aria-hidden="true">${hxRings(g)}</span><span class="hxc" aria-hidden="true">${sArt?`<img src="${esc(sArt)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span>${sc?`<b class="hxscore${/%$/.test(sc)?' pct':''}" aria-hidden="true">${esc(sc)}</b>`:''}<span class="hxt">${esc(g.title)}</span><span class="hxy">${esc([kind,dtShow(g)].filter(Boolean).join(' · '))}</span></button>`};
   const eras=hxErasOn(a,rl),grp=!eras&&(so==='rhi'||so==='rlo')&&relKind(a)==='all'&&new Set(rl.map(relKindOf)).size>1;
   let lastK=null;const rel=eras?hxEras(a,rl,sleeve,og,NEW):rl.map(g=>{const k=relKindOf(g),h=grp&&k!==lastK?`<div class="hxgrp${lastK?'':' first'}" role="heading" aria-level="4"><b>${esc(REL_KINDS[k])}</b><span>${rl.filter(x=>relKindOf(x)===k).length}</span></div>`:'';lastK=k;return h+sleeve(g)}).join('');
   const ico={back:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
@@ -10488,7 +10559,7 @@ async function nrScan(force){
       try{
         if(!rec.id&&a.amid)rec.id=String(a.amid);
         if(!rec.id){rec.id=await nrFindId(a);await mbSleep(NR_GAP)}
-        if(rec.id){found+=await nrAdd(a,await nrGet('lookup',{id:rec.id,entity:'album',limit:200}),rec.id);await mbSleep(NR_GAP)}
+        if(rec.id){const res=await nrGet('lookup',{id:rec.id,entity:'album',limit:200});if(dtFill(a,res))save();found+=await nrAdd(a,res,rec.id);await mbSleep(NR_GAP)}
         rec.t=Date.now();
       }catch(e){if(e&&e.code==='limited'){limited=true;break}rec.t=Date.now()}
       nrSave(loc);
@@ -10588,6 +10659,9 @@ function simBox(a){
   const e=SIM[simKey('a',a.name)],ok=e&&!e.busy&&!e.err&&e.rows&&e.rows.length,body=open?(ok?simCrate(e,ao):simBody(e,'a',{artist:a.name})):'';
   const arr=open&&ok?`<span class="simnav${ao?' in':''}"><button class="simar" data-simscroll="-1" aria-label="Scroll left" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button><button class="simar" data-simscroll="1" aria-label="Scroll right"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button></span>`:'';
   return `<section class="simbox crate${open?' open':''}"><div class="simh"><h3 class="hxlbl">Fans also spin</h3><button class="simtg" data-act="simtog" data-a="${a.id}" aria-expanded="${open}">${open?'Hide':'Show'}<i aria-hidden="true"></i></button>${arr}</div><small class="simsub">${open?'Similar artists, from Last.fm':'Similar artists'}</small>${open?`<div class="simbody${ao}">${body}</div>`:''}</section>`}
+function simCol(k,ph,n){const key='sim:'+k,c=ACOL[key];if(c)return c;
+  if(ph&&c!==''&&!ACOL_TRY[key])acolRead(key,ph,()=>{const v=ACOL[key];if(v)document.querySelectorAll('.simt[data-k="'+CSS.escape(k)+'"]').forEach(t=>t.style.setProperty('--sc',v))});
+  return `hsl(${colHash(n)%360} 46% 52%)`}
 function simCrate(e,ao){const an=e.anim||ao?' sim-in':'';e.anim=false;
   const rows=e.rows.slice(0,20),C=simArtCache(),need=[];
   const html=rows.map((x,i)=>{const a=rtArtist([x.n]),k=nArtist(x.n),m=Math.max(0,Math.min(1,x.m||0)),pc=Math.round(m*100);
@@ -10595,7 +10669,10 @@ function simCrate(e,ao){const an=e.anim||ao?' sim-in':'';e.anim=false;
     let wait=false;
     if(!ph){const c=C[k];if(c&&c[0])ph=c[0]+'/300x300bb.jpg';else if(!c||(!c[0]&&c[1]<Date.now()-12096e5)){need.push(x.n);wait=simArtCan()}}
     const st=a?pct(artistItems(a).map(y=>y.id))+'% heard':pc+'% match';
-    return `<button class="simt${wait?' wait':''}" data-k="${esc(k)}" style="--i:${Math.min(i,12)};--m:${m.toFixed(3)};--rot:${(9+(1-m)*14).toFixed(1)}s;--sc:hsl(${colHash(x.n)%360} 46% 52%)" data-act="${a?'llgo':'simadd'}" ${a?`data-a="${esc(a.id)}"`:`data-n="${esc(x.n)}"`} aria-label="${a?'Open':'Add'} ${esc(x.n)}, ${pc}% match"><span class="simd" aria-hidden="true"><i class="simlit"></i><span class="simlab">${ph?`<img src="${esc(ph)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}<b>${esc(String(x.n).trim().charAt(0).toUpperCase())}</b></span></span><span class="simn">${esc(x.n)}</span><span class="sims">${a?'':'<em>Add</em> \u00b7 '}${esc(st)}</span></button>`}).join('');
+    /* 2026.11.21-d: each record takes its color from the artist's photo (read once, kept with the album colors), and its spin
+       is set by the clock, so a redraw (any tap on the page) picks the spin up where it was instead of starting it over */
+    const rot=+(9+(1-m)*14).toFixed(1),rdl=-((Date.now()/1000)%rot),sc=simCol(k,ph,x.n);
+    return `<button class="simt${wait?' wait':''}" data-k="${esc(k)}" style="--i:${Math.min(i,12)};--m:${m.toFixed(3)};--rot:${rot}s;--rdl:${rdl.toFixed(2)}s;--sc:${sc}" data-act="${a?'llgo':'simadd'}" ${a?`data-a="${esc(a.id)}"`:`data-n="${esc(x.n)}"`} aria-label="${a?'Open':'Add'} ${esc(x.n)}, ${pc}% match"><span class="simd" aria-hidden="true"><i class="simlit"></i><span class="simlab">${ph?`<img src="${esc(ph)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}<b>${esc(String(x.n).trim().charAt(0).toUpperCase())}</b></span></span><span class="simn">${esc(x.n)}</span><span class="sims">${a?'':'<em>Add</em> \u00b7 '}${esc(st)}</span></button>`}).join('');
   if(need.length)setTimeout(()=>simArtLoad(need),400);
   return `<div class="simrow${an}">${html}</div>`}
 /* Apple Music photos for the Fans also spin artists who are not in your log (owner only, like the artist header photo).
@@ -10626,6 +10703,7 @@ async function simArtLoad(names){
       document.querySelectorAll('.simt[data-k="'+CSS.escape(k)+'"]').forEach(t=>t.classList.remove('wait'));
       if(base)document.querySelectorAll('.simt[data-k="'+CSS.escape(k)+'"] .simd').forEach(d=>{if(d.querySelector('img'))return;
         const lab=d.querySelector('.simlab')||d,im=new Image();im.alt='';im.className='simin';im.decoding='async';im.onload=()=>lab.insertBefore(im,lab.querySelector('b'));im.src=base+'/300x300bb.jpg'});
+      if(base)simCol(k,base+'/300x300bb.jpg',n);
       await mbSleep(NR_GAP);
     }
   }catch(e){if(e&&e.code==='limited'){try{localStorage.setItem('pb_simartcool',String(Date.now()+6e5))}catch(_){}}}
@@ -10732,7 +10810,10 @@ function gfInfo(a,g,dx,shown){
   if(can&&rating(g.id)){const gk=relKindOf(g),kin=a.groups.filter(x=>RATEABLE.includes(x.kind)&&relKindOf(x)===gk&&rating(x.id));   /* ranked against its own kind: albums against albums, EPs against EPs */
     if(kin.length>1){const me=rating(g.id),hi=kin.filter(x=>rating(x.id)>me).length,tie=kin.filter(x=>rating(x.id)===me).length>1;
       facts.push(`<div class="gfi-f"><span>Rank</span><b>#${hi+1}<i> of ${kin.length}</i></b><small>${tie?'tied, ':''}among ${esc(a.name)}’s rated ${esc((REL_KINDS[gk]||'records').toLowerCase())}</small></div>`)}}
-  if(rt.length>1){const so=rt.slice().sort((x,y)=>y.r-x.r||shown.indexOf(x.i)-shown.indexOf(y.i)),b=so[0],w=so[so.length-1];
+  /* ties on the score are settled by plays (2026.11.21-d): of two songs both rated 9, the one you play more is the best song;
+     of two rated 6, the one you play less is the weakest. Still even after that, the earlier track wins best and the later one weakest. */
+  if(rt.length>1){const pn=x=>plN(x.i.id)||0,ix=x=>shown.indexOf(x.i);
+    const b=rt.slice().sort((x,y)=>y.r-x.r||pn(y)-pn(x)||ix(x)-ix(y))[0],w=rt.slice().sort((x,y)=>x.r-y.r||pn(x)-pn(y)||ix(y)-ix(x))[0];
     if(b.r!==w.r){const tl=x=>esc(songShow(x.i).t);
       facts.push(`<div class="gfi-f gfi-s"><span>Best song</span><b class="up">${fmt(b.r)}</b><small>${tl(b)}</small></div>`);
       facts.push(`<div class="gfi-f gfi-s"><span>Weakest song</span><b class="down">${fmt(w.r)}</b><small>${tl(w)}</small></div>`)}}
@@ -10754,7 +10835,7 @@ function gfHtml(a,g){return lsWith(g,()=>{
     /* one groove per song; a long release folds songs into at most 22 grooves */
     const R=Math.min(shown.length,22),rings=[];
     for(let j=0;j<R;j++){const lo=Math.floor(j*shown.length/R),hi=Math.max(lo+1,Math.floor((j+1)*shown.length/R)),seg=shown.slice(lo,hi);
-      rings.push(!seg.length||!seg.every(i=>isDone(i.id))?0:seg.some(i=>lsCar(g,i.id))?1:2)}
+      rings.push(!seg.length||!seg.every(i=>rating(i.id))?0:seg.some(i=>lsCar(g,i.id))?1:2)}
     const hold=UI.lit&&UI.lit.g===String(g.id)?UI.lit.idx:null;   /* grooves about to light stay dark until the animation lights them */
     const ringHtml=rings.map((st,j)=>{const d=96-j*(52/Math.max(R,1)),held=hold&&hold.includes(j),cls=held?(UI.lit.fi&&UI.lit.fi.includes(j)?'on fade':''):st===2?'on':st===1?'on fade':'';return `<i class="${cls}" style="--d:${d.toFixed(1)}%;--o:${R-1-j}"></i>`}).join('');
     const trackRows=rows.map(({i,k})=>{const s=songShow(i),r=rating(i.id),dn=isDone(i.id);
@@ -11308,7 +11389,8 @@ document.addEventListener('click',ev=>{
   else if(act==='hxfold'){const aid=(document.querySelector('.hero[data-aid]')||{}).dataset?.aid,k=b.dataset.k;if(!aid||!k)return;
     const cur=UI.hxOpen&&UI.hxOpen.aid===aid?UI.hxOpen.k:[],o=cur.includes(k);
     if(o&&UI.alb&&b.closest('.hxera')&&b.closest('.hxera').querySelector('.hxsl.on')){gfClose()}
-    UI.hxOpen={aid,k:o?cur.filter(x=>x!==k):[...cur,k]};UI.hxNew=o?'x'+k:k;render();return}
+    const fx=!noMotion()&&!(o&&UI.alb&&b.closest('.hxera')&&b.closest('.hxera').querySelector('.hxsl.on'))?hxFoldBefore(b,k,!o):null;
+    UI.hxOpen={aid,k:o?cur.filter(x=>x!==k):[...cur,k]};UI.hxNew=o?'x'+k:k;render();if(fx)hxFoldAfter(fx);return}
   else if(act==='hxrail'){const row=document.querySelector('.hxrow.eras'),e=row&&row.querySelector('.hxera[data-era="'+b.dataset.i+'"]');
     if(e)row.scrollTo({left:e.getBoundingClientRect().left-row.getBoundingClientRect().left+row.scrollLeft-(parseFloat(getComputedStyle(row).paddingLeft)||0),behavior:noMotion()?'auto':'smooth'});return}
   else if(act==='hback'){UI.libOpen=true;UI.libAnim=true}
