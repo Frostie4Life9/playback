@@ -1907,6 +1907,21 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .group.sleeve{--acs:#7a3a24;--acd:var(--acs);--ac:var(--acs);--acb:var(--ac);--acsw:var(--acs);--acdw:var(--acd);--hi:#fff;gap:14px;border-radius:24px;overflow:hidden;background:var(--bg);border:1px solid color-mix(in srgb,var(--line) 60%,transparent);padding:0 0 10px}
 .sheet>.group.sleeve+.group.sleeve{margin-top:0}
 .group.sleeve.dxon{--ac:var(--acd)}
+/* 2026.11.21-c: the pictures used by the deluxe swap and the listen page turn (see gfDxRun, gfTurnRun) */
+.gfcopy,.gfcopy *{animation:none!important;transition:none!important}
+.gfcopy::before,.gfcopy::after{display:none!important}
+.gfdx-shade{position:absolute;inset:0;z-index:50;border-radius:6px;background:rgb(0 0 0 / .9);pointer-events:none;opacity:0}
+.lsleaf{position:absolute;z-index:40;pointer-events:none;transform-origin:0 50%;transform-style:preserve-3d;will-change:transform}
+.lsleaf>div{position:absolute;inset:0;overflow:hidden;border-radius:0 6px 6px 0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  background:linear-gradient(160deg,color-mix(in srgb,var(--jk) 84%,transparent),color-mix(in srgb,var(--jk) 93%,transparent)),var(--art,none) right center/200% auto no-repeat,var(--jk)}
+.lsleaf>.lsl-b{transform:rotateY(180deg);border-radius:6px 0 0 6px;background-position:0 0,left center,0 0}
+.lsleaf.flat{z-index:39}.lsleaf.flat>.lsl-b{display:none}
+.lsl-sh{position:absolute;inset:0;z-index:5;pointer-events:none;opacity:0;background:linear-gradient(90deg,rgb(0 0 0 / .55),rgb(0 0 0 / .18) 40%,rgb(0 0 0 / .05))}
+.lsl-b>.lsl-sh{background:linear-gradient(270deg,rgb(0 0 0 / .55),rgb(0 0 0 / .1) 50%,transparent)}
+.lsleaf .gf-rs{-webkit-mask-image:none;mask-image:none}
+.gf.lsturn .track.sl-t,.gf.lsturn .gf-rs>*{animation:none!important}
+@media (max-width:1099px){.lsleaf>div{border-radius:0}}
+
 /* The banner takes the cover's own brightness, so it can be light. --hi is the ink for text and buttons on it:
    near-white on a dark banner, near-black on a light one. --acsw/--acdw are darker copies for the song-row wash,
    so a song's white text stays readable even on a pale album. */
@@ -2494,7 +2509,7 @@ button.st-t:hover{color:var(--accent);text-decoration:underline}
   .hxeh span{font-size:12.5px}
   .hxera.loose .hxeh,.hxera-box .hxeh{font-size:15.5px}
   .hxsl.on .hxv{left:64px}}
-@media (prefers-reduced-motion:no-preference){.hxrow.eras>.hxera .hxeh span{animation:hxIn .45s cubic-bezier(.2,.8,.2,1) .12s backwards}}
+@media (prefers-reduced-motion:no-preference){.hxrow.eras:not(.yq)>.hxera .hxeh span{animation:hxIn .45s cubic-bezier(.2,.8,.2,1) .12s backwards}}
 
 /* "Collapse" (was "‹ Stack") on fanned-out singles */
 .hxfold svg{transition:transform .3s cubic-bezier(.2,.8,.2,1)}
@@ -3430,6 +3445,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.21-c', note:'DELUXE IS ITS OWN RECORD, LISTENS ARE PAGES, AND SMOOTHER CLOSING: in an open album, switching Standard / Deluxe now slides the record you had out down and away while the other edition rises out from behind it and comes forward, with its own cover, jacket print, color and songs. Going to a later listen turns the ratings page over like a booklet (on a phone, the page you are on), and going back turns the earlier page back over onto it. Closing an album before it has finished opening now folds it shut from wherever it was instead of snapping open first. The Spotify / Apple Music photo choice is now kept per artist (and synced), so switching one artist no longer switches everyone. The timeline\'s era years fade in once when an artist opens instead of flashing on every tap.'},
   {v:'2026.11.21-b', note:'ARTIST PHOTO FADE WITH NO LINE: on a bright photo against a dark artist color (Daft Punk) the left fade showed as a hard vertical line, because a straight fade has corners where it starts and where it changes speed. The left and bottom fades on Apple Music artist photos now ease in and out on an S-curve, so the photo melts into the colors with no edge; the top stays sharp.'},
   {v:'2026.11.21-a', note:'PHONE REVIEW FIXES + ONE SONG, SEVERAL ARTISTS. Crash guard: an album that makes the page reload when tapped (Imaginal Disk on iPhone) can no longer loop; the next start notices, says so, opens that album in light mode on that device (no zoom, cover print or blur), and files what it holds in your Suggest box so the cause can be found. Coming back: a reload puts you back where you were on the artist page, with the album you had open (never the one that crashed). Missing songs: a song whose title has no Latin letters (JPEGMAFIA\u2019s \u6295\u5f71\u306e\u82b8\u8853) was dropped on import; tap Check for new releases on the artist to bring it in. Shared songs: the same song on two artists\u2019 releases, where one credits the other (WASSUP on HYPERYOUTH and JPEGMAFIA\u2019s WASSUP single), is one song with one rating, checkmark and play count; the releases stay separate. Phone timeline: rows that scroll no longer sit 14px left of the others, and fade at the edge they continue past. Open album on a phone: Next record / Previous at the end of each page; the inside left no longer shows as a black block while closing; song discs no longer blank out while scrolling; the Details/Ratings labels stay readable mid-slide; Write a review and More are pills like Share. Artists list: tiles rise in right away and the letter headers fade into the list. Artist photo (wide screens): Apple Music photos fade like the Spotify banner, long and soft from the left and bottom, with a sharp top edge.'},
   {v:'2026.11.20-q', note:'PHONE ALBUM OPENS LIKE A REAL GATEFOLD, THEN ZOOMS IN: tapping a record on a phone now lifts its cover out of the row into the middle of the screen as a closed jacket, swings it open on its spine so you see the whole open album for a moment (both inside pages, the rating record peeking out of the right), then zooms into the inside left (Details) until it fills the screen. Swipe or tap Ratings for the right page like before. Closing plays it backwards from whichever page you are on: it zooms back out to the open jacket, the cover swings shut and flies home onto its sleeve. Dragging the sheet down still just drops it. COLLAPSE ON FANNED-OUT SINGLES: instead of a button standing in the row between the album and its singles, the fanned singles now hang under a thin bracket with Collapse and the singles count as its label, above the first one, so the singles sit right next to their album again.'},
@@ -3891,7 +3907,7 @@ function lsLoad(g,k,blank){   /* a listen -> live marks */
     const dm={...(S.marks[dxId(g)]||{})};delete dm.r;delete dm.rd;if(e.x){dm.r=e.x.r;if(e.x.rd)dm.rd=e.x.rd}
     if(Object.keys(dm).length)S.marks[dxId(g)]=dm;else delete S.marks[dxId(g)]}
   const m={...S.marks[id],ls:l,r:e.r||0};if(e.d)m.rd=e.d;else delete m.rd;S.marks[id]=m}
-function lsFlip(id,dir){UI.lsFlip=id+'|'+dir;setTimeout(()=>{UI.lsFlip=null},150)}
+function lsFlip(id,dir){gfFxAskLs(id,dir);UI.lsFlip=id+'|'+dir;setTimeout(()=>{UI.lsFlip=null},150)}
 /* A new listen starts out carrying the listen before it: the song ratings, checks, album and deluxe rating stay in the
    marks (so sorting, History and every total keep using them) and are listed in the entry's c. A number leaves c the
    moment you rate, check or clear it on this listen; only those count as this listen's own. */
@@ -7244,6 +7260,7 @@ function render(){
     const al=document.querySelector('.group.sleeve[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(gid):gid)+'"]');
     if(al){gfShow(al);if(al.classList.contains('gfopen')&&!noMotion()){try{gfRun(al,false)}catch(e){}}slRipple(al,1900)}}
   if(UI.toSheet){UI.toSheet=false;const sh=document.querySelector('.sheet');if(sh)sh.scrollIntoView({behavior:'smooth',block:'start'})}
+  if(GFX)gfFxRun();
 }
 let LIBIN=false;   /* set by renderMain for the one draw that opens the artist menu */
 function mainAside(e,list){const full=!!(UI.libOpen&&e);   /* in the full artist menu the Add an artist box sits inside it (on a phone the menu covers the page, so a box outside it could never be seen) */
@@ -9170,7 +9187,8 @@ function gfRunPh(el,back){
   }
   const done=Promise.all(a.map(x=>x.finished)).then(()=>{},()=>{});
   const mine=GFP=done.then(()=>new Promise(r=>setTimeout(r,30)));mine.then(()=>{if(GFP===mine)GFP=null});
-  done.then(()=>{if(!back){if(cv)cv.style.visibility='';if(fly)fly.remove();a.forEach(x=>{try{x.cancel()}catch(e){}})}
+  if(!back)el._gfo={a,fly};
+  done.then(()=>{if(!back&&el._gfo&&el._gfo.rev)return;if(!back){el._gfo=null;if(cv)cv.style.visibility='';if(fly)fly.remove();a.forEach(x=>{try{x.cancel()}catch(e){}})}
     else if(fly){requestAnimationFrame(()=>requestAnimationFrame(()=>fly.remove()))}});
   return done}
 /* ON A PHONE THE ALBUM OPENS LIKE A GATEFOLD (2026.11.20-m). The sheet holds the two inside pages of the jacket side by
@@ -9313,8 +9331,10 @@ function gfZoomPg(el,back){
   }
   const done=(BACK||Promise.resolve()).then(()=>Promise.all(a.map(x=>x.finished))).then(()=>{},()=>{});
   const mine=GFP=done.then(()=>new Promise(r=>setTimeout(r,30)));mine.then(()=>{if(GFP===mine)GFP=null});
+  if(!back)el._gfo={a,fly};
   done.then(()=>{
-    if(!back){
+    if(!back&&el._gfo&&el._gfo.rev)return;
+    if(!back){el._gfo=null;
       el._zm=0;el.style.width='';el.style.right='';el.style.transformOrigin='';el.style.overflow='';sp.style.removeProperty('--pw');sp.style.overflow='';
       sp.style.scrollSnapType='none';sp.scrollLeft=0;sp.style.scrollSnapType='';
       a.forEach(x=>{try{x.cancel()}catch(e){}});fly.remove();UI.gfPg=0;gfPgSync(el)}
@@ -9377,7 +9397,8 @@ function gfRunPg(el,back){
   }
   const done=Promise.all(a.map(x=>x.finished)).then(()=>{},()=>{});
   const mine=GFP=done.then(()=>new Promise(r=>setTimeout(r,30)));mine.then(()=>{if(GFP===mine)GFP=null});
-  done.then(()=>{if(!back){if(fly)fly.remove();a.forEach(x=>{try{x.cancel()}catch(e){}})}
+  if(!back)el._gfo={a,fly};
+  done.then(()=>{if(!back&&el._gfo&&el._gfo.rev)return;if(!back){el._gfo=null;if(fly)fly.remove();a.forEach(x=>{try{x.cancel()}catch(e){}})}
     else if(fly){requestAnimationFrame(()=>requestAnimationFrame(()=>fly.remove()))}});
   return done}
 function hxPinGf(rel,gf,on,keep){
@@ -9398,6 +9419,10 @@ function hxPinGf(rel,gf,on,keep){
 /* on a phone the eras scroll sideways one at a time; a rail of years above jumps to one */
 function hxRail(E){const ys=E.map((e,i)=>{const y=e.t==='era'?parseInt(e.a.year,10):e.t==='box'?NaN:parseInt(hxYears(e.items),10);return [i,e.t==='box'?'Box':isNaN(y)?'•':'’'+String(y).slice(-2)]});
   return `<div class="hxrail" role="group" aria-label="Jump to an era">${ys.map(([i,t],n)=>`<button type="button" data-act="hxrail" data-i="${i}"${n===0?' class="on"':''}>${esc(t)}</button>`).join('')}</div>`}
+/* the era years fade up once, when an artist's timeline first appears; every redraw after that (rating a song, opening an album,
+   marking heard) keeps them still instead of flashing them again (2026.11.21-c) */
+let HXYR='';
+function hxYq(a){if(HXYR===a.id)return ' yq';clearTimeout(hxYq.t);hxYq.t=setTimeout(()=>{HXYR=a.id},900);return ''}
 function hxRailSync(){const row=document.querySelector('.hxrow.eras'),rail=document.querySelector('.hxrail');if(!row||!rail||row._rs)return;row._rs=1;
   let t=0;row.addEventListener('scroll',()=>{cancelAnimationFrame(t);t=requestAnimationFrame(()=>{const x=row.getBoundingClientRect().left+24;let cur=0;
     row.querySelectorAll('.hxera[data-era]').forEach(e=>{if(e.getBoundingClientRect().left<=x)cur=e.dataset.era});
@@ -9440,7 +9465,7 @@ function heroX(a,all,done,rated,p,phUrl,more,addP){
         ${panel}
       </div>
     </div>
-    <div class="hxrel"><div class="hxprog"><div class="hrec"><div class="hring" style="--p:${p}"><div class="hdisc"><div class="hspin"></div><div class="hlab"><b${p>=100?' class="s"':''}>${p}%</b><span>heard</span></div></div></div>${HARM}</div><div class="hxpt"><span class="hxt">Your progress</span><span class="hxy">${done} of ${all.length} songs heard${p>=100?' \u00b7 finished':''}</span></div></div><div class="hxrh"><h3 class="hxlbl">Releases${open?' <button class="hxopen" data-act="filter" data-v="all" aria-label="Showing only what is still to hear. Show everything">Still to hear<span aria-hidden="true">\u00d7</span></button>':''}</h3><div class="hxtools">${relBar(a)}<button type="button" class="hxaddb" data-act="reladd" data-a="${esc(a.id)}" aria-expanded="${UI.relAdd===a.id}" aria-label="Add a release by hand" title="Add a release by hand"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span>Add release</span></button></div></div>${addP||''}<div class="hxrow${eras?' eras':rel?' flat':''}">
+    <div class="hxrel"><div class="hxprog"><div class="hrec"><div class="hring" style="--p:${p}"><div class="hdisc"><div class="hspin"></div><div class="hlab"><b${p>=100?' class="s"':''}>${p}%</b><span>heard</span></div></div></div>${HARM}</div><div class="hxpt"><span class="hxt">Your progress</span><span class="hxy">${done} of ${all.length} songs heard${p>=100?' \u00b7 finished':''}</span></div></div><div class="hxrh"><h3 class="hxlbl">Releases${open?' <button class="hxopen" data-act="filter" data-v="all" aria-label="Showing only what is still to hear. Show everything">Still to hear<span aria-hidden="true">\u00d7</span></button>':''}</h3><div class="hxtools">${relBar(a)}<button type="button" class="hxaddb" data-act="reladd" data-a="${esc(a.id)}" aria-expanded="${UI.relAdd===a.id}" aria-label="Add a release by hand" title="Add a release by hand"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span>Add release</span></button></div></div>${addP||''}<div class="hxrow${eras?' eras'+hxYq(a):rel?' flat':''}">
       ${rel||(UI.filter==='open'?`<div class="hxnone"><p>You have heard everything here.</p><button class="hxshowall" data-act="filter" data-v="all">Show all releases</button></div>`:`<div class="hxnone"><p>No releases of that kind here.</p></div>`)}
     </div>${rel?`<p class="hxhint${og?' off':''}${hintSeen?' seen':''}"${og?' aria-hidden="true"':''}>Tap a record to open it</p>`:''}</div>
     </div>
@@ -9453,8 +9478,9 @@ var PHAM={busy:false};
    the owner (it is read through the sync Worker, version 16), once an artist's page has been opened. */
 function spPhoto(a){return a.simgHi||a.simg||a.img||''}
 function amPhoto(a){return a.aimg?a.aimg+'/'+(innerWidth<700?'1600x1600bb.jpg':'2400x2400bb.jpg'):''}
-function phSrcPref(){try{return localStorage.getItem('pb_artsrc2')==='sp'?'sp':'am'}catch(e){return 'am'}}   /* Apple Music's photo by default (sharper); Spotify is the choice in Details */
-function phPick(a){return phSrcPref()==='am'&&a.aimg?amPhoto(a):(spPhoto(a)||amPhoto(a))}
+/* the choice is kept on each artist (a.phsrc, synced with the log), so switching one artist to Spotify leaves everyone else on Apple Music */
+function phSrcPref(a){return a&&a.phsrc==='sp'?'sp':'am'}   /* Apple Music's photo by default (sharper); Spotify is the choice in Details */
+function phPick(a){return phSrcPref(a)==='am'&&a.aimg?amPhoto(a):(spPhoto(a)||amPhoto(a))}
 function hxSrcHtml(a){
   if(!a||!a.aimg||!spPhoto(a))return '';
   const am=phPick(a)===amPhoto(a);
@@ -9476,8 +9502,8 @@ function phXfade(im,want){
   t.src=want}
 /* swap the picture in place (no redraw, so the colors keep flowing): fade the old one out, fade the new one in */
 function phSetSrc(v){
-  try{localStorage.setItem('pb_artsrc2',v==='am'?'am':'sp')}catch(e){}
   const h=document.querySelector('.head.hero.hx'),a=h&&(S.music||[]).find(x=>x.id===h.dataset.aid);if(!a)return;
+  const nv=v==='am'?'am':'sp';if(phSrcPref(a)!==nv){if(nv==='sp')a.phsrc='sp';else delete a.phsrc;save()}   /* this artist only */
   h.querySelectorAll('.hsrc button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===(v==='am'?'am':'sp'))));
   const im=h.querySelector('.hphoto img'),u=phPick(a);if(!im||!u||im.getAttribute('src')===u)return;
   const still=matchMedia('(prefers-reduced-motion:reduce)').matches,t=new Image();
@@ -9527,7 +9553,7 @@ async function phAmLoad(){
     const cur=document.querySelector('.head.hero.hx[data-aid="'+a.id+'"]');       /* still on this artist: slide the switch in */
     if(cur&&!cur.querySelector('.hphoto')){renderSoon();return}   /* the page had no photo at all: draw it with one */
     if(cur&&!cur.querySelector('.hsrc')){const pn=cur.querySelector('.hxpanel'),html=hxSrcHtml(a);if(pn&&html)pn.insertAdjacentHTML('afterbegin',html)}   /* the switch lives in Details */
-    if(cur&&phSrcPref()==='am')phSetSrc('am');   /* a changed photo fades in over the old one */
+    if(cur&&phSrcPref(a)==='am')phSetSrc('am');   /* a changed photo fades in over the old one */
   }catch(e){a.aimgTry=have?Date.now():Date.now()-13*864e5}   /* a hiccup (offline, Apple busy) tries again tomorrow */
   finally{PHAM.busy=false}
 }
@@ -10741,7 +10767,7 @@ function gfHtml(a,g){return lsWith(g,()=>{
     const vrLab=ar?`<b>${fmt(ar)}</b><span>rated</span>`:sav?`<b>${sav.toFixed(1)}</b><span>song avg</span>`:`<b>${shown.length?gd+'/'+shown.length:'\u2013'}</b><span>heard</span>`;
     const vgr=rings.map((st,j)=>`<i class="${st===2?'on':st===1?'on fade':''}" style="--d:${(96-j*(52/Math.max(R,1))).toFixed(1)}%;--o:${R-1-j}"></i>`).join('');
     if(g.kind==='Single')return gfSingleHtml(a,g,{art,sArt,col,colD,dx,gd,shown,full,vgr,vrLab,trackRows,rows,anim});
-    return `<div class="group sleeve gf${lsCls(g)}${gfSafe(g.id)?' gfsafe':''} ${dx?'dxon':''} ${UI.dxAnim===g.id?'dxanim':''} ${SLIN.has(String(g.id))?'in':''}${anim?' gfopen':''}" data-acol="${g.id}" style="--acs:${col};--acd:${colD}${sArt?`;--art:url(&quot;${esc(sArt)}&quot;)`:''}">
+    return `<div class="group sleeve gf${lsCls(g)}${gfSafe(g.id)?' gfsafe':''} ${dx?'dxon':''} ${UI.dxAnim===g.id?'dxanim':''} ${SLIN.has(String(g.id))?'in':''}${anim?' gfopen':''}" data-acol="${g.id}" style="--acs:${col};--acd:${colD}${art?`;--art:url(&quot;${esc(art)}&quot;)`:''}">
       <div class="gf-sp">
       <div class="gf-l">
         <div class="gf-lf"><i class="gf-sh" aria-hidden="true"></i>
@@ -10756,7 +10782,7 @@ function gfHtml(a,g){return lsWith(g,()=>{
           ${gfInfo(a,g,dx,shown)}
           </div>
         </div>
-        <div class="gf-lb" aria-hidden="true"><i class="gf-sh"></i>${sArt?`<img class="gf-lbg" src="${esc(sArt)}" alt="" decoding="async" onerror="this.remove()"><img src="${esc(sArt)}" alt="" decoding="async" onerror="this.remove()">`:''}<span>${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div>
+        <div class="gf-lb" aria-hidden="true"><i class="gf-sh"></i>${art?`<img class="gf-lbg" src="${esc(art)}" alt="" decoding="async" onerror="this.remove()"><img src="${esc(art)}" alt="" decoding="async" onerror="this.remove()">`:''}<span>${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div>
       </div>
       <div class="gf-r"><i class="gf-sh" aria-hidden="true"></i>
         <div class="gf-pk r" aria-hidden="true"><div class="gf-vr vgr" style="--vc:var(--ac)">${vgr}<span class="gf-vl">${vrLab}</span></div></div>
@@ -10854,7 +10880,94 @@ function renderSoon(){
    the cover), the sleeve unfolds to full length, then the front cover swings open toward you on the spine like a real
    gatefold, darkening as it tilts away from the light and casting a shadow on the inside. Closing plays it all backwards:
    the cover swings shut, folds down to the cover and flies home into the row. back = closing. */
+/* CLOSING BEFORE IT HAS FINISHED OPENING (2026.11.21-c): the open's own animations are played backwards from wherever they
+   are, so the cover folds shut and flies home from mid-air. Before, closing early started the close from the fully open
+   jacket, so the half-open record snapped open for a frame and then closed. Every open path keeps its animations on el._gfo. */
+/* 2026.11.21-c: TWO MOVES INSIDE AN OPEN ALBUM.
+   DELUXE IS ITS OWN RECORD. Switching Standard / Deluxe no longer just swaps the songs: the record you had out slides down out of
+   the way, the other edition rises up from behind it with its own cover, print, color and tracklist, comes forward over it and
+   drops into place while the old one sinks back behind and is gone.
+   A LISTEN IS A PAGE. Going to a later listen turns the ratings page over to the left, like turning to the next page of the
+   record's booklet, showing the new listen underneath; going back turns the earlier page over from the left onto the right.
+   Both take a picture of the album as it was (gfSnap) just before the change; the draw that follows (render) then calls gfFxRun. */
+let GFX=null;
+function gfSnap(el){const c=el.cloneNode(true),a=el.querySelectorAll('*'),b=c.querySelectorAll('*');
+  a.forEach((n,i)=>{if((n.scrollTop||n.scrollLeft)&&b[i])b[i]._sc=[n.scrollTop,n.scrollLeft]});
+  c._sc0=[el.scrollTop,el.scrollLeft];c.classList.remove('gfopen','lsflip','lsback','dxanim');c.classList.add('gfcopy');
+  c.setAttribute('aria-hidden','true');c.inert=true;c.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));return c}
+function gfSnapScroll(c){if(c._sc0&&(c._sc0[0]||c._sc0[1])){c.scrollTop=c._sc0[0];c.scrollLeft=c._sc0[1]}c.querySelectorAll('*').forEach(n=>{if(n._sc){n.scrollTop=n._sc[0];n.scrollLeft=n._sc[1]}})}
+const gfOpenEl=id=>document.querySelector('.group.sleeve.gf[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(String(id)):id)+'"]');
+/* the page of an open album that turns: the ratings page on a PC, whichever page is showing on a phone; box = the leaf it is printed on */
+function gfLeafOf(el){if(el.classList.contains('sg7'))return null;
+  if(el.classList.contains('phs')){if(!el.classList.contains('pg'))return null;const pg=gfPgCur(el);return pg?{pg,box:pg}:null}
+  const pg=el.querySelector('.gf-rs'),box=el.querySelector('.gf-r');return pg&&box?{pg,box}:null}
+function gfFxAskDx(gid){if(noMotion())return;const el=gfOpenEl(gid);if(!el||el.classList.contains('sg7')||el._gfo&&!el._gfo.rev&&el._gfo.a.some(x=>x.playState==='running'))return;
+  GFX={k:'dx',id:String(gid),copy:gfSnap(el),R:el.getBoundingClientRect()}}
+function gfFxAskLs(id,dir){if(noMotion())return;const el=gfOpenEl(id),L=el&&gfLeafOf(el);if(!L)return;
+  GFX={k:'ls',id:String(id),dir,copy:gfSnap(L.pg),B:L.box.getBoundingClientRect(),P:L.pg.getBoundingClientRect()}}
+function gfFxRun(){const fx=GFX;GFX=null;if(!fx||noMotion())return;
+  const el=gfOpenEl(fx.id);if(!el)return;
+  try{if(fx.k==='dx')gfDxRun(el,fx);else gfTurnRun(el,fx)}catch(e){document.querySelectorAll('.gfcopy,.lsleaf').forEach(n=>n.remove())}}
+function gfDxRun(el,fx){
+  const p=el.parentElement,cp=fx.copy;if(!p)return;
+  if(getComputedStyle(el).position==='fixed'){cp.style.position='fixed'}
+  else{if(getComputedStyle(p).position==='static')p.style.position='relative';
+    const P=p.getBoundingClientRect(),R=fx.R;
+    Object.assign(cp.style,{position:'absolute',left:(R.left-P.left-p.clientLeft+p.scrollLeft).toFixed(1)+'px',top:(R.top-P.top-p.clientTop+p.scrollTop).toFixed(1)+'px',width:R.width+'px',height:R.height+'px',margin:'0',right:'auto',bottom:'auto',transform:'none'})}
+  if(getComputedStyle(el).position==='static')el.style.position='relative';
+  const z=parseInt(getComputedStyle(el).zIndex)||2;el.style.zIndex=String(z);
+  el.after(cp);gfSnapScroll(cp);
+  const ph=el.classList.contains('phs'),T=ph?900:1100,E='cubic-bezier(.55,0,.2,1)',H=Math.min(ph?70:150,fx.R.height*.3);
+  const shade=document.createElement('i');shade.className='gfdx-shade';shade.setAttribute('aria-hidden','true');(el.querySelector('.gf-sp')||el).appendChild(shade);   /* over the jacket only, not the records peeking out */
+  /* the old record: down out of the way, then behind (its z drops under the new one halfway) and away */
+  const a1=cp.animate([{translate:'0 0',scale:'1',opacity:1,zIndex:z+1,offset:0},{translate:`0 ${(H*.42).toFixed(0)}px`,scale:'.99',opacity:1,zIndex:z+1,offset:.44},{zIndex:z-1,offset:.45},{translate:`0 ${(-H*.25).toFixed(0)}px`,scale:'.92',opacity:0,zIndex:z-1,offset:1}],{duration:T,easing:E,fill:'forwards'});
+  /* the new record: out from behind (rising above the old one's top edge, a little smaller and in shadow), then forward and down into place */
+  const a2=el.animate([{translate:`0 ${(-H*.15).toFixed(0)}px`,scale:'.93',offset:0},{translate:`0 ${(-H).toFixed(0)}px`,scale:'.96',offset:.45,easing:'cubic-bezier(.3,0,.15,1)'},{translate:'0 0',scale:'1',offset:1}],{duration:T,easing:E});
+  const a3=shade.animate([{opacity:.55},{opacity:.4,offset:.45},{opacity:0}],{duration:T,easing:'ease-out',fill:'forwards'});
+  const end=()=>{cp.remove();shade.remove();el.style.zIndex='';el.style.position=''};
+  a2.finished.then(end,end);
+  /* the new edition's record peeks out and spins up as it lands */
+  const vr=el.querySelector('.gf-pk.r .gf-vr,.gfph-rec .gf-vr');if(vr)vr.animate([{rotate:'-120deg'},{rotate:'-120deg',offset:.4},{rotate:'0deg'}],{duration:T+300,easing:'cubic-bezier(.2,.7,.2,1)'})}
+function gfTurnRun(el,fx){
+  const L=gfLeafOf(el);if(!L)return;
+  const sp=el.querySelector('.gf-sp')||el,S=sp.getBoundingClientRect(),B=L.box.getBoundingClientRect();
+  const pos=(n,r)=>Object.assign(n.style,{left:(r.left-S.left+sp.scrollLeft).toFixed(1)+'px',top:(r.top-S.top+sp.scrollTop).toFixed(1)+'px',width:r.width.toFixed(1)+'px',height:r.height.toFixed(1)+'px'});
+  /* a leaf printed with a page: the page's content at the spot it had inside the box */
+  const leaf=(copy)=>{const lf=document.createElement('div');lf.className='lsleaf';lf.setAttribute('aria-hidden','true');pos(lf,B);
+    const f=document.createElement('div');f.className='lsl-f';const b=document.createElement('div');b.className='lsl-b';
+    if(copy){const P=fx.P;Object.assign(copy.style,{position:'absolute',margin:'0',left:(P.left-fx.B.left).toFixed(1)+'px',top:(P.top-fx.B.top).toFixed(1)+'px',width:P.width.toFixed(1)+'px',height:P.height.toFixed(1)+'px',maxHeight:'none'});f.appendChild(copy)}
+    const sh=document.createElement('i');sh.className='lsl-sh';f.appendChild(sh);const sb=document.createElement('i');sb.className='lsl-sh';b.appendChild(sb);
+    lf.append(f,b);sp.appendChild(lf);if(copy)gfSnapScroll(copy);return lf};
+  el.classList.add('lsturn');
+  const T=780,E='cubic-bezier(.45,.05,.25,1)',per=`perspective(${(B.width*4).toFixed(0)}px)`,made=[];
+  if(fx.dir>0){   /* to a later listen: the old page turns over to the left, the new one is already underneath */
+    const lf=leaf(fx.copy);made.push(lf);
+    lf.animate([{transform:per+' rotateY(0deg)'},{transform:per+' translateZ(10px) rotateY(-90deg)',offset:.5},{transform:per+' rotateY(-180deg)'}],{duration:T,easing:E,fill:'forwards'});
+    lf.querySelector('.lsl-f>.lsl-sh').animate([{opacity:0},{opacity:.55}],{duration:T/2,easing:'ease-in',fill:'forwards'});
+    lf.querySelector('.lsl-b>.lsl-sh').animate([{opacity:.55},{opacity:0}],{duration:T/2,delay:T/2,easing:'ease-out',fill:'both'});
+    /* (opacity on the leaf itself would flatten it, showing both faces at once, so only its back face fades as it settles on the left) */
+    lf.querySelector('.lsl-b').animate([{opacity:1},{opacity:1,offset:.8},{opacity:0}],{duration:T+160,fill:'forwards'}).finished.then(()=>{made.forEach(n=>n.remove());el.classList.remove('lsturn')})}
+  else{   /* back to an earlier listen: the page that was turned comes back over from the left and lands on the right, covering what was there */
+    const under=leaf(fx.copy);under.classList.add('flat');made.push(under);
+    const nc=L.pg.cloneNode(true);nc.removeAttribute('id');nc.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));
+    const keep=fx.P;fx.P=L.pg.getBoundingClientRect();fx.B=B;const lf=leaf(nc);fx.P=keep;made.push(lf);
+    if(L.pg.scrollTop)nc.scrollTop=L.pg.scrollTop;
+    lf.animate([{transform:per+' rotateY(-180deg)'},{transform:per+' translateZ(10px) rotateY(-90deg)',offset:.5},{transform:per+' rotateY(0deg)'}],{duration:T,easing:E,fill:'forwards'});
+    lf.querySelector('.lsl-b').animate([{opacity:0},{opacity:1,offset:.14},{opacity:1}],{duration:T,fill:'forwards'});
+    lf.querySelector('.lsl-b>.lsl-sh').animate([{opacity:0},{opacity:.55}],{duration:T/2,easing:'ease-in',fill:'forwards'});
+    lf.querySelector('.lsl-f>.lsl-sh').animate([{opacity:.55},{opacity:0}],{duration:T/2,delay:T/2,easing:'ease-out',fill:'both'});
+    setTimeout(()=>{made.forEach(n=>n.remove());el.classList.remove('lsturn')},T+40)}}
+function gfReverse(el){const o=el._gfo;if(!o||o.rev||!o.a.length)return null;
+  if(!o.a.some(x=>x.playState==='running'||x.playState==='pending'))return null;
+  o.rev=true;let left=0;
+  o.a.forEach(x=>{try{const t=+x.currentTime||0;x.reverse();left=Math.max(left,t)}catch(e){}});
+  const tile=document.querySelector('.hxsl.on .hxc'),hs=tile&&tile.closest('.hxsl');if(hs)setTimeout(()=>hs.classList.add('up'),Math.max(0,left-460));
+  const done=Promise.all(o.a.map(x=>x.finished)).then(()=>{},()=>{});
+  const mine=GFP=done.then(()=>new Promise(r=>setTimeout(r,30)));mine.then(()=>{if(GFP===mine)GFP=null});
+  done.then(()=>{if(o.fly)requestAnimationFrame(()=>requestAnimationFrame(()=>o.fly.remove()))});
+  return done}
 function gfRun(el,back){
+  if(back){const rv=gfReverse(el);if(rv)return rv}
   if(el.classList.contains('phs'))return el.classList.contains('pg')?gfRunPg(el,back):gfRunPh(el,back);
   const sp=el.querySelector('.gf-sp'),l=el.querySelector('.gf-l'),r=el.querySelector('.gf-r'),sg=el.classList.contains('sg7');
   if(!sp||!r||(!l&&!sg))return null;
@@ -10912,8 +11025,9 @@ function gfRun(el,back){
   }
   /* the row's sleeve never fades out: while the record is open it sits sunk and glowing, and on closing it rises back up just as the cover lands on it */
   if(back&&tile){const hs=tile.closest('.hxsl');setTimeout(()=>{if(hs)hs.classList.add('up')},Math.max(0,T-460))}
+  if(!back)el._gfo={a};
   const done=a[0].finished;const mine=GFP=done.then(()=>{},()=>{}).then(()=>new Promise(r=>setTimeout(r,60)));mine.then(()=>{if(GFP===mine)GFP=null});
-  done.then(()=>{if(!back){a.forEach(x=>{try{x.cancel()}catch(e){}});sp.style.transformOrigin='';if(lid)lid.remove()}},()=>{});
+  done.then(()=>{if(!back&&el._gfo&&el._gfo.rev)return;if(!back){el._gfo=null;a.forEach(x=>{try{x.cancel()}catch(e){}});sp.style.transformOrigin='';if(lid)lid.remove()}},()=>{});
   return done}
 /* fold the open album shut, then drop it from the page */
 function gfClose(){const el=document.querySelector('.group.sleeve.gf');
@@ -11340,6 +11454,7 @@ document.addEventListener('click',ev=>{
   else if(act==='yrcard'){yrOpen(b.dataset.y)}
   else if(act==='frq'){const k=b.dataset.k;UI.frq=UI.frq||{};if(UI.frq[k])delete UI.frq[k];else{UI.frq[k]=1;UI.frqAnim=k;setTimeout(()=>{UI.frqAnim=null},700)}}
   else if(act==='dxsel'){const gid=b.dataset.g,to=b.dataset.v==='1',go=()=>{UI.dxOpen[gid]=to;UI.dxAnim=gid;slPulseAsk(gid,140)};
+    if(gfOpenEl(gid)&&!!UI.dxOpen[gid]!==to){gfFxAskDx(gid);UI.dxOpen[gid]=to;if(!GFX){UI.dxAnim=gid;slPulseAsk(gid,140)}}else{   /* an open album: the other edition is pulled out from behind (gfDxRun) */
     const sl=document.querySelector('.group.sleeve[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(gid):gid)+'"]');
     if(sl&&!noMotion()&&sl.animate&&!!UI.dxOpen[gid]!==to&&!UI.dxBusy){   /* the old edition leaves first: header fades, deluxe-only songs fold shut, then the new one rises in */
       UI.dxBusy=true;const E='cubic-bezier(.45,.05,.4,1)',as=[];
@@ -11348,7 +11463,7 @@ document.addEventListener('click',ev=>{
         as.push(e.animate([{opacity:1,maxHeight:h+'px',transform:'none'},{opacity:0,maxHeight:'0px',paddingTop:'0px',paddingBottom:'0px',transform:'translateY(-6px)'}],{duration:420,delay:Math.min(r.length-1-k,6)*26,easing:E,fill:'forwards'}))})}
       Promise.all(as.map(a=>a.finished.catch(()=>{}))).then(()=>{UI.dxBusy=false;go();render()});
       return}
-    go()}
+    go()}}
   else if(act==='seasonall'){const s=S.screen.find(x=>x.id===b.dataset.s),n=+b.dataset.n,se=s.seasons.find(x=>x.n===n);
     const ids=Array.from({length:se.eps},(_,k)=>sid(s.id,'s',n,'e',k+1)),full=ids.every(isDone);
     ids.forEach(i=>S.marks[i]={...(S.marks[i]||{}),done:!full});touch()}
