@@ -2648,6 +2648,8 @@ html.lite .hx .hxfp{-webkit-backdrop-filter:none;backdrop-filter:none;background
 @media (max-width:1099px){.gf .gfra{padding:0 14px 0 18px}}
 .sl-rate.gfr{--gv:color-mix(in srgb,var(--acsw) 35%,#ffd9a8);position:relative;overflow:hidden;isolation:isolate;min-height:68px;padding:8px 8px 8px 20px;gap:14px;border:1px solid color-mix(in srgb,var(--acsw) 40%,rgb(255 255 255 / .12));background:color-mix(in srgb,var(--acsw) 16%,rgb(0 0 0 / .18));box-shadow:inset 0 1px 0 rgb(255 255 255 / .06),0 8px 22px rgb(0 0 0 / .18);cursor:pointer;transition:border-color .25s,background-color .25s,transform .15s ease-out}
 @supports (color:oklch(from red l c h)){.sl-rate.gfr{--gv:oklch(from var(--acsw) .86 calc(c*.7) h)}}
+/* on the Deluxe edition the rating pill takes the deluxe's color, like its song rows, not the standard album's */
+.group.sleeve.dxon .sl-rate.gfr{--acsw:var(--acdw)}
 .sl-rate.gfr:hover,.sl-rate.gfr.open{border-color:color-mix(in srgb,var(--gv) 70%,transparent)}
 .sl-rate.gfr:active{transform:scale(.985)}
 .gfr-w{position:absolute;z-index:-1;left:0;top:0;bottom:0;pointer-events:none;background:linear-gradient(90deg,color-mix(in srgb,var(--acsw) 72%,transparent),color-mix(in srgb,var(--acsw) 38%,transparent) 55%,color-mix(in srgb,var(--acsw) 16%,transparent));-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent)}
@@ -3462,6 +3464,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.21-l', note:'DELUXE RATING PILL IN THE DELUXE\u2019S COLOR: on an album\u2019s Deluxe edition the rating pill (Your deluxe, song average, record) was still tinted with the standard album\u2019s color. It now takes the deluxe\u2019s own color, matching its song rows and cover.'},
   {v:'2026.11.21-k', note:'CLOSING A DELUXE SWAPS BACK TO STANDARD: closing an album while you are on its Deluxe now plays the same edition swap as the Standard / Deluxe switch, the two sleeves trade places in the Releases row and the standard one ends up in front, with the album left shut. Changing artist with a deluxe open also resets it.'},
   {v:'2026.11.21-j', note:'DELUXE RESETS WHEN YOU LEAVE: close an album while you are on its Deluxe (or change artist with it open) and it goes back to Standard, so the next time you open it you start on the standard album and the Releases row shows the standard sleeve in front again. Switching Standard / Deluxe inside an open album still works as before.'},
   {v:'2026.11.21-i', note:'FULL DATES FROM MUSICBRAINZ TOO: when Apple Music does not have a release at all (Y2K\u2019s DIRT (feat. JPEGMAFIA) is not on Apple), the date lookup on an artist page now asks MusicBrainz for it, so DIRT shows Oct 28, 2022 instead of 2022. Releases the first try marked as not found are looked at again.'},
