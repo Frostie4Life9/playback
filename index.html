@@ -3462,6 +3462,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.21-h', note:'FULL DATES FOR FEATURES: a release by another artist that sits on this artist\u2019s page (Y2K\u2019s DIRT (feat. JPEGMAFIA) on JPEGMAFIA\u2019s page) never got its full date, because the fill only read the artist\u2019s own Apple Music list, so it showed just the year. Now anything still missing a full date is looked up on Apple by title when the artist page opens (up to 8 per visit, from your device, not the Worker), and gets the date when the title, artist and year line up. The open single\u2019s label shows the full date too.'},
   {v:'2026.11.21-g', note:'SINGLES GET A RATED DAY: a single has no rating of its own, so its day is now the day its last song got rated. The moment every song on a single has a rating (a song shared with an album counts when you rate it there), the single gets today as its day and \u201cRated Nov 21, 2026\u201d slides in under its title on the open 7-inch sleeve. Tap it (or \u22ef \u203a Change date rated) to change or remove the day. Re-rating a song later keeps the original day. Singles finished before this build have no day yet: add one from the sleeve or from History. History now lists singles too, with their song average as the score: dated singles show under All in their month, and a new Singles chip shows every finished single, including the ones with no day yet. The History header counts singles separately so the album count and average stay album-only. Account pages still show album dates only.'},
   {v:'2026.11.21-f', note:'CRASH REPORTS SAY HOW FAR IT GOT: a second album (Skate Story: Vol. I) made the iPhone drop the page when opened, like Imaginal Disk. Both have deluxe tracks. The crash note now records each step of opening an album with the time since the tap (page built, sheet placed, cover in the air, zooming, then marks at 0.25, 0.7, 1.3, 2 and 3 seconds), so the next report shows exactly where it dies. Light mode for an album that crashed also drops the blurred copy of the cover on the back of the jacket.'},
   {v:'2026.11.21-e', note:'DELUXE STACKED BEHIND, A TIMELINE FOR EVERY ARTIST, COLOR DRIFT: an album with a deluxe edition now has the deluxe sleeve stacked behind it in the Releases row, peeking out above, and it stays there when the album opens. Switching Standard / Deluxe in an open album closes the record you have out (its cover flies home), the two sleeves trade places in the row, and the other edition is pulled out and swings open like any record, with its own cover, color and songs. Every artist now gets the timeline, even with one album or none (it used to need two albums); an artist with no albums has a Singles and EPs era. The artist color field now drifts up slowly as you scroll (15% of the scroll, at most a quarter of the screen) instead of staying glued in place; it is off in lite mode.'},
@@ -4929,16 +4930,37 @@ function dtFill(a,res){let n=0;if(!a||!Array.isArray(res))return 0;
     if(d&&(!g.year||!/^\d{4}$/.test(String(g.year))||Math.abs(+d.slice(0,4)-+g.year)<=1)){g.dt=d;n++}}   /* a different year means a different record with the same name */
   return n}
 const DTF={busy:false};
+/* 2026.11.21-h: a release by someone else that this artist is only on (Y2K's DIRT (feat. JPEGMAFIA) on JPEGMAFIA's page) is
+   not in this artist's own Apple list, so whatever is still missing a full date is searched on Apple by title, up to 8 per
+   visit, straight from this device (no Worker). A match needs the same title (a feat. credit and " - Single" ignored), this
+   artist in Apple's artist name or title, and a year within one of ours. One that is not found is skipped for a month. */
+const dtBare=t=>nTitle(String(t||'').replace(/\s-\s(single|ep)$/i,'').replace(/\s*[\(\[]\s*(feat|ft|featuring|with)\b[^)\]]*[\)\]]/ig,''));
+async function dtSearchRest(a){
+  const mo=Date.now()-30*864e5,an=nArtist(a.name),left=a.groups.filter(g=>!(g.dt&&g.dt.length===10)&&!(g.dtMiss&&g.dtMiss>mo)&&g.title).slice(0,8);let n=0;
+  for(const g of left){
+    if(n||left.indexOf(g))await mbSleep(NR_GAP);
+    const k=dtBare(g.title),y=/^\d{4}$/.test(String(g.year||''))?+g.year:0;let d='';
+    for(const c of await nrGet('search',{term:k+' '+a.name,entity:'album',limit:15})){
+      if(!c||!c.collectionName||!c.releaseDate)continue;const cd=String(c.releaseDate).slice(0,10);
+      if(!/^\d{4}-\d\d-\d\d$/.test(cd)||dtBare(c.collectionName)!==k)continue;
+      if(!nArtist(String(c.artistName||'')+' '+c.collectionName).includes(an)&&!nrm(String(c.artistName||'')+' '+c.collectionName).includes(nrm(a.name)))continue;
+      if(y&&Math.abs(+cd.slice(0,4)-y)>1)continue;
+      if(!d||cd<d)d=cd}
+    if(d){g.dt=d;delete g.dtMiss;n++}else g.dtMiss=Date.now()}
+  return n}
 async function dtLoad(){
   const h=document.querySelector('.head.hero.hx');if(!h||DTF.busy||!READY||!window.fetch||!navigator.onLine)return;
   const a=(S.music||[]).find(x=>x.id===h.dataset.aid);if(!a||a.example||!a.groups.some(g=>!g.dt||g.dt.length<10))return;
-  if(a.dtTry&&a.dtTry>Date.now()-14*864e5)return;   /* tried in the last two weeks */
-  DTF.busy=true;a.dtTry=Date.now();
-  try{const loc=nrLoc(),rec=loc.a[a.id]||(loc.a[a.id]={});
-    if(!rec.id&&a.amid)rec.id=String(a.amid);
-    if(!rec.id){rec.id=await nrFindId(a);nrSave(loc)}
-    if(rec.id){const n=dtFill(a,await nrGet('lookup',{id:rec.id,entity:'album',limit:200}));save();if(n&&document.querySelector('.head.hero.hx[data-aid="'+a.id+'"]'))renderSoon()}
-    else save()}
+  const wk2=Date.now()-14*864e5,main=!(a.dtTry&&a.dtTry>wk2),rest=!(a.dtS&&a.dtS>wk2);
+  if(!main&&!rest)return;   /* both tried in the last two weeks */
+  DTF.busy=true;if(main)a.dtTry=Date.now();
+  try{let n=0;
+    if(main){const loc=nrLoc(),rec=loc.a[a.id]||(loc.a[a.id]={});
+      if(!rec.id&&a.amid)rec.id=String(a.amid);
+      if(!rec.id){rec.id=await nrFindId(a);nrSave(loc)}
+      if(rec.id)n+=dtFill(a,await nrGet('lookup',{id:rec.id,entity:'album',limit:200}))}
+    if(rest){a.dtS=Date.now();n+=await dtSearchRest(a)}
+    save();if(n&&document.querySelector('.head.hero.hx[data-aid="'+a.id+'"]'))renderSoon()}
   catch(e){a.dtTry=Date.now()-13*864e5}   /* Apple busy or offline: try again tomorrow */
   finally{DTF.busy=false}}
 function mbDateKey(d){d=String(d||'');const p=d.split('-');return d?(p[0]||'9999')+'-'+(p[1]||'99')+'-'+(p[2]||'99'):'9999-99-99'}
@@ -10942,7 +10964,7 @@ function gfSingleHtml(a,g,v){const {sArt,col,colD,dx,gd,shown,vgr,vrLab,trackRow
       <div class="sg7-cv" aria-hidden="true">${sArt?`<img src="${esc(sArt)}" alt="" decoding="async" onerror="this.remove()">`:''}<span>${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div>
       <div class="gf-pk r" aria-hidden="true"><div class="gf-vr vgr" style="--vc:var(--ac)">${vgr}<span class="gf-vl">${vrLab}</span></div></div>
       <div class="gf-rs">
-      <div class="gf-rh"><span class="gf-lbl">${esc([g.kind,g.year].filter(Boolean).join(' \u00b7 '))}</span><button type="button" class="gf-x" data-act="gfclose" aria-label="Close ${esc(g.title)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="gf-rh"><span class="gf-lbl">${esc([g.kind,dtShow(g)].filter(Boolean).join(' \u00b7 '))}</span><button type="button" class="gf-x" data-act="gfclose" aria-label="Close ${esc(g.title)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
       <div class="sg7-meta"><h3>${esc(g.title)}</h3>${g.w&&g.w.length?`<span class="sl-w">with ${esc(g.w.join(' & '))}</span>`:''}<span class="sl-sub">${gd} of ${shown.length} heard</span>${rdLine(g,dx)}${lsPager(g)}${albBar(g,a)}${UI.wEdit===g.id?`<form class="sl-wf" data-form="gwith" data-a="${a.id}" data-g="${g.id}"><input name="w" value="${esc((g.w||[]).join(' & '))}" placeholder="Other artist, like Kenny Beats" aria-label="Collab with" autocomplete="off" autocapitalize="words"><button>Save</button></form>`:''}</div>
       ${friendStrip(g,a,dx)}
       ${g.items.length?'':'<p class="note">No songs listed yet. Tap the details button (i) up top to fill them in.</p>'}
