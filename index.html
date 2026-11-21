@@ -3462,6 +3462,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.21-k', note:'CLOSING A DELUXE SWAPS BACK TO STANDARD: closing an album while you are on its Deluxe now plays the same edition swap as the Standard / Deluxe switch, the two sleeves trade places in the Releases row and the standard one ends up in front, with the album left shut. Changing artist with a deluxe open also resets it.'},
   {v:'2026.11.21-j', note:'DELUXE RESETS WHEN YOU LEAVE: close an album while you are on its Deluxe (or change artist with it open) and it goes back to Standard, so the next time you open it you start on the standard album and the Releases row shows the standard sleeve in front again. Switching Standard / Deluxe inside an open album still works as before.'},
   {v:'2026.11.21-i', note:'FULL DATES FROM MUSICBRAINZ TOO: when Apple Music does not have a release at all (Y2K\u2019s DIRT (feat. JPEGMAFIA) is not on Apple), the date lookup on an artist page now asks MusicBrainz for it, so DIRT shows Oct 28, 2022 instead of 2022. Releases the first try marked as not found are looked at again.'},
   {v:'2026.11.21-h', note:'FULL DATES FOR FEATURES: a release by another artist that sits on this artist\u2019s page (Y2K\u2019s DIRT (feat. JPEGMAFIA) on JPEGMAFIA\u2019s page) never got its full date, because the fill only read the artist\u2019s own Apple Music list, so it showed just the year. Now anything still missing a full date is looked up on Apple by title when the artist page opens (up to 8 per visit, from your device, not the Worker), and gets the date when the title, artist and year line up. The open single\u2019s label shows the full date too.'},
@@ -11211,7 +11212,7 @@ function gfRun(el,back){
 /* fold the open album shut, then drop it from the page */
 function gfClose(keep){const el=document.querySelector('.group.sleeve.gf');
   const done=()=>{const rw=document.querySelector('.hx .hxrow'),sl=rw?rw.scrollLeft:0;   /* the row is redrawn: keep it scrolled to where it was, not back at the start */
-    if(!UI.dxSw&&UI.alb)delete UI.dxOpen[UI.alb.g];   /* leaving an album on its deluxe puts it back to Standard (a Standard / Deluxe switch keeps the pick) */
+    if(!UI.dxSw&&UI.alb&&UI.dxOpen[UI.alb.g])UI.dxSw={gid:String(UI.alb.g),to:false,stay:1};   /* closing an album on its deluxe plays the edition swap back to Standard (the sleeves trade places) and leaves the album shut */
     UI.alb=null;UI.gfClosing=false;render();placeSave();
     if(sl){const n=document.querySelector('.hx .hxrow');if(n)n.scrollLeft=sl}
     if(UI.dxSw){const x=UI.dxSw;UI.dxSw=null;requestAnimationFrame(()=>gfDxReopen(x))}};
@@ -11235,7 +11236,7 @@ function gfDxReopen(x){const q=()=>document.querySelector('.hx .hxsl[data-g="'+C
   const C0=oc?oc.getBoundingClientRect():null,D0=od?od.getBoundingClientRect():null;
   UI.dxOpen[x.gid]=x.to;render();
   const n=q();if(!n){return}
-  const open=()=>{const b=q();if(b&&!UI.alb)b.click()};
+  const open=()=>{if(x.stay)return;const b=q();if(b&&!UI.alb)b.click()};
   const c=n.querySelector('.hxc'),d=n.querySelector('.hxdx');
   if(!C0||!D0||!c||!d||noMotion()){open();return}
   const C1=c.getBoundingClientRect(),D1=d.getBoundingClientRect(),T=620,E='cubic-bezier(.45,0,.2,1)';
