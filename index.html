@@ -1980,6 +1980,8 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .sl-sub{font-size:14px;color:color-mix(in srgb,var(--hi) 88%,transparent)}
 .sl-w{font:600 15px var(--body);color:var(--hi);overflow-wrap:anywhere}
 .sl-wb{align-self:flex-start;margin-top:2px;padding:4px 0;min-height:32px;border:0;background:none;font:500 12px var(--body);letter-spacing:.01em;color:color-mix(in srgb,var(--hi) 80%,transparent);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+@keyframes sdin{0%{opacity:0;transform:translateY(6px) scale(.92);filter:blur(3px)}60%{opacity:1;transform:translateY(-1px) scale(1.04);filter:none}100%{transform:none}}
+@media (prefers-reduced-motion:no-preference){.sl-rd.sd-new{animation:sdin .6s cubic-bezier(.2,.8,.2,1) .35s both}}
 .sl-rd{text-decoration:none;font-weight:600;font-size:13px;letter-spacing:.02em;color:color-mix(in srgb,var(--hi) 88%,transparent)}
 .sl-wf{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap}
 .sl-wf input{flex:1 1 150px;min-width:0;min-height:40px;padding:0 12px;border-radius:10px;border:1px solid color-mix(in srgb,var(--hi) 38%,transparent);background:color-mix(in srgb,var(--hi) 10%,transparent);color:var(--hi);font:500 15px var(--body)}
@@ -3460,6 +3462,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.21-g', note:'SINGLES GET A RATED DAY: a single has no rating of its own, so its day is now the day its last song got rated. The moment every song on a single has a rating (a song shared with an album counts when you rate it there), the single gets today as its day and \u201cRated Nov 21, 2026\u201d slides in under its title on the open 7-inch sleeve. Tap it (or \u22ef \u203a Change date rated) to change or remove the day. Re-rating a song later keeps the original day. Singles finished before this build have no day yet: add one from the sleeve or from History. History now lists singles too, with their song average as the score: dated singles show under All in their month, and a new Singles chip shows every finished single, including the ones with no day yet. The History header counts singles separately so the album count and average stay album-only. Account pages still show album dates only.'},
   {v:'2026.11.21-f', note:'CRASH REPORTS SAY HOW FAR IT GOT: a second album (Skate Story: Vol. I) made the iPhone drop the page when opened, like Imaginal Disk. Both have deluxe tracks. The crash note now records each step of opening an album with the time since the tap (page built, sheet placed, cover in the air, zooming, then marks at 0.25, 0.7, 1.3, 2 and 3 seconds), so the next report shows exactly where it dies. Light mode for an album that crashed also drops the blurred copy of the cover on the back of the jacket.'},
   {v:'2026.11.21-e', note:'DELUXE STACKED BEHIND, A TIMELINE FOR EVERY ARTIST, COLOR DRIFT: an album with a deluxe edition now has the deluxe sleeve stacked behind it in the Releases row, peeking out above, and it stays there when the album opens. Switching Standard / Deluxe in an open album closes the record you have out (its cover flies home), the two sleeves trade places in the row, and the other edition is pulled out and swings open like any record, with its own cover, color and songs. Every artist now gets the timeline, even with one album or none (it used to need two albums); an artist with no albums has a Singles and EPs era. The artist color field now drifts up slowly as you scroll (15% of the scroll, at most a quarter of the screen) instead of staying glued in place; it is off in lite mode.'},
   {v:'2026.11.21-d', note:'FULL DATES, GROOVES BY RATING, CALMER FANS ALSO SPIN, SMOOTHER SINGLES STACK: releases on the timeline now show their full release date (Aug 3, 2018) instead of just the year. New imports keep the date; releases already in your log get theirs from Apple Music the first time each artist page opens (one lookup per artist) and from the daily new-release check. The lit lines on the records on the artist page now light for songs you have RATED, not just heard. Fans also spin records no longer restart their spin on every tap (the spin follows the clock), and each one takes its color from the artist\'s photo. Fanning out a singles stack deals the singles off the top of the stack one by one while the row slides over to make room; stacking them back gathers each one onto the stack. Best and weakest song ties are now settled by plays: the more-played song is the best, the less-played the weakest.'},
@@ -3897,6 +3900,20 @@ const isOmit=id=>!!(S.marks[id]&&S.marks[id].x);
 const avgR=id=>isOmit(id)?0:rating(id);
 /* the day a rating was set, kept as YYYY-MM-DD on the same mark (rd). Ratings made before this build have no day until you add one. */
 const ratedDate=id=>(S.marks[id]&&S.marks[id].r&&S.marks[id].rd)||'';
+/* 2026.11.21-g: a single has no rating of its own, so its day is the day its LAST song got rated: kept as sd on the
+   single's mark, stamped the moment every song on it has a rating (a song shared with an album counts when rated there).
+   Re-rating a song later keeps the day; singles finished before this build have no day until you add one. */
+const sgDone=g=>!!(g&&g.kind==='Single'&&g.items&&g.items.length&&g.items.every(i=>rating(i.id)));
+const sgDate=g=>sgDone(g)?((S.marks[g.id]&&S.marks[g.id].sd)||''):'';
+const sgAvg=g=>{const rs=g.items.map(i=>avgR(i.id)).filter(Boolean);return rs.length?rs.reduce((x,y)=>x+y,0)/rs.length:0};
+function sgStamp(id){
+  const ck=canonK(id),t=todayISO();let hit=0;
+  for(const a of S.music)for(const g of a.groups){
+    if(g.kind!=='Single'||!g.items.some(i=>canonK(i.id)===ck)||!sgDone(g)||(S.marks[g.id]&&S.marks[g.id].sd))continue;
+    S.marks[g.id]={...(S.marks[g.id]||{}),sd:t};UI.sdNew=String(g.id);hit++}
+  if(hit)setTimeout(()=>{UI.sdNew=null},1400);
+  return hit}
+const sgSet=(g,v)=>{const m0={...(S.marks[g.id]||{})};if(v)m0.sd=v;else delete m0.sd;if(Object.keys(m0).length)S.marks[g.id]=m0;else delete S.marks[g.id]};
 /* a written review of an album (or deluxe), kept as rv on the same mark as the rating; it only shows while the album is rated, and rides along when you share your page */
 const REVMAX=1000;
 const reviewOf=id=>(S.marks[id]&&S.marks[id].r&&S.marks[id].rv)||'';
@@ -6932,7 +6949,8 @@ const UI={view:null,libOpen:false,addOpen:false,rOpen:null,lq:{music:'',screen:'
    oldest first with a heading per month, or highest first. Albums with no day yet sit at the bottom
    with a + Date button. Linked collab copies (same shared rating) are listed once. */
 Object.assign(UI,{hq:'',hs:'new',hk:'all',hEdit:null,hAnim:false,lsFlip:null,lsView:{}});
-function rhAll(){
+const sgAvgAll=g=>{const rs=g.items.map(i=>rating(i.id)).filter(Boolean);return rs.length?rs.reduce((x,y)=>x+y,0)/rs.length:0};
+function rhAll(sg){
   const out=[],seen=new Set();
   for(const a of S.music)for(const g of a.groups){
     if(!RATEABLE.includes(g.kind))continue;
@@ -6943,6 +6961,11 @@ function rhAll(){
       const ck=canonK(id);if(seen.has(ck))continue;seen.add(ck);
       out.push({id,a,g,dx,r,n:lsList(id).length,d:d0,title:dx?dxName(g):g.title,art:dx?(g.dxImg||gArt(g)):gArt(g)});
     }
+  }
+  /* singles join once every song on them is rated: the day is the day the last song was rated, the score is the song average */
+  if(sg)for(const a of S.music)for(const g of a.groups){
+    if(!sgDone(g))continue;const ck=canonK(g.id);if(seen.has(ck))continue;seen.add(ck);
+    out.push({id:g.id,a,g,dx:false,sg:true,r:sgAvg(g)||sgAvgAll(g),n:1,d:sgDate(g),title:g.title,art:gArt(g)});
   }
   return out;
 }
@@ -6957,14 +6980,15 @@ function rhRow(e,i,anim){
   const yr=/^\d{4}/.test(e.g.year||'')?String(e.g.year).slice(0,4):'',kind=e.g.kind==='Studio album'?'':e.g.kind;
   const sub=[e.a.name,yr,kind].filter(Boolean).join(' · ');
   const stars=[1,2,3,4,5].map(k=>`<i class="hs" style="--f:${e.r>=2*k?100:e.r>=2*k-1?50:0}%"></i>`).join('');
-  return `<li class="hr"${st}>${badge}<button type="button" class="hmain" data-act="hgo" data-a="${esc(e.a.id)}" data-g="${esc(e.g.id)}" data-dx="${e.dx?1:''}" aria-label="Open ${esc(e.title)} by ${esc(e.a.name)}, rated ${fmt(e.r)} out of 10">
+  return `<li class="hr"${st}>${badge}<button type="button" class="hmain" data-act="hgo" data-a="${esc(e.a.id)}" data-g="${esc(e.g.id)}" data-dx="${e.dx?1:''}" aria-label="Open ${esc(e.title)} by ${esc(e.a.name)}, ${e.sg?'songs average':'rated'} ${fmt(e.r)} out of 10">
     <span class="hcov" aria-hidden="true"><span>${esc((e.title.match(/[\p{L}\p{N}]/u)||['?'])[0].toUpperCase())}</span>${e.art?`<img src="${esc(e.art)}" alt="" loading="lazy" decoding="async" onerror="coverErr(this)">`:''}</span>
     <span class="hn"><b>${esc(e.title)}</b><span>${esc(sub)}</span></span>
-    <span class="hrt" aria-hidden="true"><span class="hss">${stars}</span><span class="hsc">${e.n>1?`<em class="hls" title="Heard ${e.n} times">\u21bb${e.n}</em> `:''}${fmt(e.r)}</span></span></button></li>`;
+    <span class="hrt" aria-hidden="true"><span class="hss">${stars}</span><span class="hsc"${e.sg?' title="Song average"':''}>${e.sg?'<em class="hls hsg">avg</em> ':''}${e.n>1?`<em class="hls" title="Heard ${e.n} times">\u21bb${e.n}</em> `:''}${fmt(e.r)}</span></span></button></li>`;
 }
 function historyList(anim){
-  const all=rhAll(),q=nrm(UI.hq||'').trim(),K=e=>e.g.kind==='Studio album'?'album':e.g.kind==='EP'?'ep':'other';
-  const L=all.filter(e=>(UI.hk==='all'||(UI.hk==='again'?e.n>1:K(e)===UI.hk))&&(!q||nrm(e.title+' '+e.a.name).includes(q)));
+  const all=rhAll(true),q=nrm(UI.hq||'').trim(),K=e=>e.sg?'single':e.g.kind==='Studio album'?'album':e.g.kind==='EP'?'ep':'other';
+  /* under All, a single only shows once it has a day (singles finished before rating days existed wait under the Singles chip) */
+  const L=all.filter(e=>(UI.hk==='all'?(!e.sg||e.d):UI.hk==='again'?e.n>1:K(e)===UI.hk)&&(!q||nrm(e.title+' '+e.a.name).includes(q)));
   if(!L.length)return `<p class="lempty">${all.length?'Nothing matches'+(q?' “'+esc(UI.hq)+'”':'')+'.':'Nothing rated yet. Rate an album and it lands here.'}</p>`;
   const cmp=(x,y)=>x.title.localeCompare(y.title),dc=(x,y)=>x.d>y.d?1:x.d<y.d?-1:0;
   let n=0;
@@ -6985,18 +7009,18 @@ function historyList(anim){
 }
 function historyView(){
   const anim=UI.hAnim;UI.hAnim=false;
-  const all=rhAll(),und=all.filter(e=>!e.d).length,avg=all.length?all.reduce((t,e)=>t+e.r,0)/all.length:0;
+  const every=rhAll(true),all=every.filter(e=>!e.sg),sgs=every.filter(e=>e.sg),und=(UI.hk==='single'?sgs:all).filter(e=>!e.d).length,avg=all.length?all.reduce((t,e)=>t+e.r,0)/all.length:0;
   const chip=(act,v,t,cur)=>`<button class="chip" data-act="${act}" data-v="${v}" aria-pressed="${cur===v}">${t}</button>`;
   if(anim)setTimeout(rhCount,30);
   return `<section class="colv histv" aria-labelledby="hist-h">
     <div class="col-hero hh-hero">
-      <div class="col-hero-t"><span class="sl-kind">Albums you rated</span><h2 id="hist-h">History</h2></div>
-      <div class="col-hero-n"><div><b data-n="${all.length}">${all.length}</b><span>Rated</span></div>${all.length?`<div><b data-n="${avg.toFixed(1)}" data-d="1">${avg.toFixed(1)}</b><span>Average</span></div>`:''}${und?`<div><b data-n="${und}">${und}</b><span>No day yet</span></div>`:''}</div>
+      <div class="col-hero-t"><span class="sl-kind">${sgs.length?'Albums &amp; singles you rated':'Albums you rated'}</span><h2 id="hist-h">History</h2></div>
+      <div class="col-hero-n"><div><b data-n="${all.length}">${all.length}</b><span>Rated</span></div>${all.length?`<div><b data-n="${avg.toFixed(1)}" data-d="1">${avg.toFixed(1)}</b><span>Average</span></div>`:''}${sgs.length?`<div><b data-n="${sgs.length}">${sgs.length}</b><span>Singles</span></div>`:''}${und?`<div><b data-n="${und}">${und}</b><span>No day yet</span></div>`:''}</div>
     </div>
     <div class="hbar">
       <input id="hq" type="search" autocomplete="off" placeholder="Search albums &amp; artists" value="${esc(UI.hq||'')}" aria-label="Search rated albums">
       <div class="hrow2">
-        <div class="hchips" role="group" aria-label="Show">${chip('hkind','all','All',UI.hk)}${chip('hkind','album','Albums',UI.hk)}${chip('hkind','ep','EPs',UI.hk)}${chip('hkind','other','Other',UI.hk)}${all.some(e=>e.n>1)?chip('hkind','again','\u21bb Relistened',UI.hk):''}</div>
+        <div class="hchips" role="group" aria-label="Show">${chip('hkind','all','All',UI.hk)}${chip('hkind','album','Albums',UI.hk)}${chip('hkind','ep','EPs',UI.hk)}${chip('hkind','other','Other',UI.hk)}${sgs.length?chip('hkind','single','Singles',UI.hk):''}${all.some(e=>e.n>1)?chip('hkind','again','\u21bb Relistened',UI.hk):''}</div>
         <div class="hchips" role="group" aria-label="Sort">${chip('hsort','new','Newest',UI.hs)}${chip('hsort','old','Oldest',UI.hs)}${chip('hsort','high','Highest',UI.hs)}${chip('hsort','none','No date',UI.hs)}</div>
       </div>
     </div>
@@ -10027,9 +10051,9 @@ const fmt=v=>{v=Number(v);return Number.isInteger(v)?String(v):v.toFixed(1)};
 function rateDots(id){const r=rating(id);
   return `<span class="rate" role="group" aria-label="Rating out of 10"><span class="dots">${[1,2,3,4,5,6,7,8,9,10].map(d=>`<span class="dot ${r>=d?'full':r>=d-.5?'half':''}"><button data-act="rate" data-id="${id}" data-v="${d-.5}" aria-label="Rate ${fmt(d-.5)}"></button><button data-act="rate" data-id="${id}" data-v="${d}" aria-label="Rate ${d}"></button></span>`).join('')}</span><span class="rv ${r?'set':''}">${r?fmt(r):'–'}</span></span>`}
 function moreBtns(g,dx){
-  const id=dx?dxId(g):g.id,rated=RATEABLE.includes(g.kind)&&rating(id);
+  const id=dx?dxId(g):g.id,sg=g.kind==='Single',rated=sg?sgDone(g):RATEABLE.includes(g.kind)&&rating(id);
   return `<button class="btn" data-act="wedit" data-g="${g.id}">${g.w&&g.w.length?'Edit collab credit':'Add collab credit'}</button>`
-    +(rated?`<button class="btn" data-act="dedit" data-g="${g.id}">${ratedDate(id)?'Change date rated':'Add date rated'}</button>`:'')}
+    +(rated?`<button class="btn" data-act="dedit" data-g="${g.id}">${(sg?sgDate(g):ratedDate(id))?'Change date rated':'Add date rated'}</button>`:'')}
 function formUp(){setTimeout(()=>{const i=document.querySelector('.sl-wf input');if(i){i.scrollIntoView({block:'center',behavior:'smooth'});i.focus({preventScroll:true})}},60)}
 function delGBtn(g,a){const armed=UI.armed===g.id;return `<button class="btn danger ${armed?'armed':''}" data-act="delg" data-g="${g.id}" data-a="${a.id}">${armed?'Tap again to delete this album':'Delete album'}</button>`}
 function delBtn(id,label){const armed=UI.armed===id;return `<button class="btn danger ${armed?'armed':''}" data-act="del" data-id="${id}">${armed?'Tap again to delete':label}</button>`}
@@ -10186,7 +10210,7 @@ function rateCommit(el){const id=el.dataset.rate,v=+el.value;if(!id||!v)return;
   const wasC=lsOwn(id),isGroup=S.music.some(a=>a.groups.some(g=>g.id===id||dxId(g)===id));
   if(v===rating(id)){if(wasC){if(isGroup)S.marks[id]={...S.marks[id],rd:todayISO()};else{const g0=grpOfItem(id);if(g0)slLitAsk(g0,id)}lsFromMark(id);touch();heroPaint()}return}
   const first=!rating(id);
-  S.marks[id]={...lsBase(id),r:v,...(isGroup&&(!lsRaw(id).length||first||wasC)?{rd:todayISO()}:{}),...(isGroup||isDone(id)?{}:{done:true})};lsFromMark(id);touch();heroPaint();tdSoon();
+  S.marks[id]={...lsBase(id),r:v,...(isGroup&&(!lsRaw(id).length||first||wasC)?{rd:todayISO()}:{}),...(isGroup||isDone(id)?{}:{done:true})};lsFromMark(id);if(!isGroup)sgStamp(id);touch();heroPaint();tdSoon();
   if((first||wasC)&&!isGroup){const g=grpOfItem(id);if(g)slLitAsk(g,id)}
   const n=document.querySelector('.rt-s');if(n)n.focus({preventScroll:true})}
 
@@ -10478,6 +10502,9 @@ function reviewHtml(rid){
   return ro?'':`<button type="button" class="link rv-add" data-act="rvedit" data-id="${rid}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4"/></svg>Write a review</button>`;
 }
 function rdLine(g,dx){
+  if(g.kind==='Single'){if(!sgDone(g))return '';const d=sgDate(g);
+    if(UI.dEdit===g.id)return `<form class="sl-wf" data-form="grd" data-g="${g.id}"><input name="rd" type="date" value="${esc(d||todayISO())}" max="${todayISO()}" aria-label="Day every song was rated"><button>Save</button></form>`;
+    return d?`<button type="button" class="sl-wb sl-rd${UI.sdNew===String(g.id)?' sd-new':''}" data-act="dedit" data-g="${g.id}" title="The day its last song got rated" aria-label="Every song rated ${esc(fmtRd(d))}. Change the date">Rated ${esc(fmtRd(d))}</button>`:''}
   if(!RATEABLE.includes(g.kind))return '';
   const id=dx?dxId(g):g.id;if(!rating(id))return '';
   const d=ratedDate(id);
@@ -11574,6 +11601,7 @@ document.addEventListener('click',ev=>{
   else if(act==='hkind'){UI.hk=b.dataset.v;UI.hAnim=true}
   else if(act==='hedit'){UI.hEdit=b.dataset.id;setTimeout(()=>{const i=document.querySelector('.hr.edit input');if(i)i.focus({preventScroll:true})},40)}
   else if(act==='hcancel'){UI.hEdit=null}
+  else if(act==='hclear'&&(g=>g&&g.kind==='Single')(lsGrp(id))){sgSet(lsGrp(id),'');UI.hEdit=null;touch()}
   else if(act==='hclear'){const m0={...(S.marks[id]||{})};delete m0.rd;S.marks[id]=m0;lsFromMark(id);UI.hEdit=null;touch()}
   else if(act==='hgo'){const a=S.music.find(x=>x.id===b.dataset.a),g=a&&a.groups.find(x=>x.id===b.dataset.g);
     UI.view=null;UI.rel=null;UI.tab='music';UI.sel.music=b.dataset.a;UI.libOpen=false;UI.rOpen=null;UI.filter='all';UI.toAlb=b.dataset.g;
@@ -11765,12 +11793,14 @@ document.addEventListener('submit',ev=>{
     if(rating(id)){const m0={...S.marks[id]};if(v)m0.rv=v;else delete m0.rv;S.marks[id]=m0;touch()}
     UI.rvEdit=null;UI.rvAnim=v?id:null;if(v)setTimeout(()=>{UI.rvAnim=null},700);render();return}
   if(kind==='grd'){const g=S.music.flatMap(x=>x.groups).find(x=>x.id===f.dataset.g);
+    if(g&&g.kind==='Single'){const v=String(d.rd||'').trim();if(sgDone(g)){if(/^\d{4}-\d\d-\d\d$/.test(v)&&v<=todayISO()){sgSet(g,v);UI.sdNew=String(g.id);setTimeout(()=>{UI.sdNew=null},1400)}else if(!v)sgSet(g,'');touch()}UI.dEdit=null;render();return}
     if(g){const id=dxOn(g)?dxId(g):g.id,v=String(d.rd||'').trim();
       if(rating(id)&&/^\d{4}-\d\d-\d\d$/.test(v)&&v<=todayISO())S.marks[id]={...S.marks[id],rd:v};
       else if(rating(id)&&!v){const m0={...S.marks[id]};delete m0.rd;S.marks[id]=m0}lsFromMark(id);
       touch()}
     UI.dEdit=null;render();return}
-  if(kind==='hrd'){const id=f.dataset.id,v=String(d.rd||'').trim();
+  if(kind==='hrd'){const id=f.dataset.id,v=String(d.rd||'').trim(),sg=lsGrp(id);
+    if(sg&&sg.kind==='Single'){if(sgDone(sg)){if(/^\d{4}-\d\d-\d\d$/.test(v)&&v<=todayISO())sgSet(sg,v);else if(!v)sgSet(sg,'')}UI.hEdit=null;touch();render();return}
     if(rating(id)&&/^\d{4}-\d\d-\d\d$/.test(v)&&v<=todayISO())S.marks[id]={...S.marks[id],rd:v};
     else if(rating(id)&&!v){const m0={...S.marks[id]};delete m0.rd;S.marks[id]=m0}lsFromMark(id);
     UI.hEdit=null;touch();render();return}
