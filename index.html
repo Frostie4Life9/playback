@@ -1524,6 +1524,12 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .hxbg{position:absolute;inset:0;z-index:-2;overflow:clip;pointer-events:none}
 .hx .hxbg>.hmesh{position:sticky;inset:auto;top:0;width:100%;height:100vh;height:100lvh;border-radius:0;z-index:0}
 .hx .hxbg>.hmesh.hghost{margin-bottom:-100vh;margin-bottom:-100lvh;z-index:1}
+/* 2026.11.21-d: COLOR DRIFT. The color field stays pinned behind the page but drifts up slowly as you scroll (15% of the
+   scroll, at most a quarter of the screen), so it moves with the page a little instead of looking glued to the glass.
+   It is drawn a quarter-screen taller so the drift never shows an edge. Off in lite mode and with reduced motion. */
+@media (prefers-reduced-motion:no-preference){
+  html:not(.lite) .hx .hxbg>.hmesh{height:calc(100lvh + 25vh);top:var(--hdrift,0px)}   /* a sticky offset, not a transform, so at the end of the page the field still reaches the bottom */
+  html:not(.lite) .hx .hxbg>.hmesh.hghost{margin-bottom:calc(-100lvh - 25vh)}}
 .hx .hxtop>.hscrim{-webkit-mask-image:linear-gradient(to bottom,#000 55%,transparent);mask-image:linear-gradient(to bottom,#000 55%,transparent)}
 .hxtop{position:relative;display:flex;flex-direction:column;min-height:calc(var(--pull) + clamp(520px,72vh,800px));padding:calc(var(--pull) + 48px) var(--hxpad) 28px;color:#fff}
 .hx.nophoto .hxtop{min-height:calc(var(--pull) + clamp(440px,58vh,640px))}
@@ -1907,6 +1913,14 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .group.sleeve{--acs:#7a3a24;--acd:var(--acs);--ac:var(--acs);--acb:var(--ac);--acsw:var(--acs);--acdw:var(--acd);--hi:#fff;gap:14px;border-radius:24px;overflow:hidden;background:var(--bg);border:1px solid color-mix(in srgb,var(--line) 60%,transparent);padding:0 0 10px}
 .sheet>.group.sleeve+.group.sleeve{margin-top:0}
 .group.sleeve.dxon{--ac:var(--acd)}
+/* 2026.11.21-d: the other edition's sleeve, stacked behind an album in the Releases row */
+.hxsl{--hxw:136px}
+@media (max-width:760px){.hxsl{--hxw:116px}}
+@media (min-width:1400px){.hxsl{--hxw:168px}}
+.hxdx{position:absolute;z-index:0;top:-10px;left:12px;width:var(--hxw);height:var(--hxw);border-radius:6px;overflow:hidden;background:var(--c2,var(--c));box-shadow:0 8px 18px rgb(0 0 0 / .3);filter:brightness(.72);pointer-events:none}
+.hxdx img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hxdx em{position:absolute;z-index:1;top:1px;right:6px;font:700 8px/1 var(--mono,ui-monospace,monospace);letter-spacing:.1em;text-transform:uppercase;font-style:normal;color:#fff;text-shadow:0 1px 3px rgb(0 0 0 / .8)}
+.hxsl.hasdx{margin-top:10px}
 /* 2026.11.21-c: the pictures used by the deluxe swap and the listen page turn (see gfDxRun, gfTurnRun) */
 .gfcopy,.gfcopy *{animation:none!important;transition:none!important}
 .gfcopy::before,.gfcopy::after{display:none!important}
@@ -3445,6 +3459,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.21-e', note:'DELUXE STACKED BEHIND, A TIMELINE FOR EVERY ARTIST, COLOR DRIFT: an album with a deluxe edition now has the deluxe sleeve stacked behind it in the Releases row, peeking out above, and it stays there when the album opens. Switching Standard / Deluxe in an open album closes the record you have out (its cover flies home), the two sleeves trade places in the row, and the other edition is pulled out and swings open like any record, with its own cover, color and songs. Every artist now gets the timeline, even with one album or none (it used to need two albums); an artist with no albums has a Singles and EPs era. The artist color field now drifts up slowly as you scroll (15% of the scroll, at most a quarter of the screen) instead of staying glued in place; it is off in lite mode.'},
   {v:'2026.11.21-d', note:'FULL DATES, GROOVES BY RATING, CALMER FANS ALSO SPIN, SMOOTHER SINGLES STACK: releases on the timeline now show their full release date (Aug 3, 2018) instead of just the year. New imports keep the date; releases already in your log get theirs from Apple Music the first time each artist page opens (one lookup per artist) and from the daily new-release check. The lit lines on the records on the artist page now light for songs you have RATED, not just heard. Fans also spin records no longer restart their spin on every tap (the spin follows the clock), and each one takes its color from the artist\'s photo. Fanning out a singles stack deals the singles off the top of the stack one by one while the row slides over to make room; stacking them back gathers each one onto the stack. Best and weakest song ties are now settled by plays: the more-played song is the best, the less-played the weakest.'},
   {v:'2026.11.21-c', note:'DELUXE IS ITS OWN RECORD, LISTENS ARE PAGES, AND SMOOTHER CLOSING: in an open album, switching Standard / Deluxe now slides the record you had out down and away while the other edition rises out from behind it and comes forward, with its own cover, jacket print, color and songs. Going to a later listen turns the ratings page over like a booklet (on a phone, the page you are on), and going back turns the earlier page back over onto it. Closing an album before it has finished opening now folds it shut from wherever it was instead of snapping open first. The Spotify / Apple Music photo choice is now kept per artist (and synced), so switching one artist no longer switches everyone. The timeline\'s era years fade in once when an artist opens instead of flashing on every tap.'},
   {v:'2026.11.21-b', note:'ARTIST PHOTO FADE WITH NO LINE: on a bright photo against a dark artist color (Daft Punk) the left fade showed as a hard vertical line, because a straight fade has corners where it starts and where it changes speed. The left and bottom fades on Apple Music artist photos now ease in and out on an S-curve, so the photo melts into the colors with no edge; the top stays sharp.'},
@@ -7212,6 +7227,8 @@ function gfKeep(old){
 const PLACE_K='pb_place';
 function placeSave(){try{if(UI.tab!=='music'||UI.view)return;sessionStorage.setItem(PLACE_K,JSON.stringify({sel:UI.sel.music||'',y:Math.round(scrollY),alb:UI.alb&&UI.alb.g||'',t:Date.now()}))}catch(e){}}
 addEventListener('scroll',()=>{clearTimeout(placeSave.t);placeSave.t=setTimeout(placeSave,250)},{passive:true});
+function hxDrift(){hxDrift.q=0;const b=document.querySelector('.hx .hxbg');if(b)b.style.setProperty('--hdrift',(-Math.min(scrollY*.15,innerHeight*.25)).toFixed(1)+'px')}
+addEventListener('scroll',()=>{if(!hxDrift.q){hxDrift.q=1;requestAnimationFrame(hxDrift)}},{passive:true});
 function placeRestore(){
   if(placeRestore.done||!S.music.length||!document.querySelector('.hero[data-aid]'))return;placeRestore.done=true;
   let o=null;try{o=JSON.parse(sessionStorage.getItem(PLACE_K)||'null')}catch(e){}
@@ -7280,6 +7297,7 @@ function render(){
   phHiLoad();
   phAmLoad();
   dtLoad();
+  hxDrift();
   tdPaint();
   hxObserve();
   hxPlaceGf();
@@ -9063,7 +9081,7 @@ function hxErasOn(a,rl){
   const so=relSort();if(!['old','new'].includes(so))return null;
   const og=gfOpenId(a),keep=new Set(rl);
   const rlAll=a.groups.filter(g=>UI.filter!=='open'||String(g.id)===og||g.items.some(i=>!isDone(i.id)));
-  if(rlAll.filter(g=>g.kind==='Studio album').length<2)return null;
+  if(!rlAll.length)return null;   /* 2026.11.21-d: every artist gets the timeline, even with one album or none (it used to need two) */
   const out=hxErasBuild(a,rlAll),E=[];
   for(const e of out){
     if(e.t==='era'){const items=e.items.filter(g=>keep.has(g)),after=e.after.filter(g=>keep.has(g));if(items.length||after.length)E.push({...e,items,after})}
@@ -9121,7 +9139,7 @@ function hxEras(a,rl,sleeve,og,NEW){
     if(e.t==='box'){const k='box',o=open(k)||has(e.items),sp=e.items.slice(0,6).map(g=>`<i style="--c:${esc(hxArt(g).col)}"></i>`).join('');
       h+=`<div class="hxera hxera-box${o?' open':''}" data-era="${ix}"><div class="hxyr" aria-hidden="true"></div><div class="hxeb"><div class="hxeh"><b>Extras</b><span>Live, remixes and compilations</span></div><div class="hxer"><button class="hxbox" data-act="hxfold" data-k="${k}" aria-expanded="${o}" aria-label="${o?'Close':'Open'} the box set: ${e.items.length} releases"><span class="hxbx" aria-hidden="true">${sp}</span><span class="hxt">Box set</span><span class="hxy">${e.items.length} releases</span></button>${o?e.items.map((g,i)=>sleeve(g,NEW===k?i:null)).join(''):''}</div></div></div>`;continue}
     /* releases from before the first album */
-    h+=`<div class="hxera loose" data-era="${ix}"><div class="hxyr" aria-hidden="true"></div><div class="hxeb"><div class="hxeh"><b>Before the first album</b>${hxYears(e.items)?`<span>${esc(hxYears(e.items))}</span>`:''}</div><div class="hxer">${looseHtml(e.items)}</div></div></div>`}
+    h+=`<div class="hxera loose" data-era="${ix}"><div class="hxyr" aria-hidden="true"></div><div class="hxeb"><div class="hxeh"><b>${a.groups.some(g=>g.kind==='Studio album')?'Before the first album':'Singles and EPs'}</b>${hxYears(e.items)?`<span>${esc(hxYears(e.items))}</span>`:''}</div><div class="hxer">${looseHtml(e.items)}</div></div></div>`}
   return h}
 /* THE OPEN ALBUM FLOATS OVER THE SHELF: the jacket lies on top of the records right under the row (or era) its record is on,
    instead of pushing everything below it down the page. It is moved into the Releases block and pinned there in pixels; the
@@ -9509,8 +9527,12 @@ function heroX(a,all,done,rated,p,phUrl,more,addP){
   const NEW=UI.hxNew;UI.hxNew=null;
   /* sorted by your rating or by how much you have heard: each sleeve wears that number, so the order explains itself */
   const so=relSort(),scoreOf=so==='rhi'||so==='rlo'?g=>{const v=relScore(g);return v?(Math.round(v*10)/10).toString():''}:so==='heard'||so==='left'?g=>g.items.length?Math.round(100*g.items.filter(i=>isDone(i.id)).length/g.items.length)+'%':'':null;
-  const sleeve=(g,ni)=>{const {sArt,col,kind}=hxArt(g);
-    const on=String(g.id)===og,sc=scoreOf?scoreOf(g):'';return `<button class="hxsl${ni!=null?' hxin':''}${kind==='Single'?' sg':''}${on?' on':''}${on&&HXSINK===String(g.id)?' sink':''}" data-act="hjump" data-g="${esc(g.id)}" style="--c:${esc(col)}${ni!=null?';--i:'+ni:''}" aria-pressed="${on}" aria-label="${on?'Close':'Open'} ${esc(g.title)}"><span class="hxv vgr" aria-hidden="true">${hxRings(g)}</span><span class="hxc" aria-hidden="true">${sArt?`<img src="${esc(sArt)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span>${sc?`<b class="hxscore${/%$/.test(sc)?' pct':''}" aria-hidden="true">${esc(sc)}</b>`:''}<span class="hxt">${esc(g.title)}</span><span class="hxy">${esc([kind,dtShow(g)].filter(Boolean).join(' · '))}</span></button>`};
+  const sleeve=(g,ni)=>{const {sArt:sA,col:cA,kind}=hxArt(g);
+    /* 2026.11.21-d: an album with a deluxe edition has the deluxe sleeve stacked behind it (peeking out above), and the
+       edition you have picked is the one in front: its cover, its color */
+    const dxs=kind!=='Single'&&hasDx(g),dxo=dxs&&dxOn(g),dA=dxs?(g.dxImg||sA):'',dC=dxs?(g.dxImg&&g.dxImg!==sA?acolFor(g.id+'~dx',g.dxImg,{title:dxName(g),id:g.id}):cA):'';
+    const sArt=dxo?dA:sA,col=dxo?dC:cA,bArt=dxo?sA:dA,bCol=dxo?cA:dC;
+    const on=String(g.id)===og,sc=scoreOf?scoreOf(g):'';return `<button class="hxsl${ni!=null?' hxin':''}${kind==='Single'?' sg':''}${dxs?' hasdx':''}${on?' on':''}${on&&HXSINK===String(g.id)?' sink':''}" data-act="hjump" data-g="${esc(g.id)}" style="--c:${esc(col)}${dxs?';--c2:'+esc(bCol):''}${ni!=null?';--i:'+ni:''}" aria-pressed="${on}" aria-label="${on?'Close':'Open'} ${esc(dxo?dxName(g):g.title)}">${dxs?`<span class="hxdx" aria-hidden="true">${bArt?`<img src="${esc(bArt)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}<em>${dxo?'Standard':'Deluxe'}</em></span>`:''}<span class="hxv vgr" aria-hidden="true">${hxRings(g)}</span><span class="hxc" aria-hidden="true">${sArt?`<img src="${esc(sArt)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span>${sc?`<b class="hxscore${/%$/.test(sc)?' pct':''}" aria-hidden="true">${esc(sc)}</b>`:''}<span class="hxt">${esc(g.title)}</span><span class="hxy">${esc([kind,dtShow(g)].filter(Boolean).join(' · '))}</span></button>`};
   const eras=hxErasOn(a,rl),grp=!eras&&(so==='rhi'||so==='rlo')&&relKind(a)==='all'&&new Set(rl.map(relKindOf)).size>1;
   let lastK=null;const rel=eras?hxEras(a,rl,sleeve,og,NEW):rl.map(g=>{const k=relKindOf(g),h=grp&&k!==lastK?`<div class="hxgrp${lastK?'':' first'}" role="heading" aria-level="4"><b>${esc(REL_KINDS[k])}</b><span>${rl.filter(x=>relKindOf(x)===k).length}</span></div>`:'';lastK=k;return h+sleeve(g)}).join('');
   const ico={back:'<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
@@ -11111,10 +11133,11 @@ function gfRun(el,back){
   done.then(()=>{if(!back&&el._gfo&&el._gfo.rev)return;if(!back){el._gfo=null;a.forEach(x=>{try{x.cancel()}catch(e){}});sp.style.transformOrigin='';if(lid)lid.remove()}},()=>{});
   return done}
 /* fold the open album shut, then drop it from the page */
-function gfClose(){const el=document.querySelector('.group.sleeve.gf');
+function gfClose(keep){const el=document.querySelector('.group.sleeve.gf');
   const done=()=>{const rw=document.querySelector('.hx .hxrow'),sl=rw?rw.scrollLeft:0;   /* the row is redrawn: keep it scrolled to where it was, not back at the start */
     UI.alb=null;UI.gfClosing=false;render();placeSave();
-    if(sl){const n=document.querySelector('.hx .hxrow');if(n)n.scrollLeft=sl}};
+    if(sl){const n=document.querySelector('.hx .hxrow');if(n)n.scrollLeft=sl}
+    if(UI.dxSw){const x=UI.dxSw;UI.dxSw=null;requestAnimationFrame(()=>gfDxReopen(x))}};
   if(!el||noMotion()){done();return}
   if(UI.gfClosing)return;UI.gfClosing=true;
   el.classList.remove('gfopen');
@@ -11124,7 +11147,30 @@ function gfClose(){const el=document.querySelector('.group.sleeve.gf');
     /* the page holds perfectly still while the cover flies home, so it lands exactly on its sleeve (closing up the space and
        scrolling back during the flight moved the sleeve out from under it, so the cover landed off and then jumped). Once it has
        landed, the space the jacket held closes up smoothly and the page eases back to where it was before the album opened. */
-    const fin=()=>gfSettle(el,done);p.then(fin,fin)}catch(e){done()}}
+    const fin=()=>keep?done():gfSettle(el,done);p.then(fin,fin)}catch(e){done()}}   /* keep: the page stays put, the album is about to open again (gfDxSwitch) */
+/* SWITCHING EDITION IS SWITCHING RECORDS (2026.11.21-d). In an open album, Standard / Deluxe closes the record you have out
+   (its cover flies home onto its sleeve), the two sleeves trade places in the row (the other edition slides up out from
+   behind and comes down in front), and then that one is pulled out and swings open like any record, with its own cover,
+   color and songs. */
+function gfDxSwitch(gid,to){if(UI.dxSw||UI.gfClosing)return;UI.dxSw={gid:String(gid),to};gfClose(true)}
+function gfDxReopen(x){const q=()=>document.querySelector('.hx .hxsl[data-g="'+CSS.escape(x.gid)+'"]');
+  const o=q(),oc=o&&o.querySelector('.hxc'),od=o&&o.querySelector('.hxdx');
+  const C0=oc?oc.getBoundingClientRect():null,D0=od?od.getBoundingClientRect():null;
+  UI.dxOpen[x.gid]=x.to;render();
+  const n=q();if(!n){return}
+  const open=()=>{const b=q();if(b&&!UI.alb)b.click()};
+  const c=n.querySelector('.hxc'),d=n.querySelector('.hxdx');
+  if(!C0||!D0||!c||!d||noMotion()){open();return}
+  const C1=c.getBoundingClientRect(),D1=d.getBoundingClientRect(),T=620,E='cubic-bezier(.45,0,.2,1)';
+  const fc=[D0.left-C1.left,D0.top-C1.top],fd=[C0.left-D1.left,C0.top-D1.top],up=-Math.min(46,C1.height*.32);
+  /* the edition coming forward: up out of the back, then down in front */
+  c.animate([{translate:`${fc[0].toFixed(1)}px ${fc[1].toFixed(1)}px`,zIndex:0,filter:'brightness(.72)',offset:0},
+    {translate:`${fc[0].toFixed(1)}px ${(fc[1]+up).toFixed(1)}px`,zIndex:0,filter:'brightness(.9)',offset:.45},{zIndex:3,offset:.46},
+    {translate:'0px 0px',zIndex:3,filter:'none',offset:1}],{duration:T,easing:E});
+  /* the one going back: holds, then tucks in behind */
+  d.animate([{translate:`${fd[0].toFixed(1)}px ${fd[1].toFixed(1)}px`,zIndex:2,filter:'none',offset:0},{translate:`${fd[0].toFixed(1)}px ${fd[1].toFixed(1)}px`,zIndex:2,filter:'none',offset:.3},
+    {zIndex:0,offset:.46},{translate:'0px 0px',zIndex:0,filter:'brightness(.72)',offset:1}],{duration:T,easing:E});
+  setTimeout(open,T+60)}
 function gfSettle(el,done){
   const host=el.parentElement,y0=scrollY;
   if(!host||!el.isConnected||noMotion()){done();return}
@@ -11536,7 +11582,9 @@ document.addEventListener('click',ev=>{
   else if(act==='yrcard'){yrOpen(b.dataset.y)}
   else if(act==='frq'){const k=b.dataset.k;UI.frq=UI.frq||{};if(UI.frq[k])delete UI.frq[k];else{UI.frq[k]=1;UI.frqAnim=k;setTimeout(()=>{UI.frqAnim=null},700)}}
   else if(act==='dxsel'){const gid=b.dataset.g,to=b.dataset.v==='1',go=()=>{UI.dxOpen[gid]=to;UI.dxAnim=gid;slPulseAsk(gid,140)};
-    if(gfOpenEl(gid)&&!!UI.dxOpen[gid]!==to){gfFxAskDx(gid);UI.dxOpen[gid]=to;if(!GFX){UI.dxAnim=gid;slPulseAsk(gid,140)}}else{   /* an open album: the other edition is pulled out from behind (gfDxRun) */
+    if(gfOpenEl(gid)&&!!UI.dxOpen[gid]!==to){
+      if(!noMotion()&&document.querySelector('.hx .hxsl.hasdx[data-g="'+CSS.escape(gid)+'"]')){gfDxSwitch(gid,to);return}
+      UI.dxOpen[gid]=to}else{   /* an open album: the other edition is pulled out from behind (gfDxRun) */
     const sl=document.querySelector('.group.sleeve[data-acol="'+(window.CSS&&CSS.escape?CSS.escape(gid):gid)+'"]');
     if(sl&&!noMotion()&&sl.animate&&!!UI.dxOpen[gid]!==to&&!UI.dxBusy){   /* the old edition leaves first: header fades, deluxe-only songs fold shut, then the new one rises in */
       UI.dxBusy=true;const E='cubic-bezier(.45,.05,.4,1)',as=[];
