@@ -3462,6 +3462,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.21-j', note:'DELUXE RESETS WHEN YOU LEAVE: close an album while you are on its Deluxe (or change artist with it open) and it goes back to Standard, so the next time you open it you start on the standard album and the Releases row shows the standard sleeve in front again. Switching Standard / Deluxe inside an open album still works as before.'},
   {v:'2026.11.21-i', note:'FULL DATES FROM MUSICBRAINZ TOO: when Apple Music does not have a release at all (Y2K\u2019s DIRT (feat. JPEGMAFIA) is not on Apple), the date lookup on an artist page now asks MusicBrainz for it, so DIRT shows Oct 28, 2022 instead of 2022. Releases the first try marked as not found are looked at again.'},
   {v:'2026.11.21-h', note:'FULL DATES FOR FEATURES: a release by another artist that sits on this artist\u2019s page (Y2K\u2019s DIRT (feat. JPEGMAFIA) on JPEGMAFIA\u2019s page) never got its full date, because the fill only read the artist\u2019s own Apple Music list, so it showed just the year. Now anything still missing a full date is looked up on Apple by title when the artist page opens (up to 8 per visit, from your device, not the Worker), and gets the date when the title, artist and year line up. The open single\u2019s label shows the full date too.'},
   {v:'2026.11.21-g', note:'SINGLES GET A RATED DAY: a single has no rating of its own, so its day is now the day its last song got rated. The moment every song on a single has a rating (a song shared with an album counts when you rate it there), the single gets today as its day and \u201cRated Nov 21, 2026\u201d slides in under its title on the open 7-inch sleeve. Tap it (or \u22ef \u203a Change date rated) to change or remove the day. Re-rating a song later keeps the original day. Singles finished before this build have no day yet: add one from the sleeve or from History. History now lists singles too, with their song average as the score: dated singles show under All in their month, and a new Singles chip shows every finished single, including the ones with no day yet. The History header counts singles separately so the album count and average stay album-only. Account pages still show album dates only.'},
@@ -11024,6 +11025,8 @@ function gfGuard(a,g){if(!g)return;
 function gfStep(s){try{const o=JSON.parse(localStorage.getItem(GFG_K)||'null');if(!o)return;o.st=(o.st?o.st+'>':'')+s+'@'+(Date.now()-o.t);localStorage.setItem(GFG_K,JSON.stringify(o))}catch(e){}}
 function gfCrashLog(){try{return JSON.parse(localStorage.getItem(GFC_K)||'[]')}catch(e){return[]}}
 function artistView(a){heroLook(a.id);
+  if(UI.alb&&UI.alb.aid!==a.id)delete UI.dxOpen[UI.alb.g];   /* left an album behind on its deluxe by changing artist: it goes back to Standard */
+  if(UI.toAlb)for(const k of Object.keys(UI.dxOpen))if(String(k)!==String(UI.toAlb))delete UI.dxOpen[k];   /* opening an album: any other album left on its deluxe goes back to Standard */
   if(UI.toAlb&&a.groups.some(g=>String(g.id)===String(UI.toAlb))){UI.alb={aid:a.id,g:String(UI.toAlb)};UI.gfAnim=String(UI.toAlb);gfGuard(a,a.groups.find(g=>String(g.id)===String(UI.toAlb)))}
   const all=artistItems(a),done=all.filter(i=>isDone(i.id)).length,rated=all.filter(i=>rating(i.id)).length,p=pct(all.map(i=>i.id));
   const og=gfOpenId(a),og2=og&&a.groups.find(g=>String(g.id)===og),gf=og2?gfHtml(a,og2):'';
@@ -11208,6 +11211,7 @@ function gfRun(el,back){
 /* fold the open album shut, then drop it from the page */
 function gfClose(keep){const el=document.querySelector('.group.sleeve.gf');
   const done=()=>{const rw=document.querySelector('.hx .hxrow'),sl=rw?rw.scrollLeft:0;   /* the row is redrawn: keep it scrolled to where it was, not back at the start */
+    if(!UI.dxSw&&UI.alb)delete UI.dxOpen[UI.alb.g];   /* leaving an album on its deluxe puts it back to Standard (a Standard / Deluxe switch keeps the pick) */
     UI.alb=null;UI.gfClosing=false;render();placeSave();
     if(sl){const n=document.querySelector('.hx .hxrow');if(n)n.scrollLeft=sl}
     if(UI.dxSw){const x=UI.dxSw;UI.dxSw=null;requestAnimationFrame(()=>gfDxReopen(x))}};
