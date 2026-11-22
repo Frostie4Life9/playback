@@ -3358,6 +3358,198 @@ html.lite .hx .hxfp{-webkit-backdrop-filter:none;backdrop-filter:none;background
   .hx .rseg button .c{margin-left:4px}
 }
 </style>
+<style id="pv-css">
+/* 2026.11.22-b THE PAGE REDESIGN (Account, Friends, Stats, Listen list, History, Settings) in the Sleeve/Crate look:
+   a slow color field behind the page, Archivo display type, mono labels, glass pills, records and sleeves.
+   Everything is scoped to .pv so the artist page and library keep their own styles. */
+body:has(.pv){background:#0b0f0d}
+body:has(.pv) .top{position:relative;z-index:6}
+body:has(.pv)>footer,body:has(.pv) footer{position:relative;z-index:2}
+body:has(.pv) .buildid{color:rgb(255 255 255 / .6)}
+.pv{--x1:#3d5048;--x2:#5a6e78;--x3:#7a6650;position:relative;z-index:1;color:#fff;display:flex;flex-direction:column;gap:30px;width:100%;max-width:1760px;margin:0 auto;padding-bottom:40px;font-family:var(--body);-webkit-font-smoothing:antialiased}
+.pv *{box-sizing:border-box}
+.pvbg{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;background-color:color-mix(in srgb,var(--x1) 40%,#0b0f0d);transition:background-color 1.4s cubic-bezier(.2,.8,.2,1)}
+.pvbg i{position:absolute;border-radius:50%;filter:blur(110px);opacity:.92;transition:background-color 1.4s cubic-bezier(.2,.8,.2,1);animation:lxDrift 26s ease-in-out infinite alternate}
+.pvbg .b1{left:36%;top:-10%;width:72%;height:52%;background-color:color-mix(in srgb,var(--x1) 86%,#000)}
+.pvbg .b2{left:-16%;top:16%;width:62%;height:48%;background-color:color-mix(in srgb,var(--x2) 80%,#000);animation-duration:33s;animation-direction:alternate-reverse}
+.pvbg .b3{left:32%;top:48%;width:78%;height:46%;background-color:color-mix(in srgb,var(--x3) 84%,#000);animation-duration:41s}
+.pvbg .b4{left:-20%;top:72%;width:70%;height:46%;background-color:color-mix(in srgb,var(--x1) 80%,#000);animation-duration:29s;animation-direction:alternate-reverse}
+.pvbg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgb(0 0 0 / .08),rgb(0 0 0 / .22) 55%,rgb(0 0 0 / .4))}
+.pvbg.calm i{filter:blur(120px) saturate(.5);opacity:.78}
+html.lite .pvbg i{animation:none;filter:blur(70px)}
+@media (prefers-reduced-motion:reduce){.pvbg i{animation:none}}
+/* type */
+.pvk{font:500 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:rgb(255 255 255 / .84)}
+.pvh{margin:0;font:900 clamp(64px,8.4vw,136px)/.86 Archivo,var(--display);letter-spacing:-.045em;color:#fff;overflow-wrap:anywhere}
+.pvh2{margin:0;font:850 30px/1 Archivo,var(--display);letter-spacing:-.02em;color:#fff}
+.pvh3{margin:0;font:800 20px/1.1 Archivo,var(--display);letter-spacing:-.01em;color:#fff}
+.pvsub{margin:0;font:500 clamp(16px,1.4vw,21px)/1.35 var(--body);color:rgb(255 255 255 / .92)}
+.pvlab{font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:rgb(255 255 255 / .78)}
+.pvsm{font:500 13px/1.4 var(--body);color:rgb(255 255 255 / .84)}
+.pvmono{font-family:var(--mono)}
+.pvmut{color:rgb(255 255 255 / .78)}
+/* surfaces */
+.pvg{background:rgb(255 255 255 / .15);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.pvdg{background:rgb(10 12 12 / .34);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);box-shadow:0 0 0 1px rgb(255 255 255 / .1) inset}
+html.lite .pvdg,html.lite .pvg{-webkit-backdrop-filter:none;backdrop-filter:none}
+html.lite .pvdg{background:rgb(10 12 12 / .55)}
+.pvcard{border-radius:30px;padding:28px 30px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.pvcard>.pvch{display:flex;align-items:baseline;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.pvcard>.pvch .pvmono{font-size:12px}
+.pvtile{border-radius:24px;padding:20px;background:rgb(255 255 255 / .09);box-shadow:0 0 0 1px rgb(255 255 255 / .13) inset;display:flex;flex-direction:column;gap:12px;min-width:0}
+/* buttons, segments, chips */
+.pvb{border:0;display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:48px;padding:0 22px;border-radius:999px;font:600 15px var(--body);color:#fff;cursor:pointer;background:rgb(255 255 255 / .16);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);transition:background .2s,transform .15s;text-decoration:none;white-space:nowrap}
+.pvb:hover{background:rgb(255 255 255 / .27)}
+.pvb:active{transform:scale(.97)}
+.pvb:disabled{opacity:.5;cursor:default}
+.pvb.w{background:#fff;color:#141414}.pvb.w:hover{background:#f1f1f1}
+.pvb.sm{min-height:40px;padding:0 16px;font-size:14px}
+.pvb.xs{min-height:34px;padding:0 13px;font-size:13px}
+.pvb.ic{width:48px;padding:0}.pvb.ic.sm{width:40px}
+.pvb.dng{background:rgb(214 53 63 / .24);color:#ffdfe1}.pvb.dng:hover{background:rgb(214 53 63 / .38)}
+.pvb svg{width:18px;height:18px;flex:none}
+.pvseg{display:inline-flex;gap:4px;padding:5px;border-radius:999px;flex-wrap:wrap}
+.pvseg button{border:0;background:transparent;color:rgb(255 255 255 / .9);font:600 15px var(--body);padding:0 20px;min-height:42px;border-radius:999px;cursor:pointer;transition:background .25s,color .25s;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.pvseg button span{font:500 12px var(--mono);opacity:.72}
+.pvseg button:hover{background:rgb(255 255 255 / .12)}
+.pvseg button[aria-pressed="true"]{background:#fff;color:#141414}
+.pvseg.sm button{min-height:34px;padding:0 14px;font-size:13px}
+.pvchip{border:0;display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:0 15px;border-radius:999px;font:600 14px var(--body);color:#fff;background:rgb(255 255 255 / .14);cursor:pointer;white-space:nowrap;transition:background .2s}
+.pvchip:hover{background:rgb(255 255 255 / .24)}
+.pvchip[aria-pressed="true"]{background:#fff;color:#141414}
+.pvchip span{font:500 11px var(--mono);opacity:.72}
+.pvin{display:flex;align-items:center;gap:12px;min-height:54px;padding:0 20px;border-radius:999px;color:#fff}
+.pvin svg{width:20px;height:20px;flex:none;opacity:.85}
+.pvin input{flex:1;min-width:0;border:0;background:transparent;outline:none;color:#fff;font:500 16px var(--body);padding:0}
+.pvin input::placeholder{color:rgb(255 255 255 / .72)}
+.pvin:focus-within{box-shadow:0 0 0 2px rgb(255 255 255 / .6) inset}
+/* toggle: the knob is a little record that turns when switched on */
+.pvtg{position:relative;flex:none;width:58px;height:34px;border-radius:17px;border:0;padding:0;background:rgb(255 255 255 / .2);cursor:pointer;transition:background .3s}
+.pvtg i{position:absolute;top:3px;left:3px;width:28px;height:28px;border-radius:50%;background:radial-gradient(circle,#fff 0 22%,#1a1a1a 23% 26%,transparent 27%),repeating-radial-gradient(circle,#2a2a2a 0 1px,#111 1px 2.4px);box-shadow:0 2px 6px rgb(0 0 0 / .4);transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+.pvtg[aria-pressed="true"]{background:#fff}
+.pvtg[aria-pressed="true"] i{transform:translateX(24px) rotate(300deg)}
+/* setting rows */
+.pvrow{display:flex;align-items:center;gap:20px;padding:18px 0;border-top:1px solid rgb(255 255 255 / .13);flex-wrap:wrap}
+.pvcard>.pvch+.pvrow,.pvrow.first{border-top:0}
+.pvrow>.pvrt{flex:1 1 260px;min-width:0}
+.pvrow>.pvrt>b{font:600 16px var(--body)}
+.pvrow>.pvrt>.pvsm{margin-top:4px;font-size:14px}
+.pvrow>.pvrc{flex:none;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pvrow[hidden],.pvcard[hidden]{display:none}
+/* the existing panels (forms, guides, imports) sit inside the new sections: give them the glass look */
+.pvmore{width:100%;flex-basis:100%}
+.pvmore>summary{list-style:none;cursor:pointer;display:inline-flex}
+.pvmore>summary::-webkit-details-marker{display:none}
+.pvold{display:flex;flex-direction:column;gap:12px;margin-top:14px;padding:18px;border-radius:20px;background:rgb(0 0 0 / .18);box-shadow:0 0 0 1px rgb(255 255 255 / .1) inset;animation:pvRise .5s cubic-bezier(.2,.8,.2,1) both}
+.pv .note{color:rgb(255 255 255 / .84)}
+.pv .label{color:rgb(255 255 255 / .78);font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase}
+.pv .setcard{background:rgb(255 255 255 / .07);border:0;box-shadow:0 0 0 1px rgb(255 255 255 / .12) inset;border-radius:20px;color:#fff}
+.pv .setcard h3{color:#fff}
+.pv .pvold .btn,.pv .setcard .btn,.pv .pvc-legacy .btn{border:0;border-radius:999px;min-height:40px;padding:0 16px;background:rgb(255 255 255 / .16);color:#fff;font:600 14px var(--body);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+.pv .pvold .btn:hover,.pv .setcard .btn:hover,.pv .pvc-legacy .btn:hover{background:rgb(255 255 255 / .27)}
+.pv .pvold .btn.primary,.pv .setcard .btn.primary,.pv .pvc-legacy .btn.primary{background:#fff;color:#141414}
+.pv .pvold .btn.danger,.pv .setcard .btn.danger,.pv .pvc-legacy .btn.danger{background:rgb(214 53 63 / .24);color:#ffdfe1}
+.pv .pvold input:not([type=checkbox]):not([type=radio]):not([type=range]),.pv .pvold select,.pv .pvold textarea,.pv .setcard input:not([type=checkbox]):not([type=radio]):not([type=range]),.pv .setcard select,.pv .setcard textarea{background:rgb(255 255 255 / .1);border:0;box-shadow:0 0 0 1px rgb(255 255 255 / .18) inset;border-radius:14px;color:#fff;min-height:44px}
+.pv .pvold details>summary,.pv .setcard details>summary{color:#fff}
+.pv .pvold a,.pv .setcard a{color:#fff}
+.pv .msg{color:#c9ffd9}.pv .msg.err{color:#ffc9cd}
+/* records and sleeves */
+.pvrec{position:relative;flex:none;width:var(--s,120px);height:var(--s,120px);border-radius:50%;display:block}
+.pvrec>.rd{position:absolute;inset:0;border-radius:50%;box-shadow:0 14px 34px rgb(0 0 0 / .38);background:repeating-radial-gradient(circle,rgb(0 0 0 / .16) 0 1px,transparent 1px 3px),radial-gradient(circle,#2a2a2a,#0c0c0c 70%)}
+.pvrec>.rs{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 20deg,rgb(255 255 255 / 0) 0 8%,rgb(255 255 255 / .2) 12%,rgb(255 255 255 / 0) 17% 56%,rgb(255 255 255 / .13) 61%,rgb(255 255 255 / 0) 66%);pointer-events:none}
+.pvrec>.rl{position:absolute;inset:var(--li,32%);border-radius:50%;display:grid;place-items:center;overflow:hidden;box-shadow:0 0 0 2px rgb(0 0 0 / .18);background:var(--lc,#fff);color:#141414;font:900 calc(var(--s,120px) * .14) Archivo,var(--display)}
+.pvrec>.rl img{width:100%;height:100%;object-fit:cover;display:block}
+.pvrec>.rh{position:absolute;left:50%;top:50%;width:6%;height:6%;margin:-3% 0 0 -3%;border-radius:50%;background:#0d0d0d}
+.pvrec>.lt{position:absolute;inset:0;border-radius:50%;-webkit-mask:radial-gradient(circle,transparent 0 45%,#000 45.5% 48%,transparent 48.5%);mask:radial-gradient(circle,transparent 0 45%,#000 45.5% 48%,transparent 48.5%)}
+.pvspin{animation:pvSpin 3.4s linear infinite}.pvspin.slow{animation-duration:14s}.pvspin.mid{animation-duration:7s}
+@keyframes pvSpin{to{transform:rotate(360deg)}}
+.pvarm{position:absolute;border-radius:4px;background:linear-gradient(#efefef,#9a9a9a);box-shadow:0 4px 10px rgb(0 0 0 / .35);transform-origin:50% 6px;transition:transform 1.2s cubic-bezier(.2,.8,.2,1)}
+.pvknob{position:absolute;border-radius:50%;background:#222;box-shadow:0 0 0 3px rgb(255 255 255 / .5)}
+.pvslv{position:relative;flex:none;display:grid;place-items:center;width:var(--s,72px);height:var(--s,72px);border-radius:calc(var(--s,72px) * .12);overflow:hidden;background:var(--c,#444);box-shadow:0 14px 30px rgb(0 0 0 / .32),0 0 0 1px rgb(255 255 255 / .12) inset;color:#fff;font:900 calc(var(--s,72px) * .34) Archivo,var(--display)}
+.pvslv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.pvslv::after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgb(255 255 255 / .16),rgb(255 255 255 / 0) 40%,rgb(0 0 0 / .12));pointer-events:none}
+.pvpack{position:relative;flex:none;width:calc(var(--s,72px) * 1.34);height:var(--s,72px)}
+.pvpack>.pvrec{position:absolute;top:5%;left:0;--s:calc(var(--ps,72px) * .9);transition:transform .7s cubic-bezier(.2,.8,.2,1)}
+.pvpack>.pvslv{position:absolute;left:0;top:0;transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+.pvpack.peek>.pvrec{transform:translateX(30%)}
+.pvhov:hover .pvpack>.pvrec,.pvhov:focus-visible .pvpack>.pvrec{transform:translateX(34%)}
+.pvhov:hover .pvpack>.pvrec>.rd{animation:pvSpin 3.2s linear infinite}
+.pvhov:hover .pvpack>.pvslv{transform:translateY(-3px) rotate(-1deg)}
+.pvpill{display:inline-flex;align-items:center;justify-content:center;font:700 14px var(--mono);padding:4px 10px;border-radius:999px;box-shadow:0 0 0 1px rgb(255 255 255 / .22) inset;white-space:nowrap;background:var(--c,rgb(255 255 255 / .16));color:var(--ci,#fff)}
+.pvpill.l{font-size:22px;padding:7px 15px}
+.pvpill.xl{font:900 30px Archivo,var(--display);padding:9px 18px}
+.pvsegs{display:flex;gap:3px}
+.pvsegs i{flex:1;height:6px;border-radius:3px;background:rgb(255 255 255 / .2);overflow:hidden;display:block}
+.pvsegs i u{display:block;height:100%;width:var(--f,0%);background:var(--c,#fff);border-radius:3px}
+.pvbar{height:5px;border-radius:5px;background:rgb(255 255 255 / .2);overflow:hidden}
+.pvbar i{display:block;height:100%;border-radius:5px;background:var(--c,#fff);width:var(--w,0%);transform-origin:left;animation:pvGrowX 1s cubic-bezier(.2,.8,.2,1) both}
+.pvav{flex:none;border-radius:50%;display:grid;place-items:center;font:900 18px Archivo,var(--display);color:#fff;box-shadow:0 0 0 2px rgb(255 255 255 / .7);background:hsl(var(--h,180) 42% 38%);overflow:hidden;width:var(--s,40px);height:var(--s,40px)}
+.pvav img{width:100%;height:100%;object-fit:cover}
+.pvbadge{position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;border-radius:10px;background:#fff;color:#141414;font:700 11px var(--mono);display:grid;place-items:center;padding:0 5px}
+.pvlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.pvrowh{transition:background .25s;border-radius:16px}
+.pvrowh:hover{background:rgb(255 255 255 / .08)}
+.pvsr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* motion: every new piece rises in */
+.pvrise{animation:pvRise .7s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--d,0) * 60ms)}
+@keyframes pvRise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.pvgrow{transform-origin:bottom;animation:pvGrow .9s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--d,0) * 25ms)}
+@keyframes pvGrow{from{transform:scaleY(0)}to{transform:none}}
+@keyframes pvGrowX{from{transform:scaleX(0)}to{transform:none}}
+.pvpulse{animation:pvPulse 2s ease-in-out infinite}
+@keyframes pvPulse{50%{opacity:.45}}
+.pvnoanim .pvrise,.pvnoanim .pvgrow,.pvnoanim .pvbar i{animation:none}
+@media (prefers-reduced-motion:reduce){.pv .pvrise,.pv .pvgrow,.pv .pvbar i,.pvspin,.pvhov:hover .pvpack>.pvrec>.rd{animation:none}}
+/* hero row shared by every page */
+.pvhero{display:flex;flex-wrap:wrap;gap:40px;align-items:center;min-height:clamp(260px,30vh,360px)}
+.pvhero>.pvht{flex:1 1 520px;min-width:0;display:flex;flex-direction:column;gap:20px}
+.pvstats{display:flex;flex-wrap:wrap;gap:12px 34px}
+.pvstats>div{display:flex;flex-direction:column;gap:6px}
+.pvstats b{font:900 clamp(34px,3.4vw,52px)/.9 Archivo,var(--display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.pvside{display:flex;gap:30px;align-items:flex-start;flex-wrap:wrap}
+.pvnav{flex:0 0 260px;border-radius:24px;padding:10px;display:flex;flex-direction:column;gap:2px;position:sticky;top:78px}
+.pvnav button{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 16px;border-radius:14px;border:0;background:transparent;color:#fff;text-align:left;font:600 15px var(--body);cursor:pointer;transition:background .25s,color .25s}
+.pvnav button:hover{background:rgb(255 255 255 / .08)}
+.pvnav button[aria-current="true"]{background:#fff;color:#141414}
+.pvnav button svg{width:18px;height:18px;flex:none}
+.pvmain{flex:999 1 640px;min-width:0;display:flex;flex-direction:column;gap:26px}
+@media (max-width:900px){
+  .pv{gap:22px}
+  .pvhero{gap:24px;min-height:0}
+  .pvnav{display:none}
+  .pvcard{padding:22px 18px;border-radius:24px}
+  .pvrow{gap:12px}
+  .pvrow>.pvrc{width:100%}
+}
+/* Settings */
+.pvset .pvhero{align-items:center}
+.pvset-q{max-width:520px}
+.pvset-sync{flex:0 1 620px;display:flex;gap:28px;align-items:center;padding:26px 30px;border-radius:30px;background:linear-gradient(150deg,rgb(255 255 255 / .2),rgb(255 255 255 / .06));box-shadow:0 0 0 1px rgb(255 255 255 / .2) inset;flex-wrap:wrap}
+.pvset-tt{position:relative;width:170px;height:160px;flex:none}
+.pvset-st{display:flex;flex-direction:column;gap:8px;min-width:0;flex:1 1 220px}
+.pvset-st>b{font:900 34px/1 Archivo,var(--display);letter-spacing:-.02em}
+.pvset-sb{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
+.pvset-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;margin-bottom:6px}
+.pvset-th{display:flex;align-items:center;gap:12px}
+.pvset-ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font:900 18px Archivo,var(--display);color:#fff;flex:none}
+.pvset-ok{font-size:11px;margin-top:3px}
+.pvset-tl{display:flex;flex-direction:column;gap:6px}
+.pvset-tb{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
+.pvset-tb:empty{display:none}
+.pvset-me{align-items:center}
+.pvset-me .pvrt{flex:1 1 200px}
+.pvset-code{font-size:18px;letter-spacing:.14em;padding:8px 14px;border-radius:12px;background:rgb(255 255 255 / .12)}
+.pvset-num{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:8px}
+.pvset-num .pvtile{gap:6px}
+.pvset-num b{font:900 40px/1 Archivo,var(--display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.pvset-cl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.pvset-cl li{display:flex;flex-direction:column;gap:4px}
+.pvset-cl summary{cursor:pointer}
+.pvset-cl .pvmono{font-size:11px;opacity:.75}
+.pvset-none{padding:20px}
+html.pbstill *,html.pbstill *::before,html.pbstill *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+@media (max-width:900px){.pvset-sync{padding:20px;gap:18px}.pvset-tt{transform:scale(.8);transform-origin:left center;width:140px;height:130px}}
+</style>
 
 <!-- suite:css v10 · shared by Kitchen, Grocery, Lift, DishLog, Protocol, Rail, Game Log, Playback — edit tools/suite.py in the kitchen repo, not here -->
 <style id="suite-css">
@@ -3911,6 +4103,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.22-b', note:'SETTINGS REDESIGN (first of the six redesigned pages). Settings now sits on a calm color field from the last artist you opened, with a big Settings title, a search box that hides everything that doesn\u2019t match as you type, and a sync turntable that spins while you\u2019re in sync (Save now and Check for newer right on it). On a wide screen a section list on the left follows you down the page. Connections are cards for Spotify, Apple Music, MusicBrainz and Rate Your Music with a status light, and the setup forms open in place under them. On/off switches have a knob that\u2019s a tiny record and turns when you flip it. NEW: a Motion switch (turns off the spinning and sliding on this device), an album-cover default (Apple or Spotify for every artist; an artist\u2019s own switch still wins), a backup reminder interval (7, 14, 21 days or off), Ideas for Playback, and What\u2019s new (the last few builds).'},
   {v:'2026.11.22-a', note:'PHONE AND ALBUM FIXES. NO MORE GLITCHING WITH AN ALBUM OPEN: things finishing in the background (Apple covers being matched for other artists, play counts, Spotify\u2019s auto-check, friends\u2019 ratings, sync) used to rebuild the whole artist page under an open album, even when nothing on it had changed. Now a background update leaves the page alone unless something on it really changed, and an open album\u2019s covers never switch under you (they switch when it closes). LIBRARY PHOTO: the old photo now fades out while the new one fades in, so there is no snap at the end of the fade. PHONE LIBRARY: the A\u2013Z letters no longer sit on top of the + and Sort (they slide in once you scroll past them), the Add an artist fields are full size again, and the page fades under the status bar instead of being cut off. OPEN ALBUM ON A PHONE: it looks like a record jacket now. The cover is printed once across both inside pages (it was zoomed 3x and cut off oddly), the pages have a card grain and jacket corners, and the inside left has its own record sleeved in the outer edge, like the desktop\u2019s 2LP. FASTER: opening, closing and switching albums, the Standard/Deluxe swap and turning to another listen all play about 40% faster, with the same moves. The phone\u2019s pause before zooming into the inside left is shorter. OPENING AN ARTIST ON A PHONE: the page no longer scrolls down after it opens, so the record flies straight to the turntable instead of aiming low and being dragged up, and it stutters less in the air. SINGLES: fanning out a stack takes the top single off first, then the ones under it (the reverse of how they stack). DELUXE: an album with a deluxe edition shows the deluxe record too, peeking out behind the standard one in its own color, and the two records swap along with their sleeves.'},
   {v:'2026.11.21-w', note:'ARTIST LIBRARY CLEANUP (from your screen recording). NO MORE FLASHING: the library was drawn on top of the last artist you opened, and every redraw (changing the sort or filter, Add an artist, or a background update like play counts or sync) rebuilt both and faded the library back in, so that artist\u2019s page flashed through. Now the library updates in place, and nothing is drawn behind it. ADD AN ARTIST is a glass sheet over the library with its own close button; Esc or a click outside closes it too, and closing it no longer opens an artist page (the round X on the library was actually the library\u2019s own close button, so it\u2019s gone; on a phone there\u2019s a Back to [artist] chip instead). SMOOTHER PREVIEW: the new photo loads before it fades in, and the name, photo and colors change together, so there\u2019s no snap at the end. Old photos no longer stack up, and the page waits for the pointer to rest on a tile before changing colors, so sweeping across the wall doesn\u2019t flicker. SCROLLING: the slim preview only appears once the search and chips have scrolled away (it used to land on top of them). It now has a small record in the artist\u2019s colors, and the hero fades out as it scrolls up. OPENING AN ARTIST: the library\u2019s backing clears at once, so the artist page shows straight away (the library used to hang on screen for most of a second), the record\u2019s flight onto the turntable is shorter, and the empty turntable is a faint platter instead of a black disc. The app bar stays visible over the library, so nothing jumps. GOING BACK: All artists is a glass chip. The library comes back scrolled to where you left it, and the artist\u2019s record flies home into its sleeve. NEW: a glass Sort menu replaces the plain dropdown. Tiles and the big library record show how much you\u2019ve RATED instead of heard (Done means every song rated). Labels are a little bigger. The A\u2013Z rail shows every letter, with empty ones dimmed. There\u2019s a Recently opened row. Searching lists Artists, then Albums (album results look like sleeves and open the album), with an Add \u201csearch\u201d tile. The Rating sort breaks ties by song average, then plays. Keys: / to search, arrows to move between artists, Enter to open, Esc to close or clear. Empty filters get a proper message. Fans also spin photos load right away and fade in.'},
   {v:'2026.11.21-v', note:'APPLE MUSIC ALBUM COVERS: album covers now come from Apple Music by default, like artist photos. They\u2019re sharper, and the open album shows them at full size (1200 px). Each artist is checked once (their page first, then the rest of your library slowly in the background), straight from your device to Apple, so your Worker isn\u2019t used. A cover is only swapped when the title matches and the track count lines up (explicit copies win over clean ones), so a wrong edition doesn\u2019t slip in; anything without a sure match keeps its old cover. Deluxe editions get their own Apple cover too. Albums you imported from Apple Music were saved at a small size and are now sharper. The Spotify / Apple Music switch for an artist\u2019s photo now flips their album covers too (it shows up for any artist with Apple covers), and album colors stay the same as before.'},
@@ -8658,7 +8851,7 @@ const bkMark=()=>bkSet({last:Date.now()});
 function bkNudge(){
   if(syncOn())return '';
   const b=bkGet(),now=Date.now(),base=b.last||b.first||0;
-  if(!base||now-base<BK_EVERY*BK_DAY||now<(b.snooze||0))return '';
+  if(!base||!bkEvery()||now-base<bkEvery()*BK_DAY||now<(b.snooze||0))return '';
   if(Object.keys((S&&S.marks)||{}).length<5)return '';   /* nothing worth losing yet */
   const wk=Math.max(1,Math.round((now-base)/(7*BK_DAY)));
   return `<div class="banner bk" role="status"><p>${b.last?`You last backed up your log ${wk} weeks ago.`:'You have not backed up your log yet.'} A backup file is your only copy if this browser ever clears its saved data.</p><button class="btn primary" data-act="bkfile">Download backup</button><button class="btn" data-act="bksnooze">Later</button></div>`;
@@ -9520,52 +9713,167 @@ function accCard(){
 /* one Settings card that throws must not blank the whole page: show what failed in its place */
 function sfe(name,fn){try{return fn()}catch(e){try{console.error('Settings card '+name,e)}catch(_){}
   return '<p class="note" role="alert">This part of Settings could not load ('+esc(name)+': '+esc(String(e&&e.message||e))+'). The rest of Settings still works.</p>'}}
+/* ---------- 2026.11.22-b THE PAGE REDESIGN: shared pieces ----------
+   Every redesigned page (Settings, History, Stats, Listen list, Friends, Account) draws a slow color field behind itself
+   (pvBg), and uses the same records, sleeves, pills and rows. Colors come from album covers (gCol) like the artist page. */
+function pvRgb(c){const m=/^#?([0-9a-f]{6})$/i.exec(String(c||'').trim());if(!m)return null;const n=parseInt(m[1],16);return[n>>16&255,n>>8&255,n&255]}
+function pvInk(c){const v=pvRgb(c);if(!v)return '#fff';const L=v.map(x=>{x/=255;return x<=.03928?x/12.92:Math.pow((x+.055)/1.055,2.4)});return .2126*L[0]+.7152*L[1]+.0722*L[2]>.42?'#141414':'#fff'}
+function pvCols(list){const o=[];for(const c of list||[])if(c&&!o.includes(c))o.push(c);
+  const d=['#3d5048','#5a6e78','#7a6650'];while(o.length<3)o.push(o[o.length%Math.max(1,o.length)]||d[o.length]);return o.slice(0,3)}
+function pvBg(cols,calm){const c=pvCols(cols);return `<div class="pvbg${calm?' calm':''}" aria-hidden="true" style="--x1:${c[0]};--x2:${c[1]};--x3:${c[2]}"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i></div>`}
+/* the color of a rated entry from rhAll (its own cover; the deluxe has its own) */
+function pvECol(e){if(!e)return '#444';if(e.dx)return acolFor(e.g.id+'~dx',e.g.dxImg,{title:e.title,id:e.g.id+'~dx'});return gCol(e.g,e.art,true)}
+/* a record: size in px, an optional label (html), label color, lit groove (0-100 or a conic string) and spin speed */
+function pvRec(s,o){o=o||{};const lit=o.lit==null?'':typeof o.lit==='string'?o.lit:`conic-gradient(${o.lc||'#fff'} 0 ${Math.max(0,Math.min(100,o.lit)).toFixed(1)}%, rgb(255 255 255 / .14) ${Math.max(0,Math.min(100,o.lit)).toFixed(1)}% 100%)`;
+  return `<span class="pvrec${o.cls?' '+o.cls:''}" style="--s:${s}px${o.lc?';--lc:'+o.lc:''}${o.li?';--li:'+o.li:''}" aria-hidden="true"><i class="rd${o.spin?' pvspin '+o.spin:''}"${o.disc?` style="background:${o.disc}"`:''}></i><i class="rs"></i>${lit?`<i class="lt" style="background:${lit}"></i>`:''}<span class="rl">${o.label||''}</span>${o.label&&/<img/.test(o.label)?'':'<i class="rh"></i>'}</span>`}
+function pvSleeve(s,art,col,title){return `<span class="pvslv" style="--s:${s}px;--c:${col||'#444'}" aria-hidden="true">${esc(String(title||'?').trim().charAt(0).toUpperCase())}${art?`<img src="${esc(art)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span>`}
+/* a sleeve with its record peeking out (lifts and spins on hover) */
+function pvPack(s,art,col,title,lit,peek){return `<span class="pvpack${peek?' peek':''}" style="--s:${s}px;--ps:${s}px">${pvRec(Math.round(s*.9),{lc:col,lit:lit==null?null:lit})}${pvSleeve(s,art,col,title)}</span>`}
+function pvPill(r,col,cls){return `<span class="pvpill${cls?' '+cls:''}" style="--c:${col||'rgb(255 255 255 / .16)'};--ci:${col?pvInk(col):'#fff'}">${fmt(r)}</span>`}
+/* ten segments filled to the rating, in the album's color */
+function pvSegs(r,col){return `<span class="pvsegs" style="--c:${col||'#fff'}" aria-hidden="true">${[1,2,3,4,5,6,7,8,9,10].map(k=>`<i><u style="--f:${r>=k?100:r>k-1?Math.round((r-k+1)*100):0}%"></u></i>`).join('')}</span>`}
+function pvRow(k,title,sub,ctrl,more){return `<div class="pvrow" data-k="${esc(k)}"><div class="pvrt"><b>${title}</b>${sub?`<div class="pvsm">${sub}</div>`:''}</div>${ctrl?`<div class="pvrc">${ctrl}</div>`:''}${more||''}</div>`}
+function pvSeg(act,cur,opts,lab,sm){return `<div class="pvseg pvg${sm===false?'':' sm'}" role="group" aria-label="${esc(lab)}">${opts.map(([v,t])=>`<button type="button" data-act="${act}" data-v="${esc(v)}" aria-pressed="${cur===v}">${t}</button>`).join('')}</div>`}
+function pvTg(act,on,lab,v){return `<button type="button" class="pvtg" data-act="${act}"${v!=null?` data-v="${esc(v)}"`:''} aria-pressed="${!!on}" aria-label="${esc(lab)}"><i></i></button>`}
+/* a panel of the older controls (forms, guides, imports) that opens under its row */
+const pvOpen=k=>!!(UI.pvOpen&&UI.pvOpen[k]);
+function pvMoreBtn(k,lab,cls){return `<button type="button" class="pvb sm${cls?' '+cls:''}" data-act="pvmore" data-v="${k}" aria-expanded="${pvOpen(k)}">${pvOpen(k)?'Close':lab}</button>`}
+function pvPanel(k,html,id){return pvOpen(k)?`<div class="pvmore"${id?` id="${id}"`:''}><div class="pvold">${html}</div></div>`:''}
+/* motion: on by default; Settings can turn the spinning and sliding off on this device (the system's reduce-motion still wins) */
+function pvMotion(){try{return localStorage.getItem('pb_motion')!=='0'}catch(e){return true}}
+function pvMotionApply(){document.documentElement.classList.toggle('pbstill',!pvMotion())}
+pvMotionApply();
+/* album covers default: Apple Music unless this device picks Spotify; each artist's own switch still wins */
+function phDef(){try{return localStorage.getItem('pb_phdef')==='sp'?'sp':'am'}catch(e){return 'am'}}
+/* backup reminder interval in days (0 = off); 21 was the old fixed value */
+function bkEvery(){const v=bkGet().every;return v===0?0:[7,14,21,30].includes(v)?v:21}
+
+/* ---------- Settings (redesign) ----------
+   Hero: a sync turntable and a search box. Then sections (Connections, Look & playback, Account & friends, Sync & backup,
+   Your data, Help & feedback, Owner tools), with a section list on the left on wide screens. The older panels
+   (Spotify setup, RYM import, sync form, backups) open in place under their row, so every control still works. */
+function setHero(){
+  const on=syncOn(),st=SYS.status,err=st==='error'||st==='conflict',busy=st==='busy';
+  const lc=!on?'#9aa3a0':err?'#ff8a8a':busy?'#ffd27a':'#9ff0b8';
+  const lab=!on?'Sync off':err?(st==='conflict'?'Needs a choice':'Sync problem'):busy?'Syncing':'In sync';
+  const big=on?(busy?'Syncing…':SY.at&&!err?'Synced '+new Date(SY.at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):syncLabel()):'Only on this device';
+  let host='';try{host=SY.url?new URL(SY.url).host:''}catch(e){}
+  const line=on?[window.PB_OWNER&&ACC.me&&SY.via?'Owner login':'',ownSync()?(host?'Your Worker · '+esc(host):'Your Worker'):'Under your Google account'].filter(Boolean).join(' · '):'Turn on sync to keep your log on every device';
+  return `<div class="pvset-sync pvrise" style="--d:2">
+    <div class="pvset-tt">${pvRec(150,{lit:on?100:0,lc,label:`<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#141414" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 0 1-14.3 4.9M4 12a8 8 0 0 1 14.3-4.9"/><path d="M18 3v4.5h-4.5M6 21v-4.5h4.5"/></svg>`,spin:on&&!err?'mid':''})}
+      <i class="pvarm" style="left:150px;top:8px;width:5px;height:92px;transform:rotate(${on?26:4}deg)"></i><i class="pvknob" style="left:143px;top:2px;width:18px;height:18px"></i></div>
+    <div class="pvset-st"><span class="pvlab" style="color:${lc}">● ${lab}</span><b>${esc(big)}</b><span class="pvsm">${line}</span>
+      ${SYS.msg?`<span class="pvsm" style="color:#ffc9cd">${esc(SYS.msg)}</span>`:''}
+      <div class="pvset-sb">${on?`<button class="pvb sm w" data-act="pushnow">Save now</button><button class="pvb sm" data-act="pullnow">Check for newer</button>`:`<button class="pvb sm w" data-act="pvsec" data-v="sync">Set up sync</button>`}</div></div></div>`}
 function settingsView(){
-  const acct=sfe('accCard',accCard)+sfe('sugCard',sugCard)+sfe('usersCard',usersCard);
-  return `
-  <section class="settings set" aria-labelledby="set-h">
-    <h2 id="set-h">Settings</h2>
-    <p class="note">Setup and housekeeping. Everything here syncs with the rest of your log.</p>
-    <div class="set-col set-lib"><h3 class="set-gh">Library &amp; imports</h3>
-    <div class="setcard"><h3>Import source</h3>${sfe('srcSide',srcSide)}</div>
-    <div class="setcard"><h3>Spotify</h3>${sfe('spSide',spSide)}</div>
-    <div class="setcard"><h3>Rate Your Music</h3>${sfe('rymSide',rymSide)}${sfe('rtSide',rtSide)}</div>
-    ${window.PB_OWNER?`<div class="setcard"><h3>Rating dates</h3>${sfe('rdSide',rdSide)}</div>`:''}
+  const anim=UI.setAnim!==false;UI.setAnim=false;
+  const own=!!window.PB_OWNER,sec=[['conn','Connections'],['look','Look &amp; playback'],['acct','Account &amp; friends'],['sync','Sync &amp; backup'],['data','Your data'],['help','Help &amp; feedback']].concat(own?[['own','Owner tools']]:[]);
+  const cur=UI.setSec||'conn';
+  const a=current(),cols=a&&a.groups?lxCols(a):null;
+  /* Connections */
+  const cid=spCid(),viaW=spViaWorker(),w=SPX.wk,spOn=viaW?!!(w&&w.connected):!!SPL.rt,src=(S.cfg&&S.cfg.importSrc)||'',want=importSource();
+  const tile=(c,ic,name,stat,ok,lines,btns)=>`<div class="pvtile pvrise" data-k="${esc(name+' '+lines.join(' '))}"><div class="pvset-th"><span class="pvset-ic" style="background:${c}">${ic}</span><div><b class="pvh3">${name}</b><div class="pvmono pvset-ok" style="color:${ok?'#9ff0b8':'#ffd27a'}">● ${stat}</div></div></div>
+    <div class="pvset-tl">${lines.map(l=>`<span class="pvsm">${l}</span>`).join('')}</div><div class="pvset-tb">${btns}</div></div>`;
+  const pend=Object.keys(S.pendingR||{}).length;
+  const conn=`<section id="pvs-conn" class="pvcard pvdg pvrise" data-sec="conn"><div class="pvch"><h2 class="pvh2">Connections</h2><span class="pvmono pvmut">where your music and ratings come from</span></div>
+    <div class="pvset-tiles">
+      ${tile('#1db954','S','Spotify',spOn?'Connected · auto-check on':cid?'Client ID saved · not connected':'Not set up',spOn,[spOn?'Songs you play on Spotify get checked off as heard':'Check off what you play on Spotify, with your own free developer app','Imports read from Spotify when it’s connected'],pvMoreBtn('sp',spOn?'Manage':'Set up'))}
+      ${tile('#fa4c63','♫','Apple Music',want==='apple'?'Import source · artist art':'Artist art · covers',true,['Discography imports and new-release checks, no account needed','Artist photos and album covers default to Apple'],src==='apple'?'':`<button class="pvb xs" data-act="impsrc" data-v="apple">Make default</button>`)}
+      ${tile('#ba478f','MB','MusicBrainz',want==='mb'?'Import source':'Fallback source',true,['Used when Spotify and Apple don’t have a release'],src==='mb'?'':`<button class="pvb xs" data-act="impsrc" data-v="mb">Make default</button>`)}
+      ${tile('#2a6bb0','R','Rate Your Music',pend?pend+' waiting for their artist':'Ready',!pend,['Album ratings from RYM’s CSV export','The helper userscript catches song ratings from album pages you open'],pvMoreBtn('rym','Import CSV')+pvMoreBtn('rt','Song ratings'))}
     </div>
-    ${acct.trim()?`<div class="set-col set-acct"><h3 class="set-gh">Account &amp; community</h3>${acct}</div>`:''}
-    <div class="set-col set-data"><h3 class="set-gh">Your data</h3>
-    <div class="setcard"><h3>Artist page</h3><p class="note">The artist's photo fades into their colors at the top of their page, with a Play on Spotify button. Turn it off to get the plain color header back. Saved on this device.</p><div class="tools"><button class="btn" data-act="phtog" aria-pressed="${phOn()}">${phOn()?'Turn off artist photo':'Turn on artist photo'}</button></div></div>
-    <div class="setcard"><h3>Play button</h3><p class="note">Play in an open album starts it from the first song on Spotify, on whichever device has Spotify open. Pick Apple Music to have Play open the album in Apple Music instead (Apple doesn't let web apps start the music, so you tap play there). Saved on this device.</p><div class="tools seg2" role="group" aria-label="Play button"><button class="btn" data-act="plsrc" data-v="sp" aria-pressed="${plSrc()==='sp'}">Spotify</button><button class="btn" data-act="plsrc" data-v="am" aria-pressed="${plSrc()==='am'}">Apple Music</button></div></div>
-    <div class="setcard"><h3>Lite mode</h3><p class="note">${liteNote()}</p><div class="rseg" role="group" aria-label="Lite mode">${[['auto','Auto'],['on','Always on'],['off','Always off']].map(([v,t])=>`<button data-act="litepick" data-v="${v}" aria-pressed="${LITE.pref===v}">${t}</button>`).join('')}</div></div>
-    <div class="setcard"><h3>How Playback works</h3><p class="note">A short tour of the buttons and tabs.</p><div class="tools"><button class="btn" data-act="tourgo">Show the tour</button></div></div>
-    <div class="setcard"><h3>Sync &amp; data</h3>
-    <details id="syncpanel" ${UI.syncOpen?'open':''}>
-      <summary class="label" style="cursor:pointer">Sync</summary>
-      ${sfe('syncGuide',syncGuide)}
+    ${pvPanel('sp',sfe('spSide',spSide))}${pvPanel('rym',sfe('rymSide',rymSide))}${pvPanel('rt',sfe('rtSide',rtSide))}
+    ${pvRow('import source spotify apple musicbrainz automatic','Import source','Where new discographies come from first. Right now: <b>'+esc(SRC_NAME[want]||want)+'</b>',pvSeg('impsrc',src,[['','Automatic'],['apple','Apple Music'],['mb','MusicBrainz']],'Import source'))}
+  </section>`;
+  /* Look & playback */
+  const look=`<section id="pvs-look" class="pvcard pvdg pvrise" data-sec="look" style="--d:1"><div class="pvch"><h2 class="pvh2">Look &amp; playback</h2><span class="pvmono pvmut">saved on this device</span></div>
+    ${pvRow('artist photo header','Artist photo','The photo fades into the artist’s colors at the top of their page',pvTg('phtog',phOn(),phOn()?'Artist photo on':'Artist photo off'))}
+    ${pvRow('album covers apple spotify artwork default','Album covers','Apple Music covers and photos by default; each artist’s own photo switch still flips just that artist',pvSeg('phdef',phDef(),[['am','Apple'],['sp','Spotify']],'Album cover default'))}
+    ${pvRow('play button spotify apple music','Play button opens','Spotify starts the album on whichever device has it open. Apple Music opens the album, then you tap play there',pvSeg('plsrc',plSrc(),[['sp','Spotify'],['am','Apple Music']],'Play button'))}
+    ${pvRow('lite mode performance effects',  'Lite mode',liteNote(),pvSeg('litepick',LITE.pref,[['auto','Auto'],['on','Always on'],['off','Always off']],'Lite mode'))}
+    ${pvRow('motion animation spin reduce','Motion','Spinning records, sliding sleeves and color shifts. Your system’s reduce-motion setting always wins',pvTg('pvmotion',pvMotion(),pvMotion()?'Motion on':'Motion off'))}
+    ${pvRow('tour help how playback works','How Playback works','A short tour of the buttons and tabs',`<button class="pvb sm" data-act="tourgo">Show the tour</button>`)}
+  </section>`;
+  /* Account & friends */
+  const me=accOn()?ACC.me:null,F=ACX.fr,nf=F?F.friends.length:0;
+  const acct=GCID?`<section id="pvs-acct" class="pvcard pvdg pvrise" data-sec="acct" style="--d:2"><div class="pvch"><h2 class="pvh2">Account &amp; friends</h2><span class="pvmono pvmut">your page, sharing and sign-in live on your Account page</span></div>
+    ${me?`<div class="pvset-me pvrow first" data-k="account page profile signed in">${pvRec(84,{label:`<span class="pvav" style="--h:${accHueOf(me)};--s:100%;box-shadow:none;font-size:22px">${accFace(me)}</span>`,li:'30%',lc:`hsl(${accHueOf(me)} 42% 38%)`})}
+      <div class="pvrt"><b class="pvh3">${esc(me.name)}</b><div class="pvsm">${[SY.via&&own?'Owner login':'Signed in with Google',nf+' friend'+(nf===1?'':'s'),me.share?'page shared with friends':'page not shared'].join(' · ')}</div></div>
+      <div class="pvrc"><button class="pvb sm w" data-act="view" data-v="account">Open your page</button><button class="pvb sm" data-act="view" data-v="account" data-tab="c">Account settings</button></div></div>
+      ${pvRow('friend code add friends','Friend code','Friends enter this to add you',`<span class="pvmono pvset-code">${esc(me.code)}</span><button class="pvb sm" data-act="acccopy">${ACX.copied?'Copied':'Copy'}</button>`)}
+      ${GCID?pvRow('friends list requests','Friends','Requests, activity and adding friends',`<button class="pvb sm" data-act="fropen">Open Friends</button>`):''}`
+    :pvRow('sign in google account','Sign in','Sign in with Google to get a page of your own, add friends and see their ratings',`<button class="pvb sm w" data-act="view" data-v="account">Sign in</button>`)}
+    ${!own?pvRow('suggest idea feedback','Suggest something','Send an idea or a problem straight to Skyler',pvMoreBtn('sug','Write one'),pvPanel('sug',sfe('sugCard',sugCard))):''}
+  </section>`:'';
+  /* Sync & backup */
+  let host='';try{host=SY.url?new URL(SY.url).host:''}catch(e){}
+  const b=bkGet(),last=b.last?new Date(b.last).toLocaleDateString(undefined,{month:'short',day:'numeric'}):'';
+  const syncForm=`${sfe('syncGuide',syncGuide)}
       <form class="panel" data-form="sync">
         <p class="note">Connect your playback-sync Worker so your phone and PC share one log. Changes upload a moment after you make them, and the app checks for newer data whenever you open it.</p>
         <label class="label" for="sync-url">Worker URL</label>
         <input id="sync-url" name="url" type="url" placeholder="https://playback-sync.skyfro04.workers.dev" value="${esc(SY.url)}">
         <label class="label" for="sync-key">Sync key</label>
         <input id="sync-key" name="key" type="password" autocomplete="off" placeholder="The SECRET you set on the Worker" value="${esc(SY.key)}">
-        <div class="tools"><button class="btn primary">Save and sync</button>${SY.url?'<button type="button" class="btn" data-act="pushnow">Upload now</button><button type="button" class="btn" data-act="pullnow">Check for newer</button><button type="button" class="btn danger" data-act="unsync">Turn off sync</button>':''}</div>
+        <div class="tools"><button class="btn primary">Save and sync</button></div>
         <span class="msg ${SYS.status==='error'?'err':''}">${esc(SYS.msg||'')}</span>
-      </form>
-    </details>
-    ${sfe('statSide',statSide)}
-    ${sfe('expSide',expSide)}
-    <details id="backup" ${UI.bkOpen?'open':''}>
-      <summary class="label" style="cursor:pointer">Backup &amp; restore</summary>
-      <p class="note">Your log${SV.bytes?' ('+mb(SV.bytes)+')':''} is saved in this browser${SV.idb?'\u2019s database':''}${ownSync()?' and on your Worker':accSync()?' and under your account':' only'}. ${syncOn()?'':'Download a backup file now and then and keep it somewhere safe, like your email or a cloud drive. '}Paste or load a backup to restore it.${bkGet().last?' Last backup from this device: '+esc(new Date(bkGet().last).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}))+'.':''}</p>
-      <div class="tools"><button class="btn primary" data-act="bkfile">Download backup file</button><label class="btn" for="bk-file" style="cursor:pointer">Restore from file</label><input type="file" id="bk-file" accept=".json,application/json" hidden></div>
-      ${BKX.msg?`<p class="msg ${BKX.ok?'':'err'}" role="status">${esc(BKX.msg)}</p>`:''}
-      ${BKX.pending?`<div class="tools"><button class="btn primary" data-act="bkgo">Replace my log with this backup</button><button class="btn" data-act="bkno">Cancel</button></div>`:''}
-      <textarea id="backup-text" aria-label="Backup data"></textarea>
-      <div class="tools"><button class="btn" data-act="copy">${UI.copied?'Copied':'Copy backup text'}</button><button class="btn" data-act="restore">Restore from pasted text</button></div>
-    </details>
-    </div></div>
-  </section>
-`}
+      </form>`;
+  const sopen=pvOpen('sync')||UI.syncOpen;
+  const sync=`<section id="pvs-sync" class="pvcard pvdg pvrise" data-sec="sync" style="--d:3"><div class="pvch"><h2 class="pvh2">Sync &amp; backup</h2><span class="pvmono pvmut">your log${SV.bytes?' is '+mb(SV.bytes):''}</span></div>
+    ${pvRow('sync worker devices',ownSync()?'Sync with your Worker':accSync()?'Kept under your account':'Sync',ownSync()?(host?esc(host)+' · deploys from GitHub on every push':'Your Worker'):accSync()?'Your log follows your Google sign-in to every device':'Connect your own playback-sync Worker so your phone and PC share one log',
+      `<button type="button" class="pvb sm" data-act="pvmore" data-v="sync" aria-expanded="${!!sopen}">${sopen?'Close':SY.url?'Edit':'Set up'}</button>${SY.url?'<button class="pvb sm dng" data-act="unsync">Turn off</button>':''}`,
+      sopen?`<div class="pvmore" id="syncpanel"><div class="pvold">${syncForm}</div></div>`:'')}
+    ${pvRow('backup file download restore','Backup file',`${last?'Last downloaded '+esc(last)+' from this device.':'No backup downloaded on this device yet.'} ${syncOn()?'':bkEvery()?'A reminder shows every '+bkEvery()+' days.':'Reminders are off.'}`,
+      `<button class="pvb sm w" data-act="bkfile">Download</button><label class="pvb sm" for="bk-file">Restore</label><input type="file" id="bk-file" accept=".json,application/json" hidden>`,
+      (BKX.msg||BKX.pending)?`<div class="pvmore"><div class="pvold">${BKX.msg?`<p class="msg ${BKX.ok?'':'err'}" role="status">${esc(BKX.msg)}</p>`:''}${BKX.pending?`<div class="tools"><button class="btn primary" data-act="bkgo">Replace my log with this backup</button><button class="btn" data-act="bkno">Cancel</button></div>`:''}</div></div>`:'')}
+    ${pvRow('backup reminder days','Backup reminder','For logs without sync, a nudge to download a backup',pvSeg('bkevery',String(bkEvery()),[['7','7 days'],['14','14 days'],['21','21 days'],['0','Off']],'Backup reminder'))}
+    ${pvRow('paste backup text copy restore','Paste a backup','Copy your log as text, or restore from text you copied',pvMoreBtn('paste','Open'),
+      pvOpen('paste')?`<div class="pvmore" id="backup"><div class="pvold"><textarea id="backup-text" aria-label="Backup data"></textarea><div class="tools"><button class="btn" data-act="copy">${UI.copied?'Copied':'Copy backup text'}</button><button class="btn" data-act="restore">Restore from pasted text</button></div></div></div>`:'')}
+  </section>`;
+  /* Your data */
+  let L={n:0,rel:0,heard:0};try{L=lxStats()}catch(e){}
+  const plays=PL.d&&PL.d.ts?PL.d.ts.length:0;
+  const data=`<section id="pvs-data" class="pvcard pvdg pvrise" data-sec="data" style="--d:4"><div class="pvch"><h2 class="pvh2">Your data</h2><span class="pvmono pvmut">the numbers behind your log</span></div>
+    <div class="pvset-num">${[[L.n,'artists'],[L.rel,'releases'],[L.heard,'songs rated'],[plays,'plays kept']].map(([n,t],i)=>`<div class="pvtile pvrise" style="--d:${i}"><b>${stN(n||0)}</b><span class="pvsm">${t}</span></div>`).join('')}</div>
+    ${pvRow('export ratings csv spreadsheet','Export ratings','Spreadsheets (CSV). They double as a backup, since RYM has no import',`<button class="pvb sm" data-act="expalbums">Albums</button><button class="pvb sm" data-act="expsongs">Songs</button>${own?'<button class="pvb sm" data-act="expscreen">Shows &amp; films</button>':''}${pvMoreBtn('exp','More')}`,pvPanel('exp',(EXP.open=true,sfe('expSide',expSide))))}
+    ${pvRow('numbers breakdown ratings statistics','Rating breakdown','How your scores spread across albums, songs and shows',pvMoreBtn('stat','Show'),pvPanel('stat',(STAT.open=true,sfe('statSide',statSide))))}
+    ${pvRow('listening history plays stats import','Listening history',plays?stN(plays)+' plays kept. Imports and the Spotify history backfill live on the Stats page':'Imports and the Spotify history backfill live on the Stats page',`<button class="pvb sm" data-act="mmgo" data-v="stats">Open Stats</button>`)}
+  </section>`;
+  /* Help & feedback */
+  const cl=CHANGELOG.slice(0,6);
+  const help=`<section id="pvs-help" class="pvcard pvdg pvrise" data-sec="help" style="--d:5"><div class="pvch"><h2 class="pvh2">Help &amp; feedback</h2></div>
+    ${own?pvRow('ideas feature idea','Ideas for Playback','Jot down a feature idea; it goes to your ideas list',`<button class="pvb sm" data-act="pvidea">New idea</button>`):''}
+    ${pvRow('whats new changelog build','What’s new','Build '+esc(BUILD),pvMoreBtn('new','Changelog'),pvPanel('new',`<ol class="pvset-cl">${cl.map(x=>{const t=String(x.note||''),dot=t.search(/[.:](\s|$)/),h=dot>0&&dot<90?t.slice(0,dot):t.slice(0,80);return `<li><span class="pvmono">${esc(x.v)}</span><details><summary><b>${esc(h)}</b></summary><p class="note">${esc(t)}</p></details></li>`}).join('')}</ol>`))}
+    ${pvRow('privacy policy','Privacy','Playback keeps your Google name and a private id, never your email',`<a class="pvb sm" href="privacy.html" target="_blank" rel="noopener">Privacy policy</a>`)}
+  </section>`;
+  /* Owner tools */
+  const ownS=own?`<section id="pvs-own" class="pvcard pvdg pvrise" data-sec="own" style="--d:6"><div class="pvch"><h2 class="pvh2">Owner tools</h2><span class="pvmono pvmut">only you see these</span></div>
+    ${ownSync()&&GCID?pvRow('people using playback users','People using Playback',USX.list?USX.list.length+' accounts':'Everyone who made an account',pvMoreBtn('users','Open'),pvPanel('users',sfe('usersCard',usersCard))):''}
+    ${pvRow('suggestions inbox friends','Suggestions inbox','What friends send from their Suggest box',pvMoreBtn('sugo','Open'),pvPanel('sugo',sfe('sugCard',sugCard)))}
+    ${pvRow('rating dates private history','Rating dates','Your private list on the Worker',pvMoreBtn('rd','Manage'),pvPanel('rd',sfe('rdSide',rdSide)))}
+    ${pvRow('screen collection hidden','Screen &amp; Collection','Hidden from friends while they’re in progress','<span class="pvmono pvmut">owner only</span>')}
+  </section>`:'';
+  return `<section class="pv pvset${anim?'':' pvnoanim'}" aria-labelledby="set-h">${pvBg(cols||['#3d5048','#5a6e78','#7a6650'],true)}
+    <div class="pvhero"><div class="pvht pvrise"><span class="pvk">Setup &amp; housekeeping</span><h2 id="set-h" class="pvh">Settings</h2><p class="pvsub">Everything here syncs with the rest of your log.</p>
+      <label class="pvin pvg pvset-q"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="pvsr">Search settings</span><input id="pvsq" type="search" autocomplete="off" placeholder="Find a setting — try “backup” or “Spotify”" value="${esc(UI.setQ||'')}"></label></div>
+      ${setHero()}</div>
+    <div class="pvside"><nav class="pvnav pvdg pvrise" aria-label="Settings sections" style="--d:1">${sec.map(([k,t])=>`<button type="button" data-act="pvsec" data-v="${k}" aria-current="${cur===k}">${t}</button>`).join('')}</nav>
+      <div class="pvmain">${conn}${look}${acct}${sync}${data}${help}${ownS}<p class="pvsm pvset-none" hidden>No setting matches that. Try another word.</p></div></div>
+  </section>`}
+/* the search box: hides rows (and whole sections) that don't match, as you type */
+function setFilter(){const q=(UI.setQ||'').trim().toLowerCase(),root=document.querySelector('.pvset');if(!root)return;let any=false;
+  root.querySelectorAll('.pvcard[data-sec]').forEach(sec=>{let n=0;
+    sec.querySelectorAll('.pvrow,.pvtile[data-k]').forEach(r=>{const hit=!q||(r.dataset.k+' '+r.textContent).toLowerCase().includes(q);r.hidden=!hit;if(hit)n++});
+    const t=sec.querySelector('.pvch').textContent.toLowerCase().includes(q);if(t&&q){sec.querySelectorAll('[hidden]').forEach(r=>{if(!r.classList.contains('pvset-none'))r.hidden=false});n++}
+    sec.hidden=!!q&&!n;if(n)any=true});
+  const none=root.querySelector('.pvset-none');if(none)none.hidden=any||!q}
+document.addEventListener('input',ev=>{if(ev.target&&ev.target.id==='pvsq'){UI.setQ=ev.target.value;setFilter()}});
+/* the section list follows the page as you scroll */
+addEventListener('scroll',()=>{if(UI.view!=='settings')return;clearTimeout(setFilter.t);setFilter.t=setTimeout(()=>{
+  const secs=[...document.querySelectorAll('.pvset .pvcard[data-sec]:not([hidden])')];if(!secs.length)return;
+  let cur=secs[0].dataset.sec;for(const s of secs)if(s.getBoundingClientRect().top<innerHeight*.35)cur=s.dataset.sec;
+  if(cur!==UI.setSec){UI.setSec=cur;document.querySelectorAll('.pvset .pvnav button').forEach(b=>b.setAttribute('aria-current',String(b.dataset.v===cur)))}},60)},{passive:true});
+
 /* Every redraw rebuilds the page, which makes each cover a brand new picture that paints blank for a moment (the flash when you open a rating).
    So before a redraw, the covers already on screen are kept, and any new cover with the same picture and place in the markup is swapped for the kept one. */
 function keepImgs(fn){
@@ -9590,6 +9898,7 @@ function renderMain(topIn){
   if(UI.mm&&(UI.tab!=='music'||(UI.view&&UI.view!=='history'&&UI.view!=='stats')))UI.mm=false;   /* the Music menu only belongs to Music */   /* the menu's opening animation plays on the one draw that opens it */
   const list=S[UI.tab];
   const top=topIn!=null?topIn:topHTML(),mo={};
+  PVIN=UI.view!==PVLV;PVLV=UI.view;if(PVIN)UI.setAnim=true;
   document.getElementById('app').innerHTML=top+`${UI.view==='settings'?settingsView():UI.view==='account'?accountView():UI.view==='friends'?friendsView():UI.view==='friend'?friendView():UI.view==='collection'?collectionView():UI.view==='history'?historyView():UI.view==='stats'?statsView():mainView(e,list,mo)}
   <footer>
     <p class="buildid">Build ${esc(BUILD)}</p>
@@ -9597,7 +9906,9 @@ function renderMain(topIn){
   if(!UI.view&&UI.tab==='music'&&mo.aside)PAINT={top,side:asideKey(mo.aside),sheet:SHEET_LAST};
   heroStart();
   tourMaybe();
+  if(UI.view==='settings'&&UI.setQ)setFilter();
 }
+var PVIN=true,PVLV=undefined;
 function topHTML(){const out=topHTML0();UI.llAnim=false;return out}
 /* 2026.11.22-a: A QUIET BACKGROUND REDRAW. Things that finish in the background (Apple covers matched for another artist, play counts,
    Spotify's auto-check, friends' ratings, sync) used to rebuild the whole artist page, open album and all, even when nothing on it had
@@ -10472,7 +10783,7 @@ var PHAM={busy:false};
 function spPhoto(a){return a.simgHi||a.simg||a.img||''}
 function amPhoto(a){return a.aimg?a.aimg+'/'+(innerWidth<700?'1600x1600bb.jpg':'2400x2400bb.jpg'):''}
 /* the choice is kept on each artist (a.phsrc, synced with the log), so switching one artist to Spotify leaves everyone else on Apple Music */
-function phSrcPref(a){return a&&a.phsrc==='sp'?'sp':'am'}   /* Apple Music's photo by default (sharper); Spotify is the choice in Details */
+function phSrcPref(a){return a&&(a.phsrc==='sp'||(a.phsrc!=='am'&&phDef()==='sp'))?'sp':'am'}   /* Apple Music's photo by default (sharper); Spotify is the choice in Details */
 function phPick(a){return phSrcPref(a)==='am'&&a.aimg?amPhoto(a):(spPhoto(a)||amPhoto(a))}
 function hxSrcHtml(a){
   if(!a||!((a.aimg&&spPhoto(a))||amcHas(a)))return '';
@@ -10496,7 +10807,7 @@ function phXfade(im,want){
 /* swap the picture in place (no redraw, so the colors keep flowing): fade the old one out, fade the new one in */
 function phSetSrc(v){
   const h=document.querySelector('.head.hero.hx'),a=h&&(S.music||[]).find(x=>x.id===h.dataset.aid);if(!a)return;
-  const nv=v==='am'?'am':'sp';if(phSrcPref(a)!==nv){if(nv==='sp')a.phsrc='sp';else delete a.phsrc;save()}   /* this artist only */
+  const nv=v==='am'?'am':'sp';if(phSrcPref(a)!==nv){if(nv===phDef())delete a.phsrc;else a.phsrc=nv;save()}   /* this artist only */
   if(amcApply(a)){save();renderSoon()}   /* 2026.11.21-v: the switch takes the artist's album covers with it */
   h.querySelectorAll('.hsrc button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===(v==='am'?'am':'sp'))));
   const im=h.querySelector('.hphoto img'),u=phPick(a);if(!im||!u||im.getAttribute('src')===u)return;
@@ -10673,7 +10984,7 @@ function liqTick(dt,spd,t){if(!LIQ.svg||!LIQ.svg.isConnected)return;
   LIQ.u.forEach((b,i)=>{const n=LIQ.un[i];if(!n)return;
     b.om+=(spd*(1-b.eps)-b.om)*Math.min(1,h*b.k);b.lag=Math.max(-60,Math.min(60,b.lag+((b.om-spd)-b.lag*.6)*h));
     const an=b.an0+b.lag*D,rr=b.r0+(b.r1-b.r0)*LIQ.c;n.setAttribute('transform','translate('+(HC+Math.cos(an)*rr).toFixed(1)+' '+(HC+Math.sin(an)*rr).toFixed(1)+')')})}
-const noMotion=()=>!!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches);
+const noMotion=()=>{try{if(localStorage.getItem('pb_motion')==='0')return true}catch(e){}return !!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)};
 /* ===== 2026.11.20-n: lite mode. On a device that can't keep the artist page smooth (a friend's MacBook, a laptop on
    battery), Playback swaps its heaviest effects for cheaper ones: the artist colors hold still, the frosted pills on the
    artist page get a flat tint (the top bar keeps its blur), the liquid record drops its gooey blur, the record spins up
@@ -12507,6 +12818,12 @@ document.addEventListener('click',ev=>{
   else if(act==='litepick'){liteSet(b.dataset.v);heroPaint()}
   else if(act==='alplay'){albPlay(b.dataset.a,b.dataset.g,b);return}
   else if(act==='plsrc'){try{localStorage.setItem('pb_playsrc',b.dataset.v==='am'?'am':'sp')}catch(e){}}
+  else if(act==='pvmore'){UI.pvOpen=UI.pvOpen||{};const k=b.dataset.v,o=!(UI.pvOpen[k]||(k==='sync'&&UI.syncOpen));UI.pvOpen[k]=o;if(k==='sync')UI.syncOpen=o}
+  else if(act==='pvsec'){const el=document.getElementById('pvs-'+b.dataset.v);UI.setSec=b.dataset.v;document.querySelectorAll('.pvset .pvnav button').forEach(x=>x.setAttribute('aria-current',String(x===b)));if(el)el.scrollIntoView({behavior:noMotion()?'auto':'smooth',block:'start'});return}
+  else if(act==='phdef'){try{localStorage.setItem('pb_phdef',b.dataset.v==='sp'?'sp':'am')}catch(e){}LXC.k=null}
+  else if(act==='pvmotion'){try{localStorage.setItem('pb_motion',pvMotion()?'0':'1')}catch(e){}pvMotionApply()}
+  else if(act==='bkevery'){bkSet({every:+b.dataset.v||0})}
+  else if(act==='pvidea'){const ib=document.getElementById('sx-ibtn');if(ib)ib.click();return}
   else if(act==='phtog'){try{localStorage.setItem('pb_photohero',phOn()?'0':'1')}catch(e){}}
   else if(act==='tourgo'){UI.view=null;UI.tab='music';UI.libOpen=false;setTimeout(()=>tourOpen(0),120)}
   else if(act==='dcforget'){dcSetToken('');COL.tokMsg='Removed from this device.';UI.colTok=true}
