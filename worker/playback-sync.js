@@ -50,7 +50,7 @@
    Every response carries x-pb-worker: 5 so the app knows what this Worker
    can do (2 = compressed sync, 3 = Spotify plays, 4 = Spotify catalog too,
    5 = the morning-brief list, 6 = Discogs pressing search, 7 = Discogs pressing photos, 8 = your own record photos,
-   11 = Google accounts, friends and friends' ratings, 12 = a capped copy of a friend's log under their Google account, 13 = the owner can sign in with Google instead of pasting the sync key, 14 = profile picture and account color, 15 = the owner can list every account: GET /users, see the accounts section above the export, 16 = Apple Music artist photos: GET /apple/art, 20 = those photos saved for everyone and open to signed-in friends: GET /acct/apple/art, 21 = &fresh=1 skips the saved copy).
+   11 = Google accounts, friends and friends' ratings, 12 = a capped copy of a friend's log under their Google account, 13 = the owner can sign in with Google instead of pasting the sync key, 14 = profile picture and account color, 15 = the owner can list every account: GET /users, see the accounts section above the export, 16 = Apple Music artist photos: GET /apple/art, 20 = those photos saved for everyone and open to signed-in friends: GET /acct/apple/art, 21 = &fresh=1 skips the saved copy, 22 = POST /spotify/play starts an album on your Spotify).
 
    MORNING BRIEF (version 5)
    The app keeps a tiny list of the next episode of each show you follow
@@ -75,6 +75,10 @@
                     plays newer than <ms>, oldest first. Checks Spotify first if
                     the last check is over a minute old.
    DELETE /spotify  -> forgets the sign-in and the stored plays.
+   POST   /spotify/play {album} (version 22) -> starts that album from its first song on
+                    whichever device has Spotify open (or the only one Spotify
+                    lists). {ok} | {error:'nodevice'} | {error:'scope'} (the
+                    sign-in predates the play permission: reconnect Spotify).
    GET    /spotify/api?p=<path> (version 4) -> a read-only Spotify catalog request
                     (artist search, an artist's albums, an album and its tracks)
                     made with the stored sign-in, so the app can build tracklists
@@ -118,7 +122,7 @@ const CORS = {
   'Access-Control-Allow-Headers': 'content-type, x-sync-key, authorization',
   'Access-Control-Expose-Headers': 'x-pb-worker, retry-after, x-pb-cache',
   'Access-Control-Max-Age': '86400',
-  'x-pb-worker': '21'
+  'x-pb-worker': '22'
 };
 const JSON_H = Object.assign({ 'content-type': 'application/json', 'cache-control': 'no-store' }, CORS);
 const GZ_H = Object.assign({ 'content-type': 'application/gzip', 'cache-control': 'no-store' }, CORS);
@@ -465,6 +469,41 @@ async function spCheck(env, mayRefresh, fromCron) {
   return done();
 }
 
+/* a fresh access token from the stored sign-in, or a reply to send back instead */
+async function spAccess(env) {
+  const auth = await getJSON(env, SP_AUTH);
+  if (!auth) return { res: reply({ error: 'not connected' }, 409) };
+  if (auth.at && Date.now() < (auth.exp || 0) - 60000) return { at: auth.at };
+  const t = await spRefresh(env, auth);
+  if (t.err) {
+    if (t.err === 'reconnect') { const meta = (await getJSON(env, SP_META)) || {}; meta.err = 'reconnect'; await env.STATE.put(SP_META, JSON.stringify(meta)); }
+    return { res: reply({ error: t.err }, 409) };
+  }
+  return { at: t.at };
+}
+/* PLAY AN ALBUM (version 22): owner only, one album id, always from its first song */
+async function spPlay(request, env) {
+  let b; try { b = JSON.parse(await request.text()); } catch (e) { return reply({ error: 'body is not valid JSON' }, 400); }
+  const id = b && typeof b.album === 'string' && /^[A-Za-z0-9]{22}$/.test(b.album) ? b.album : '';
+  if (!id) return reply({ error: 'not an album id' }, 400);
+  const tk = await spAccess(env); if (tk.res) return tk.res;
+  const H = { authorization: 'Bearer ' + tk.at, 'content-type': 'application/json' };
+  const body = JSON.stringify({ context_uri: 'spotify:album:' + id, offset: { position: 0 }, position_ms: 0 });
+  const go = dev => fetch('https://api.spotify.com/v1/me/player/play' + (dev ? '?device_id=' + encodeURIComponent(dev) : ''), { method: 'PUT', headers: H, body });
+  let r = await go('');
+  if (r.status === 401 || r.status === 403) { const t = await r.text().catch(() => ''); return reply({ error: /scope|permission/i.test(t) || r.status === 401 ? 'scope' : 'premium' }, 200); }
+  if (r.status === 404) {   /* nothing playing right now: use the one device Spotify has open, if any */
+    const d = await fetch('https://api.spotify.com/v1/me/player/devices', { headers: H });
+    if (d.status === 401 || d.status === 403) return reply({ error: 'scope' }, 200);
+    const list = ((await d.json().catch(() => ({}))).devices || []).filter(x => x && x.id && !x.is_restricted);
+    if (!list.length) return reply({ error: 'nodevice' }, 200);
+    const pick = list.find(x => x.is_active) || list.find(x => x.type === 'Computer') || list[0];
+    r = await go(pick.id);
+  }
+  if (r.status === 204 || r.status === 200 || r.status === 202) return reply({ ok: true });
+  if (r.status === 404) return reply({ error: 'nodevice' }, 200);
+  return reply({ error: 'spotify ' + r.status }, 200);
+}
 async function spotify(request, env, url) {
   if (request.method === 'DELETE') {
     await Promise.all([SP_AUTH, SP_META, SP_PLAYS].map(k => env.STATE.delete(k)));
@@ -977,6 +1016,7 @@ export default {
     }
     if (url.pathname === '/apple/art') return request.method === 'GET' ? appleArtCached(env, url, 'owner') : reply({ error: 'method not allowed' }, 405);
     if (url.pathname === '/spotify/api') return request.method === 'GET' ? spCatalog(env, url) : reply({ error: 'method not allowed' }, 405);
+    if (url.pathname === '/spotify/play') return request.method === 'POST' ? spPlay(request, env) : reply({ error: 'method not allowed' }, 405);
     if (url.pathname === '/photo') {
       if (request.method === 'PUT') return photoPut(request, env, url);
       if (request.method === 'DELETE') { const k = url.searchParams.get('k') || ''; if (!PHOTO_RE.test(k)) return reply({ error: 'bad photo key' }, 400); await env.STATE.delete('photo:' + k); return reply({ ok: true }); }

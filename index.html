@@ -370,7 +370,7 @@ details.gmore summary em{display:none;font-style:normal}
 .gf details.gmore[open] summary,.gf details.gmore summary:hover{background:color-mix(in srgb,var(--ink) 8%,transparent)}
 details.gmore .btn{display:block;margin:4px 0 8px auto}
 /* share card */
-.shr{position:fixed;inset:0;z-index:140;display:flex;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));background:rgb(6 9 8 / .72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.shr{position:fixed;inset:0;z-index:1500;display:flex;align-items:center;justify-content:center;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));background:rgb(6 9 8 / .72);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 .shr-box{width:min(420px,100%);max-height:100%;overflow:hidden;display:flex;flex-direction:column;gap:14px;background:var(--bg);border:1px solid var(--line);border-radius:24px;padding:16px;box-shadow:0 24px 60px rgb(0 0 0 / .45)}
 .shr-prev{flex:1 1 auto;min-height:0;overflow:auto;border-radius:16px;-webkit-overflow-scrolling:touch}
 .shr-box img{display:block;width:100%;height:auto;border-radius:16px;background:var(--sunk)}
@@ -382,6 +382,26 @@ details.gmore .btn{display:block;margin:4px 0 8px auto}
 .shr-acts{display:flex;gap:10px}
 .shr-acts .btn{flex:1;min-height:48px}
 .shr-note{margin:0;text-align:center;font-size:13px;color:var(--muted)}
+/* 2026.11.21-m: the share sheet in the album's color, like the open album: tinted glass, a pill switch, a white Share button */
+.shr{--shc:#5a3a3a}
+.shr-box{background:linear-gradient(170deg,color-mix(in srgb,var(--shc) 42%,#141212),color-mix(in srgb,var(--shc) 18%,#0e0d0d));border:1px solid color-mix(in srgb,var(--shc) 45%,rgb(255 255 255 / .12));color:#fff;box-shadow:0 30px 70px rgb(0 0 0 / .5),inset 0 1px 0 rgb(255 255 255 / .08)}
+.shr-seg{background:rgb(0 0 0 / .28);box-shadow:inset 0 0 0 1px rgb(255 255 255 / .06)}
+.shr-seg button{color:rgb(255 255 255 / .62)}
+.shr-seg button[aria-pressed="true"]{background:rgb(255 255 255 / .16);color:#fff;box-shadow:inset 0 0 0 1px rgb(255 255 255 / .14),0 2px 8px rgb(0 0 0 / .2)}
+.shr-box img{background:rgb(0 0 0 / .25);box-shadow:0 14px 34px rgb(0 0 0 / .35)}
+.shr-tog{color:#fff;position:relative}
+.shr-tog input{position:absolute;opacity:0;width:44px;height:26px;margin:0;cursor:pointer}
+.shr-sw{flex:none;position:relative;width:44px;height:26px;border-radius:999px;background:rgb(255 255 255 / .18);box-shadow:inset 0 0 0 1px rgb(255 255 255 / .12);transition:background .25s}
+.shr-sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 5px rgb(0 0 0 / .3);transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.shr-tog input:checked+.shr-sw{background:color-mix(in srgb,var(--shc) 60%,#fff)}
+.shr-tog input:checked+.shr-sw::after{transform:translateX(18px)}
+.shr-tog input:focus-visible+.shr-sw{outline:2px solid #fff;outline-offset:2px}
+.shr-acts .btn{border-radius:999px;border:1px solid rgb(255 255 255 / .22);background:transparent;color:#fff;font-weight:650}
+.shr-acts .btn.primary{background:#fff;color:#141212;border-color:#fff}
+.shr-acts .btn:disabled{opacity:.5}
+.shr-note{color:rgb(255 255 255 / .66)}
+@media (prefers-reduced-motion:no-preference){.shr-box{animation:shrIn .42s cubic-bezier(.2,.8,.2,1)}@keyframes shrIn{from{opacity:0;transform:translateY(18px) scale(.97)}}.shr-acts .btn:active{transform:scale(.97)}}
+
 details.more{border-top:1px solid var(--line);padding-top:12px}
 details.more summary{cursor:pointer;font-weight:600;color:var(--accent)}
 details.more form{display:flex;flex-direction:column;gap:8px;margin-top:10px;max-width:460px}
@@ -1921,6 +1941,67 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .hxdx img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .hxdx em{position:absolute;z-index:1;top:1px;right:6px;font:700 8px/1 var(--mono,ui-monospace,monospace);letter-spacing:.1em;text-transform:uppercase;font-style:normal;color:#fff;text-shadow:0 1px 3px rgb(0 0 0 / .8)}
 .hxsl.hasdx{margin-top:10px}
+
+/* ===== 2026.11.21-m: Play, the inside left's new facts, the songs line, and the friends card and rating editor in the album's colors ===== */
+.sl-ic.sl-lbtn.sl-play{background:var(--ink)!important;color:var(--bg)!important;border-color:var(--ink)!important;padding:0 16px 0 12px}
+.sl-ic.sl-lbtn.sl-play svg{width:16px;height:16px}
+.sl-ic.sl-lbtn.sl-play.busy svg{animation:plBusy .9s ease-in-out infinite}
+@keyframes plBusy{50%{opacity:.35;transform:scale(.85)}}
+@media (prefers-reduced-motion:no-preference){.sl-ic.sl-lbtn.sl-play{transition:transform .15s}.sl-ic.sl-lbtn.sl-play:active{transform:scale(.95)}}
+.pbtoast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));z-index:3000;display:none;align-items:center;gap:10px;width:max-content;max-width:min(92vw,520px);box-sizing:border-box;padding:12px 16px 12px 14px;border-radius:16px;
+  background:color-mix(in srgb,#141414 86%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:#fff;font:500 14px/1.35 var(--body);box-shadow:0 14px 40px rgb(0 0 0 / .4),inset 0 0 0 1px rgb(255 255 255 / .1);transform:translate(-50%,0)}
+.pbtoast.on{display:flex}
+.pbtoast svg{flex:none;width:18px;height:18px;color:#1ed760}
+.pbtoast a{flex:none;color:#fff;font-weight:700;text-decoration:none;padding:7px 12px;border-radius:999px;background:rgb(255 255 255 / .14)}
+@media (prefers-reduced-motion:no-preference){.pbtoast.on{animation:pbtIn .38s cubic-bezier(.2,.8,.2,1)}.pbtoast.out{animation:pbtOut .36s cubic-bezier(.4,0,.8,.4) forwards}
+  @keyframes pbtIn{from{opacity:0;transform:translate(-50%,16px) scale(.96)}}@keyframes pbtOut{to{opacity:0;transform:translate(-50%,12px) scale(.97)}}}
+@media (max-width:760px){.pbtoast{bottom:calc(92px + env(safe-area-inset-bottom))}}
+/* the record on the inside left: which listen */
+.sl-lab.sl-lsn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;line-height:1}
+.sl-lab.sl-lsn b{font:800 1.5em/1 Archivo,var(--display)}
+.sl-lab.sl-lsn i{font:700 .48em/1 var(--body);font-style:normal;letter-spacing:.12em;text-transform:uppercase;opacity:.75}
+.gfi-f.gfi-gem{grid-column:1/-1;background:linear-gradient(120deg,color-mix(in srgb,var(--acsw) 26%,transparent),color-mix(in srgb,var(--ink) 5%,transparent) 70%);border-color:color-mix(in srgb,var(--acsw) 40%,transparent)}
+/* the songs line under the album pill */
+.gfr-songs{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px;margin:10px 22px 4px 30px;padding:0 4px;color:color-mix(in srgb,var(--ink) 70%,transparent);font-size:12.5px;font-weight:500}
+@media (max-width:1099px){.gfr-songs{margin:8px 14px 2px 18px}}
+.gfr-songs .gfr-sl{font:700 10.5px var(--body);letter-spacing:.09em;text-transform:uppercase;color:color-mix(in srgb,var(--ink) 62%,transparent);margin-right:2px}
+.gfr-songs b{font:700 16px Archivo,var(--display);color:var(--ink);font-variant-numeric:tabular-nums}
+.gfr-songs .gfr-sa{margin-left:-4px}
+.gfr-songs .gfr-sn::before{content:"\00b7";margin-right:8px;opacity:.6}
+.gfr-songs em{margin-left:auto;display:inline-flex;align-items:center;gap:4px;font-style:normal;font-weight:600;font-variant-numeric:tabular-nums;padding:3px 9px;border-radius:999px;background:color-mix(in srgb,var(--ink) 8%,transparent)}
+.gfr-songs em svg{width:9px;height:9px;fill:var(--gv,currentColor)}
+.gfr-songs em.even{opacity:.75}
+/* friends: the same glass card as the facts above it, each score a small record in the album's color */
+.gf .frs{--frc:var(--acsw,var(--ac));margin:0;padding:12px 14px 13px;border-radius:14px;background:color-mix(in srgb,var(--ink) 6%,transparent);border:1px solid color-mix(in srgb,var(--ink) 8%,transparent)}
+.group.sleeve.dxon .frs{--frc:var(--acdw,var(--acsw))}
+.gf .frs-h{font:700 10.5px var(--body);letter-spacing:.09em;color:color-mix(in srgb,var(--ink) 62%,transparent);margin-bottom:10px}
+.gf .frs-h b{font:700 12px var(--body);letter-spacing:0;text-transform:none;color:var(--ink)}
+.gf .frs-l{gap:10px}
+.gf .frp{grid-template-columns:30px minmax(0,1fr) minmax(40px,1.2fr) 38px;gap:10px;font-size:14px}
+.gf .frp .fav{width:30px;height:30px;box-shadow:0 0 0 2px color-mix(in srgb,var(--ink) 14%,transparent)}
+.gf .frp .fn{color:var(--ink)}
+.gf .frp .fbar{height:4px;background:color-mix(in srgb,var(--ink) 12%,transparent)}
+.gf .frp .fbar i{background:linear-gradient(90deg,color-mix(in srgb,var(--frc) 55%,#fff),var(--frc))}
+.gf .frp b.fr{position:relative;width:38px;height:38px;min-width:0;border-radius:50%;display:grid;place-items:center;font:800 13px Archivo,var(--display);color:#111;
+  background:radial-gradient(circle,#ece8e4 0 41%,transparent 42%),conic-gradient(var(--frc) var(--p),transparent 0),repeating-radial-gradient(circle,#1b1818 0 1px,#0c0a0a 1px 3px);box-shadow:0 3px 8px rgb(0 0 0 / .35)}
+/* the rating editor, inside an open album: glass in the album's color, a groove for a rail, a small record for a thumb */
+.gf .rater{--rc:var(--acsw,var(--ac));margin:6px 0 10px;padding:16px 18px 12px;border-radius:18px;background:linear-gradient(160deg,color-mix(in srgb,var(--rc) 26%,rgb(0 0 0 / .2)),color-mix(in srgb,var(--rc) 12%,rgb(0 0 0 / .3)));border:1px solid color-mix(in srgb,var(--rc) 40%,rgb(255 255 255 / .12));box-shadow:inset 0 1px 0 rgb(255 255 255 / .08),0 10px 24px rgb(0 0 0 / .18)}
+.gf .gf-rs>.rater{background:linear-gradient(160deg,color-mix(in srgb,var(--rc) 26%,rgb(0 0 0 / .2)),color-mix(in srgb,var(--rc) 12%,rgb(0 0 0 / .3)));border-color:color-mix(in srgb,var(--rc) 40%,rgb(255 255 255 / .12))}
+.group.sleeve.dxon .rater{--rc:var(--acdw,var(--acsw))}
+.gf .rt-l{color:color-mix(in srgb,var(--ink) 74%,transparent);font-weight:600}
+.gf .rt-v{color:var(--ink)}
+.gf .rt-rail{height:6px;top:15px;background:repeating-linear-gradient(90deg,color-mix(in srgb,var(--ink) 16%,transparent) 0 2px,color-mix(in srgb,var(--ink) 9%,transparent) 2px 4px);box-shadow:inset 0 1px 2px rgb(0 0 0 / .35)}
+.gf .rt-fill{background:linear-gradient(90deg,color-mix(in srgb,var(--rc) 50%,#fff),color-mix(in srgb,var(--rc) 80%,#fff));box-shadow:0 0 10px color-mix(in srgb,var(--rc) 60%,transparent)}
+.gf .rt-thumb{width:30px;height:30px;margin:-15px 0 0 -15px;border:0;background:radial-gradient(circle,color-mix(in srgb,var(--rc) 55%,#fff) 0 22%,#0d0b0b 23% 26%,transparent 27%),repeating-radial-gradient(circle,#211c1c 0 1px,#0c0a0a 1px 3px);box-shadow:0 3px 10px rgb(0 0 0 / .45),0 0 0 2px color-mix(in srgb,var(--rc) 50%,#fff)}
+.gf .rt-wrap:has(.rt-s.unset) .rt-thumb{box-shadow:0 3px 10px rgb(0 0 0 / .45),0 0 0 2px color-mix(in srgb,var(--ink) 30%,transparent)}
+.gf .rt-ticks{color:color-mix(in srgb,var(--ink) 55%,transparent)}
+.gf .rt-foot{gap:8px;margin-top:8px}
+.gf .rt-foot .link{min-height:36px;padding:0 14px;border-radius:999px;color:var(--ink);font:600 13px var(--body);text-decoration:none;border:1px solid color-mix(in srgb,var(--ink) 22%,transparent);background:transparent}
+.gf .rt-foot .rt-done{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.gf .rt-om{min-height:36px;padding:0 14px;border-color:color-mix(in srgb,var(--ink) 22%,transparent)}
+.gf .rt-om[aria-pressed="true"]{background:color-mix(in srgb,var(--rc) 45%,transparent);border-color:color-mix(in srgb,var(--rc) 70%,#fff)}
+.gf .rater .simsong .link{color:var(--ink);font-weight:600}
+@media (prefers-reduced-motion:no-preference){.gf .rt-thumb{transition:left .2s cubic-bezier(.25,.9,.3,1),transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .14s}.gf .rt-wrap:has(.rt-s:active) .rt-thumb{transform:scale(1.18) rotate(90deg)}}
 /* 2026.11.21-c: the pictures used by the deluxe swap and the listen page turn (see gfDxRun, gfTurnRun) */
 .gfcopy,.gfcopy *{animation:none!important;transition:none!important}
 .gfcopy::before,.gfcopy::after{display:none!important}
@@ -3464,6 +3545,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.21-m', note:'PLAY, A RICHER INSIDE LEFT, AND THE LAST OLD-STYLE PIECES RESTYLED: an open album has a Play button that starts it from the first song on Spotify, on whichever device has Spotify open (reconnect Spotify once in Settings so Play is allowed to start music). Settings > Play button can switch it to Apple Music, which opens the album in Apple Music. The inside left now shows full spins and hours listened under Plays (song lengths come from Apple Music, once per album), where the album ranks among every album you have rated under the artist rank, and a Hidden gem: a song you rate high but rarely play. The record on the inside left shows which listen you are on. The song average moved out of the album rating pill to its own line heading the song list, so it is not mistaken for the album score. The friends card, the song rating editor and the share card and sheet now use the album\'s colors and the record look. The share sheet also opens above an open album on phones again.'},
   {v:'2026.11.21-l', note:'DELUXE RATING PILL IN THE DELUXE\u2019S COLOR: on an album\u2019s Deluxe edition the rating pill (Your deluxe, song average, record) was still tinted with the standard album\u2019s color. It now takes the deluxe\u2019s own color, matching its song rows and cover.'},
   {v:'2026.11.21-k', note:'CLOSING A DELUXE SWAPS BACK TO STANDARD: closing an album while you are on its Deluxe now plays the same edition swap as the Standard / Deluxe switch, the two sleeves trade places in the Releases row and the standard one ends up in front, with the album left shut. Changing artist with a deluxe open also resets it.'},
   {v:'2026.11.21-j', note:'DELUXE RESETS WHEN YOU LEAVE: close an album while you are on its Deluxe (or change artist with it open) and it goes back to Standard, so the next time you open it you start on the standard album and the Releases row shows the standard sleeve in front again. Switching Standard / Deluxe inside an open album still works as before.'},
@@ -4697,6 +4779,82 @@ function lsPager(g){
     ${old?`<p class="ls-ro">An earlier listen, view only. Your latest listen sets your scores. <button type="button" class="link" data-act="lsgo" data-g="${esc(id)}" data-k="${n-1}">Back to latest</button></p>`:''}
     ${!old&&(l[k].c||[]).length?`<p class="ls-ro">Dimmed ratings carry over from listen ${k}. Rate a song or the album to set it for this listen.</p>`:''}
     ${df&&parts.length?`<p class="ls-df">vs listen ${df.k}: ${parts.join(' · ')}</p>`:''}</div>`}
+/* PLAY AN ALBUM (2026.11.21-m). Play in an open album starts it from its first song on Spotify, on whichever device has
+   Spotify open (through the sync Worker's sign-in, or this device's own). Settings > Play button can switch it to Apple
+   Music instead, which opens the album in Apple Music (Apple gives web apps no way to start the music itself).
+   The album's Spotify id comes from a Spotify import, or one search the first time (kept as g.spal); its Apple Music id
+   comes from one Apple search (kept as g.amc, which also brings the song lengths for hours listened). */
+const ICO_PLAY='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="none"/></svg>';
+function plSrc(){try{return localStorage.getItem('pb_playsrc')==='am'?'am':'sp'}catch(e){return 'sp'}}
+function playBtn(g,a){if(!a||g.kind==='Single'&&!g.items.length)return '';const am=plSrc()==='am';
+  return `<button class="sl-ic sl-lbtn sl-play" data-act="alplay" data-a="${esc(a.id)}" data-g="${esc(g.id)}" aria-label="Play ${esc(g.title)} ${am?'in Apple Music':'on Spotify'}" title="${am?'Open in Apple Music':'Play on Spotify'}">${ICO_PLAY}<span class="sl-bl">Play</span></button>`}
+function pbToast(html,ms){let t=document.querySelector('.pbtoast');
+  if(!t){t=document.createElement('div');t.className='pbtoast';t.setAttribute('role','status');t.setAttribute('aria-live','polite');document.body.appendChild(t)}
+  t.innerHTML=html;t.classList.remove('out');void t.offsetWidth;t.classList.add('on');clearTimeout(pbToast.t);
+  pbToast.t=setTimeout(()=>{t.classList.add('out');setTimeout(()=>{if(t.classList.contains('out'))t.classList.remove('on','out')},380)},ms||4200)}
+async function spAlbumId(a,g){const dx=dxOn(g),m=/^sp:([A-Za-z0-9]{22})$/.exec(g.mbid||'');
+  if(dx&&g.spalD)return g.spalD;if(!dx&&m)return m[1];if(!dx&&g.spal)return g.spal;if(!spCanImport())return m?m[1]:'';
+  const title=dx?dxName(g):g.title,want=dtBare(title),an=nTitle(a.name);
+  const j=await spApi('search?'+new URLSearchParams({q:'album:'+title.replace(/"/g,'')+' artist:'+a.name.replace(/"/g,''),type:'album',limit:'10'}));
+  const L=(j&&j.albums&&j.albums.items||[]).filter(Boolean);
+  const byA=x=>(x.artists||[]).some(y=>nTitle(y.name)===an);
+  const hit=L.find(x=>dtBare(x.name)===want&&byA(x))||L.find(x=>dtBare(x.name)===want)||(dx?null:L.find(x=>nTitle(x.name)===nTitle(title)&&byA(x)));
+  if(hit){if(dx)g.spalD=hit.id;else g.spal=hit.id;save();return hit.id}
+  return dx?spAlbumIdStd(a,g):(m?m[1]:'')}
+function spAlbumIdStd(a,g){const m=/^sp:([A-Za-z0-9]{22})$/.exec(g.mbid||'');return m?m[1]:g.spal||''}
+async function spPlayHere(id){   /* no Worker: this device's own Spotify sign-in */
+  await spLocalToken();const H={authorization:'Bearer '+SPL.at,'content-type':'application/json'};
+  const body=JSON.stringify({context_uri:'spotify:album:'+id,offset:{position:0},position_ms:0});
+  const go=dev=>fetch('https://api.spotify.com/v1/me/player/play'+(dev?'?device_id='+encodeURIComponent(dev):''),{method:'PUT',headers:H,body});
+  let r=await go('');
+  if(r.status===401||r.status===403){const t=await r.text().catch(()=>'');return {error:/scope|permission/i.test(t)||r.status===401?'scope':'premium'}}
+  if(r.status===404){const d=await fetch('https://api.spotify.com/v1/me/player/devices',{headers:H});if(d.status===401||d.status===403)return {error:'scope'};
+    const list=((await d.json().catch(()=>({}))).devices||[]).filter(x=>x&&x.id&&!x.is_restricted);if(!list.length)return {error:'nodevice'};
+    r=await go((list.find(x=>x.is_active)||list.find(x=>x.type==='Computer')||list[0]).id)}
+  return r.ok||r.status===204?{ok:true}:{error:r.status===404?'nodevice':'spotify'}}
+async function spPlayWk(id){let r;
+  try{r=await fetch(SY.url.replace(/\/+$/,'')+'/spotify/play',{method:'POST',cache:'no-store',headers:{...syH(),'content-type':'application/json'},body:JSON.stringify({album:id})})}catch(e){return {error:'network'}}
+  if(r.status===404||r.status===405)return {error:'old'};if(r.status===401)return {error:'synckey'};
+  const j=await r.json().catch(()=>({}));if(r.status===409)return {error:j.error==='not connected'?'none':'scope'};return j}
+async function amAlbumFind(a,g){if(g.amc)return 'https://music.apple.com/album/'+g.amc;
+  const want=dtBare(g.title),an=nTitle(a.name);
+  const res=await nrGet('search',{term:a.name+' '+g.title,entity:'album',limit:15});
+  const ok=c=>c&&c.collectionId&&dtBare(String(c.collectionName||'').replace(/\s-\s(single|ep)$/i,''))===want;
+  const hit=res.find(c=>ok(c)&&nTitle(c.artistName||'').includes(an))||res.find(ok);
+  if(!hit)return '';g.amc=String(hit.collectionId);save();return 'https://music.apple.com/album/'+g.amc}
+/* song lengths, for hours listened: the album's tracks on Apple Music, once per album (g.msTry) */
+async function msLoad(a,g){if(!g||g.msTry&&g.msTry>Date.now()-30*864e5||!g.items.length||g.items.every(i=>i.ms))return;
+  g.msTry=Date.now();
+  try{if(!g.amc&&!(await amAlbumFind(a,g))){save();return}
+    const res=(await nrGet('lookup',{id:g.amc,entity:'song',limit:200})).filter(x=>x&&x.wrapperType==='track'&&x.trackTimeMillis);
+    const key=t=>dtBare(String(t||'').replace(/\s*[\(\[][^)\]]*[\)\]]/g,'')),by=new Map(res.map(x=>[key(x.trackName),x.trackTimeMillis]));
+    let n=0;g.items.forEach((i,k)=>{if(i.ms)return;let v=by.get(key(songShow(i).t||i.title))||by.get(key(i.title));
+      if(!v&&res.length===g.items.length){const t=res.find(x=>x.trackNumber===k+1);v=t&&t.trackTimeMillis}
+      if(v){i.ms=v;n++}});
+    save();if(n&&gfOpenEl(g.id))renderSoon()}
+  catch(e){g.msTry=Date.now()-29*864e5}}   /* Apple busy: try again tomorrow */
+async function albPlay(aid,gid,btn){
+  const a=(S.music||[]).find(x=>x.id===aid),g=a&&a.groups.find(x=>String(x.id)===String(gid));if(!g)return;
+  if(plSrc()==='am'){
+    if(g.amc){window.open('https://music.apple.com/album/'+g.amc,'_blank','noopener');return}
+    const w=window.open('about:blank','_blank');   /* opened now, while the tap still counts, then sent to the album once Apple answers */
+    let url='';try{url=await amAlbumFind(a,g)}catch(e){}
+    url=url||'https://music.apple.com/search?term='+encodeURIComponent(a.name+' '+g.title);
+    if(w&&!w.closed){try{w.opener=null}catch(e){}w.location.href=url}else location.href=url;return}
+  if(btn)btn.classList.add('busy');
+  try{let id='';try{id=await spAlbumId(a,g)}catch(e){id=spAlbumIdStd(a,g)}
+    const q=encodeURIComponent(a.name+' '+(dxOn(g)?dxName(g):g.title));
+    const open=id?'https://open.spotify.com/album/'+id:'https://open.spotify.com/search/'+q,uri=id?'spotify:album:'+id:'spotify:search:'+q;
+    const link=`<a href="${esc(open)}" data-uri="${esc(uri)}" onclick="return spApp(event,this)" target="_blank" rel="noopener">Open in Spotify</a>`;
+    const ttl=esc(dxOn(g)?dxName(g):g.title);
+    if(!id){pbToast(`Couldn’t find ${ttl} on Spotify to start it. ${link}`,7000);return}
+    let r=null;
+    if(spViaWorker())r=await spPlayWk(id);else if(SPL.rt)r=await spPlayHere(id);
+    if(r&&r.ok){pbToast(`${ICO_PLAY}<span>Playing <b>${ttl}</b> on Spotify</span>`);return}
+    const e=r&&r.error,why=!r||e==='none'?'Connect Spotify in Settings and Play starts albums for you.':e==='nodevice'?'Open Spotify on a device first, then tap Play again.':e==='scope'?'Reconnect Spotify in Settings once so Play can start albums.':e==='premium'?'Spotify only lets apps start music on Premium.':e==='old'?'Your sync Worker is still updating. Try again in a minute.':'Spotify didn’t start it.';
+    pbToast(`<span>${why}</span> ${link}`,8000)}
+  catch(e){pbToast('Spotify didn’t answer. Try again in a moment.')}
+  finally{if(btn)btn.classList.remove('busy')}}
 function relBtn(g){
   if(!RATEABLE.includes(g.kind)||!rating(g.id))return '';const n=lsRaw(g.id).length;
   return `<button class="sl-ic sl-lbtn sl-again" data-act="lsnew" data-g="${esc(g.id)}" aria-label="Listen again: start another listen of ${esc(g.title)}" title="Listen again">${ICO.again}<span class="sl-bl">Listen again</span>${n>1?`<b>${n}</b>`:''}</button>`}
@@ -5969,7 +6127,7 @@ async function spConnect(){
   const st=b64u(crypto.getRandomValues(new Uint8Array(16)));
   SPL.pkce={v,st,cid,at:Date.now()};splSave();
   const u=new URL(SP_AUTH);
-  Object.entries({response_type:'code',client_id:cid,scope:'user-read-recently-played',redirect_uri:SP_REDIRECT,code_challenge_method:'S256',code_challenge:ch,state:st}).forEach(([k,x])=>u.searchParams.set(k,x));
+  Object.entries({response_type:'code',client_id:cid,scope:'user-read-recently-played user-modify-playback-state user-read-playback-state',redirect_uri:SP_REDIRECT,code_challenge_method:'S256',code_challenge:ch,state:st}).forEach(([k,x])=>u.searchParams.set(k,x));
   location.assign(u.toString());
 }
 async function spToken(body){
@@ -7365,6 +7523,7 @@ function render(){
   phHiLoad();
   phAmLoad();
   dtLoad();
+  if(UI.alb){const a=(S.music||[]).find(x=>x.id===UI.alb.aid),g=a&&a.groups.find(x=>String(x.id)===UI.alb.g);if(g&&READY&&navigator.onLine)msLoad(a,g)}
   hxDrift();
   tdPaint();
   hxObserve();
@@ -8764,6 +8923,7 @@ function settingsView(){
     ${acct.trim()?`<div class="set-col set-acct"><h3 class="set-gh">Account &amp; community</h3>${acct}</div>`:''}
     <div class="set-col set-data"><h3 class="set-gh">Your data</h3>
     <div class="setcard"><h3>Artist page</h3><p class="note">The artist's photo fades into their colors at the top of their page, with a Play on Spotify button. Turn it off to get the plain color header back. Saved on this device.</p><div class="tools"><button class="btn" data-act="phtog" aria-pressed="${phOn()}">${phOn()?'Turn off artist photo':'Turn on artist photo'}</button></div></div>
+    <div class="setcard"><h3>Play button</h3><p class="note">Play in an open album starts it from the first song on Spotify, on whichever device has Spotify open. Pick Apple Music to have Play open the album in Apple Music instead (Apple doesn't let web apps start the music, so you tap play there). Saved on this device.</p><div class="tools seg2" role="group" aria-label="Play button"><button class="btn" data-act="plsrc" data-v="sp" aria-pressed="${plSrc()==='sp'}">Spotify</button><button class="btn" data-act="plsrc" data-v="am" aria-pressed="${plSrc()==='am'}">Apple Music</button></div></div>
     <div class="setcard"><h3>Lite mode</h3><p class="note">${liteNote()}</p><div class="rseg" role="group" aria-label="Lite mode">${[['auto','Auto'],['on','Always on'],['off','Always off']].map(([v,t])=>`<button data-act="litepick" data-v="${v}" aria-pressed="${LITE.pref===v}">${t}</button>`).join('')}</div></div>
     <div class="setcard"><h3>How Playback works</h3><p class="note">A short tour of the buttons and tabs.</p><div class="tools"><button class="btn" data-act="tourgo">Show the tour</button></div></div>
     <div class="setcard"><h3>Sync &amp; data</h3>
@@ -10268,7 +10428,7 @@ function listBtn(g,a){
   const on=llOn(a.name,g.title),sg=stdItems(g),heard=(sg.length>0&&sg.every(i=>isDone(i.id)))||!!rating(g.id);
   if(!on&&heard)return '';
   return `<button class="sl-ic sl-lbtn" data-act="lltog" data-a="${a.id}" data-g="${g.id}" aria-pressed="${on}" aria-label="${on?'On your listen list, remove':'Add to listen list'}" title="${on?'On your listen list':'Add to listen list'}">${on?ICO.listOn:ICO.list}<span class="sl-bl">${on?'On the list':'Add to list'}</span></button>`}
-function albBar(g,a){const h=listBtn(g,a)+relBtn(g);return h?`<div class="sl-bar">${h}</div>`:''}
+function albBar(g,a){const h=playBtn(g,a)+listBtn(g,a)+relBtn(g);return h?`<div class="sl-bar">${h}</div>`:''}
 
 /* ---------- share card ----------
    Share under an album opens a picture of your rating (cover, big number, song average, favorites).
@@ -10300,11 +10460,13 @@ async function shareScene(a,g,withSongs,wide){
   function paint0(x,T){
     const A=T===undefined,pr=(t0,t1)=>A?1:clamp((T-t0)/(t1-t0));
     const gr=x.createLinearGradient(0,0,W*.35,H);gr.addColorStop(0,`rgb(${top})`);gr.addColorStop(1,`rgb(${bot})`);x.fillStyle=gr;x.fillRect(-PX,0,OUTW,H);
+    /* 2026.11.21-m: soft pools of the cover's color over the gradient, like the artist page's color field */
+    [[W*.92,H*.12,W*.75,shMix(base,.42),.55],[W*.05,H*.62,W*.8,shMix(base,-.55),.5],[W*.7,H*.95,W*.7,shMix(base,.18),.45]].forEach(([px,py,pr,c,al])=>{const rg=x.createRadialGradient(px,py,0,px,py,pr);rg.addColorStop(0,'rgba('+c+','+al+')');rg.addColorStop(1,'rgba('+c+',0)');x.fillStyle=rg;x.fillRect(-PX,0,OUTW,H)});
     /* record, sliding out from behind the cover and spinning */
     const slide=A?1:ease(pr(.1,songs?1:.8)),dcx=cx0+cs/2+(cs*.78-cs/2)*slide,dcy=cy0+cs/2,ang=A?0:(T<=END-DEC?SPIN*T:SPIN*(END-DEC)+SPIN*DEC*(u=>u-u*u/2)(clamp((T-END+DEC)/DEC)));   /* turns at a steady pace after the reveal, then slows to a stop on the last frame */
     x.save();x.translate(dcx,dcy);x.fillStyle='rgb(14 16 15 / .92)';x.beginPath();x.arc(0,0,cs/2,0,7);x.fill();
-    /* one groove per song, same as the record in the app (a long release folds songs into at most 22 grooves); the ones you have heard light up in the cover's color, inner ones first */
-    {const hd=f.its.map(i=>isDone(i.id)),n0=hd.length,R=Math.min(n0,22),gv=shMix(base,.62);x.lineWidth=5;
+    /* one groove per song, same as the record in the app (a long release folds songs into at most 22 grooves); the ones you have rated light up in the cover's color, inner ones first */
+    {const hd=f.its.map(i=>!!rating(i.id)),n0=hd.length,R=Math.min(n0,22),gv=shMix(base,.62);x.lineWidth=5;
       for(let j=0;j<R;j++){const lo=Math.floor(j*n0/R),hi=Math.max(lo+1,Math.floor((j+1)*n0/R)),on=hd.slice(lo,hi).every(Boolean),rr=cs/2*(.96-j*.52/R),la=on?(A?1:clamp((T-.45-(R-1-j)*.045)/.3)):0;
         x.strokeStyle='rgb(255 255 255 / .09)';x.beginPath();x.arc(0,0,rr,0,7);x.stroke();
         if(la>0){x.strokeStyle='rgba('+gv[0]+','+gv[1]+','+gv[2]+','+la.toFixed(2)+')';x.beginPath();x.arc(0,0,rr,0,7);x.stroke()}}}
@@ -10331,13 +10493,17 @@ async function shareScene(a,g,withSongs,wide){
     x.fillStyle=inkSoft;x.font='500 38px Archivo,sans-serif';y+=58;
     x.fillText(shFit(x,a.name+(g.w&&g.w.length?' & '+g.w.join(' & '):''),W-220),110,y);
     /* rating ring + number */
-    const big=f.r||f.avg,ry=1064,rr=92,rx=110+rr,rp=A?1:ease(pr(.3,songs?1.6:1.3));
-    x.lineWidth=16;x.lineCap='round';x.strokeStyle=light?'rgb(0 0 0 / .14)':'rgb(255 255 255 / .22)';
-    x.beginPath();x.arc(rx,ry,rr,0,7);x.stroke();
-    if(rp>0){x.strokeStyle=ink;x.beginPath();x.arc(rx,ry,rr,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,big/10)*rp);x.stroke()}
-    x.fillStyle=ink;x.textAlign='center';x.textBaseline='middle';x.font='800 '+(f.r?86:70)+'px Archivo,sans-serif';
-    x.fillText(f.r?fmt(A?f.r:Math.round(f.r*rp*2)/2):(big*rp).toFixed(1),rx,ry+4);
-    x.textAlign='left';let tx=rx+rr+44;const dY=f.rd?-18:0;   /* with a date line the three lines sit a little higher so the block stays centered on the ring */
+    /* 2026.11.21-m: the rating is a small record, like the album's rating in the app: grooves, a label in the cover's color
+       carrying the number, and a ring around it that fills with the score */
+    const big=f.r||f.avg,ry=1064,rr=92,rx=110+rr,rp=A?1:ease(pr(.3,songs?1.6:1.3)),gl=shMix(base,.62);
+    x.save();x.shadowColor='rgb(0 0 0 / .4)';x.shadowBlur=24;x.shadowOffsetY=8;x.fillStyle='rgb(14 12 12)';x.beginPath();x.arc(rx,ry,rr,0,7);x.fill();x.restore();
+    x.lineWidth=1.5;x.strokeStyle='rgb(255 255 255 / .07)';for(let q=rr*.66;q<rr-4;q+=5){x.beginPath();x.arc(rx,ry,q,0,7);x.stroke()}
+    {const lg=x.createRadialGradient(rx-rr*.18,ry-rr*.2,0,rx,ry,rr*.6);lg.addColorStop(0,`rgb(${shMix(base,.35)})`);lg.addColorStop(1,`rgb(${shMix(base,-.05)})`);x.fillStyle=lg;x.beginPath();x.arc(rx,ry,rr*.6,0,7);x.fill()}
+    x.lineWidth=9;x.lineCap='round';x.strokeStyle=light?'rgb(0 0 0 / .14)':'rgb(255 255 255 / .18)';x.beginPath();x.arc(rx,ry,rr+16,0,7);x.stroke();
+    if(rp>0){x.strokeStyle=`rgb(${gl})`;x.beginPath();x.arc(rx,ry,rr+16,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,big/10)*rp);x.stroke()}
+    x.save();x.shadowColor='rgb(0 0 0 / .45)';x.shadowBlur=8;x.fillStyle='#fff';x.textAlign='center';x.textBaseline='middle';x.font='800 '+(f.r?66:56)+'px Archivo,sans-serif';
+    x.fillText(f.r?fmt(A?f.r:Math.round(f.r*rp*2)/2):(big*rp).toFixed(1),rx,ry+4);x.restore();
+    x.textAlign='left';let tx=rx+rr+56;const dY=f.rd?-18:0;   /* with a date line the three lines sit a little higher so the block stays centered on the ring */
     x.fillStyle=ink;x.font='700 42px Archivo,sans-serif';x.textBaseline='alphabetic';x.fillText(f.r?'My '+f.what+' rating':'Song average',tx,ry-14+dY);
     x.fillStyle=inkSoft;x.font='500 30px Archivo,sans-serif';
     const sub=f.r?(f.rs.length?'Song average '+f.avg.toFixed(1)+' · '+f.rs.length+' of '+f.its.length+' rated':'out of 10'):f.rs.length+' of '+f.its.length+' songs rated';
@@ -10353,10 +10519,14 @@ async function shareScene(a,g,withSongs,wide){
       f.its.forEach((it,k)=>{
         const col2=two&&k>=rows,cx=110+(col2?cw+40:0),cy=y0+24+(col2?k-rows:k)*(rh+gap),v=rating(it.id),bp=A?1:ease(pr(1+k*.07,1.5+k*.07));
         x.save();shRound(x,cx,cy,cw,rh,16);x.fillStyle=light?'rgb(0 0 0 / .07)':'rgb(255 255 255 / .09)';x.fill();x.clip();
-        if(v){x.fillStyle=light?'rgb(0 0 0 / .14)':'rgb(255 255 255 / .2)';x.fillRect(cx,cy,cw*Math.min(1,v/10)*bp,rh)}x.restore();
+        if(v){const fg=x.createLinearGradient(cx,0,cx+cw,0);fg.addColorStop(0,'rgba('+gl+','+(light?.22:.26)+')');fg.addColorStop(1,'rgba('+gl+',.06)');x.fillStyle=fg;x.fillRect(cx,cy,cw*Math.min(1,v/10)*bp,rh)}x.restore();
         x.textAlign='left';x.fillStyle=inkSoft;x.font='500 22px Archivo,sans-serif';x.fillText(String(k+1),cx+18,cy+rh/2+8);
-        x.fillStyle=ink;x.font='500 27px Archivo,sans-serif';x.fillText(shFit(x,(it.title||'').trim(),cw-160),cx+62,cy+rh/2+9);
-        x.save();x.globalAlpha=bp;x.textAlign='right';x.font='700 28px Archivo,sans-serif';x.fillStyle=v?ink:inkSoft;x.fillText(v?fmt(v):'–',cx+cw-18,cy+rh/2+10);x.restore()})}
+        x.fillStyle=ink;x.font='500 27px Archivo,sans-serif';x.fillText(shFit(x,(it.title||'').trim(),cw-130),cx+62,cy+rh/2+9);
+        {const mx=cx+cw-34,my=cy+rh/2,mr=22;x.save();x.globalAlpha=v?1:.55;x.fillStyle='rgb(14 12 12)';x.beginPath();x.arc(mx,my,mr,0,7);x.fill();
+          x.lineWidth=1;x.strokeStyle='rgb(255 255 255 / .08)';x.beginPath();x.arc(mx,my,mr-6,0,7);x.stroke();
+          if(v){x.lineWidth=4;x.lineCap='round';x.strokeStyle=`rgb(${gl})`;x.beginPath();x.arc(mx,my,mr-2,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,v/10)*bp);x.stroke()}
+          x.fillStyle='#ece8e4';x.beginPath();x.arc(mx,my,14,0,7);x.fill();
+          x.globalAlpha=v?bp:.55;x.fillStyle='#111';x.textAlign='center';x.textBaseline='middle';x.font='800 '+(v&&String(fmt(v)).length>2?14:17)+'px Archivo,sans-serif';x.fillText(v?fmt(v):'–',mx,my+1);x.restore();x.textBaseline='alphabetic'}})}
   }
   return {W:OUTW,PX,H,LOOP,REVEAL,paint,name,f,text:'My '+f.what+' rating for '+name+' by '+a.name+': '+(f.r?fmt(f.r)+'/10':f.avg.toFixed(1)+'/10 song average')}}
 /* Animated card: paints the card at each moment, then writes a looping GIF. One shared 255-color palette, a fixed dither
@@ -10404,9 +10574,10 @@ async function shareDraw(a,g,withSongs){
 function shareClose(){const o=document.getElementById('shr');if(o){if(o._url)URL.revokeObjectURL(o._url);o.remove()}document.removeEventListener('keydown',shareKey)}
 function shareKey(e){if(e.key==='Escape')shareClose()}
 async function shareOpen(a,g){
-  shareClose();const o=document.createElement('div');o.id='shr';o.className='shr';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-label','Share your rating');
+  shareClose();const o=document.createElement('div');o.id='shr';o.className='shr';
+  {const sA=g.img||'',bc=(dxOn(g)&&g.dxImg&&g.dxImg!==sA?ACOL[g.id+'~dx']:ACOL[g.id])||acolFallback(g);if(bc)o.style.setProperty('--shc',bc)}   /* the sheet wears the album's color */o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-label','Share your rating');
   const f=shareInfo(a,g);
-  o.innerHTML='<div class="shr-box"><div class="shr-seg" role="group" aria-label="Card style"><button type="button" data-sh="mode" data-m="still" aria-pressed="true">Still</button><button type="button" data-sh="mode" data-m="anim" aria-pressed="false">Animated</button></div><div class="shr-prev" aria-live="polite"><p class="shr-note" style="padding:60px 0">Making your card…</p></div>'+(f.its.length?'<label class="shr-tog"><input type="checkbox" data-sh="songs" checked>Show every song rating</label>':'')+'<div class="shr-acts"><button class="btn" data-sh="close">Close</button><button class="btn" data-sh="save" hidden>Save</button><button class="btn primary" data-sh="send" disabled>Share</button></div><p class="shr-note" hidden></p></div>';
+  o.innerHTML='<div class="shr-box"><div class="shr-seg" role="group" aria-label="Card style"><button type="button" data-sh="mode" data-m="still" aria-pressed="true">Still</button><button type="button" data-sh="mode" data-m="anim" aria-pressed="false">Animated</button></div><div class="shr-prev" aria-live="polite"><p class="shr-note" style="padding:60px 0">Making your card…</p></div>'+(f.its.length?'<label class="shr-tog"><input type="checkbox" role="switch" data-sh="songs" checked><span class="shr-sw" aria-hidden="true"></span>Show every song rating</label>':'')+'<div class="shr-acts"><button class="btn" data-sh="close">Close</button><button class="btn" data-sh="save" hidden>Save</button><button class="btn primary" data-sh="send" disabled>Share</button></div><p class="shr-note" hidden></p></div>';
   document.body.appendChild(o);document.addEventListener('keydown',shareKey);
   o.addEventListener('click',e=>{if(e.target===o||e.target.closest('[data-sh="close"]'))shareClose()});
   const prev=o.querySelector('.shr-prev'),send=o.querySelector('[data-sh="send"]'),saveB=o.querySelector('[data-sh="save"]'),note=o.querySelector('.shr-box>.shr-note'),tog=o.querySelector('[data-sh="songs"]'),togL=tog&&tog.parentNode;
@@ -10889,35 +11060,53 @@ function gfRateBar(g,a,full,n,v){const {dx,its,rid,rn,r,avg,d,what}=v,f1=x=>x.to
   return `<div class="sl-acts gfra">
     <button class="sl-rate gfr ${r?'set':''}${lsCar(g,rid)?' carry':''}${UI.rLand===rid?' landing':''}${UI.rOpen===rid?' open':''}" data-act="ropen" data-id="${rid}" aria-expanded="${UI.rOpen===rid}" aria-label="${r?'Your '+what+' rating, '+fmt(r)+'. Change it':'Rate the '+what}">
       ${r?`<span class="gfr-w" style="width:${r*10}%" aria-hidden="true"></span>`:''}
-      <span class="t"><b>${r?'Your '+what:'Rate the '+what}</b><small>${(()=>{const om=its.filter(i=>isOmit(i.id)).length;return (rn?rn+' of '+(its.length-om)+' songs rated':'No songs rated yet')+(om?' \u00b7 '+om+' left out':'')})()}</small></span>
-      ${rn?`<span class="gfr-avg"><b>${f1(avg)}</b><span>song avg</span>${dl?`<em class="${dir}">${arr}${dl}</em>`:''}</span>`:''}
+      <span class="t"><b>${r?'Your '+what:'Rate the '+what}</b><small>${r?'Album rating':'Tap to rate it'}</small></span>
       <span class="gfr-rec" aria-hidden="true"><i></i><b class="v">${r?fmt(r):'+'}</b></span>
     </button>
     ${n?`<button class="sl-ic" data-act="grpall" data-a="${a.id}" data-g="${g.id}" aria-label="${full?'Clear all checkmarks':'Mark all heard'}" title="${full?'Clear all':'Mark all heard'}" aria-pressed="${full}">${ICO.all}</button>`:''}
   </div>
+  ${/* 2026.11.21-m: the song average moved out of the album pill (where it read like the album's own score) to its own line
+       heading the song list, with how many are rated and how the album compares */''}
+  <div class="gfr-songs" aria-label="Songs: ${rn?'average '+f1(avg):'none rated yet'}"><span class="gfr-sl">Songs</span>${rn?`<b>${f1(avg)}</b><span class="gfr-sa">avg</span>`:''}<span class="gfr-sn">${(()=>{const om=its.filter(i=>isOmit(i.id)).length;return (rn?rn+' of '+(its.length-om)+' rated':'None rated yet')+(om?' \u00b7 '+om+' left out':'')})()}</span>${dl?`<em class="${dir}">${arr}album ${dl}</em>`:''}</div>
   ${UI.rOpen===rid?rateMeter(rid,(dx?dxName(g):g.title)):''}`}
 /* THE INSIDE LEFT OF THE OPEN ALBUM: what the album has been to you. Plays, where it ranks among this artist's records,
    its best and weakest songs, every listen, your review, friends' scores, and the links (share, RYM, listen list). */
 function gfInfo(a,g,dx,shown){
   const can=RATEABLE.includes(g.kind),rid=dx?dxId(g):g.id,rt=shown.map(i=>({i,r:avgR(i.id)})).filter(x=>x.r);
   const plays=shown.reduce((t,i)=>t+plN(i.id),0),facts=[];
-  if(plays)facts.push(`<div class="gfi-f"><span>Plays</span><b>${plays.toLocaleString()}</b><small>${shown.filter(i=>plN(i.id)).length} of ${shown.length} songs played</small></div>`);
+  /* 2026.11.21-m: under Plays, how many full spins of the album that adds up to and the hours spent (from each song's length,
+     fetched once from Apple Music; songs it has no length for count as the album's average song) */
+  if(plays){const spins=shown.length?plays/shown.length:0,known=shown.filter(i=>i.ms),bits=[];
+    if(spins>=1)bits.push('≈ '+Math.round(spins).toLocaleString()+' full spin'+(Math.round(spins)===1?'':'s'));
+    if(known.length&&known.length>=shown.length*.6){const am=known.reduce((t,i)=>t+i.ms,0)/known.length,ms=shown.reduce((t,i)=>t+plN(i.id)*(i.ms||am),0),h=ms/36e5;
+      bits.push(h>=1.5?Math.round(h).toLocaleString()+' hours':h>=.95?'1 hour':Math.max(1,Math.round(ms/6e4))+' min')}
+    facts.push(`<div class="gfi-f"><span>Plays</span><b>${plays.toLocaleString()}</b><small>${bits.length?bits.join(' · '):shown.filter(i=>plN(i.id)).length+' of '+shown.length+' songs played'}</small></div>`)}
   if(can&&rating(g.id)){const gk=relKindOf(g),kin=a.groups.filter(x=>RATEABLE.includes(x.kind)&&relKindOf(x)===gk&&rating(x.id));   /* ranked against its own kind: albums against albums, EPs against EPs */
     if(kin.length>1){const me=rating(g.id),hi=kin.filter(x=>rating(x.id)>me).length,tie=kin.filter(x=>rating(x.id)===me).length>1;
-      facts.push(`<div class="gfi-f"><span>Rank</span><b>#${hi+1}<i> of ${kin.length}</i></b><small>${tie?'tied, ':''}among ${esc(a.name)}’s rated ${esc((REL_KINDS[gk]||'records').toLowerCase())}</small></div>`)}}
+      /* and where it sits among every rated album (or EP) in your log; an album on several artists' pages counts once */
+      const seen=new Set(),all=[];for(const x of S.music||[])for(const y of x.groups){if(!RATEABLE.includes(y.kind)||relKindOf(y)!==gk||!rating(y.id))continue;const kk=nTitle(y.title)+'|'+(y.year||'');if(seen.has(kk))continue;seen.add(kk);all.push(rating(y.id))}
+      const ov=all.length>kin.length?`#${all.filter(v=>v>me).length+1} of your ${all.length.toLocaleString()} ${esc((REL_KINDS[gk]||'records').toLowerCase())}`:'';
+      facts.push(`<div class="gfi-f"><span>Rank</span><b>#${hi+1}<i> of ${kin.length}</i></b><small>${ov||((tie?'tied, ':'')+'among '+esc(a.name)+'’s rated '+esc((REL_KINDS[gk]||'records').toLowerCase()))}</small></div>`)}}
   /* ties on the score are settled by plays (2026.11.21-d): of two songs both rated 9, the one you play more is the best song;
      of two rated 6, the one you play less is the weakest. Still even after that, the earlier track wins best and the later one weakest. */
   if(rt.length>1){const pn=x=>plN(x.i.id)||0,ix=x=>shown.indexOf(x.i);
     const b=rt.slice().sort((x,y)=>y.r-x.r||pn(y)-pn(x)||ix(x)-ix(y))[0],w=rt.slice().sort((x,y)=>x.r-y.r||pn(x)-pn(y)||ix(y)-ix(x))[0];
     if(b.r!==w.r){const tl=x=>esc(songShow(x.i).t);
       facts.push(`<div class="gfi-f gfi-s"><span>Best song</span><b class="up">${fmt(b.r)}</b><small>${tl(b)}</small></div>`);
-      facts.push(`<div class="gfi-f gfi-s"><span>Weakest song</span><b class="down">${fmt(w.r)}</b><small>${tl(w)}</small></div>`)}}
+      facts.push(`<div class="gfi-f gfi-s"><span>Weakest song</span><b class="down">${fmt(w.r)}</b><small>${tl(w)}</small></div>`)}
+    /* HIDDEN GEM: a song you rate high (8 or better, and at or above the album's song average) but play far less than the
+       rest of the album, the one worth going back to. Only when there are plays to compare. */
+    if(plays&&shown.length>=4){const mean=plays/shown.length,sa=rt.reduce((t,x)=>t+x.r,0)/rt.length;
+      const gem=rt.filter(x=>x.r>=Math.max(8,sa)&&x!==b&&pn(x)<mean*.35).sort((x,y)=>pn(x)-pn(y)||y.r-x.r)[0];
+      if(gem){const n=pn(gem);facts.push(`<div class="gfi-f gfi-s gfi-gem"><span>Hidden gem</span><b>${fmt(gem.r)}<i> · ${n?'only '+n+' play'+(n===1?'':'s'):'never played'}</i></b><small>${esc(songShow(gem.i).t)}: rated high, rarely played</small></div>`)}}}
   const L=can?lsList(g.id):[],k=L.length?lsIdx(g.id):-1;
   const lis=L.length>1?`<div class="gfi-b"><h4>Listens</h4><ol class="gfi-ls">${L.map((x,j)=>`<li${j===k?' class="on"':''}><button type="button" data-act="lsgo" data-g="${esc(g.id)}" data-k="${j}"${j===k?' aria-current="true"':''}><span>Listen ${j+1}</span><time>${x.d?esc(fmtRd(x.d)):'No date'}</time><b>${x.r?fmt(x.r):'–'}</b></button></li>`).join('')}</ol></div>`:'';
   const rv=can&&rating(rid)?reviewHtml(rid):'';
   const fr=friendStrip(g,a,dx);
   const links=`<div class="gfi-k">${shareBtn(g,a).replace('<span></span>','')}<a class="gfi-a" href="${esc(rymSearchUrl(a,g))}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>Find on RYM</a></div>`;
   return `<div class="gfi">${facts.length?`<div class="gfi-g">${facts.join('')}</div>`:''}${lis}${rv?`<div class="gfi-b gfi-rv">${rv}</div>`:''}${fr}${links}</div>`}
+/* the inside left's record wears the listen you're on (1 until you listen again); a release with no rating keeps heard/total */
+function gfLsLab(g){if(!RATEABLE.includes(g.kind)||!rating(g.id)&&!lsRaw(g.id).length)return 0;const L=lsRaw(g.id);return L.length?lsIdx(g.id)+1:1}
 function gfOpenId(a){return UI.alb&&UI.alb.aid===a.id&&a.groups.some(g=>String(g.id)===UI.alb.g)?UI.alb.g:''}
 function gfHtml(a,g){return lsWith(g,()=>{
 
@@ -10947,7 +11136,7 @@ function gfHtml(a,g){return lsWith(g,()=>{
       <div class="gf-sp">
       <div class="gf-l">
         <div class="gf-lf"><i class="gf-sh" aria-hidden="true"></i>
-          <div class="gf-pk l"><div class="sl-disc" role="img" aria-label="${gd} of ${shown.length} songs heard">${ringHtml}<span class="sl-lab">${shown.length?gd+'/'+shown.length:'–'}</span></div></div>
+          <div class="gf-pk l"><div class="sl-disc" role="img" aria-label="${gfLsLab(g)?'Listen '+gfLsLab(g):gd+' of '+shown.length+' songs heard'}">${ringHtml}${gfLsLab(g)?`<span class="sl-lab sl-lsn"><b>${gfLsLab(g)}</b><i>Listen</i></span>`:`<span class="sl-lab">${shown.length?gd+'/'+shown.length:'–'}</span>`}</div></div>
           <div class="gf-ls">
           <div class="sl-hero">
             ${albBar(g,a)}
@@ -11522,6 +11711,8 @@ document.addEventListener('click',ev=>{
     if(e)row.scrollTo({left:e.getBoundingClientRect().left-row.getBoundingClientRect().left+row.scrollLeft-(parseFloat(getComputedStyle(row).paddingLeft)||0),behavior:noMotion()?'auto':'smooth'});return}
   else if(act==='hback'){UI.libOpen=true;UI.libAnim=true}
   else if(act==='litepick'){liteSet(b.dataset.v);heroPaint()}
+  else if(act==='alplay'){albPlay(b.dataset.a,b.dataset.g,b);return}
+  else if(act==='plsrc'){try{localStorage.setItem('pb_playsrc',b.dataset.v==='am'?'am':'sp')}catch(e){}}
   else if(act==='phtog'){try{localStorage.setItem('pb_photohero',phOn()?'0':'1')}catch(e){}}
   else if(act==='tourgo'){UI.view=null;UI.tab='music';UI.libOpen=false;setTimeout(()=>tourOpen(0),120)}
   else if(act==='dcforget'){dcSetToken('');COL.tokMsg='Removed from this device.';UI.colTok=true}
