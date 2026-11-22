@@ -2585,6 +2585,192 @@ button.st-t:hover{color:var(--accent);text-decoration:underline}
 /* the still copy of the artist menu that dissolves as you leave it (see libGhostRun) */
 .side.libghost{position:fixed!important;inset:0;z-index:69!important;pointer-events:none;animation:none!important}
 .side.libghost *{animation:none!important;transition:none!important}
+/* ===== THE ARTIST LIBRARY PAGE (2026.11.21-s): the full artist menu, made like an artist page ===== */
+@property --lxp{syntax:'<number>';inherits:false;initial-value:0}
+#lx{--x1:#7a3a24;--x2:#2f5fb0;--x3:#c9a66b;color:#fff}
+#lx .lxbg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;background-color:color-mix(in srgb,var(--x1) 42%,#0b0f0d);transition:background-color 1.4s cubic-bezier(.2,.8,.2,1)}
+#lx .lxbg i{position:absolute;border-radius:50%;filter:blur(110px);opacity:.9;transition:background-color 1.4s cubic-bezier(.2,.8,.2,1);animation:lxDrift 26s ease-in-out infinite alternate}
+#lx .lxbg .b1{left:36%;top:-10%;width:72%;height:58%;background-color:color-mix(in srgb,var(--x1) 86%,#000)}
+#lx .lxbg .b2{left:-16%;top:16%;width:62%;height:56%;background-color:color-mix(in srgb,var(--x3) 80%,#000);animation-duration:33s;animation-direction:alternate-reverse}
+#lx .lxbg .b3{left:32%;top:50%;width:78%;height:54%;background-color:color-mix(in srgb,var(--x2) 84%,#000);animation-duration:41s}
+#lx .lxbg .b4{left:-20%;top:74%;width:70%;height:50%;background-color:color-mix(in srgb,var(--x1) 80%,#000);animation-duration:29s;animation-direction:alternate-reverse}
+#lx .lxbg::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgb(0 0 0 / .1),rgb(0 0 0 / .24) 55%,rgb(0 0 0 / .4))}
+@keyframes lxDrift{0%{transform:translate(0,0) scale(1)}50%{transform:translate(6%,-4%) scale(1.12)}100%{transform:translate(-5%,5%) scale(.94)}}
+html.lite #lx .lxbg i{animation:none;filter:blur(70px)}
+#lx .libbtn,#lx .lhead,#lx .ltitle{display:none}
+#lx .libbody{position:relative;z-index:1;gap:26px}
+#lx .libbody>*{flex-shrink:0}
+#lx .llist{max-height:none;overflow:visible;border:0;background:transparent;padding:0}
+#lx .lempty{color:rgb(255 255 255 / .85)}
+#lx details.addart{color:var(--ink)}
+/* the hero: your library on the left, the artist you point at on the right */
+#lx .lxhero{position:relative;display:flex;flex-wrap:wrap;gap:32px;align-items:stretch;min-height:clamp(420px,46vh,560px)}
+#lx .lxlib{flex:1 1 480px;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:20px;padding:10px 0}
+#lx .lxtop{display:flex;align-items:center;justify-content:space-between}
+#lx .lxkick,#lx .lxk{font:500 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:rgb(255 255 255 / .84)}
+#lx .lxclose{position:absolute;top:0;right:0;z-index:3;width:52px;height:52px;border-radius:50%;border:0;padding:0;display:grid;place-items:center;color:#fff;background:rgb(255 255 255 / .16);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);cursor:pointer;transition:background .2s,transform .15s}
+#lx .lxclose:hover{background:rgb(255 255 255 / .28)}#lx .lxclose:active{transform:scale(.94)}
+#lx .lxclose svg{width:22px;height:22px}
+#lx .lxtitle{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+#lx .lxh{margin:0;font:900 clamp(84px,8.4vw,136px)/.86 Archivo,var(--display);letter-spacing:-.045em;color:#fff}
+#lx .lxsub{margin:0;font:500 clamp(17px,1.4vw,22px)/1.3 var(--body);color:rgb(255 255 255 / .94)}
+#lx .lxrw{display:flex;align-items:center;gap:30px;margin-top:8px}
+#lx .lxrt{display:flex;flex-direction:column;gap:6px;min-width:0}
+#lx .lxrt b{font:700 28px/1.1 Archivo,var(--display);letter-spacing:-.01em}
+#lx .lxrt span{font:500 18px var(--body);color:rgb(255 255 255 / .9)}
+#lx .lxrt small{font:500 12px var(--mono);color:rgb(255 255 255 / .78)}
+/* your library's record: one slice per artist, a ring for everything heard */
+#lx .lxrec{position:relative;flex:none;width:210px;aspect-ratio:1/1}
+#lx .lxrec.sm{display:none;width:78px}
+#lx .lxrd{position:absolute;inset:0;border-radius:50%;background-size:100% 100%;box-shadow:0 18px 40px rgb(0 0 0 / .35),0 0 0 6px rgb(255 255 255 / .14);animation:lxSpin 18s linear infinite}
+#lx .lxrd::after{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 20deg,rgb(255 255 255 / 0),rgb(255 255 255 / .16) 12%,rgb(255 255 255 / 0) 26%,rgb(255 255 255 / 0) 50%,rgb(255 255 255 / .12) 62%,rgb(255 255 255 / 0) 76%)}
+#lx .lxring{position:absolute;inset:0;border-radius:50%;background:conic-gradient(#fff calc(var(--lxp)*1%),rgb(255 255 255 / .16) 0);
+  -webkit-mask:radial-gradient(circle closest-side,transparent 0 91%,#000 92% 97%,transparent 98%);mask:radial-gradient(circle closest-side,transparent 0 91%,#000 92% 97%,transparent 98%)}
+#lx .lxlab{position:absolute;inset:31%;border-radius:50%;background:#fff;color:#141414;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 2px 8px rgb(0 0 0 / .25)}
+#lx .lxlab b{font:900 32px/1 Archivo,var(--display)}
+#lx .lxlab i{font:600 10px var(--mono);font-style:normal;letter-spacing:.12em;text-transform:uppercase;margin-top:4px}
+#lx .lxrec.sm .lxlab{inset:28%}#lx .lxrec.sm .lxlab b{font-size:13px}#lx .lxrec.sm .lxlab i{display:none}
+#lx .lxarm{position:absolute;left:92%;top:-6%;width:22px;height:22px;border-radius:50%;background:#222;box-shadow:0 0 0 3px rgb(255 255 255 / .5);transform-origin:50% 50%}
+#lx .lxarm i{position:absolute;left:8.5px;top:10px;width:5px;height:120px;border-radius:4px;background:linear-gradient(#ececec,#9a9a9a);transform-origin:50% 0;transform:rotate(28deg);box-shadow:0 4px 10px rgb(0 0 0 / .35)}
+@keyframes lxSpin{to{transform:rotate(360deg)}}
+/* the preview: the artist photo fades out to the left and bottom, like the artist page header */
+#lx .lxspot{flex:1 1 520px;min-width:0;position:relative;min-height:clamp(420px,46vh,560px)}
+#lx .lxph{position:absolute;inset:0;overflow:hidden;background:linear-gradient(160deg,color-mix(in srgb,var(--x1) 80%,#fff),var(--x1) 45%,color-mix(in srgb,var(--x1) 55%,#000));
+  -webkit-mask-image:linear-gradient(to right,transparent,#000 34%),linear-gradient(to top,transparent,#000 32%);-webkit-mask-composite:source-in;
+  mask-image:linear-gradient(to right,transparent,#000 34%),linear-gradient(to top,transparent,#000 32%);mask-composite:intersect;transition:background 1.2s}
+#lx .lxph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 22%}
+#lx .lxini{position:absolute;right:6%;bottom:-6%;font:900 clamp(200px,22vw,360px)/1 Archivo,var(--display);color:rgb(255 255 255 / .2)}
+#lx .lxph.lxold{z-index:0}
+#lx .lxst{position:absolute;left:0;bottom:0;z-index:2;max-width:86%;display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:0 0 6px 4px}
+#lx .lxn{font:900 clamp(48px,4.8vw,84px)/.92 Archivo,var(--display);letter-spacing:-.04em;text-shadow:0 2px 24px rgb(0 0 0 / .25);overflow-wrap:anywhere}
+#lx .lxl{font:500 clamp(15px,1.25vw,19px)/1.35 var(--body);color:rgb(255 255 255 / .95);text-shadow:0 1px 12px rgb(0 0 0 / .25)}
+#lx .lxbt{display:flex;gap:12px;margin-top:6px}
+#lx .lxopen{display:inline-flex;align-items:center;gap:10px;height:56px;padding:0 26px;border:0;border-radius:999px;background:#fff;color:#141414;font:700 17px var(--body);cursor:pointer;transition:transform .15s,box-shadow .2s}
+#lx .lxopen:hover{box-shadow:0 10px 26px rgb(0 0 0 / .3)}#lx .lxopen:active{transform:scale(.97)}
+#lx .lxopen svg{width:18px;height:18px;transition:transform .25s}#lx .lxopen:hover svg{transform:translateX(3px)}
+#lx .lxplay{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;color:#fff;background:rgb(255 255 255 / .18);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);transition:background .2s}
+#lx .lxplay:hover{background:rgb(255 255 255 / .3)}#lx .lxplay svg{width:20px;height:20px}
+#lx .lxspot.lxsw .lxst{animation:lxSw .55s cubic-bezier(.2,.8,.2,1) both}
+#lx .lxspot.lxsw .lxph:not(.lxold){animation:lxFade .7s ease both}
+@keyframes lxSw{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes lxFade{from{opacity:0}to{opacity:1}}
+/* controls: glass pills like the Releases filter on an artist page */
+#lx .lxctl{display:flex;flex-direction:row;flex-wrap:wrap;gap:12px;align-items:center}
+#lx .lxq{flex:1 1 320px;display:flex;align-items:center;gap:12px;height:56px;padding:0 8px 0 22px;border-radius:999px;background:rgb(255 255 255 / .16);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);transition:background .2s,box-shadow .2s}
+#lx .lxq:focus-within{background:rgb(255 255 255 / .24);box-shadow:0 0 0 2px rgb(255 255 255 / .6)}
+#lx .lxq>svg{flex:none;width:20px;height:20px;color:#fff}
+#lx .lxq .q{flex:1;min-width:0}
+#lx .lxq input{width:100%;border:0;background:transparent;color:#fff;font:500 17px var(--body);padding:0 30px 0 0;min-height:44px;outline:none}
+#lx .lxq input::placeholder{color:rgb(255 255 255 / .75)}
+#lx .lxq .q button{color:#fff}
+#lx .lxaddr{display:none}
+#lx .lxchips{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#lx .lseg{display:flex;gap:2px;padding:6px;border:0;border-radius:999px;background:rgb(255 255 255 / .16);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+#lx .lseg button{min-height:44px;padding:0 20px;color:rgb(255 255 255 / .88);font:600 15px var(--body);transition:background .25s,color .25s}
+#lx .lseg button .c{font:500 12px var(--mono);opacity:.75;margin-left:6px}
+#lx .lseg button[aria-pressed="true"]{background:#fff;color:#141414;font-weight:700}
+#lx .lsort select{height:56px;min-height:56px;padding:0 46px 0 22px;border:0;border-radius:999px;color:#fff;font:600 15px var(--body);cursor:pointer;
+  background:rgb(255 255 255 / .16) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 18px center;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+#lx .lsort select option{color:#141414;background:#fff}
+#lx .lxadd{display:inline-flex;align-items:center;gap:10px;height:56px;padding:0 24px;border:0;border-radius:999px;color:#fff;font:600 15px var(--body);background:rgb(255 255 255 / .16);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);cursor:pointer;transition:background .2s}
+#lx .lxadd:hover,#lx .lsort select:hover,#lx .lseg button:not([aria-pressed="true"]):hover{background-color:rgb(255 255 255 / .26)}
+#lx .lxadd svg,#lx .lxaddr svg{width:18px;height:18px}
+/* the groups run down a timeline, like the years on an artist's Releases */
+#lx .llist.wall .lsect{position:relative;display:grid;grid-template-columns:120px minmax(0,1fr)}
+#lx .llist.wall .lsect::before{content:"";position:absolute;left:13px;top:30px;bottom:-4px;width:2px;background:rgb(255 255 255 / .3)}
+#lx .llist.wall .lsec{position:sticky;top:14px;align-self:start;display:flex;flex-direction:column;justify-content:flex-start;gap:6px;padding:4px 0 0 40px;background:none;color:#fff;text-transform:none;letter-spacing:0;z-index:2}
+#lx .llist.wall .lsec::before{content:"";position:absolute;left:5px;top:12px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 0 0 5px rgb(255 255 255 / .25)}
+#lx .llist.wall .lsec::after{display:none}
+#lx .llist.wall .lsec span:first-child{font:900 64px/.9 Archivo,var(--display);font-stretch:112%;letter-spacing:-.03em;text-shadow:0 2px 18px rgb(0 0 0 / .2)}
+#lx .llist.wall .lsec.lng span:first-child{font-size:26px;line-height:1.05;font-stretch:100%;letter-spacing:-.01em}
+#lx .llist.wall .lsec span:last-child{font:500 12px var(--mono);color:rgb(255 255 255 / .82)}
+#lx .lgrid{grid-template-columns:repeat(auto-fill,minmax(clamp(170px,11vw,240px),1fr));gap:34px 28px;padding:6px 0 48px 24px}
+/* the artist tiles: no grey card, a tinted score, a ring on the record for how much you have heard */
+#lx .tile{gap:10px;color:#fff;transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+#lx .tile .tpack .tcov{box-shadow:0 18px 40px rgb(0 0 0 / .3),inset 0 0 0 1px rgb(255 255 255 / .14);border-radius:14px;transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+#lx .tile:hover .tpack .tcov{filter:none;transform:translateY(-4px) rotate(-1deg)}
+#lx .tile[aria-current="true"] .tcov{box-shadow:0 0 0 3px #fff,0 18px 40px rgb(0 0 0 / .3)}
+#lx .tdisc::after{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(#fff calc(var(--p,0)*1%),rgb(255 255 255 / .14) 0);
+  -webkit-mask:radial-gradient(circle closest-side,transparent 0 89%,#000 90% 96%,transparent 97%);mask:radial-gradient(circle closest-side,transparent 0 89%,#000 90% 96%,transparent 97%)}
+#lx .trate{top:10px;right:10px;padding:4px 10px;font:700 13px var(--mono);color:#fff;background:color-mix(in srgb,var(--tl,#2D5840) 58%,#000);box-shadow:inset 0 0 0 1px rgb(255 255 255 / .24)}
+#lx .tcorner{left:10px;bottom:10px;border-radius:9px}
+#lx .tn{font:750 16px/1.15 Archivo,var(--display);font-stretch:106%;letter-spacing:-.01em;text-shadow:0 1px 12px rgb(0 0 0 / .3)}
+#lx .tm{display:flex;align-items:center;gap:10px;margin-top:-2px;font:500 12px var(--mono);color:rgb(255 255 255 / .86)}
+.tmb{display:none}
+#lx .tmb{display:block;flex:0 0 56px;height:4px;border-radius:4px;background:rgb(255 255 255 / .22);overflow:hidden}
+#lx .tmb i{display:block;height:100%;border-radius:4px;background:#fff}
+#lx .tile.add .tcov{border:2px dashed rgb(255 255 255 / .5);color:#fff;background:rgb(255 255 255 / .06)}
+#lx .tile.add .tn{color:#fff}
+#lx .tile.alb .ts{color:rgb(255 255 255 / .8)}
+#lx .lrail button{color:rgb(255 255 255 / .9)}
+/* opening it: the title rises, the record drops on and its ring fills, the arm swings over, the artists rise in */
+@media (prefers-reduced-motion:no-preference){
+  #lx.libin .lxkick,#lx.libin .lxh,#lx.libin .lxsub,#lx.libin .lxrt,#lx.libin .lxctl{animation:lxSw .6s cubic-bezier(.2,.8,.2,1) backwards}
+  #lx.libin .lxh{animation-delay:.05s}#lx.libin .lxsub{animation-delay:.12s}#lx.libin .lxrt{animation-delay:.24s}#lx.libin .lxctl{animation-delay:.2s}
+  #lx.libin .lxrec:not(.sm){animation:lxDrop .7s cubic-bezier(.2,.8,.2,1) .12s backwards}
+  #lx.libin .lxring{animation:lxRing 1.4s cubic-bezier(.2,.8,.2,1) .45s backwards}
+  #lx.libin .lxarm{animation:lxArm .9s cubic-bezier(.3,.7,.2,1) .5s backwards}
+  #lx.libin .lxspot{animation:lxFade .8s ease .1s backwards}
+  #lx.libin .lxst{animation:lxSw .7s cubic-bezier(.2,.8,.2,1) .25s backwards}
+  #lx.libin .llist .lsec{animation:lxSw .5s cubic-bezier(.2,.8,.2,1) .26s backwards}
+  #lx.libin .llist .lgrid>*{animation:lxTile .55s cubic-bezier(.2,.8,.2,1) .3s backwards}
+  #lx.libin .llist .lgrid>:nth-child(2){animation-delay:.34s}#lx.libin .llist .lgrid>:nth-child(3){animation-delay:.38s}#lx.libin .llist .lgrid>:nth-child(4){animation-delay:.42s}#lx.libin .llist .lgrid>:nth-child(5){animation-delay:.46s}#lx.libin .llist .lgrid>:nth-child(6){animation-delay:.5s}#lx.libin .llist .lgrid>:nth-child(7){animation-delay:.54s}#lx.libin .llist .lgrid>:nth-child(n+8){animation-delay:.58s}
+}
+@keyframes lxDrop{from{opacity:0;transform:translateY(-26px) scale(1.08) rotate(-40deg)}to{opacity:1;transform:none}}
+@keyframes lxRing{from{--lxp:0}}
+@keyframes lxArm{from{transform:rotate(-30deg)}}
+@keyframes lxTile{from{opacity:0;transform:translateY(18px) scale(.95)}to{opacity:1;transform:none}}
+@media (min-width:761px){
+  body:has(#lx){overflow:hidden}
+  body:has(#lx) .top{position:relative;z-index:85}
+  #lx.side.libfull{display:flex;flex-direction:column;position:fixed;z-index:80;inset:var(--libtop,90px) 0 0 0;height:auto;max-height:none;margin:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;background:transparent;padding:14px clamp(18px,3vw,48px) 72px;animation:lxIn .35s ease both}
+  #lx .libbody{flex:none;width:100%;max-width:1760px;margin:0 auto;padding:0}
+  #lx .lwrap{flex:none;flex-direction:row;gap:20px;align-items:flex-start}
+  #lx .llist{flex:1;min-width:0;min-height:0}
+  #lx .lrail{display:flex;flex-direction:column;align-items:center;flex:none;position:sticky;top:20px;width:34px;padding:10px 0;border-radius:999px;background:rgb(0 0 0 / .26);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+  #lx .lrail:empty{display:none}
+  #lx .lrail button{border:0;background:none;padding:3px 0;width:34px;font:600 11px var(--mono);cursor:pointer;border-radius:8px;transition:color .2s,transform .15s}
+  #lx .lrail button:hover{color:#fff;transform:scale(1.25)}
+  #lx .tile:hover .tdisc{left:calc(16% + var(--p,0)*.17%)}
+}
+@keyframes lxIn{from{opacity:0}to{opacity:1}}
+/* phones: the same page, stacked. The whole page scrolls (title included), the groups get a header row instead of a gutter */
+@media (max-width:760px){
+  #lx .lxbg{z-index:79}
+  #lx.side.libfull .libbody{position:fixed;inset:0;z-index:80;background:transparent;overflow-y:auto;overflow-x:hidden;padding:calc(18px + env(safe-area-inset-top,0px)) 16px calc(110px + env(safe-area-inset-bottom,0px));gap:16px}
+  #lx .lxhero{min-height:0;gap:12px}
+  #lx .lxlib{flex-basis:100%;gap:10px;padding:0}
+  #lx .lxclose{position:static;width:44px;height:44px}
+  #lx .lxh{font-size:58px}
+  #lx .lxrec.sm{display:block}
+  #lx .lxrw,#lx .lxspot{display:none}
+  #lx .lxsub{font-size:15px}
+  #lx .lxctl{flex-direction:column;align-items:stretch;gap:10px}
+  #lx .lxq{flex:none;width:100%;min-width:0;box-sizing:border-box;height:48px;padding-left:16px;padding-right:4px}
+  #lx .lxq input{width:100%;min-width:0}
+  #lx .lxq input{font-size:16px}
+  #lx .lxaddr{display:grid;place-items:center;flex:none;width:40px;height:40px;border:0;border-radius:50%;color:#141414;background:#fff}
+  #lx .lxchips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px;gap:8px}
+  #lx .lxchips::-webkit-scrollbar{display:none}
+  #lx .lseg{flex:none;padding:4px}
+  #lx .lseg button{min-height:38px;padding:0 14px;font-size:14px}
+  #lx .lsort select{height:46px;min-height:46px;font-size:14px;padding:0 40px 0 16px}
+  #lx .lxadd{display:none}
+  #lx .lwrap{flex:none}
+  #lx .llist{padding:0 22px 0 0!important}
+  #lx .llist.wall .lsect{display:block}
+  #lx .llist.wall .lsect::before{display:none}
+  #lx .llist.wall .lsec{position:sticky;top:-18px;flex-direction:row;align-items:center;gap:10px;padding:10px 38px 10px 40px;margin:0 -38px 0 -16px;background:color-mix(in srgb,var(--x1) 30%,rgb(11 15 13 / .5));-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);transition:background-color 1.2s}
+  #lx .llist.wall .lsec::before{left:18px;top:50%;width:12px;height:12px;margin-top:-6px;box-shadow:0 0 0 4px rgb(255 255 255 / .25)}
+  #lx .llist.wall .lsec span:first-child{font-size:34px}
+  #lx .llist.wall .lsec.lng span:first-child{font-size:20px}
+  #lx .llist.wall .lsec span:last-child{font-size:11px;flex:1;display:flex;align-items:center;gap:10px}
+  #lx .llist.wall .lsec span:last-child::after{content:"";flex:1;height:2px;background:rgb(255 255 255 / .25)}
+  #lx .lgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 14px;padding:4px 0 26px}
+  #lx .tn{font-size:15px}
+  #lx .tm{font-size:11px}#lx .tmb{flex-basis:40px}
+  #lx.side.libfull .lrail{position:fixed;z-index:81;top:calc(env(safe-area-inset-top,0px) + 150px);bottom:calc(110px + env(safe-area-inset-bottom,0px));right:2px}
+}
 
 /* ===== 2026.11.19-an: era names lead, a 7-inch sleeve for singles, bigger records on wide screens, Add release by the filters ===== */
 /* ERA NAMES: each row is headed by its era's name with the year beside it (two eras from one year no longer both read
@@ -3545,6 +3731,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.21-s', note:'A NEW ARTIST LIBRARY, MADE LIKE AN ARTIST PAGE: All artists is now a page of its own instead of a dark grey sheet. The whole window takes an artist\u2019s colors (the last one you opened), and on a PC pointing at an artist slowly bleeds the page into their colors and shows them on the right with their photo, numbers, Open artist and Play. On the left: a big Artists title, your library numbers (artists, album and song averages, releases) and your library\u2019s own record, one slice per artist sized by the songs you\u2019ve heard, with a ring for everything heard and the arm swinging over as it opens. Search, Show, Sort and Add artist are glass pills like the Releases filter. The groups (A\u2013Z, rating or progress) run down a timeline like the years on an artist\u2019s Releases, with the big letter sticking as you scroll, and a glass A\u2013Z rail on the right. Tiles lose the grey card: a score tinted in the artist\u2019s color, a ring on the record for how much you\u2019ve heard, and a small bar under the name. On a phone it\u2019s the same page stacked, with the record beside the title. Closing it puts you back where you were on the artist page.'},
   {v:'2026.11.21-r', note:'CLEARER GROOVES ON THE SHARE CARD: the lit grooves on the share card\u2019s record are brighter, a little thicker and softly glow in the album\u2019s color, so the color reads clearly while the record still looks real.'},
   {v:'2026.11.21-q', note:'SHARE CARD POLISH AND A STORY SIZE: the record on the share card is now a solid record with a soft shadow, fine grooves and lit grooves tinted in the album\u2019s color, so it reads as vinyl even on pale covers. Song bars fill deeper in the album color, so your favorite songs stand out. Favorites are chips, each with its score on a little record, popping in one by one in the animation. A footer shows whose log it is and the month, with the Playback mark. The share sheet has a new Post / Story switch: Story makes a 1080 \u00d7 1920 card for Instagram and Snapchat stories, still or animated.'},
   {v:'2026.11.21-p', note:'ONE \u201cHIGHEST RATED\u201d ORDER EVERYWHERE, AND READABLE SONG SCORES ON THE SHARE CARD: every highest or lowest sort now breaks ties the same way the album rank does: album rating, then song average (left-out songs stay out), then plays. That covers the big record and the Albums wall on account pages, the best-album pick, the month and top-artist cards, the year card, History sorted by score, Stats\u2019 top albums and an artist\u2019s Releases sorted by rating. On a friend\u2019s page the song average comes from the song ratings they share (plays are not shared). On the share card the little score records next to each song are bigger, with a larger number, so they read at phone size.'},
@@ -7278,6 +7465,7 @@ function sideFinder(list){
   const P=lPrefs(),sums=list.map(lSum),c={all:sums.length,going:0,fresh:0,done:0};
   sums.forEach(s=>c[s.st]++);
   const music=UI.tab==='music',noun=music?'artists':'shows & films',title=music?'Artists':'Shows & films';
+  if(lxOn())return lxFinder(list,P,c);
   return `<div class="lhead"><h2>${title}<span>${list.length}</span></h2><button class="lclose" data-act="lib" aria-label="Close ${noun} list">×</button></div>
   <div class="lfind">
     <div class="ltitle"><h2>${title}</h2><span class="mono">${list.length}</span><span class="sp"></span>${music?`<button class="ladd" data-act="addart">${ICO.plus}Add artist</button>`:''}</div>
@@ -7299,7 +7487,7 @@ function lCover(x){let best=null,bs=-1;
 function lTile(s,e){const x=s.x,cv=lCover(x),pic=x.simg||(cv&&cv.u)||'',col=(cv&&ACOL[cv.g.id])||acolFallback({title:x.name,id:x.id}),
   ini=([...lName(x)][0]||'#').toUpperCase(),cor=!!(cv&&cv.sc>0),rv=s.r?fmt(Math.round(s.r*10)/10):'',
   lab=x.name+', '+(s.p>=100?'finished':s.p+'% heard')+(rv?', rated '+rv:'');
-  return `<button class="tile${s.p>=100?' done':''}" data-act="sel" data-id="${x.id}" aria-current="${!!(e&&e.id===x.id)}" aria-label="${esc(lab)}"><span class="tpack" style="--p:${s.p};--tl:${esc(col)}"><span class="tdisc" data-td="${esc(x.id)}" aria-hidden="true"><i></i></span><span class="tcov" style="--ac:${esc(col)}"><span class="tini" aria-hidden="true">${esc(ini)}</span>${pic?`<img src="${esc(pic)}" alt="" loading="lazy" decoding="async" onerror="coverErr(this)">`:''}${cor?`<span class="tcorner" title="${esc('Your best-rated album: '+(cv.g.title||''))}"><img src="${esc(cv.u)}" alt="" loading="lazy" decoding="async" onerror="this.parentNode.remove()"></span>`:''}${rv?`<span class="trate" title="Your average rating">${rv}</span>`:''}</span></span><span class="tn">${esc(x.name)}${x.example?'<span class="ex">Example</span>':''}</span><span class="tm">${s.p>=100?'Finished':s.p+'% heard'}</span></button>`}
+  return `<button class="tile${s.p>=100?' done':''}" data-act="sel" data-id="${x.id}" aria-current="${!!(e&&e.id===x.id)}" aria-label="${esc(lab)}"><span class="tpack" style="--p:${s.p};--tl:${esc(col)}"><span class="tdisc" data-td="${esc(x.id)}" aria-hidden="true"><i></i></span><span class="tcov" style="--ac:${esc(col)}"><span class="tini" aria-hidden="true">${esc(ini)}</span>${pic?`<img src="${esc(pic)}" alt="" loading="lazy" decoding="async" onerror="coverErr(this)">`:''}${cor?`<span class="tcorner" title="${esc('Your best-rated album: '+(cv.g.title||''))}"><img src="${esc(cv.u)}" alt="" loading="lazy" decoding="async" onerror="this.parentNode.remove()"></span>`:''}${rv?`<span class="trate" title="Your average rating">${rv}</span>`:''}</span></span><span class="tn">${esc(x.name)}${x.example?'<span class="ex">Example</span>':''}</span><span class="tm"><span class="tmb" aria-hidden="true"><i style="width:${s.p}%"></i></span>${s.p>=100?'Finished':s.p+'% heard'}</span></button>`}
 const L_ADD='<button class="tile add" data-act="addart"><span class="tcov"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span class="tn">Add an artist</span></button>';
 /* the A-Z rail beside the wall: the letters that have artists, in the order the list shows them */
 let LRAIL=[];
@@ -7347,7 +7535,7 @@ function sideList(list,e){
   let last=null,h=albHtml;
   for(const s of sums){const k=sec(s),x=s.x;
     if(k!==last){if(P.sort==='az')LRAIL.push(k);
-      h+=(wall&&last!==null?'</div></section>':'')+(wall?'<section class="lsect">':'')+`<div class="lsec" data-sec="${esc(k)}"><span>${esc(k)}</span><span>${cnt[k]}</span></div>`+(wall?'<div class="lgrid">':'');last=k}
+      h+=(wall&&last!==null?'</div></section>':'')+(wall?'<section class="lsect">':'')+`<div class="lsec${[...k].length>2?' lng':''}" data-sec="${esc(k)}"><span>${esc(k)}</span><span>${cnt[k]}${wall?(cnt[k]===1?' artist':' artists'):''}</span></div>`+(wall?'<div class="lgrid">':'');last=k}
     if(wall){h+=lTile(s,e);continue}
     h+=`<button class="entry" data-act="sel" data-id="${x.id}" aria-current="${!!(e&&e.id===x.id)}">${s.sub?'<span class="nw">':''}<span class="n">${esc(x.name||x.title)}${x.example?'<span class="ex">Example</span>':''}</span>${s.sub?'<span class="sub">'+esc(s.sub)+'</span></span>':''}${s.r?`<span class="r" title="Your average rating">${fmt(Math.round(s.r*10)/10)}</span>`:''}<span class="bar" aria-hidden="true"><i style="width:${s.p}%"></i></span><span class="p">${s.p}%</span></button>`}
   if(wall)h+=L_ADD+'</div></section>';
@@ -7356,6 +7544,90 @@ function lRedraw(){const el=document.getElementById('llist');if(el)el.innerHTML=
   const rl=document.getElementById('lrail');if(rl)rl.innerHTML=lRailHTML();
   const q=document.querySelector('.lfind .q');if(q){const has=!!UI.lq[UI.tab],btn=q.querySelector('button');
     if(has&&!btn)q.insertAdjacentHTML('beforeend','<button data-act="lqx" aria-label="Clear search">\u00d7</button>');if(!has&&btn)btn.remove()}}
+
+/* ===== THE ARTIST LIBRARY PAGE (2026.11.21-s) =====
+   The full artist menu on the Music tab is a page of its own, made like an artist page: the whole window takes an artist's
+   colors (the last one you opened, then whoever you point at), a hero with "Artists", your library numbers and a record
+   whose slices are your artists (sized by the songs you have heard), a preview of the artist on the right, glass controls,
+   and the A–Z (or rating) groups run down a timeline like the Releases do. Pointing at an artist (PC) slowly bleeds the
+   page into their colors and swaps the preview, without redrawing anything. */
+const lxOn=()=>UI.tab==='music'&&!!UI.libOpen&&!UI.view;
+let LXS=null,LXT=0,LXC={k:null,v:null},LXY=null;
+const lxEl=()=>document.querySelector('#lx:not(.libghost)');
+const lxScroller=()=>{const s=lxEl();if(!s)return null;
+  if(matchMedia('(max-width:760px)').matches){const b=s.querySelector(':scope>.libbody');return b||null}return s};
+function lxCols(a){const P=heroPalette(a,true).map(x=>x.col),f=acolFallback({title:a.name,id:a.id});
+  return [P[0]||f,P[1]||P[0]||f,P[2]||P[1]||P[0]||f]}
+function lxStats(){const k=(S.mtime||0)+':'+S.music.length+':'+ACOLV;if(LXC.k===k)return LXC.v;
+  let alb=[];try{alb=rhAll(true).filter(e=>!e.sg)}catch(x){}
+  const aAvg=alb.length?(alb.reduce((t,e)=>t+e.r,0)/alb.length).toFixed(1):'';
+  const seen=new Set();let sN=0,sT=0,heard=0,tot=0,rel=0;const sl=[];
+  for(const a of S.music){rel+=a.groups.length;let h=0;
+    for(const g of a.groups)for(const i of g.items){if(seen.has(i.id))continue;seen.add(i.id);tot++;if(isDone(i.id)){heard++;h++}const r=avgR(i.id);if(r){sN++;sT+=r}}
+    if(h){const P=heroPalette(a,true);sl.push({c:(P[0]&&P[0].col)||acolFallback({title:a.name,id:a.id}),h})}}
+  sl.sort((x,y)=>y.h-x.h);
+  let at=0;const st=[];const H=sl.reduce((t,x)=>t+x.h,0)||1;
+  sl.forEach(x=>{const w=x.h/H*100;st.push(x.c+' '+at.toFixed(2)+'% '+(at+w).toFixed(2)+'%');at+=w});
+  const disc=st.length?'conic-gradient(from -90deg,'+st.join(',')+')':'conic-gradient(#2a302d,#2a302d)';
+  LXC={k,v:{n:S.music.length,aAvg,sAvg:sN?(sT/sN).toFixed(1):'',rel,heard,tot,p:tot?Math.round(heard/tot*100):0,disc}};return LXC.v}
+function lxArt(a){return phSrcPref(a)==='am'&&a.aimg?a.aimg+'/1200x1200bb.jpg':(spPhoto(a)||(a.aimg?a.aimg+'/1200x1200bb.jpg':''))}
+function lxLine(a){const mean=v=>v.length?(v.reduce((x,y)=>x+y,0)/v.length).toFixed(1):'',items=artistItems(a);
+  const aAvg=mean(a.groups.map(g=>rating(g.id)).filter(Boolean)),sAvg=mean(items.map(i=>avgR(i.id)).filter(Boolean)),n=a.groups.length,p=pct(items.map(i=>i.id));
+  return [aAvg&&'Albums '+aAvg,sAvg&&'Songs '+sAvg,n+' release'+(n===1?'':'s'),p>=100?'Finished':p+'% heard'].filter(Boolean).join(' · ')}
+const LX_ARROW='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const LX_PLAY='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 4.8v14.4L19 12z" fill="currentColor"/></svg>';
+function lxSpotHtml(a){const e=current(),ph=lxArt(a),cur=!!(e&&e.id===a.id),ini=([...lName(a)][0]||'#').toUpperCase();
+  return `<div class="lxspot" data-aid="${esc(a.id)}">
+    <div class="lxph"><span class="lxini" aria-hidden="true">${esc(ini)}</span>${ph?`<img src="${esc(ph)}" alt="" decoding="async" onerror="this.remove()">`:''}</div>
+    <div class="lxst">
+      <span class="lxk">${cur?'Last opened':'Preview'}</span>
+      <b class="lxn">${esc(a.name)}</b>
+      <span class="lxl">${esc(lxLine(a))}</span>
+      <div class="lxbt"><button class="lxopen" data-act="lxopen" data-id="${esc(a.id)}">Open artist${LX_ARROW}</button><a class="lxplay" href="${esc(spOpenUrl(a))}" data-uri="${esc(spAppUri(a))}" onclick="return spApp(event,this)" target="_blank" rel="noopener noreferrer" aria-label="Play ${esc(a.name)} on Spotify">${LX_PLAY}</a></div>
+    </div></div>`}
+function lxRec(st,sm){return `<div class="lxrec${sm?' sm':''}" aria-hidden="true"><span class="lxrd" style="background-image:repeating-radial-gradient(circle,rgb(0 0 0 / .2) 0 1px,transparent 1px 3px),${st.disc}"></span><span class="lxring" style="--lxp:${st.p}"></span><span class="lxlab"><b>${st.p}%</b><i>Heard</i></span>${sm?'':'<span class="lxarm"><i></i></span>'}</div>`}
+function lxFinder(list,P,c){
+  const st=lxStats(),e=current(),a=S.music.find(x=>x.id===LXS)||e,fmtN=n=>n.toLocaleString();
+  const sub=[st.n+' artist'+(st.n===1?'':'s'),st.aAvg&&'Albums '+st.aAvg,st.sAvg&&'Songs '+st.sAvg,fmtN(st.rel)+' release'+(st.rel===1?'':'s')].filter(Boolean).join(' · ');
+  return `<div class="lxhero">
+    <div class="lxlib">
+      <div class="lxtop"><span class="lxkick">Your library</span><button class="lxclose" data-act="lib" aria-label="Close the artist library"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="lxtitle"><h2 class="lxh">Artists</h2>${lxRec(st,true)}</div>
+      <p class="lxsub">${esc(sub)}</p>
+      <div class="lxrw">${lxRec(st,false)}<div class="lxrt"><b>Your library</b><span>${fmtN(st.heard)} of ${fmtN(st.tot)} songs heard</span><small>Every slice is one artist, sized by the songs you’ve heard</small></div></div>
+    </div>
+    ${a?lxSpotHtml(a):''}
+  </div>
+  <div class="lfind lxctl">
+    <div class="lxq">
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg>
+      <div class="q"><input id="lq" type="search" autocomplete="off" placeholder="Search artists &amp; albums" value="${esc(UI.lq[UI.tab]||'')}" aria-label="Search artists and albums">${UI.lq[UI.tab]?'<button data-act="lqx" aria-label="Clear search">×</button>':''}</div>
+      <button class="lxaddr" data-act="addart" aria-label="Add an artist"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+    </div>
+    <div class="lxchips">
+      <div class="lseg" role="group" aria-label="Show">${Object.entries(LSHOWS).map(([k,v])=>`<button data-act="lshow" data-v="${k}" aria-pressed="${P.show===k}">${v}<span class="c">${c[k]}</span></button>`).join('')}</div>
+      <label class="lsort"><select id="lsort" aria-label="Sort artists">${Object.entries(LSORTS).map(([k,v])=>`<option value="${k}"${P.sort===k?' selected':''}>${v}</option>`).join('')}</select></label>
+      <button class="lxadd" data-act="addart"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add artist</button>
+    </div>
+  </div>`}
+/* point at an artist: the page drifts into their colors and the preview swaps (no redraw) */
+function lxSpot(id){const side=lxEl();if(!side)return;const a=S.music.find(x=>x.id===id);if(!a)return;LXS=id;
+  const c=lxCols(a);side.style.setProperty('--x1',c[0]);side.style.setProperty('--x2',c[1]);side.style.setProperty('--x3',c[2]);
+  const sp=side.querySelector('.lxspot');if(!sp||sp.dataset.aid===String(id))return;
+  const t=document.createElement('template');t.innerHTML=lxSpotHtml(a).trim();const nw=t.content.firstElementChild;
+  const op=sp.querySelector('.lxph'),np=nw.querySelector('.lxph');
+  if(op&&np&&!noMotion()){op.classList.add('lxold');np.parentNode.insertBefore(op,np);setTimeout(()=>op.remove(),900)}
+  nw.classList.add('lxsw');sp.replaceWith(nw)}
+document.addEventListener('mouseover',ev=>{const t=ev.target.closest&&ev.target.closest('#lx .tile[data-act="sel"]');if(!t||!matchMedia('(hover:hover)').matches)return;
+  clearTimeout(LXT);LXT=setTimeout(()=>lxSpot(t.dataset.id),60)});
+document.addEventListener('focusin',ev=>{const t=ev.target.closest&&ev.target.closest('#lx .tile[data-act="sel"]');if(t)lxSpot(t.dataset.id)});
+/* after a draw: the page starts below the top bar, and keeps its scroll across redraws */
+function lxAfter(was,y,opened){const side=lxEl();
+  if(!side){if(was&&LXY!=null&&!UI.libOpen){const yy=LXY;LXY=null;requestAnimationFrame(()=>window.scrollTo(0,yy))}return}
+  if(!matchMedia('(max-width:760px)').matches){
+    if(opened){LXY=scrollY;if(scrollY)window.scrollTo(0,0)}
+    const tp=document.querySelector('#app .top')||document.querySelector('.top');side.style.setProperty('--libtop',Math.max(0,tp?tp.getBoundingClientRect().bottom:0)+'px')}
+  const box=lxScroller();if(box&&y&&!opened)box.scrollTop=y}
 
 /* the record slides out of its sleeve as the sleeve scrolls into view. Which sleeves are on screen is
    remembered across redraws, so a tap never replays or resets the motion. */
@@ -7477,6 +7749,7 @@ function render(){
   const vk=UI.view||UI.tab,vPrev=UI.vKey;UI.vKey=vk;
   const vlT=(()=>{const el=document.querySelector('.vl-spin'),an=el&&el.getAnimations&&el.getAnimations()[0];return an?an.currentTime:null})();   /* where the record is in its slow spin, so a redraw does not snap it back to the start */
   const ll=document.getElementById('llist'),llTop=ll?ll.scrollTop:0,llTab=UI.llTab;UI.llTab=UI.tab;
+  const lxWas=!!lxEl(),lxBox=lxScroller(),lxY=lxBox?lxBox.scrollTop:0;
   const gfOld=document.querySelector('.group.sleeve.gf');   /* 2026.11.20-o: the open album is patched in place below, not rebuilt */
   const gfS=(()=>{const g=document.querySelector('.group.sleeve.gf');if(!g)return null;const r=g.querySelector('.gf-rs'),l=g.querySelector('.gf-ls');return{id:g.dataset.acol,r:r?r.scrollTop:0,l:l?l.scrollTop:0,s:g.scrollTop}})();   /* the open album's panels keep their scroll through a redraw */
   let ohg=null;{const oh=document.querySelector('.hero[data-aid]'),m=oh&&oh.querySelector('.hmesh');   /* the old artist's colors, to fade out from */
@@ -7523,6 +7796,7 @@ function render(){
   if(!document.querySelector('.hero.hx[data-aid]'))PHSEEN='';
   phPull();
   if(keepY!=null&&Math.abs(scrollY-keepY)>1)window.scrollTo(0,keepY);
+  lxAfter(lxWas,lxY,!lxWas&&!!lxEl());
   if(keepHx){const e=document.querySelector('.hx .hxrow');if(e&&!e.scrollLeft)e.scrollLeft=keepHx}
   if(keepSim){const e=document.querySelector('.simrow');if(e&&!e.scrollLeft)e.scrollLeft=keepSim}
   phHiLoad();
@@ -7547,7 +7821,10 @@ function render(){
 }
 let LIBIN=false;   /* set by renderMain for the one draw that opens the artist menu */
 function mainAside(e,list){const full=!!(UI.libOpen&&e);   /* in the full artist menu the Add an artist box sits inside it (on a phone the menu covers the page, so a box outside it could never be seen) */
-  return `<aside class="side ${UI.libOpen||!e?'libopen':''}${UI.libOpen&&e?' libfull':''}${LIBIN&&UI.libOpen&&e?' libin':''}">
+  const lx=full&&UI.tab==='music';if(lx&&LIBIN)LXS=null;
+  const la=lx?(S.music.find(x=>x.id===LXS)||e):null,lc=la?lxCols(la):null;
+  return `<aside class="side ${UI.libOpen||!e?'libopen':''}${UI.libOpen&&e?' libfull':''}${LIBIN&&UI.libOpen&&e?' libin':''}${lx?' lx':''}"${lx?` id="lx" style="--x1:${esc(lc[0])};--x2:${esc(lc[1])};--x3:${esc(lc[2])}"`:''}>
+      ${lx?'<div class="lxbg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i></div>':''}
       ${e?`<button class="libbtn" data-act="lib" aria-expanded="${!!UI.libOpen}"><span class="label">${UI.tab==='music'?'Artists':'Shows & films'} \u00b7 ${list.length}</span><b>${esc(e.name||e.title)}</b><span class="libsw">${UI.libOpen?'Close':'Switch'}</span></button>`:''}
       <div class="libbody">
       ${sideFinder(list)}
@@ -11841,7 +12118,11 @@ document.addEventListener('click',ev=>{
     if(matchMedia('(max-width:760px)').matches)UI.toSheet=true}
   else if(act==='selalb'){UI.rel=null;UI.tab='music';UI.sel.music=id;UI.libOpen=false;UI.rOpen=null;UI.filter='all';UI.toAlb=b.dataset.g}
   else if(act==='lsort'||act==='lshow'){UI.flip=true;const P=lPrefs();P[act==='lsort'?'sort':'show']=b.dataset.v;lSave(P);UI.llTab=null}
-  else if(act==='ljump'){const ll=document.getElementById('llist'),h=[...document.querySelectorAll('#llist .lsec')].find(z=>z.dataset.sec===b.dataset.l),sc=h&&h.parentElement;if(ll&&sc)ll.scrollTo({top:sc.offsetTop-4});return}
+  else if(act==='ljump'){const ll=document.getElementById('llist'),h=[...document.querySelectorAll('#llist .lsec')].find(z=>z.dataset.sec===b.dataset.l),sc=h&&h.parentElement;if(!ll||!sc)return;
+    const box=lxScroller();if(box){const top=0;box.scrollTo({top:box.scrollTop+sc.getBoundingClientRect().top-box.getBoundingClientRect().top-top-8,behavior:noMotion()?'auto':'smooth'})}
+    else ll.scrollTo({top:sc.offsetTop-4});return}
+  else if(act==='lxopen'){const t=document.querySelector('#llist .tile[data-act="sel"][data-id="'+(window.CSS&&CSS.escape?CSS.escape(id):id)+'"]');if(t){t.click();return}
+    UI.sel[UI.tab]=id;UI.libOpen=false;UI.rOpen=null}
   else if(act==='lqx'){UI.lq[UI.tab]='';lRedraw();const i=document.getElementById('lq');if(i){i.value='';i.focus()}return}
   else if(act==='go'){UI.view=null;UI.rOpen=null;UI.tab=b.dataset.tab;UI.sel[UI.tab]=id;UI.filter='all'}
   else if(act==='statgo'){UI.view=null;UI.tab=b.dataset.tab;UI.sel[UI.tab]=id;UI.filter='all';UI.toSheet=true;window.scrollTo({top:0,behavior:'smooth'})}
