@@ -3569,7 +3569,7 @@ html.lite .pvdg{background:rgb(10 12 12 / .55)}
 .hsel select{appearance:none;-webkit-appearance:none;border:0;background:transparent;color:#fff;font:600 15px var(--body);cursor:pointer;outline:none;padding-right:2px}
 .hsel select option{color:#141414}
 .hmo{display:flex;gap:0}
-.hmo-l{flex:0 0 230px;position:relative}
+.hmo-l{flex:0 0 260px;max-width:260px;position:relative}
 .hmo-s{position:sticky;top:78px;padding-top:8px}
 .hmo-n{font:900 48px/.9 Archivo,var(--display);letter-spacing:-.035em}
 .hmo-y{font-size:13px;margin-top:6px}
@@ -3716,10 +3716,14 @@ html.lite .pvdg{background:rgb(10 12 12 / .55)}
   .stre-r{flex-direction:column}
   .stnow{border-right:0;padding-right:0}
   .stre-l{width:100%}
-  .stpod{gap:18px;justify-content:center}
-  .stp .pvpack{--ps:120px!important}.stp.big .pvpack{--ps:150px!important}
-  .stp-ph{--s:120px!important}.stp.big .stp-ph{--s:150px!important}
-  .str-b{display:none}
+  .stpod{gap:12px;justify-content:center;flex-wrap:nowrap;padding-top:28px}
+  .stp{flex:1 1 0;min-width:0}
+  .stp .pvpack{--ps:84px!important}.stp.big .pvpack{--ps:104px!important}
+  .stp-ph{--s:84px!important;font-size:28px}.stp.big .stp-ph{--s:104px!important}
+  .stp-n,.stp.big .stp-n{font-size:40px;top:-18px}
+  .stp-t>b,.stp.big .stp-t>b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .stp-t .pvmono{font-size:11px}.stp-t .pvmono b,.stp.big .stp-t .pvmono b{font-size:16px}
+  .str-b{display:none}.str{gap:10px;padding:8px 4px}.str-k{width:20px;font-size:16px}.str-c{width:auto}
 }
 /* Listen list: the crate */
 .llover:has(.crate){align-items:flex-end}
@@ -4490,6 +4494,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.22-h', note:'REDESIGN POLISH. Scoring habits on your page now says how much your albums beat (or trail) their songs on average. On phones, the Stats top 3 sit side by side as a small podium instead of stacking, and the song rows have more room for titles. History\u2019s month column is a little wider, so long month names like September no longer push the timeline sideways.'},
   {v:'2026.11.22-g', note:'ACCOUNT PAGES REDESIGN (yours and friends\u2019). The page colors now come from your account color mixed with your top-rated albums (a friend\u2019s page uses theirs). The big bead record is the hero beside your name, a stats line, your friend code chip, whether friends can see your page, and Share my page; tapping a bead still pops that album out. The tabs are glass pills (Overview, Albums, Shows & films, Settings). OVERVIEW: a row of big numbers; TOP SHELF, your 5 highest with records peeking out (same tie-break ranking as everywhere); the SCORE SPECTRUM (tap a score to see those albums); ALBUMS RATED PER MONTH where each block is one album in its own color; and the Year in review, Scoring habits and Top artists cards. Albums and Settings keep everything they had, in the new look. A FRIEND\u2019S PAGE adds two overlapping records with your taste match, WHERE YOU SPLIT and WHERE YOU AGREE, and WHAT THEY LOVE THAT YOU HAVEN\u2019T HEARD, with one tap to add it to your Listen list (it remembers it came from their page).'},
   {v:'2026.11.22-f', note:'FRIENDS SHEET REDESIGN. Friends is now a glass drawer on the right over whatever page you\u2019re on (a full-height sheet on a phone), with your friends\u2019 faces at the top. ACTIVITY: requests sit at the top with Accept and Decline, then what friends rated grouped Today / Yesterday / This week, each one a sleeve with the friend\u2019s face on it, their rating pill, review snippets, and NEW: the gap to your own score ("you 8.5 +1"). FRIENDS: each friend is a sleeve in their account color with a record whose lit groove is your taste match (once you\u2019ve opened their page), the last album they rated tucked in the corner, sorted by best match or A to Z. Friends who aren\u2019t sharing are dimmed. ADD: your friend code as a ticket with Copy and Share, three short steps, the code box, and the requests waiting for them.'},
   {v:'2026.11.22-e', note:'LISTEN LIST AS THE CRATE. The Listen list is now a wide sheet that rises from the bottom (full screen on a phone) in the colors of the album at the front. UP NEXT is that album, big, with its record pulled out and spinning slowly, its grooves lit for the songs you\u2019ve heard, when you added it and where it came from, friends\u2019 scores when they\u2019ve rated it, a segment bar of songs heard, Play (it tells you which song is next), Open album, Move to back and Remove. The rest stand in the crate as sleeves with their records peeking out; they lift on hover, show a progress bar, and say when they were added, where they came from, or that they\u2019re not in your log yet. Add an album from the bar at the top. Fresh pressings are the new releases with a date stamp (white for ones not out yet), with Add, Artist, Dismiss, Check now and the daily-checks switch. Heard sits last with checkmarks and Clear.'},
@@ -9796,7 +9801,7 @@ function accInsightsHtml(P){
     const cnt={};for(const x of b){const k=Math.min(10,Math.max(1,Math.round(x.r)));cnt[k]=(cnt[k]||0)+1}
     const mode=Object.keys(cnt).map(Number).sort((p,q)=>cnt[q]-cnt[p]||q-p)[0];
     const tens=b.filter(x=>x.r>=10).length,hi=Math.round(100*b.filter(x=>x.r>=8).length/b.length);
-    h+=`<div class="pf-card pf-c-hab${an}" style="--i:${n++}"><h3>Scoring habits</h3><div class="pf-mini"><div><b>${mode}</b><span>most common score</span></div><div><b>${tens}</b><span>perfect 10${tens===1?'':'s'} given</span></div><div><b>${hi}%</b><span>rated 8 or higher</span></div></div></div>`;
+    h+=`<div class="pf-card pf-c-hab${an}" style="--i:${n++}"><h3>Scoring habits</h3><div class="pf-mini"><div><b>${mode}</b><span>most common score</span></div><div><b>${tens}</b><span>perfect 10${tens===1?'':'s'} given</span></div><div><b>${hi}%</b><span>rated 8 or higher</span></div></div>${pfHabits(P)}</div>`;
   }
   const dated=al.filter(x=>/^\d{4}-\d\d/.test(x.d||''));
   if(dated.length>=3){
