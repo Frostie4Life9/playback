@@ -1719,6 +1719,18 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .hxadd .hxy{color:rgb(255 255 255 / .55)}
 .hxaddp{border:1px solid rgb(255 255 255 / .12);border-radius:20px;padding:18px 20px 20px;max-width:640px;background:color-mix(in srgb,var(--surface) 86%,transparent);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);transform-origin:50% 0}
 .hxaddp form{display:flex;flex-direction:column;gap:8px}
+.rsform{margin-bottom:6px}
+.rslist{list-style:none;margin:10px 0 4px;padding:0;display:flex;flex-direction:column;gap:6px;max-height:420px;overflow:auto}
+.rsrow{display:flex;align-items:center;gap:12px;padding:8px;border-radius:14px;background:rgb(255 255 255 / .05);animation:rsIn .35s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i) * 35ms)}
+.rsrow img,.rsrow .rsimg{width:48px;height:48px;border-radius:8px;object-fit:cover;flex:none;background:rgb(255 255 255 / .08);transition:transform .25s}
+.rsrow:hover img{transform:scale(1.06) rotate(-2deg)}
+.rstx{flex:1;min-width:0;display:flex;flex-direction:column}.rstx b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rstx span{font-size:.82em;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rsact{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.rsact .btn{padding:6px 12px;font-size:.85em}
+.rshand{margin-top:12px}.rshand summary{cursor:pointer;opacity:.75;margin-bottom:8px}.rshand[open] form{animation:rsIn .3s both}
+@keyframes rsIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (max-width:560px){.rsrow{flex-wrap:wrap}.rsact{width:100%}}
+@media (prefers-reduced-motion:reduce){.rsrow,.rshand[open] form{animation:none}}
+
 .hxaddh{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
 .hxaddh h3{margin:0;font-size:17px}
 .hxaddx{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;border:0;background:rgb(255 255 255 / .1);color:var(--ink);cursor:pointer;transition:background .2s,transform .3s}
@@ -4494,6 +4506,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.22-k', note:'ADD A RELEASE BY SEARCH: the Add a release sleeve at the end of an artist\u2019s Releases now starts with a search. Type a song, album or performer (like Clair de lune, or Martin Jones) and Playback asks Spotify (or Apple Music, if that is where your imports come from) for that artist\u2019s matching songs and albums, with cover, performer and year. Add song brings in that exact recording as a single; Add its album or Add album brings in the whole album, keeping only that artist\u2019s songs when an album mixes composers. It costs one or two calls, made for composers and other huge catalogs you can\u2019t import whole. Releases added this way stay when you Check for new releases, a song already on the page under the same title is skipped, and the new release opens right away. Your plays of that exact recording count on it. Adding by hand is still there under Or add one by hand.'},
   {v:'2026.11.22-j', note:'A COMPOSER\u2019S PLAYS COUNT ON ANY RECORDING: plays of a composer are now matched by the piece, not the exact track title. Spotify calls your most played Debussy track \u201cClair de Lune, L. 32\u201d, while Debussy\u2019s page has Clair de lune inside Suite bergamasque, so its 174 plays never reached it. Now any recording of Clair de lune counts on that song (and any Des pas sur la neige on the Pr\u00e9ludes, and so on), so you can rate it and it shows its plays. Updating an artist who was imported before composers were handled (the 3-album Apple version of Debussy) now spots that he is a composer too and rebuilds him by work.'},
   {v:'2026.11.22-i', note:'COMPOSERS IMPORT PROPERLY: adding a classical composer like Claude Debussy used to break. Spotify lists him on thousands of releases (every pianist\u2019s Clair de lune), so the import ran out of Spotify\u2019s allowance, and Apple Music only found 3 albums because it credits the performers. Now a composer comes in by WORK: Playback reads his most played recordings, groups them into the pieces they belong to, and brings each piece in once from its most played recording. Suites and sets (Suite bergamasque, La mer, the Pr\u00e9ludes) come in whole with their movements and get an album rating; single pieces (R\u00eaverie, Syrinx) come in as singles. A lone Clair de lune folds into Suite bergamasque instead of showing twice, and pieces he only orchestrated (Satie\u2019s Gymnop\u00e9dies) stay out. The performer shows as \u201cwith\u201d, and the dates are the recording\u2019s. This takes about 30 to 50 Spotify calls instead of thousands, and composers are spotted from MusicBrainz (\u201cFrench composer\u201d) or from Spotify listing more than 400 releases. Check for new releases on a composer reads him the same way.'},
   {v:'2026.11.22-h', note:'REDESIGN POLISH. Scoring habits on your page now says how much your albums beat (or trail) their songs on average. On phones, the Stats top 3 sit side by side as a small podium instead of stacking, and the song rows have more room for titles. History\u2019s month column is a little wider, so long month names like September no longer push the timeline sideways.'},
@@ -6596,6 +6609,76 @@ function mbSide(){
   return h;
 }
 
+
+/* ---------- Add a release by search ----------
+   For artists too big to import whole (a composer, a huge back catalog): search Spotify (or Apple Music when Spotify isn't
+   the import source) for one song or album and add that exact recording. One or two calls, nothing else is read. The
+   release is kept apart from imported ones (src 'pick'), so Check for new releases never removes it, and a song already
+   on the artist's page under the same title is skipped like when adding by hand. */
+const RSX={q:'',busy:false,err:'',res:null,aid:'',adding:''};
+const rsMine=(a,list)=>(list||[]).some(x=>x&&x.name&&nArtist(x.name)===nArtist(a.name));
+async function relSearch(a,q){
+  q=String(q||'').trim();if(!q||RSX.busy)return;
+  Object.assign(RSX,{q,busy:true,err:'',res:null,aid:a.id});render();
+  try{
+    const res=[];
+    if(importSource()==='sp'){
+      const j=await spApi('search?'+new URLSearchParams({q:'artist:"'+a.name+'" '+q,type:'track,album',market:'from_token',limit:10}));
+      const oth=xs=>(xs||[]).filter(x=>x&&x.name&&nArtist(x.name)!==nArtist(a.name)).map(x=>x.name).slice(0,3);
+      for(const t of ((j.tracks&&j.tracks.items)||[]))if(t&&t.album&&rsMine(a,t.artists))
+        res.push({src:'sp',kind:'song',id:t.id,title:t.name,sub:t.album.name,w:oth(t.artists),img:spPickImg(t.album.images||[]),date:t.album.release_date||'',alb:{id:t.album.id,name:t.album.name,type:t.album.album_type,n:t.album.total_tracks}});
+      for(const al of ((j.albums&&j.albums.items)||[]))if(al&&rsMine(a,al.artists))
+        res.push({src:'sp',kind:'album',id:al.id,title:al.name,sub:(al.total_tracks||'?')+' songs',w:oth(al.artists),img:spPickImg(al.images||[]),date:al.release_date||'',alb:{id:al.id,name:al.name,type:al.album_type,n:al.total_tracks}});
+    }else{
+      const [songs,albs]=[await amApi('search',{term:a.name+' '+q,entity:'song',limit:10}),await amApi('search',{term:a.name+' '+q,entity:'album',limit:8})];
+      const img=c=>String(c.artworkUrl100||'').replace(/\/\d+x\d+(?:bb)?\.(?:jpg|png|webp)$/i,'/400x400bb.jpg');
+      const typ=c=>/\s-\s(?:Single|EP)$/i.test(c.collectionName||'')?'single':'album';
+      for(const t of songs)if(t&&t.wrapperType==='track')
+        res.push({src:'am',kind:'song',id:t.trackId,title:t.trackName,sub:t.collectionName,w:[t.artistName].filter(x=>x&&nArtist(x)!==nArtist(a.name)),img:img(t),date:String(t.releaseDate||'').slice(0,10),alb:{id:t.collectionId,name:t.collectionName,type:typ(t),n:t.trackCount}});
+      for(const c of albs)if(c&&c.collectionId)
+        res.push({src:'am',kind:'album',id:c.collectionId,title:String(c.collectionName||'').replace(/\s-\s(?:Single|EP)$/i,''),sub:(c.trackCount||'?')+' songs',w:[c.artistName].filter(x=>x&&nArtist(x)!==nArtist(a.name)),img:img(c),date:String(c.releaseDate||'').slice(0,10),alb:{id:c.collectionId,name:c.collectionName,type:typ(c),n:c.trackCount}});
+    }
+    RSX.res=res;if(!res.length)RSX.err='Nothing by '+a.name+' matched that. Try fewer words, or the album or performer’s name.';
+  }catch(e){RSX.err=e&&e.code==='quota'||e&&e.code==='limited'?'Spotify’s limit is used up for now. Try again later, or switch imports to Apple Music in Settings.':'Search did not work ('+((e&&(e.code||e.message))||'error')+'). Try again in a moment.'}
+  RSX.busy=false;render();
+}
+/* one song: a single holding that recording; a whole album: its songs by this artist (a recital album can mix composers) */
+async function relPick(a,r,whole){
+  if(RSX.adding)return;RSX.adding=r.id+(whole?'a':'s');render();
+  try{
+    let songs=[r.title],title=r.title,kind='Single',alb=r.alb,key=r.src+':'+(whole?'al:'+alb.id:'tr:'+r.id);
+    if(whole||r.kind==='album'){
+      if(r.src==='sp'){const j=await spApi('albums/'+alb.id+'?market=from_token');
+        const tr=((j.tracks&&j.tracks.items)||[]).slice();let next=j.tracks&&j.tracks.next,g=0;
+        while(next&&g++<20){const k=await spApi(spRel(next));tr.push(...(k.items||[]));next=k.next}
+        const mine=tr.filter(t=>t&&t.name&&rsMine(a,t.artists));songs=(mine.length?mine:tr).map(t=>t.name)}
+      else{const rows=(await amApi('lookup',{id:alb.id,entity:'song',limit:200})).filter(t=>t&&t.wrapperType==='track')
+        .sort((x,y)=>(x.discNumber||1)-(y.discNumber||1)||(x.trackNumber||0)-(y.trackNumber||0));songs=rows.map(t=>t.trackName)}
+      title=String(alb.name||r.title).replace(/\s-\s(?:Single|EP)$/i,'');key=r.src+':al:'+alb.id;
+      kind=alb.type==='compilation'?'Compilation':alb.type==='single'?(songs.length>=4?'EP':'Single'):'Studio album';
+    }
+    const gid=sid(a.id,'pick',key);
+    if(a.groups.some(g=>g.id===gid)){UI.toAlb=gid;RSX.res=null;RSX.adding='';UI.relAdd=null;render();return}
+    const have=new Set(artistItems(a).map(mbItemKey)),items=[];let skipped=0;
+    for(const t of songs){const k=mbKeyOf(t);if(have.has(k)){skipped++;continue}have.add(k);items.push({id:sid(a.id,'pick',key,t),title:t})}
+    if(!items.length){RSX.err='Every song on that '+(whole?'album':'release')+' is already on '+a.name+'’s page.';RSX.adding='';render();return}
+    const dt=dtClean(r.date);
+    a.groups.push({id:gid,src:'pick',...(r.src==='sp'?{mbid:'sp:'+alb.id}:{amc:String(alb.id)}),title,year:dt?dt.slice(0,4):'—',kind,...(dt?{dt}:{}),...(r.img?{img:r.img}:{}),...(r.w&&r.w.length?{w:r.w}:{}),items});
+    Object.assign(RSX,{res:null,q:'',err:skipped?skipped+' song'+(skipped===1?' was':'s were')+' already on the page, so '+(skipped===1?'it was':'they were')+' skipped.':''});
+    UI.relAdd=null;UI.toAlb=gid;touch();
+  }catch(e){RSX.err=e&&(e.code==='quota'||e.code==='limited')?'Spotify’s limit is used up for now. Try again later.':'Could not read that release. Try again in a moment.'}
+  RSX.adding='';render();
+}
+function relSearchHtml(a){
+  const on=RSX.aid===a.id,res=on&&RSX.res||[];
+  const row=(r,i)=>`<li class="rsrow" style="--i:${i}">${r.img?`<img src="${esc(r.img)}" alt="" loading="lazy">`:'<span class="rsimg"></span>'}
+    <div class="rstx"><b>${esc(r.title)}</b><span>${esc([r.kind==='song'?r.sub:'Album · '+r.sub,r.w&&r.w.length?'with '+r.w.join(', '):'',String(r.date||'').slice(0,4)].filter(Boolean).join(' · '))}</span></div>
+    <div class="rsact">${r.kind==='song'?`<button type="button" class="btn" data-act="relpick" data-a="${a.id}" data-i="${i}" data-w="0" ${RSX.adding?'disabled':''}>${RSX.adding===r.id+'s'?'Adding…':'Add song'}</button>`:''}<button type="button" class="btn${r.kind==='album'?' primary':''}" data-act="relpick" data-a="${a.id}" data-i="${i}" data-w="1" ${RSX.adding?'disabled':''}>${RSX.adding===r.id+'a'?'Adding…':r.kind==='song'?'Add its album':'Add album'}</button></div></li>`;
+  return `<form data-form="relsearch" data-a="${a.id}" class="rsform"><label class="label" for="rs-q">Find a recording on ${importSource()==='sp'?'Spotify':'Apple Music'}</label>
+      <div class="row2"><input id="rs-q" name="q" value="${on?esc(RSX.q):''}" placeholder="A song, album or performer, like Clair de lune" autocomplete="off" enterkeyhint="search"><button class="btn primary" ${RSX.busy?'disabled':''}>${RSX.busy&&on?'Searching…':'Search'}</button></div></form>
+    ${on&&RSX.err?`<p class="note rserr" role="status">${esc(RSX.err)}</p>`:''}
+    ${res.length?`<ul class="rslist">${res.map(row).join('')}</ul>`:''}`;
+}
 /* ---------- Rate Your Music album ratings ----------
    RYM's export is one row per rated release (ratings already run 1-10). Each
    rating goes onto the matching album or EP here; anything not here yet waits in
@@ -13087,13 +13170,15 @@ function artistView(a){heroLook(a.id);
   const addIn=UI.relAddAnim;UI.relAddAnim=false;
   const addP=UI.relAdd===a.id?`<div class="hxaddp${addIn?' in':''}" role="region" aria-label="Add a release">
       <div class="hxaddh"><h3>Add a release</h3><button class="hxaddx" data-act="reladd" data-a="${a.id}" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      ${relSearchHtml(a)}
+      <details class="rshand"><summary>Or add one by hand</summary>
       <form data-form="group" data-a="${a.id}">
         <div class="row2"><input id="g-title" name="title" placeholder="Release title" required><input id="g-year" name="year" placeholder="Year" style="max-width:90px"></div>
         <select id="g-kind" name="kind" aria-label="Release type"><option>Studio album</option><option>EP</option><option>Single</option><option>B-sides &amp; singles</option><option>Compilation</option><option>Live</option><option>Archival release</option><option>Other</option></select>
         <p class="note">A song that's already listed for this artist is skipped, so nothing shows up twice.</p>
         <textarea id="g-tracks" name="tracks" placeholder="One track per line" required></textarea>
         <button class="btn primary">Add release</button>
-      </form></div>`:'';
+      </form></details></div>`:'';
   const more=`${gf}
     ${simBox(a)}`;
   return heroX(a,all,done,rated,p,phUrl,more,addP);
@@ -13693,6 +13778,7 @@ document.addEventListener('click',ev=>{
   else if(act==='llclear'){S.listen=listenAll().filter(x=>!llResolve(x).heard);touch()}
   else if(act==='llgo'){UI.view=null;UI.rel=null;UI.tab='music';UI.sel.music=b.dataset.a;UI.libOpen=false;UI.rOpen=null;UI.llOpen=false;UI.filter='all';
     if(b.dataset.g)UI.toAlb=b.dataset.g;else UI.toSheet=true}   /* a listen-list album opens that album; Collection's Open in Music has no album, so it still goes to the artist */
+  else if(act==='relpick'){const a=S.music.find(x=>x.id===b.dataset.a),r=RSX.res&&RSX.res[+b.dataset.i];if(a&&r)relPick(a,r,b.dataset.w==='1');return}
   else if(act==='reladd'){const aid=b.dataset.a,on=UI.relAdd===aid,pn=document.querySelector('.hxaddp');
     if(on&&pn&&!noMotion()){if(pn.classList.contains('out'))return;pn.classList.add('out');document.querySelectorAll('.hxadd,.hxaddb').forEach(x=>x.setAttribute('aria-expanded','false'));setTimeout(()=>{UI.relAdd=null;render()},220);return}
     UI.relAdd=on?null:aid;UI.relAddAnim=!on;
@@ -13925,6 +14011,7 @@ document.addEventListener('submit',ev=>{
     if(rating(id)&&/^\d{4}-\d\d-\d\d$/.test(v)&&v<=todayISO())S.marks[id]={...S.marks[id],rd:v};
     else if(rating(id)&&!v){const m0={...S.marks[id]};delete m0.rd;S.marks[id]=m0}lsFromMark(id);
     UI.hEdit=null;touch();render();return}
+  if(kind==='relsearch'){const a=S.music.find(x=>x.id===f.dataset.a);if(a)relSearch(a,d.q);return}
   if(kind==='listen'){if(llAdd(d.artist,d.title))touch();UI.llOpen=true;render();const el=document.getElementById('wl-artist');if(el)el.focus();return}
   if(kind==='spcid'){const c=(d.cid||'').trim();
     if(!/^[0-9a-f]{32}$/i.test(c)){SPX.err='That does not look like a Client ID. It is 32 letters and numbers, under Settings on your Spotify app\u2019s page.';render();return}
