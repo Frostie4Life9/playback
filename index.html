@@ -4506,7 +4506,8 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
-  {v:'2026.11.22-k', note:'ADD A RELEASE BY SEARCH: the Add a release sleeve at the end of an artist\u2019s Releases now starts with a search. Type a song, album or performer (like Clair de lune, or Martin Jones) and Playback asks Spotify (or Apple Music, if that is where your imports come from) for that artist\u2019s matching songs and albums, with cover, performer and year. Add song brings in that exact recording as a single; Add its album or Add album brings in the whole album, keeping only that artist\u2019s songs when an album mixes composers. It costs one or two calls, made for composers and other huge catalogs you can\u2019t import whole. Releases added this way stay when you Check for new releases, a song already on the page under the same title is skipped, and the new release opens right away. Your plays of that exact recording count on it. Adding by hand is still there under Or add one by hand.'},
+  {v:'2026.11.22-l', note:'PICKED RECORDINGS STAY THEIR OWN: a release you add by search for a composer keeps its own songs even when an imported work has the same title, and Check for new releases never folds them into the imported ones or merges a picked album into an imported one with the same name. Song and album counts in the search say 1 song, not 1 songs.'},
+  {v:'2026.11.22-k', note:'ADD A RELEASE BY SEARCH: the Add a release sleeve at the end of an artist\u2019s Releases now starts with a search. Type a song, album or performer (like Clair de lune, or Martin Jones) and Playback asks Spotify (or Apple Music, if that is where your imports come from) for that artist\u2019s matching songs and albums, with cover, performer and year. Add song brings in that exact recording as a single; Add its album or Add album brings in the whole album, keeping only that artist\u2019s songs when an album mixes composers. It costs one or two calls, made for composers and other huge catalogs you can\u2019t import whole. Releases added this way stay when you Check for new releases, for a composer each picked recording keeps its own songs (so you can rate Martin Jones\u2019s Clair de lune apart from the one in Suite bergamasque), for anyone else a song already on the page is skipped, and the new release opens right away. Your plays of that exact recording count on it. Adding by hand is still there under Or add one by hand.'},
   {v:'2026.11.22-j', note:'A COMPOSER\u2019S PLAYS COUNT ON ANY RECORDING: plays of a composer are now matched by the piece, not the exact track title. Spotify calls your most played Debussy track \u201cClair de Lune, L. 32\u201d, while Debussy\u2019s page has Clair de lune inside Suite bergamasque, so its 174 plays never reached it. Now any recording of Clair de lune counts on that song (and any Des pas sur la neige on the Pr\u00e9ludes, and so on), so you can rate it and it shows its plays. Updating an artist who was imported before composers were handled (the 3-album Apple version of Debussy) now spots that he is a composer too and rebuilds him by work.'},
   {v:'2026.11.22-i', note:'COMPOSERS IMPORT PROPERLY: adding a classical composer like Claude Debussy used to break. Spotify lists him on thousands of releases (every pianist\u2019s Clair de lune), so the import ran out of Spotify\u2019s allowance, and Apple Music only found 3 albums because it credits the performers. Now a composer comes in by WORK: Playback reads his most played recordings, groups them into the pieces they belong to, and brings each piece in once from its most played recording. Suites and sets (Suite bergamasque, La mer, the Pr\u00e9ludes) come in whole with their movements and get an album rating; single pieces (R\u00eaverie, Syrinx) come in as singles. A lone Clair de lune folds into Suite bergamasque instead of showing twice, and pieces he only orchestrated (Satie\u2019s Gymnop\u00e9dies) stay out. The performer shows as \u201cwith\u201d, and the dates are the recording\u2019s. This takes about 30 to 50 Spotify calls instead of thousands, and composers are spotted from MusicBrainz (\u201cFrench composer\u201d) or from Spotify listing more than 400 releases. Check for new releases on a composer reads him the same way.'},
   {v:'2026.11.22-h', note:'REDESIGN POLISH. Scoring habits on your page now says how much your albums beat (or trail) their songs on average. On phones, the Stats top 3 sit side by side as a small podium instead of stacking, and the song rows have more room for titles. History\u2019s month column is a little wider, so long month names like September no longer push the timeline sideways.'},
@@ -6424,7 +6425,7 @@ function mbMerge(art,incoming,versions,tidy,sp){
       placed.add(k);if(looseFold(i,k)||fuzzyFold(k))continue;items.push(Object.assign({},i,{id:idFor(k)}))}
     const moved=land,moves=nFold;land=null;
     /* a hand-made album with the same title as a new release is that release: its leftover songs go onto it, not into a card of their own */
-    const same=items.length&&nTitle(g.title)?(groups.find(G=>nTitle(G.title)===nTitle(g.title)&&G.kind===g.kind)||groups.find(G=>nTitle(G.title)===nTitle(g.title))):null;
+    const same=items.length&&g.src!=='pick'&&nTitle(g.title)?(groups.find(G=>nTitle(G.title)===nTitle(g.title)&&G.kind===g.kind)||groups.find(G=>nTitle(G.title)===nTitle(g.title))):null;
     if(same){for(const i of items)if(!same.items.some(x=>x.id===i.id))same.items.push(i)}
     else if(items.length)manual.push(Object.assign({},g,{items}));
     else if(rating(g.id)&&!incoming.some(G=>nTitle(G.title)===nTitle(g.title))){
@@ -6628,7 +6629,7 @@ async function relSearch(a,q){
       for(const t of ((j.tracks&&j.tracks.items)||[]))if(t&&t.album&&rsMine(a,t.artists))
         res.push({src:'sp',kind:'song',id:t.id,title:t.name,sub:t.album.name,w:oth(t.artists),img:spPickImg(t.album.images||[]),date:t.album.release_date||'',alb:{id:t.album.id,name:t.album.name,type:t.album.album_type,n:t.album.total_tracks}});
       for(const al of ((j.albums&&j.albums.items)||[]))if(al&&rsMine(a,al.artists))
-        res.push({src:'sp',kind:'album',id:al.id,title:al.name,sub:(al.total_tracks||'?')+' songs',w:oth(al.artists),img:spPickImg(al.images||[]),date:al.release_date||'',alb:{id:al.id,name:al.name,type:al.album_type,n:al.total_tracks}});
+        res.push({src:'sp',kind:'album',id:al.id,title:al.name,sub:(al.total_tracks||'?')+(al.total_tracks===1?' song':' songs'),w:oth(al.artists),img:spPickImg(al.images||[]),date:al.release_date||'',alb:{id:al.id,name:al.name,type:al.album_type,n:al.total_tracks}});
     }else{
       const [songs,albs]=[await amApi('search',{term:a.name+' '+q,entity:'song',limit:10}),await amApi('search',{term:a.name+' '+q,entity:'album',limit:8})];
       const img=c=>String(c.artworkUrl100||'').replace(/\/\d+x\d+(?:bb)?\.(?:jpg|png|webp)$/i,'/400x400bb.jpg');
@@ -6636,7 +6637,7 @@ async function relSearch(a,q){
       for(const t of songs)if(t&&t.wrapperType==='track')
         res.push({src:'am',kind:'song',id:t.trackId,title:t.trackName,sub:t.collectionName,w:[t.artistName].filter(x=>x&&nArtist(x)!==nArtist(a.name)),img:img(t),date:String(t.releaseDate||'').slice(0,10),alb:{id:t.collectionId,name:t.collectionName,type:typ(t),n:t.trackCount}});
       for(const c of albs)if(c&&c.collectionId)
-        res.push({src:'am',kind:'album',id:c.collectionId,title:String(c.collectionName||'').replace(/\s-\s(?:Single|EP)$/i,''),sub:(c.trackCount||'?')+' songs',w:[c.artistName].filter(x=>x&&nArtist(x)!==nArtist(a.name)),img:img(c),date:String(c.releaseDate||'').slice(0,10),alb:{id:c.collectionId,name:c.collectionName,type:typ(c),n:c.trackCount}});
+        res.push({src:'am',kind:'album',id:c.collectionId,title:String(c.collectionName||'').replace(/\s-\s(?:Single|EP)$/i,''),sub:(c.trackCount||'?')+(c.trackCount===1?' song':' songs'),w:[c.artistName].filter(x=>x&&nArtist(x)!==nArtist(a.name)),img:img(c),date:String(c.releaseDate||'').slice(0,10),alb:{id:c.collectionId,name:c.collectionName,type:typ(c),n:c.trackCount}});
     }
     RSX.res=res;if(!res.length)RSX.err='Nothing by '+a.name+' matched that. Try fewer words, or the album or performer’s name.';
   }catch(e){RSX.err=e&&e.code==='quota'||e&&e.code==='limited'?'Spotify’s limit is used up for now. Try again later, or switch imports to Apple Music in Settings.':'Search did not work ('+((e&&(e.code||e.message))||'error')+'). Try again in a moment.'}
@@ -6659,8 +6660,10 @@ async function relPick(a,r,whole){
     }
     const gid=sid(a.id,'pick',key);
     if(a.groups.some(g=>g.id===gid)){UI.toAlb=gid;RSX.res=null;RSX.adding='';UI.relAdd=null;render();return}
-    const have=new Set(artistItems(a).map(mbItemKey)),items=[];let skipped=0;
-    for(const t of songs){const k=mbKeyOf(t);if(have.has(k)){skipped++;continue}have.add(k);items.push({id:sid(a.id,'pick',key,t),title:t})}
+    /* a composer's pieces are recorded again and again under the same title: each picked recording keeps its own copy
+       (the "@" key keeps imports from folding it into the imported song). Anyone else: a song already there is skipped. */
+    const own=!!a.composer,have=new Set(own?[]:artistItems(a).map(mbItemKey)),items=[];let skipped=0;
+    for(const t of songs){const k=mbKeyOf(t);if(have.has(k)){skipped++;continue}have.add(k);items.push({id:sid(a.id,'pick',key,t),title:t,...(own?{k:k+'@'+gid}:{})})}
     if(!items.length){RSX.err='Every song on that '+(whole?'album':'release')+' is already on '+a.name+'’s page.';RSX.adding='';render();return}
     const dt=dtClean(r.date);
     a.groups.push({id:gid,src:'pick',...(r.src==='sp'?{mbid:'sp:'+alb.id}:{amc:String(alb.id)}),title,year:dt?dt.slice(0,4):'—',kind,...(dt?{dt}:{}),...(r.img?{img:r.img}:{}),...(r.w&&r.w.length?{w:r.w}:{}),items});
