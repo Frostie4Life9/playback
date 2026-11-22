@@ -3545,6 +3545,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.21-n', note:'SMOOTHER SHARE ANIMATION: the animated share card now plays at about 33 frames a second instead of 20, so the record turns, the ring fills and the song bars grow without stepping. Each frame lines up exactly with how GIFs time their frames, so the motion no longer drifts unevenly, and the record now eases up to speed instead of jumping straight into a full spin. Making the animation takes a little longer.'},
   {v:'2026.11.21-m', note:'PLAY, A RICHER INSIDE LEFT, AND THE LAST OLD-STYLE PIECES RESTYLED: an open album has a Play button that starts it from the first song on Spotify, on whichever device has Spotify open (reconnect Spotify once in Settings so Play is allowed to start music). Settings > Play button can switch it to Apple Music, which opens the album in Apple Music. The inside left now shows full spins and hours listened under Plays (song lengths come from Apple Music, once per album), where the album ranks among every album you have rated under the artist rank, and a Hidden gem: a song you rate high but rarely play. The record on the inside left shows which listen you are on. The song average moved out of the album rating pill to its own line heading the song list, so it is not mistaken for the album score. The friends card, the song rating editor and the share card and sheet now use the album\'s colors and the record look. The share sheet also opens above an open album on phones again.'},
   {v:'2026.11.21-l', note:'DELUXE RATING PILL IN THE DELUXE\u2019S COLOR: on an album\u2019s Deluxe edition the rating pill (Your deluxe, song average, record) was still tinted with the standard album\u2019s color. It now takes the deluxe\u2019s own color, matching its song rows and cover.'},
   {v:'2026.11.21-k', note:'CLOSING A DELUXE SWAPS BACK TO STANDARD: closing an album while you are on its Deluxe now plays the same edition swap as the Standard / Deluxe switch, the two sleeves trade places in the Releases row and the standard one ends up in front, with the album left shut. Changing artist with a deluxe open also resets it.'},
@@ -10463,7 +10464,7 @@ async function shareScene(a,g,withSongs,wide){
     /* 2026.11.21-m: soft pools of the cover's color over the gradient, like the artist page's color field */
     [[W*.92,H*.12,W*.75,shMix(base,.42),.55],[W*.05,H*.62,W*.8,shMix(base,-.55),.5],[W*.7,H*.95,W*.7,shMix(base,.18),.45]].forEach(([px,py,pr,c,al])=>{const rg=x.createRadialGradient(px,py,0,px,py,pr);rg.addColorStop(0,'rgba('+c+','+al+')');rg.addColorStop(1,'rgba('+c+',0)');x.fillStyle=rg;x.fillRect(-PX,0,OUTW,H)});
     /* record, sliding out from behind the cover and spinning */
-    const slide=A?1:ease(pr(.1,songs?1:.8)),dcx=cx0+cs/2+(cs*.78-cs/2)*slide,dcy=cy0+cs/2,ang=A?0:(T<=END-DEC?SPIN*T:SPIN*(END-DEC)+SPIN*DEC*(u=>u-u*u/2)(clamp((T-END+DEC)/DEC)));   /* turns at a steady pace after the reveal, then slows to a stop on the last frame */
+    const slide=A?1:ease(pr(.1,songs?1:.8)),dcx=cx0+cs/2+(cs*.78-cs/2)*slide,dcy=cy0+cs/2,UP=.7,spun=t=>t<UP?t*t/(2*UP):t-UP/2,ang=A?0:(T<=END-DEC?SPIN*spun(T):SPIN*spun(END-DEC)+SPIN*DEC*(u=>u-u*u/2)(clamp((T-END+DEC)/DEC)));   /* 2026.11.21-n: eases up to speed instead of starting at full spin, turns at a steady pace, then slows to a stop on the last frame */
     x.save();x.translate(dcx,dcy);x.fillStyle='rgb(14 16 15 / .92)';x.beginPath();x.arc(0,0,cs/2,0,7);x.fill();
     /* one groove per song, same as the record in the app (a long release folds songs into at most 22 grooves); the ones you have rated light up in the cover's color, inner ones first */
     {const hd=f.its.map(i=>!!rating(i.id)),n0=hd.length,R=Math.min(n0,22),gv=shMix(base,.62);x.lineWidth=5;
@@ -10534,7 +10535,7 @@ async function shareScene(a,g,withSongs,wide){
    the file only stores what moves. Takes a few seconds; progress is reported as it goes. */
 async function shareGif(a,g,prog,withSongs){
   const G=window.GIFenc;if(!G)throw new Error('no encoder');
-  const sc=await shareScene(a,g,withSongs,true),FPS=20,N=Math.round(sc.LOOP*FPS),OW=720,OH=Math.round(sc.H*OW/sc.W);
+  const sc=await shareScene(a,g,withSongs,true),CS=3,FPS=100/CS,N=Math.round(sc.LOOP*FPS)   /* 2026.11.21-n: 3/100 s a frame (about 33 fps, up from 20). GIF delays are whole hundredths, so frame times use the same step and never drift */,OW=720,OH=Math.round(sc.H*OW/sc.W);
   const big=document.createElement('canvas');big.width=sc.W;big.height=sc.H;const bx=big.getContext('2d');
   const sm=document.createElement('canvas');sm.width=OW;sm.height=OH;const sx=sm.getContext('2d',{willReadFrequently:true});sx.imageSmoothingQuality='high';
   const grab=T=>{sc.paint(bx,T);sx.drawImage(big,0,0,OW,OH);return sx.getImageData(0,0,OW,OH).data};
@@ -10546,7 +10547,7 @@ async function shareGif(a,g,prog,withSongs){
   /* after the reveal only the part of the record that sticks out from behind the cover keeps changing */
   const ks=OW/sc.W,RX=Math.floor((645+sc.PX)*ks),RY=Math.floor(84*ks),RW=Math.min(Math.ceil(195*ks)+2,OW-RX),RH=Math.min(Math.ceil(588*ks)+2,OH-RY);
   for(let k=0;k<N;k++){
-    const T=k/FPS,strip=!!prev&&T>=sc.REVEAL&&!window.__gifFull;
+    const T=k*CS/100,strip=!!prev&&T>=sc.REVEAL&&!window.__gifFull;
     let idx,out;
     if(strip){
       sc.paint(bx,T);sx.drawImage(big,0,0,OW,OH);const d=sx.getImageData(RX,RY,RW,RH).data;
@@ -10561,7 +10562,7 @@ async function shareGif(a,g,prog,withSongs){
       prev=idx;
     }
     /* play once and stay on the finished card: no loop, and the last frame is held for 30 s in case an app loops anyway */
-    const dl=k===N-1?30000:1000/FPS;
+    const dl=k===N-1?30000:CS*10;
     enc.writeFrame(out,OW,OH,k===0?{palette:pal,delay:dl,repeat:-1}:{delay:dl,transparent:true,transparentIndex:255,dispose:1});
     prog&&prog(k+1,N);await new Promise(r=>setTimeout(r));
   }
