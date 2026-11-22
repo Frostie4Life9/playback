@@ -3545,6 +3545,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.21-q', note:'SHARE CARD POLISH AND A STORY SIZE: the record on the share card is now a solid record with a soft shadow, fine grooves and lit grooves tinted in the album\u2019s color, so it reads as vinyl even on pale covers. Song bars fill deeper in the album color, so your favorite songs stand out. Favorites are chips, each with its score on a little record, popping in one by one in the animation. A footer shows whose log it is and the month, with the Playback mark. The share sheet has a new Post / Story switch: Story makes a 1080 \u00d7 1920 card for Instagram and Snapchat stories, still or animated.'},
   {v:'2026.11.21-p', note:'ONE \u201cHIGHEST RATED\u201d ORDER EVERYWHERE, AND READABLE SONG SCORES ON THE SHARE CARD: every highest or lowest sort now breaks ties the same way the album rank does: album rating, then song average (left-out songs stay out), then plays. That covers the big record and the Albums wall on account pages, the best-album pick, the month and top-artist cards, the year card, History sorted by score, Stats\u2019 top albums and an artist\u2019s Releases sorted by rating. On a friend\u2019s page the song average comes from the song ratings they share (plays are not shared). On the share card the little score records next to each song are bigger, with a larger number, so they read at phone size.'},
   {v:'2026.11.21-o', note:'RANKS THAT DO NOT TIE: an album\u2019s rank (on the inside left of the open album) used to go by the album rating alone, so every 10 was #1 and every 9 shared the same spot. Albums are now ordered by album rating, then by song average (songs you left out of the average stay out), then by plays, more plays ranking higher. Only albums even on all three share a rank. The rank also shows when you have rated just one album by an artist, as #1 of 1, with where it sits across your whole library underneath.'},
   {v:'2026.11.21-n', note:'SMOOTHER SHARE ANIMATION: the animated share card now plays at about 33 frames a second instead of 20, so the record turns, the ring fills and the song bars grow without stepping. Each frame lines up exactly with how GIFs time their frames, so the motion no longer drifts unevenly, and the record now eases up to speed instead of jumping straight into a full spin. Making the animation takes a little longer.'},
@@ -10449,8 +10450,11 @@ function shareBtn(g,a){
 function shMix(h,t){const n=parseInt(h.slice(1),16),c=[n>>16&255,n>>8&255,n&255];return c.map(v=>Math.round(t>0?v+(255-v)*t:v*(1+t)))}
 function shRound(x,l,t,w,h,r){x.beginPath();x.moveTo(l+r,t);x.arcTo(l+w,t,l+w,t+h,r);x.arcTo(l+w,t+h,l,t+h,r);x.arcTo(l,t+h,l,t,r);x.arcTo(l,t,l+w,t,r);x.closePath()}
 function shFit(x,txt,max){if(x.measureText(txt).width<=max)return txt;while(txt.length>1&&x.measureText(txt+'…').width>max)txt=txt.slice(0,-1);return txt.trim()+'…'}
-async function shareScene(a,g,withSongs,wide){
-  const f=shareInfo(a,g),W=1080,n=f.its.length,two=n>6,rows=two?Math.ceil(n/2):n,songs=!!withSongs&&n>0,fav=f.rs.slice().sort((p,q)=>q.v-p.v).filter(z=>z.v>=8).slice(0,3),favH=fav.length?112:0,H=songs?1330+favH+rows*66:1350,OUTW=wide?Math.max(W,Math.ceil(H/1.28)):W,PX=(OUTW-W)/2;
+async function shareScene(a,g,withSongs,wide,story){
+  /* 2026.11.21-q: room for a footer, and a story size (1080 x 1920) that fits the card inside and centers it */
+  const f=shareInfo(a,g),W=1080,n=f.its.length,two=n>6,rows=two?Math.ceil(n/2):n,songs=!!withSongs&&n>0,fav=f.rs.slice().sort((p,q)=>q.v-p.v).filter(z=>z.v>=8).slice(0,3),favH=fav.length?120:0,H=songs?1410+favH+rows*66:1430,
+    OUTW=story?1080:wide?Math.max(W,Math.ceil(H/1.28)):W,OUTH=story?1920:H,K=story?Math.min(1,(OUTH-140)/H):1,PX=(OUTW-W*K)/2,PY=story?(OUTH-H*K)/2:0;
+  let who='';try{who=(ACC&&ACC.me&&ACC.me.name||'').trim().split(/\s+/)[0]||''}catch(e){}
   const sArt=g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-500':''),art=f.dx?(g.dxImg||sArt):sArt;
   const base=(f.dx&&g.dxImg&&g.dxImg!==sArt?ACOL[g.id+'~dx']:ACOL[g.id])||acolFallback(g);
   try{await Promise.race([Promise.all(['800 40px Archivo','500 40px Archivo','600 40px "JetBrains Mono"'].map(q=>document.fonts.load(q))),new Promise(r=>setTimeout(r,1200))])}catch(e){}
@@ -10459,20 +10463,25 @@ async function shareScene(a,g,withSongs,wide){
   const LOOP=songs?9:8,END=LOOP-.05,REVEAL=songs?2.7:2,SPIN=Math.PI,DEC=1.5,cs=560,cx0=110,cy0=96,name=f.dx?dxName(g):g.title,clamp=v=>Math.max(0,Math.min(1,v)),ease=v=>1-Math.pow(1-clamp(v),3);
   /* paint(x) draws the finished card. paint(x,T) draws the moment T seconds into the animation:
      the record slides out and keeps turning, the ring fills, the number counts up, the song bars fill in. */
-  function paint(x,T){x.save();x.translate(PX,0);paint0(x,T);x.restore()}
+  function paint(x,T){paintBg(x);x.save();x.translate(PX,PY);x.scale(K,K);paint0(x,T);x.restore()}
+  function paintBg(x){
+    const gr=x.createLinearGradient(0,0,OUTW*.35,OUTH);gr.addColorStop(0,`rgb(${top})`);gr.addColorStop(1,`rgb(${bot})`);x.fillStyle=gr;x.fillRect(0,0,OUTW,OUTH);
+    /* soft pools of the cover's color over the gradient, like the artist page's color field */
+    [[OUTW*.92,OUTH*.12,OUTW*.75,shMix(base,.42),.55],[OUTW*.05,OUTH*.62,OUTW*.8,shMix(base,-.55),.5],[OUTW*.7,OUTH*.95,OUTW*.7,shMix(base,.18),.45]].forEach(([px,py,pr,c,al])=>{const rg=x.createRadialGradient(px,py,0,px,py,pr);rg.addColorStop(0,'rgba('+c+','+al+')');rg.addColorStop(1,'rgba('+c+',0)');x.fillStyle=rg;x.fillRect(0,0,OUTW,OUTH)})}
   function paint0(x,T){
     const A=T===undefined,pr=(t0,t1)=>A?1:clamp((T-t0)/(t1-t0));
-    const gr=x.createLinearGradient(0,0,W*.35,H);gr.addColorStop(0,`rgb(${top})`);gr.addColorStop(1,`rgb(${bot})`);x.fillStyle=gr;x.fillRect(-PX,0,OUTW,H);
-    /* 2026.11.21-m: soft pools of the cover's color over the gradient, like the artist page's color field */
-    [[W*.92,H*.12,W*.75,shMix(base,.42),.55],[W*.05,H*.62,W*.8,shMix(base,-.55),.5],[W*.7,H*.95,W*.7,shMix(base,.18),.45]].forEach(([px,py,pr,c,al])=>{const rg=x.createRadialGradient(px,py,0,px,py,pr);rg.addColorStop(0,'rgba('+c+','+al+')');rg.addColorStop(1,'rgba('+c+',0)');x.fillStyle=rg;x.fillRect(-PX,0,OUTW,H)});
     /* record, sliding out from behind the cover and spinning */
     const slide=A?1:ease(pr(.1,songs?1:.8)),dcx=cx0+cs/2+(cs*.78-cs/2)*slide,dcy=cy0+cs/2,UP=.7,spun=t=>t<UP?t*t/(2*UP):t-UP/2,ang=A?0:(T<=END-DEC?SPIN*spun(T):SPIN*spun(END-DEC)+SPIN*DEC*(u=>u-u*u/2)(clamp((T-END+DEC)/DEC)));   /* 2026.11.21-n: eases up to speed instead of starting at full spin, turns at a steady pace, then slows to a stop on the last frame */
-    x.save();x.translate(dcx,dcy);x.fillStyle='rgb(14 16 15 / .92)';x.beginPath();x.arc(0,0,cs/2,0,7);x.fill();
+    /* 2026.11.21-q: a solid record with a soft shadow and fine grooves, so it reads as vinyl on light covers too */
+    x.save();x.translate(dcx,dcy);
+    x.save();x.shadowColor='rgb(0 0 0 / .38)';x.shadowBlur=36;x.shadowOffsetY=12;x.fillStyle='rgb(12 13 13)';x.beginPath();x.arc(0,0,cs/2,0,7);x.fill();x.restore();
+    {const bg=x.createRadialGradient(0,0,cs*.16,0,0,cs/2);bg.addColorStop(0,'rgb(20 21 21)');bg.addColorStop(.9,'rgb(10 11 11)');bg.addColorStop(1,'rgb(24 25 25)');x.fillStyle=bg;x.beginPath();x.arc(0,0,cs/2,0,7);x.fill()}
+    x.lineWidth=1;x.strokeStyle='rgb(255 255 255 / .045)';for(let q=cs*.17;q<cs/2-4;q+=3.2){x.beginPath();x.arc(0,0,q,0,7);x.stroke()}
     /* one groove per song, same as the record in the app (a long release folds songs into at most 22 grooves); the ones you have rated light up in the cover's color, inner ones first */
-    {const hd=f.its.map(i=>!!rating(i.id)),n0=hd.length,R=Math.min(n0,22),gv=shMix(base,.62);x.lineWidth=5;
+    {const hd=f.its.map(i=>!!rating(i.id)),n0=hd.length,R=Math.min(n0,22),gv=lum>.62?shMix(base,-.08):shMix(base,.3);x.lineWidth=2.5;
       for(let j=0;j<R;j++){const lo=Math.floor(j*n0/R),hi=Math.max(lo+1,Math.floor((j+1)*n0/R)),on=hd.slice(lo,hi).every(Boolean),rr=cs/2*(.96-j*.52/R),la=on?(A?1:clamp((T-.45-(R-1-j)*.045)/.3)):0;
-        x.strokeStyle='rgb(255 255 255 / .09)';x.beginPath();x.arc(0,0,rr,0,7);x.stroke();
-        if(la>0){x.strokeStyle='rgba('+gv[0]+','+gv[1]+','+gv[2]+','+la.toFixed(2)+')';x.beginPath();x.arc(0,0,rr,0,7);x.stroke()}}}
+        x.strokeStyle='rgb(255 255 255 / .07)';x.beginPath();x.arc(0,0,rr,0,7);x.stroke();
+        if(la>0){x.strokeStyle='rgba('+gv[0]+','+gv[1]+','+gv[2]+','+(la*.5).toFixed(2)+')';x.beginPath();x.arc(0,0,rr,0,7);x.stroke()}}}
     if(x.createConicGradient){const cg=x.createConicGradient(ang,0,0);
       for(let q=0;q<=48;q++){const o=q/48,al=.24*Math.pow((Math.cos((o-.25)*Math.PI*4)+1)/2,7);cg.addColorStop(o,'rgb(255 255 255 / '+al.toFixed(3)+')')}
       x.fillStyle=cg;x.beginPath();x.moveTo(cs/2-6,0);x.arc(0,0,cs/2-6,0,Math.PI*2);x.closePath();x.moveTo(cs*.16,0);x.arc(0,0,cs*.16,0,Math.PI*2);x.closePath();x.fill('evenodd')}
@@ -10488,8 +10497,7 @@ async function shareScene(a,g,withSongs,wide){
     /* title block */
     x.textAlign='left';x.textBaseline='alphabetic';let y=cy0+cs+86;
     x.fillStyle=inkSoft;x.font='600 28px "JetBrains Mono",monospace';
-    x.fillText(shFit(x,(g.kind+' · '+g.year+(f.dx?' · Deluxe':'')).toUpperCase(),W-220-190),110,y);
-    x.save();x.textAlign='right';x.font='700 24px "JetBrains Mono",monospace';x.fillText('PLAYBACK',W-110,y);x.restore();
+    x.fillText(shFit(x,(g.kind+' · '+g.year+(f.dx?' · Deluxe':'')).toUpperCase(),W-220),110,y);
     let fs=76;x.fillStyle=ink;
     do{x.font='800 '+fs+'px Archivo,sans-serif';fs-=4}while(x.measureText(name).width>W-220&&fs>44);
     y+=fs+34;x.fillText(shFit(x,name,W-220),110,y);
@@ -10513,8 +10521,16 @@ async function shareScene(a,g,withSongs,wide){
     x.fillText(shFit(x,sub,W-tx-110),tx,ry+34+dY);
     if(f.rd){x.font='600 26px "JetBrains Mono",monospace';x.fillText('RATED '+f.rd.toUpperCase(),tx,ry+80+dY)}
     /* favorites */
-    if(fav.length){const fy=songs?ry+rr+72:H-104;x.save();x.globalAlpha=A?1:ease(pr(songs?2.1:1.4,songs?2.6:1.9));x.textAlign='left';x.textBaseline='alphabetic';x.fillStyle=inkSoft;x.font='600 24px "JetBrains Mono",monospace';x.fillText('FAVORITES',110,fy);
-      x.fillStyle=ink;x.font='600 30px Archivo,sans-serif';x.fillText(shFit(x,fav.map(z=>z.t).join('  ·  '),W-220),110,fy+42);x.restore()}
+    /* 2026.11.21-q: favorites as chips, each with its score on a little record, popping in one after another */
+    if(fav.length){const fy=songs?ry+rr+72:H-200;x.save();x.textAlign='left';x.textBaseline='alphabetic';x.globalAlpha=A?1:ease(pr(songs?2:1.3,songs?2.4:1.7));x.fillStyle=inkSoft;x.font='600 24px "JetBrains Mono",monospace';x.fillText('FAVORITES',110,fy);x.restore();
+      const ch=58,gapC=14,t0=songs?2.1:1.4;let cxp=110;x.font='600 28px Archivo,sans-serif';
+      const lens=fav.map(z=>x.measureText((z.t||'').trim()).width),room=W-220-fav.length*(ch+28)-(fav.length-1)*gapC,cap=Math.max(120,room/fav.length);
+      fav.forEach((z,i)=>{const lab=shFit(x,(z.t||'').trim(),Math.min(lens[i],Math.max(cap,room-lens.reduce((t,l,j)=>j===i?t:t+Math.min(l,cap),0)))),tw=x.measureText(lab).width,w=ch+tw+28,cy=fy+20,ap=A?1:ease(pr(t0+i*.12,t0+.35+i*.12));
+        if(cxp+w>110+W-220||ap<=0){cxp+=w+gapC;return}
+        x.save();x.globalAlpha=ap;x.translate(0,(1-ap)*14);shRound(x,cxp,cy,w,ch,ch/2);x.fillStyle=light?'rgb(0 0 0 / .09)':'rgb(255 255 255 / .13)';x.fill();
+        const mx=cxp+ch/2,my=cy+ch/2;x.fillStyle='rgb(14 12 12)';x.beginPath();x.arc(mx,my,ch/2-5,0,7);x.fill();x.fillStyle=`rgb(${gl})`;x.beginPath();x.arc(mx,my,ch/2-13,0,7);x.fill();
+        x.fillStyle='#111';x.textAlign='center';x.textBaseline='middle';x.font='800 '+(String(fmt(z.v)).length>2?17:22)+'px Archivo,sans-serif';x.fillText(fmt(z.v),mx,my+1);
+        x.fillStyle=ink;x.textAlign='left';x.font='600 28px Archivo,sans-serif';x.fillText(lab,cxp+ch+10,my+1);x.restore();cxp+=w+gapC})}
     /* every song, in order, with its rating and a bar that fills with the score */
     if(songs){
       const y0=ry+rr+80+favH,gap=8,rh=58,cw=two?(W-220-40)/2:W-220;
@@ -10522,7 +10538,7 @@ async function shareScene(a,g,withSongs,wide){
       f.its.forEach((it,k)=>{
         const col2=two&&k>=rows,cx=110+(col2?cw+40:0),cy=y0+24+(col2?k-rows:k)*(rh+gap),v=rating(it.id),bp=A?1:ease(pr(1+k*.07,1.5+k*.07));
         x.save();shRound(x,cx,cy,cw,rh,16);x.fillStyle=light?'rgb(0 0 0 / .07)':'rgb(255 255 255 / .09)';x.fill();x.clip();
-        if(v){const fg=x.createLinearGradient(cx,0,cx+cw,0);fg.addColorStop(0,'rgba('+gl+','+(light?.22:.26)+')');fg.addColorStop(1,'rgba('+gl+',.06)');x.fillStyle=fg;x.fillRect(cx,cy,cw*Math.min(1,v/10)*bp,rh)}x.restore();
+        if(v){const bc=light?shMix(base,.8):gl,fg=x.createLinearGradient(cx,0,cx+cw,0);fg.addColorStop(0,'rgba('+bc+','+(light?.6:.5)+')');fg.addColorStop(1,'rgba('+bc+','+(light?.28:.2)+')');   /* 2026.11.21-q: deeper fill, so the songs you liked most stand out at a glance */x.fillStyle=fg;x.fillRect(cx,cy,cw*Math.min(1,v/10)*bp,rh)}x.restore();
         x.textAlign='left';x.fillStyle=inkSoft;x.font='500 22px Archivo,sans-serif';x.fillText(String(k+1),cx+18,cy+rh/2+8);
         x.fillStyle=ink;x.font='500 27px Archivo,sans-serif';x.fillText(shFit(x,(it.title||'').trim(),cw-142),cx+62,cy+rh/2+9);
         /* 2026.11.21-p: bigger score records with a larger label and number, so they read at phone size */
@@ -10531,14 +10547,21 @@ async function shareScene(a,g,withSongs,wide){
           if(v){x.lineWidth=4.5;x.lineCap='round';x.strokeStyle=`rgb(${gl})`;x.beginPath();x.arc(mx,my,mr-2,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,v/10)*bp);x.stroke()}
           x.fillStyle='#ece8e4';x.beginPath();x.arc(mx,my,19.5,0,7);x.fill();
           x.globalAlpha=v?bp:.55;x.fillStyle='#111';x.textAlign='center';x.textBaseline='middle';x.font='800 '+(v&&String(fmt(v)).length>2?19:25)+'px Archivo,sans-serif';x.fillText(v?fmt(v):'–',mx,my+1.5);x.restore();x.textBaseline='alphabetic'}})}
+    /* 2026.11.21-q: footer: whose rating this is, and a small record mark with the app's name */
+    {const ly=H-96,ty=H-48;x.save();x.globalAlpha=A?1:ease(pr(songs?2.4:1.6,songs?2.9:2.1));x.strokeStyle=light?'rgb(0 0 0 / .14)':'rgb(255 255 255 / .16)';x.lineWidth=2;x.beginPath();x.moveTo(110,ly);x.lineTo(W-110,ly);x.stroke();
+      x.textBaseline='alphabetic';x.textAlign='left';x.fillStyle=inkSoft;x.font='600 24px "JetBrains Mono",monospace';
+      const mo=new Date().toLocaleDateString('en-US',{month:'short',year:'numeric'}).toUpperCase();
+      x.fillText(shFit(x,(who?who.toUpperCase()+'\u2019S LOG':'MY LOG')+'  \u00b7  '+mo,W-220-260),110,ty);
+      x.textAlign='right';x.fillStyle=ink;x.font='700 26px "JetBrains Mono",monospace';x.fillText('PLAYBACK',W-110,ty);const pw=x.measureText('PLAYBACK').width,mx=W-110-pw-26,my=ty-9;
+      x.fillStyle='rgb(14 12 12)';x.beginPath();x.arc(mx,my,15,0,7);x.fill();x.fillStyle=`rgb(${gl})`;x.beginPath();x.arc(mx,my,6,0,7);x.fill();x.restore()}
   }
-  return {W:OUTW,PX,H,LOOP,REVEAL,paint,name,f,text:'My '+f.what+' rating for '+name+' by '+a.name+': '+(f.r?fmt(f.r)+'/10':f.avg.toFixed(1)+'/10 song average')}}
+  return {W:OUTW,PX,PY,K,H:OUTH,LOOP,REVEAL,paint,name,f,text:'My '+f.what+' rating for '+name+' by '+a.name+': '+(f.r?fmt(f.r)+'/10':f.avg.toFixed(1)+'/10 song average')}}
 /* Animated card: paints the card at each moment, then writes a looping GIF. One shared 255-color palette, a fixed dither
    pattern so still parts of the card stay identical from frame to frame, and every unchanged pixel marked transparent so
    the file only stores what moves. Takes a few seconds; progress is reported as it goes. */
-async function shareGif(a,g,prog,withSongs){
+async function shareGif(a,g,prog,withSongs,story){
   const G=window.GIFenc;if(!G)throw new Error('no encoder');
-  const sc=await shareScene(a,g,withSongs,true),CS=3,FPS=100/CS,N=Math.round(sc.LOOP*FPS)   /* 2026.11.21-n: 3/100 s a frame (about 33 fps, up from 20). GIF delays are whole hundredths, so frame times use the same step and never drift */,OW=720,OH=Math.round(sc.H*OW/sc.W);
+  const sc=await shareScene(a,g,withSongs,!story,story),CS=3,FPS=100/CS,N=Math.round(sc.LOOP*FPS)   /* 2026.11.21-n: 3/100 s a frame (about 33 fps, up from 20). GIF delays are whole hundredths, so frame times use the same step and never drift */,OW=720,OH=Math.round(sc.H*OW/sc.W);
   const big=document.createElement('canvas');big.width=sc.W;big.height=sc.H;const bx=big.getContext('2d');
   const sm=document.createElement('canvas');sm.width=OW;sm.height=OH;const sx=sm.getContext('2d',{willReadFrequently:true});sx.imageSmoothingQuality='high';
   const grab=T=>{sc.paint(bx,T);sx.drawImage(big,0,0,OW,OH);return sx.getImageData(0,0,OW,OH).data};
@@ -10548,7 +10571,7 @@ async function shareGif(a,g,prog,withSongs){
   const pal=G.quantize(all,255,{format:'rgb565'});while(pal.length<256)pal.push([0,0,0]);
   const bay=[0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5],enc=G.GIFEncoder(),pal255=pal.slice(0,255);let prev=null;
   /* after the reveal only the part of the record that sticks out from behind the cover keeps changing */
-  const ks=OW/sc.W,RX=Math.floor((645+sc.PX)*ks),RY=Math.floor(84*ks),RW=Math.min(Math.ceil(195*ks)+2,OW-RX),RH=Math.min(Math.ceil(588*ks)+2,OH-RY);
+  const ks=OW/sc.W,RX=Math.floor((645*sc.K+sc.PX)*ks),RY=Math.max(0,Math.floor((60*sc.K+sc.PY)*ks)),RW=Math.min(Math.ceil(230*sc.K*ks)+2,OW-RX),RH=Math.min(Math.ceil(650*sc.K*ks)+2,OH-RY);   /* the record plus its shadow */
   for(let k=0;k<N;k++){
     const T=k*CS/100,strip=!!prev&&T>=sc.REVEAL&&!window.__gifFull;
     let idx,out;
@@ -10571,8 +10594,8 @@ async function shareGif(a,g,prog,withSongs){
   }
   enc.finish();
   return {blob:new Blob([enc.bytes()],{type:'image/gif'}),name:(a.name+' - '+sc.name).replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'-')+'.gif',text:sc.text}}
-async function shareDraw(a,g,withSongs){
-  const S0=await shareScene(a,g,withSongs),c=document.createElement('canvas');c.width=S0.W;c.height=S0.H;S0.paint(c.getContext('2d'));
+async function shareDraw(a,g,withSongs,story){
+  const S0=await shareScene(a,g,withSongs,false,story),c=document.createElement('canvas');c.width=S0.W;c.height=S0.H;S0.paint(c.getContext('2d'));
   const blob=await new Promise(r=>{try{c.toBlob(r,'image/png')}catch(e){r(null)}});
   return {canvas:c,blob,scene:S0,name:(a.name+' - '+S0.name).replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'-')+'.png',text:S0.text}}
 function shareClose(){const o=document.getElementById('shr');if(o){if(o._url)URL.revokeObjectURL(o._url);o.remove()}document.removeEventListener('keydown',shareKey)}
@@ -10581,19 +10604,19 @@ async function shareOpen(a,g){
   shareClose();const o=document.createElement('div');o.id='shr';o.className='shr';
   {const sA=g.img||'',bc=(dxOn(g)&&g.dxImg&&g.dxImg!==sA?ACOL[g.id+'~dx']:ACOL[g.id])||acolFallback(g);if(bc)o.style.setProperty('--shc',bc)}   /* the sheet wears the album's color */o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-label','Share your rating');
   const f=shareInfo(a,g);
-  o.innerHTML='<div class="shr-box"><div class="shr-seg" role="group" aria-label="Card style"><button type="button" data-sh="mode" data-m="still" aria-pressed="true">Still</button><button type="button" data-sh="mode" data-m="anim" aria-pressed="false">Animated</button></div><div class="shr-prev" aria-live="polite"><p class="shr-note" style="padding:60px 0">Making your card…</p></div>'+(f.its.length?'<label class="shr-tog"><input type="checkbox" role="switch" data-sh="songs" checked><span class="shr-sw" aria-hidden="true"></span>Show every song rating</label>':'')+'<div class="shr-acts"><button class="btn" data-sh="close">Close</button><button class="btn" data-sh="save" hidden>Save</button><button class="btn primary" data-sh="send" disabled>Share</button></div><p class="shr-note" hidden></p></div>';
+  o.innerHTML='<div class="shr-box"><div class="shr-seg" role="group" aria-label="Card style"><button type="button" data-sh="mode" data-m="still" aria-pressed="true">Still</button><button type="button" data-sh="mode" data-m="anim" aria-pressed="false">Animated</button></div><div class="shr-seg" role="group" aria-label="Card size"><button type="button" data-sh="size" data-z="post" aria-pressed="true">Post</button><button type="button" data-sh="size" data-z="story" aria-pressed="false">Story</button></div><div class="shr-prev" aria-live="polite"><p class="shr-note" style="padding:60px 0">Making your card…</p></div>'+(f.its.length?'<label class="shr-tog"><input type="checkbox" role="switch" data-sh="songs" checked><span class="shr-sw" aria-hidden="true"></span>Show every song rating</label>':'')+'<div class="shr-acts"><button class="btn" data-sh="close">Close</button><button class="btn" data-sh="save" hidden>Save</button><button class="btn primary" data-sh="send" disabled>Share</button></div><p class="shr-note" hidden></p></div>';
   document.body.appendChild(o);document.addEventListener('keydown',shareKey);
   o.addEventListener('click',e=>{if(e.target===o||e.target.closest('[data-sh="close"]'))shareClose()});
   const prev=o.querySelector('.shr-prev'),send=o.querySelector('[data-sh="send"]'),saveB=o.querySelector('[data-sh="save"]'),note=o.querySelector('.shr-box>.shr-note'),tog=o.querySelector('[data-sh="songs"]'),togL=tog&&tog.parentNode;
-  let seq=0,mode='still';
+  let seq=0,mode='still',size='post';
   async function make(){
     const my=++seq;send.disabled=true;note.hidden=true;saveB.hidden=true;
     let R;
     try{
       if(mode==='anim'){
         prev.innerHTML='<p class="shr-note" style="padding:60px 0" id="shr-pg">Making your animation…</p>';
-        R=await shareGif(a,g,(k,n)=>{if(my!==seq)throw 0;const e=document.getElementById('shr-pg');if(e)e.textContent='Making your animation… '+Math.round(k/n*100)+'%'},tog?tog.checked:false)}
-      else R=await shareDraw(a,g,tog?tog.checked:false)}
+        R=await shareGif(a,g,(k,n)=>{if(my!==seq)throw 0;const e=document.getElementById('shr-pg');if(e)e.textContent='Making your animation… '+Math.round(k/n*100)+'%'},tog?tog.checked:false,size==='story')}
+      else R=await shareDraw(a,g,tog?tog.checked:false,size==='story')}
     catch(e){R=null}
     if(my!==seq||!document.getElementById('shr'))return;
     if(!R||!R.blob){prev.innerHTML='<p class="shr-note" style="padding:40px 0">The card could not be made. Try again in a moment.</p>';return}
@@ -10612,6 +10635,7 @@ async function shareOpen(a,g){
     else if(canCopy){send.textContent='Copy image';send.onclick=copy;saveB.hidden=false;saveB.onclick=save}
     else{send.textContent=anim?'Save GIF':'Save image';send.onclick=save;if(anim)say('Browsers cannot copy an animation, so save it and drop the file into your chat.')}}
   o.querySelectorAll('[data-sh="mode"]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.m===mode)return;mode=b.dataset.m;o.querySelectorAll('[data-sh="mode"]').forEach(x=>x.setAttribute('aria-pressed',x===b));make()}));
+  o.querySelectorAll('[data-sh="size"]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.z===size)return;size=b.dataset.z;o.querySelectorAll('[data-sh="size"]').forEach(x=>x.setAttribute('aria-pressed',x===b));make()}));
   if(tog)tog.addEventListener('change',make);
   make();
 }
