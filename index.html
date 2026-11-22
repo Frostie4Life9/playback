@@ -2082,7 +2082,7 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 @keyframes sdin{0%{opacity:0;transform:translateY(6px) scale(.92);filter:blur(3px)}60%{opacity:1;transform:translateY(-1px) scale(1.04);filter:none}100%{transform:none}}
 @media (prefers-reduced-motion:no-preference){.sl-rd.sd-new{animation:sdin .6s cubic-bezier(.2,.8,.2,1) .35s both}}
 .sl-rd{text-decoration:none;font-weight:600;font-size:13px;letter-spacing:.02em;color:color-mix(in srgb,var(--hi) 88%,transparent)}
-.sl-od{display:inline;align-self:auto;margin:0;padding:0;min-height:0;border:0;background:none;font:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit;cursor:pointer;text-decoration:none;-webkit-tap-highlight-color:transparent}.sl-od:hover,.sl-od:focus-visible{text-decoration:underline;text-underline-offset:3px}
+.sl-od{display:inline;align-self:auto;margin:0 0 0 .7em;opacity:.72;padding:0;min-height:0;border:0;background:none;font:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit;cursor:pointer;text-decoration:none;-webkit-tap-highlight-color:transparent}.sl-od:hover,.sl-od:focus-visible{text-decoration:underline;text-underline-offset:3px}
 .pvorl{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:4px;font-size:13px}.pvorl li{display:flex;gap:8px;justify-content:space-between}.pvorl li span:last-child{opacity:.7;white-space:nowrap}
 .sl-wf{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap}
 .sl-wf input{flex:1 1 150px;min-width:0;min-height:40px;padding:0 12px;border-radius:10px;border:1px solid color-mix(in srgb,var(--hi) 38%,transparent);background:color-mix(in srgb,var(--hi) 10%,transparent);color:var(--hi);font:500 15px var(--body)}
@@ -4508,6 +4508,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.22-o', note:'STREAMING DATE FIXED AND ON THE TOP LINE: the streaming note vanished after the app restarted, because the start-up tidy rebuilds every imported artist\u2019s albums and dropped it (it also reset the monthly MusicBrainz check, so each artist page would have asked again every visit). Now the rebuild keeps it, a copy is saved with the original date so it can always be restored, and notes already lost come back from Apple Music the next time you open that artist. The note sits at the end of the open album\u2019s top line with a gap instead of dots: Studio album 2020   Streaming Jan 17, 2025. Singles too.'},
   {v:'2026.11.22-n', note:'STREAMING DATE ON THE TOP LINE: the streaming date of a record that came out earlier now sits at the end of the open album\u2019s top line, like Studio album \u00b7 2020 \u00b7 Streaming Jan 17, 2025, instead of on a line of its own. Tap it to change the original date, same as before. Singles show it the same way.'},
   {v:'2026.11.22-m', note:'ORIGINAL RELEASE DATES: a record that reached streaming years after it first came out now sits in the year it was born. Spotify and Apple only know their own date, so Mac Miller\u2019s Faces (a free mixtape in May 2014, on streaming October 2021) landed after his death on the timeline. Playback now asks MusicBrainz, which keeps every edition of a record together with its first release date, and moves a release back when MusicBrainz has it in an earlier year under the same title (remaster, anniversary and deluxe tags ignored; singles only match singles; live albums and compilations never count). The timeline, Eras and oldest/newest sorting all follow the original date, and the open album shows the streaming date at the end of its top line (Studio album \u00b7 2020 \u00b7 Streaming Oct 15, 2021). Tap it, or More \u2192 Set original release date, to type your own date, or clear it to go back to the streaming date; a date you set is never changed again. Each artist page checks itself once a month (and right after an import), and Settings \u2192 Your data \u2192 Original release dates checks every artist at once and lists what moved. It costs no Worker or Spotify calls.'},
   {v:'2026.11.22-l', note:'PICKED RECORDINGS STAY THEIR OWN: a release you add by search for a composer keeps its own songs even when an imported work has the same title, and Check for new releases never folds them into the imported ones or merges a picked album into an imported one with the same name. Song and album counts in the search say 1 song, not 1 songs.'},
@@ -6137,7 +6138,10 @@ function dtFill(a,res){let n=0;if(!a||!Array.isArray(res))return 0;
   const by=new Map();for(const c of res){if(!c||c.wrapperType!=='collection'||!c.collectionName||!c.releaseDate)continue;
     const k=nTitle(String(c.collectionName).replace(/\s-\s(single|ep)$/i,''));const d=String(c.releaseDate).slice(0,10);
     if(!/^\d{4}-\d\d-\d\d$/.test(d))continue;if(!by.has(k)||by.get(k)>d)by.set(k,d)}   /* the earliest edition is the release date */
-  for(const g of a.groups){if(g.dt&&g.dt.length===10)continue;const k=nTitle(g.title),d=by.get(k)||(g.dxTitle?by.get(nTitle(g.dxTitle)):'');
+  for(const g of a.groups){
+    {const oe=a.orig&&a.orig[nTitle(g.title)];   /* streaming note lost to an earlier rebuild: Apple's later date is it */
+     if(oe&&oe.d&&!g.ed&&!oe.e){const d0=by.get(nTitle(g.title))||(g.dxTitle?by.get(nTitle(g.dxTitle)):'');if(d0&&d0.slice(0,4)>String(oe.d).slice(0,4)){g.ed=d0;oe.e=d0;n++}}}
+    if(g.dt&&g.dt.length===10)continue;const k=nTitle(g.title),d=by.get(k)||(g.dxTitle?by.get(nTitle(g.dxTitle)):'');
     if(d&&(!g.year||!/^\d{4}$/.test(String(g.year))||Math.abs(+d.slice(0,4)-+g.year)<=1)){g.dt=d;n++}}   /* a different year means a different record with the same name */
   return n}
 const DTF={busy:false};
@@ -6175,7 +6179,7 @@ async function dtMB(a,g,k,y){
   return d}
 async function dtLoad(){
   const h=document.querySelector('.head.hero.hx');if(!h||DTF.busy||!READY||!window.fetch||!navigator.onLine)return;
-  const a=(S.music||[]).find(x=>x.id===h.dataset.aid);if(!a||a.example||!a.groups.some(g=>!g.dt||g.dt.length<10))return;
+  const a=(S.music||[]).find(x=>x.id===h.dataset.aid);if(!a||a.example||!(a.groups.some(g=>!g.dt||g.dt.length<10)||origLost(a)))return;
   const wk2=Date.now()-14*864e5,main=!(a.dtTry&&a.dtTry>wk2),rest=!(a.dtS2&&a.dtS2>wk2);
   if(!main&&!rest)return;   /* both tried in the last two weeks */
   DTF.busy=true;if(main)a.dtTry=Date.now();
@@ -6200,8 +6204,14 @@ const ORF={busy:false,all:false,n:0,of:0,moved:[],msg:''};
 const origKey=t=>dtBare(String(t||'').replace(/\s*[\(\[][^)\]]*\b(remaster(ed)?|anniversary|deluxe|expanded|edition|version|reissue)\b[^)\]]*[\)\]]/ig,'').replace(/\s[-–]\s[^-–]*\b(remaster(ed)?|anniversary|deluxe|edition|reissue)\b.*$/i,''));
 function origApply(a){if(!a||!a.orig||!a.groups)return 0;let n=0;
   for(const g of a.groups){const o=a.orig[nTitle(g.title)];if(!o||!o.d)continue;
-    const cur=g.dt||String(g.year||'');if(cur===o.d||(o.d.length===4&&String(g.year)===o.d&&!g.dt))continue;
+    const cur=g.dt||String(g.year||'');
+    if(cur===o.d||(o.d.length===4&&String(g.year)===o.d&&!g.dt)){   /* already on its original date */
+      if(!g.ed&&o.e&&o.e!==o.d){g.ed=o.e;n++}   /* a rebuild dropped the streaming note: it is kept with the original date */
+      else if(g.ed&&!o.e)o.e=g.ed;
+      continue}
+    if(o.src!=='hand'&&cur.slice(0,4)<=o.d.slice(0,4)){if(g.ed&&!o.e)o.e=g.ed;continue}   /* not a later reissue */
     if(!g.ed&&/^\d{4}/.test(cur))g.ed=cur;
+    if(g.ed)o.e=g.ed;
     g.year=o.d.slice(0,4);if(o.d.length>=7)g.dt=o.d;else delete g.dt;n++}
   return n}
 /* back to the streaming date (an original date cleared by hand) */
@@ -6225,12 +6235,16 @@ async function origFind(a){
     for(const k of [origKey(g.title)+t,g.dxTitle?origKey(g.dxTitle)+t:'']){const x=k&&by.get(k);if(x&&(!d||x.slice(0,4)<d.slice(0,4)))d=x}
     const cur=String(g.ed||g.dt||g.year||'');if(!d||!/^\d{4}/.test(cur))continue;
     const dy=+d.slice(0,4),cy=+cur.slice(0,4);if(dy>=cy||cy-dy>60)continue;   /* only an earlier year means a later reissue */
-    if(!ex||ex.d!==d){a.orig[gk]={d,src:'mb'};moved.push({aid:a.id,artist:a.name,title:g.title,from:cur,to:d})}}
+    if(!ex||ex.d!==d){a.orig[gk]={d,src:'mb',e:cur};moved.push({aid:a.id,artist:a.name,title:g.title,from:cur,to:d})}}
   origApply(a);a.origAt=Date.now();return moved}
 /* on an artist's page: once a month, or right after an import (which clears a.origAt) */
+function origLost(a){return !!(a&&a.orig&&a.groups&&a.groups.some(g=>{const o=a.orig[nTitle(g.title)];return o&&o.d&&!g.ed&&!o.e&&g.src==='mb'}))}
 async function origLoad(){
   const h=document.querySelector('.head.hero.hx');if(!h||ORF.busy||MBX.busy||!READY||!window.fetch||!navigator.onLine)return;
-  const a=(S.music||[]).find(x=>x.id===h.dataset.aid);if(!a||a.example||!a.mbid||(a.origAt&&a.origAt>Date.now()-30*864e5))return;
+  const a=(S.music||[]).find(x=>x.id===h.dataset.aid);if(!a||a.example||!a.mbid)return;
+  if(origApply(a))touch();   /* restores a streaming note a rebuild dropped, from the copy kept with the original date */
+  if(origLost(a)&&!(a.ohealAt&&a.ohealAt>Date.now()-14*864e5)){a.ohealAt=Date.now();a.dtTry=0;a.dtS2=0;dtLoad()}   /* no copy yet: Apple's date fills it in */
+  if(a.origAt&&a.origAt>Date.now()-30*864e5)return;
   ORF.busy=true;
   try{const m=await origFind(a);touch();
     if(m.length){if(document.querySelector('.head.hero.hx[data-aid="'+a.id+'"]'))renderSoon();
@@ -6245,9 +6259,9 @@ async function origAll(){
       try{ORF.moved.push(...await origFind(a))}catch(e){if(e&&e.code==='cancel')break;if(e&&e.code==='offline'){ORF.msg='You went offline, so the check stopped. Tap again to finish.';break}}}
     touch();ORF.msg=ORF.msg||(ORF.moved.length?'':'Every release already had its original date.')}
   finally{ORF.busy=false;render()}}
-/* the streaming date sits on the kind line: "Studio album \u00b7 2020 \u00b7 Streaming Jan 17, 2025" */
+/* the streaming date sits on the kind line, set apart by a gap not a dot: "Studio album 2020   Streaming Jan 17, 2025" */
 function origBtn(g){
-  return g.ed?` \u00b7 <button type="button" class="sl-od" data-act="oedit" data-g="${g.id}" title="First came out ${esc(origShow(g.dt||String(g.year)))}" aria-label="First came out ${esc(origShow(g.dt||String(g.year)))}, on streaming ${esc(origShow(g.ed))}. Change the original date">Streaming ${esc(origShow(g.ed))}</button>`:''}
+  return g.ed?` <button type="button" class="sl-od" data-act="oedit" data-g="${g.id}" title="First came out ${esc(origShow(g.dt||String(g.year)))}" aria-label="First came out ${esc(origShow(g.dt||String(g.year)))}, on streaming ${esc(origShow(g.ed))}. Change the original date">Streaming ${esc(origShow(g.ed))}</button>`:''}
 function origLine(g,a){
   if(UI.oEdit!==g.id)return '';const o=a&&a.orig&&a.orig[nTitle(g.title)];
   return `<form class="sl-wf" data-form="gorig" data-a="${a.id}" data-g="${g.id}"><input name="od" value="${esc(o&&o.d?o.d:g.dt||String(g.year||''))}" placeholder="2014-05-11 or 2014" inputmode="numeric" aria-label="Original release date (year, or year-month-day). Leave empty to use the streaming date" autocomplete="off"><button>Save</button></form>`}
@@ -6433,7 +6447,7 @@ function mbMerge(art,incoming,versions,tidy,sp){
     for(const t of G.items){if(placed.has(t.k))continue;placed.add(t.k);items.push({id:idFor(t.k),title:t.title,k:t.k,...(t.f&&t.f.length?{f:t.f}:{}),...(t.dx?{dx:1}:{})})}
     const ow=(a.groups.find(x=>x.id===sid(a.id,'rg',G.rgid))||{}).w;
     const od=(a.groups.find(x=>x.id===sid(a.id,'rg',G.rgid))||{}).dt,nd=G.dt||dtClean(G.date)||od;
-    if(items.length)groups.push({id:sid(a.id,'rg',G.rgid),src:'mb',mbid:G.rgid,title:G.title,year:G.year,kind:G.kind,...(nd?{dt:nd}:{}),...(ow&&ow.length?{w:ow}:G.w&&G.w.length?{w:G.w}:{}),...(G.img?{img:G.img}:{}),...(G.dxImg?{dxImg:G.dxImg}:{}),...(G.dxTitle?{dxTitle:G.dxTitle}:{}),items});
+    if(items.length)groups.push({id:sid(a.id,'rg',G.rgid),src:'mb',mbid:G.rgid,title:G.title,year:G.year,kind:G.kind,...(nd?{dt:nd}:{}),...(G.ed?{ed:G.ed}:{}),...(ow&&ow.length?{w:ow}:G.w&&G.w.length?{w:G.w}:{}),...(G.img?{img:G.img}:{}),...(G.dxImg?{dxImg:G.dxImg}:{}),...(G.dxTitle?{dxTitle:G.dxTitle}:{}),items});
   }
   /* A song with no exact match, when exactly ONE song on the new tracklists has the same title once a
      subtitle in brackets is ignored, moves onto that song with its checkmark and rating. Never when two
@@ -6520,7 +6534,7 @@ function mbMerge(art,incoming,versions,tidy,sp){
   if(kept.length)a.groups.push({id:sid(a.id,'kept'),src:'kept',title:'Kept from your earlier list',year:'—',kind:srcKey==='am'?'Not on Apple Music':fromSp?'Not on Spotify':'Not in the MusicBrainz import',items:kept});
   a.mbid=art.id;if(!tidy){a.name=ARTIST_SHOW[nArtist(art.name)]||(sp&&!sp.am&&sp.name)||art.name;if(sp&&!sp.am)a.snameAt=Date.now();a.mbVersions=!!versions;a.mbAt=Date.now();a.src=srcKey;if(sp&&!sp.am){a.spid=sp.id;if(sp.img)a.simg=sp.img}if(sp&&sp.am){a.amid=sp.id;a.amname=sp.name}if(art.aka){a.akaAt=Date.now()}}
   akaSet(a,art,sp&&!sp.am?sp:null,prevName);
-  origApply(a);delete a.origAt;   /* original release dates outlive the rebuild; new releases get looked up next visit */
+  origApply(a);if(!tidy)delete a.origAt;   /* original dates outlive the rebuild; a real import looks again next visit (the tidy on every app start does not) */
   for(const g of a.groups){if(rating(g.id))continue;const o=oldR.find(x=>x[0]===nTitle(g.title));if(o)S.marks[g.id]={...(S.marks[g.id]||{}),r:o[1]}}
   for(const g of a.groups){if(!hasDx(g)||rating(dxId(g)))continue;
     /* its own deluxe rating from before, or the rating of the separate deluxe album it has just absorbed */
@@ -6555,7 +6569,7 @@ function undoApply(aid){
 }
 setTimeout(undoLoad,0);
 function mbTidy(a){
-  const inc=a.groups.filter(g=>g.src==='mb').map(g=>({rgid:g.mbid,title:g.title,year:g.year,kind:g.kind,img:g.img||'',...(g.dt?{dt:g.dt}:{}),...(g.dxImg?{dxImg:g.dxImg}:{}),...(g.dxTitle?{dxTitle:g.dxTitle}:{}),...(g.w&&g.w.length?{w:g.w}:{}),items:g.items.map(i=>({k:mbItemKey(i),title:i.title,...(i.f&&i.f.length?{f:i.f}:{}),...(i.dx?{dx:1}:{})}))}));
+  const inc=a.groups.filter(g=>g.src==='mb').map(g=>({rgid:g.mbid,title:g.title,year:g.year,kind:g.kind,img:g.img||'',...(g.dt?{dt:g.dt}:{}),...(g.ed?{ed:g.ed}:{}),...(g.dxImg?{dxImg:g.dxImg}:{}),...(g.dxTitle?{dxTitle:g.dxTitle}:{}),...(g.w&&g.w.length?{w:g.w}:{}),items:g.items.map(i=>({k:mbItemKey(i),title:i.title,...(i.f&&i.f.length?{f:i.f}:{}),...(i.dx?{dx:1}:{})}))}));
   mbMerge({id:a.mbid,name:a.name},inc,a.mbVersions,true);
 }
 function mbReportText(r){
@@ -13156,7 +13170,7 @@ function gfHtml(a,g){return lsWith(g,()=>{
           <div class="sl-hero">
             ${albBar(g,a)}
             <div class="sl-pack"><div class="sl-cover">${art?`<img src="${esc(amBig(art))}" ${dx&&sArt&&art!==sArt?`data-f="${esc(sArt)}" `:''}alt="" loading="lazy" decoding="async" onerror="if(this.dataset.f){this.src=this.dataset.f;this.removeAttribute('data-f')}else coverErr(this)">`:''}<span class="sl-ph" aria-hidden="true">${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div></div>
-            <div class="sl-meta"><span class="sl-kind">${esc(g.kind)} · ${esc(g.year)}${origBtn(g)}</span><h3>${esc(dx?dxName(g):g.title)}</h3>${dx?'<span class="dxbadge">Deluxe</span>':''}${g.w&&g.w.length?`<span class="sl-w">with ${esc(g.w.join(' & '))}</span>`:''}<span class="sl-sub">${gd} of ${shown.length} heard</span>${rdLine(g,dx)}${origLine(g,a)}${lsPager(g)}${UI.wEdit===g.id?`<form class="sl-wf" data-form="gwith" data-a="${a.id}" data-g="${g.id}"><input name="w" value="${esc((g.w||[]).join(' & '))}" placeholder="Other artist, like Kenny Beats" aria-label="Collab with" autocomplete="off" autocapitalize="words"><button>Save</button></form>`:''}</div>
+            <div class="sl-meta"><span class="sl-kind">${esc(g.kind)} ${esc(g.year)}${origBtn(g)}</span><h3>${esc(dx?dxName(g):g.title)}</h3>${dx?'<span class="dxbadge">Deluxe</span>':''}${g.w&&g.w.length?`<span class="sl-w">with ${esc(g.w.join(' & '))}</span>`:''}<span class="sl-sub">${gd} of ${shown.length} heard</span>${rdLine(g,dx)}${origLine(g,a)}${lsPager(g)}${UI.wEdit===g.id?`<form class="sl-wf" data-form="gwith" data-a="${a.id}" data-g="${g.id}"><input name="w" value="${esc((g.w||[]).join(' & '))}" placeholder="Other artist, like Kenny Beats" aria-label="Collab with" autocomplete="off" autocapitalize="words"><button>Save</button></form>`:''}</div>
           </div>
           ${dxs.length?`<div class="dxseg" role="group" aria-label="Edition" data-dx="${dx?1:0}"><button type="button" data-act="dxsel" data-g="${g.id}" data-v="0" aria-pressed="${!dx}">Standard<span class="mono">${sd}/${std.length}</span></button><button type="button" class="dx" data-act="dxsel" data-g="${g.id}" data-v="1" aria-pressed="${dx}">Deluxe<span class="mono">${dd}/${g.items.length}</span></button></div>`:''}
           ${gfInfo(a,g,dx,shown)}
@@ -13188,7 +13202,7 @@ function gfSingleHtml(a,g,v){const {sArt,col,colD,dx,gd,shown,vgr,vrLab,trackRow
       <div class="sg7-cv" aria-hidden="true">${sArt?`<img src="${esc(sArt)}" alt="" decoding="async" onerror="this.remove()">`:''}<span>${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div>
       <div class="gf-pk r" aria-hidden="true"><div class="gf-vr vgr" style="--vc:var(--ac)">${vgr}<span class="gf-vl">${vrLab}</span></div></div>
       <div class="gf-rs">
-      <div class="gf-rh"><span class="gf-lbl">${esc([g.kind,dtShow(g)].filter(Boolean).join(' \u00b7 '))}${origBtn(g)}</span><button type="button" class="gf-x" data-act="gfclose" aria-label="Close ${esc(g.title)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+      <div class="gf-rh"><span class="gf-lbl">${esc([g.kind,dtShow(g)].filter(Boolean).join(' '))}${origBtn(g)}</span><button type="button" class="gf-x" data-act="gfclose" aria-label="Close ${esc(g.title)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
       <div class="sg7-meta"><h3>${esc(g.title)}</h3>${g.w&&g.w.length?`<span class="sl-w">with ${esc(g.w.join(' & '))}</span>`:''}<span class="sl-sub">${gd} of ${shown.length} heard</span>${rdLine(g,dx)}${origLine(g,a)}${lsPager(g)}${albBar(g,a)}${UI.wEdit===g.id?`<form class="sl-wf" data-form="gwith" data-a="${a.id}" data-g="${g.id}"><input name="w" value="${esc((g.w||[]).join(' & '))}" placeholder="Other artist, like Kenny Beats" aria-label="Collab with" autocomplete="off" autocapitalize="words"><button>Save</button></form>`:''}</div>
       ${friendStrip(g,a,dx)}
       ${g.items.length?'':'<p class="note">No songs listed yet. Tap the details button (i) up top to fill them in.</p>'}
@@ -14076,7 +14090,7 @@ document.addEventListener('submit',ev=>{
     if(g){const v=String(d.od||'').trim(),k=nTitle(g.title);a.orig=a.orig||{};
       if(/^\d{4}(-\d\d(-\d\d)?)?$/.test(v)&&+v.slice(0,4)>1800&&v<=todayISO()){
         if(g.ed&&(g.ed===v||(v.length===4&&g.ed.slice(0,4)===v))){origUndo(g);a.orig[k]={d:'',src:'hand'}}   /* same as the streaming date: no separate original */
-        else{if(!g.ed&&!(g.dt||String(g.year)).startsWith(v))g.ed=g.dt||String(g.year);a.orig[k]={d:v,src:'hand'};origApply(a);if(g.ed&&(g.dt||String(g.year))===g.ed)delete g.ed}}
+        else{if(!g.ed&&!(g.dt||String(g.year)).startsWith(v))g.ed=g.dt||String(g.year);a.orig[k]={d:v,src:'hand',...(g.ed?{e:g.ed}:{})};origApply(a);if(g.ed&&(g.dt||String(g.year))===g.ed)delete g.ed}}
       else if(!v){origUndo(g);a.orig[k]={d:'',src:'hand'}}
       touch()}
     UI.oEdit=null;render();return}
