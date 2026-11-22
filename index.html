@@ -3858,6 +3858,82 @@ html.lite .pvfr .frsheet{background:rgb(22 20 19 / .96);-webkit-backdrop-filter:
   .frc-p{transform:scale(.82);transform-origin:left top;height:124px}
   .fra-s{flex-direction:column;gap:8px}
 }
+/* Account pages */
+.pfv .pfhero{min-height:clamp(480px,56vh,600px)}
+.pfrec{flex:0 1 560px;display:flex;justify-content:center;min-width:0}
+.pfv .vl{background:transparent;border:0;padding:0;width:100%;max-width:560px;color:#fff}
+.pfv .vl-wrap{box-shadow:0 30px 60px rgb(0 0 0 / .45),0 0 0 8px rgb(255 255 255 / .1)}
+.pfv .vl .note,.pfv .vl .label{color:rgb(255 255 255 / .8)}
+.pfv .vl .btn,.pfv .vl select{border:0;border-radius:999px;background:rgb(255 255 255 / .16);color:#fff;min-height:40px}
+.pftabs{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.pfbody{display:flex;flex-direction:column;gap:34px}
+.pfs{display:flex;flex-wrap:wrap;gap:18px 0;margin-left:-28px}
+.pfs>div{flex:1 1 200px;min-width:0;padding:6px 28px;border-left:1px solid rgb(255 255 255 / .22);display:flex;flex-direction:column}
+.pfs b{font:900 clamp(44px,4.4vw,64px)/.95 Archivo,var(--display);letter-spacing:-.04em}
+.pfs span{font:600 16px var(--body);margin-top:8px}.pfs i{font-size:12px;font-style:normal;color:rgb(255 255 255 / .78);margin-top:4px}
+.pfsec{display:flex;flex-direction:column;gap:22px}
+.pfsec>.pvch{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.pfsh{display:flex;gap:30px;flex-wrap:wrap;align-items:flex-end}
+.pfsh-i{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:12px;min-width:0}
+.pfsh-i:focus-visible{outline:2px solid #fff;outline-offset:6px;border-radius:12px}
+.pfsh-a{position:relative;display:block}
+.pfsh-n{position:absolute;left:-6px;top:-18px;font:900 64px/1 Archivo,var(--display);letter-spacing:-.05em;text-shadow:0 4px 20px rgb(0 0 0 / .35)}
+.pfsh-t{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;width:calc(var(--w,160px))}
+.pfsh-i:first-child .pfsh-t{--w:190px}
+.pfsh-t>span{min-width:0;display:flex;flex-direction:column;gap:3px}.pfsh-t b{font:800 17px/1.15 Archivo,var(--display);overflow-wrap:anywhere}
+.pfspec .pf-tiles{display:none}
+.pfv .pf-hist{height:200px;border:0;background:rgb(10 12 12 / .34);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);border-radius:26px;padding:20px 22px 12px;gap:10px}
+.pfv .pf-hist button{color:#fff}
+.pfv .pf-hist i{background:rgb(255 255 255 / .34)!important;border-radius:10px}
+.pfv .pf-hist button[aria-pressed="true"] i,.pfv .pf-hist button:hover i{background:#fff!important}
+.pfv .pf-hist em,.pfv .pf-hist span{color:#fff}
+.pfv .pf-info,.pfv .pf-card{background:rgb(10 12 12 / .34);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);border:0;border-radius:26px;color:#fff;box-shadow:0 0 0 1px rgb(255 255 255 / .1) inset;padding:22px 24px}
+.pfv .pf-card h3{color:#fff;font:850 22px Archivo,var(--display)}.pfv .pf-card h3 small{color:rgb(255 255 255 / .7);font:500 12px var(--mono)}
+.pfv .note,.pfv .pf-mini span,.pfv .pf-ta small{color:rgb(255 255 255 / .8)}
+.pfv .pf-mini b,.pfv .pf-ta b{color:#fff}
+.pfv .pf-act i{background:rgb(255 255 255 / .34)}.pfv .pf-act i.top,.pfv .pf-act button[aria-pressed="true"] i{background:#fff}
+.pfv .pf-ta .bar{background:rgb(255 255 255 / .2)}.pfv .pf-ta .bar i{background:#fff}
+.pfv .btn{border:0;border-radius:999px;background:rgb(255 255 255 / .16);color:#fff;min-height:40px;font-weight:600}
+.pfv .btn:hover{background:rgb(255 255 255 / .27)}.pfv .btn.primary{background:#fff;color:#141414}.pfv .btn.danger{background:rgb(214 53 63 / .24);color:#ffdfe1}
+.pfov{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:26px}
+.pfov>.pf-c-mon{grid-column:1/-1}
+.pfhab{margin:0}
+.pflist,.pfset{display:flex;flex-direction:column;gap:20px}
+.pfv .pflist .chip,.pfv .pflist .pf-tabs button,.pfv .pfset .pf-tabs button{border:0;background:rgb(255 255 255 / .14);color:#fff}
+.pfv .pflist .chip[aria-pressed="true"],.pfv .pflist .pf-tabs button[aria-pressed="true"]{background:#fff;color:#141414}
+.pfv .pflist select,.pfv .pfset input:not([type=checkbox]),.pfv .pfset select{background:rgb(255 255 255 / .12);border:0;color:#fff;border-radius:14px}
+.pfv .pfset .setcard{background:rgb(10 12 12 / .34);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);border:0;border-radius:26px;color:#fff;padding:22px 24px}
+.pfv .pflist,.pfv .pfset{color:#fff}
+.pf-back{align-self:flex-start}
+.pft{display:flex;flex-direction:column;gap:26px}
+.pft-m{display:flex;align-items:center;gap:34px;flex-wrap:wrap}
+.pft-recs{position:relative;display:block;width:290px;height:170px;flex:none}
+.pft-recs>.pvrec{position:absolute;left:0;top:0}.pft-recs>.pft-r2{left:120px;mix-blend-mode:normal;opacity:.96}
+.pft-recs .rl{color:#fff;font-size:28px;background:var(--lc)}
+.pft-mt{display:flex;flex-direction:column;gap:6px}.pft-mt>b{font:900 clamp(56px,6vw,96px)/.9 Archivo,var(--display);letter-spacing:-.04em}
+.pft-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:22px}
+.pft-g .pvcard{gap:4px;padding:22px}
+.pft-r{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:8px;border-radius:14px;cursor:pointer}
+div.pft-r{cursor:default}
+.pft-t{flex:1;min-width:0;display:flex;flex-direction:column}.pft-t b{font:600 15px var(--body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pft-s{font-size:12px;text-align:right;color:rgb(255 255 255 / .8)}.pft-s b{color:#fff}.pft-d{color:#ffd27a!important}
+@media (max-width:900px){
+  .pfv .pfhero{min-height:0}
+  .pfrec{flex-basis:100%}
+  .pfs{margin-left:-14px}.pfs>div{padding:6px 14px;flex-basis:140px}
+  .pfsh{gap:18px;flex-wrap:nowrap;overflow-x:auto;padding:24px 4px 8px}
+  .pfsh .pvpack{--ps:130px!important}.pfsh-t,.pfsh-i:first-child .pfsh-t{--w:130px}
+  .pfsh-n{font-size:48px}
+}
+.pfv .pf-act i{display:flex;flex-direction:column-reverse;gap:2px;background:transparent!important;overflow:hidden;border-radius:5px}
+.pfv .pf-act i{opacity:.75}.pfv .pf-act i.top,.pfv .pf-act button[aria-pressed="true"] i{opacity:1}
+.pfv .pf-act i>u{display:block;width:100%;flex:1;min-height:2px;border-radius:3px;box-shadow:0 0 0 1px rgb(0 0 0 / .15) inset}
+.pfv .pf-act button[aria-pressed="true"] i,.pfv .pf-act i.top{box-shadow:0 0 0 2px #fff}
+.pfv .pf-mini>div{background:rgb(255 255 255 / .08);border:0;color:#fff}
+.pfv .pcv{box-shadow:0 0 0 2px rgb(20 20 20 / .7)}
+.pfv{--ink:#fff;--muted:rgb(255 255 255 / .76);--line:rgb(255 255 255 / .18);--surface:rgb(255 255 255 / .06);--sunk:rgb(255 255 255 / .08);--accent:#fff;--accent-ink:#141414}
+.pfv .pf-fan{width:62px}.pfv .pf-fan .pcv{border-color:#1b1f1e}
+.pfv .vl-sort button,.pfv .vl .chip{border:0;background:rgb(255 255 255 / .14);color:#fff}.pfv .vl-sort button[aria-pressed="true"],.pfv .vl .chip[aria-pressed="true"]{background:#fff;color:#141414}
 html.pbstill *,html.pbstill *::before,html.pbstill *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
 @media (max-width:900px){.pvset-sync{padding:20px;gap:18px}.pvset-tt{transform:scale(.8);transform-origin:left center;width:140px;height:130px}}
 </style>
@@ -4414,6 +4490,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.22-g', note:'ACCOUNT PAGES REDESIGN (yours and friends\u2019). The page colors now come from your account color mixed with your top-rated albums (a friend\u2019s page uses theirs). The big bead record is the hero beside your name, a stats line, your friend code chip, whether friends can see your page, and Share my page; tapping a bead still pops that album out. The tabs are glass pills (Overview, Albums, Shows & films, Settings). OVERVIEW: a row of big numbers; TOP SHELF, your 5 highest with records peeking out (same tie-break ranking as everywhere); the SCORE SPECTRUM (tap a score to see those albums); ALBUMS RATED PER MONTH where each block is one album in its own color; and the Year in review, Scoring habits and Top artists cards. Albums and Settings keep everything they had, in the new look. A FRIEND\u2019S PAGE adds two overlapping records with your taste match, WHERE YOU SPLIT and WHERE YOU AGREE, and WHAT THEY LOVE THAT YOU HAVEN\u2019T HEARD, with one tap to add it to your Listen list (it remembers it came from their page).'},
   {v:'2026.11.22-f', note:'FRIENDS SHEET REDESIGN. Friends is now a glass drawer on the right over whatever page you\u2019re on (a full-height sheet on a phone), with your friends\u2019 faces at the top. ACTIVITY: requests sit at the top with Accept and Decline, then what friends rated grouped Today / Yesterday / This week, each one a sleeve with the friend\u2019s face on it, their rating pill, review snippets, and NEW: the gap to your own score ("you 8.5 +1"). FRIENDS: each friend is a sleeve in their account color with a record whose lit groove is your taste match (once you\u2019ve opened their page), the last album they rated tucked in the corner, sorted by best match or A to Z. Friends who aren\u2019t sharing are dimmed. ADD: your friend code as a ticket with Copy and Share, three short steps, the code box, and the requests waiting for them.'},
   {v:'2026.11.22-e', note:'LISTEN LIST AS THE CRATE. The Listen list is now a wide sheet that rises from the bottom (full screen on a phone) in the colors of the album at the front. UP NEXT is that album, big, with its record pulled out and spinning slowly, its grooves lit for the songs you\u2019ve heard, when you added it and where it came from, friends\u2019 scores when they\u2019ve rated it, a segment bar of songs heard, Play (it tells you which song is next), Open album, Move to back and Remove. The rest stand in the crate as sleeves with their records peeking out; they lift on hover, show a progress bar, and say when they were added, where they came from, or that they\u2019re not in your log yet. Add an album from the bar at the top. Fresh pressings are the new releases with a date stamp (white for ones not out yet), with Add, Artist, Dismiss, Check now and the daily-checks switch. Heard sits last with checkmarks and Clear.'},
   {v:'2026.11.22-d', note:'STATS REDESIGN. Stats now takes its colors from your #1 artist for the range you pick. The top has the range pills and a year menu, the big numbers, and how this period compares with the one before (for example +18% plays and 2 h more), beside your #1 artist with their photo fading in like the artist page header, Open artist and Play. Recently played starts with a turntable for what\u2019s playing now (or the last thing you played), then sleeves with how long ago. Top of the month is a podium for the top 3 (records peeking out of their sleeves, artist photos for Artists), then rows with play bars in each album\u2019s color. Beside it: plays over time as a waveform, and Highlights. Then TIME OF DAY AS A RECORD CLOCK (24 bars around a spinning record, peak hour on the label), day of the week, and a NEW record showing how much of what you play is from artists in your log. Your listening history, imports and the fake-stats preview stay at the bottom.'},
@@ -9723,7 +9800,7 @@ function accInsightsHtml(P){
   }
   const dated=al.filter(x=>/^\d{4}-\d\d/.test(x.d||''));
   if(dated.length>=3){
-    const by={};for(const x of dated){const k=x.d.slice(0,7);by[k]=(by[k]||0)+1}
+    const by={},byC={};for(const x of dated){const k=x.d.slice(0,7);by[k]=(by[k]||0)+1;(byC[k]=byC[k]||[]).push(accCol(x))}
     const ks=Object.keys(by).sort(),[y0,m0]=ks[0].split('-').map(Number),[y1,m1]=ks[ks.length-1].split('-').map(Number);
     const mo=[];let y=y0,m=m0;
     while(y<y1||(y===y1&&m<=m1)){const k=y+'-'+String(m).padStart(2,'0');mo.push({k,n:by[k]||0});m++;if(m>12){m=1;y++}}
@@ -9736,7 +9813,7 @@ function accInsightsHtml(P){
         ${ls.length?`<p class="note">${ls.length} album${ls.length===1?'':'s'} · avg ${accAvg(ls).toFixed(1)} · best: ${esc(ls[0].n||'Untitled')} (${fmt(ls[0].r)})</p>${pfCovs(ls,`data-act="pgomon" data-v="${mk.k}"`)}<div class="pf-go"><button class="btn" data-act="pgomon" data-v="${mk.k}">See ${ls.length===1?'it':'them'} in Albums →</button></div>`:`<p class="note">Nothing rated this month.</p>`}</div>`;
     }else monInfo=`<p class="note pf-hint${pfHintIn('mo')}">Tap a bar to see that month.</p>`;
     h+=`<div class="pf-card pf-c-mon${an}" style="--i:${n++}"><h3>Albums rated per month<small>${esc(lab(shown[0].k))} → ${esc(lab(shown[shown.length-1].k))}</small></h3>
-      <div class="pf-act${an}" role="group" aria-label="Albums rated each month. Tap a bar for details.">${shown.map((x,i)=>`<button data-act="pmo" data-v="${x.k}" aria-pressed="${x.k===sk}" aria-label="${esc(pMonthName(x.k))}: ${x.n} album${x.n===1?'':'s'}" style="--i:${i}"><i style="--v:${(x.n/mx*100).toFixed(0)}%" class="${x.k===best.k?'top':''}"></i></button>`).join('')}</div>
+      <div class="pf-act${an}" role="group" aria-label="Albums rated each month. Tap a bar for details.">${shown.map((x,i)=>`<button data-act="pmo" data-v="${x.k}" aria-pressed="${x.k===sk}" aria-label="${esc(pMonthName(x.k))}: ${x.n} album${x.n===1?'':'s'}" style="--i:${i}"><i style="--v:${(x.n/mx*100).toFixed(0)}%" class="${x.k===best.k?'top':''}">${(byC[x.k]||[]).slice(0,40).map(c=>`<u style="background:${c}"></u>`).join('')}</i></button>`).join('')}</div>
       ${monInfo}
       <div class="pf-mini"><div><b>${best.n}</b><span>busiest month (${esc(lab(best.k))})</span></div><div><b>${act} of ${mo.length}</b><span>months with a rating</span></div><div><b>${(dated.length/mo.length).toFixed(1)}</b><span>albums a month</span></div></div></div>`;
   }
@@ -9904,10 +9981,65 @@ document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&document.querySel
 let pfRz=null;
 window.addEventListener('resize',()=>{clearTimeout(pfRz);pfRz=setTimeout(pfFit,80)});
 document.addEventListener('keydown',ev=>{if((ev.key==='Enter'||ev.key===' ')&&ev.target.classList&&ev.target.classList.contains('vl-b')){ev.preventDefault();ev.target.dispatchEvent(new MouseEvent('click',{bubbles:true}))}});
+/* 2026.11.22-b ACCOUNT PAGES (yours and a friend's) in the new look. The page colors are your account color mixed with your
+   top-rated albums (a friend's page uses theirs). The big bead record is the hero, with your photo as its center label;
+   tapping a bead still pops that album out. Overview: a row of stats, the Top shelf (top 5 with records peeking out, using
+   the tie-break ranking), the score spectrum, albums rated per month as blocks (one per album, in its own color), and the
+   Year in review, Scoring habits and Top artists cards. A friend's page adds two overlapping records with your taste
+   match, where you split and agree, and what they love that you haven't heard (one tap adds it to your Listen list). */
+let ACCOL=null;
+function accColMap(){const k=(S.mtime||0)+':'+ACOLV;if(ACCOL&&ACCOL.k===k)return ACCOL.m;const m=new Map();
+  for(const a of S.music||[]){if(a.example)continue;for(const g of a.groups||[]){if(!RATEABLE.includes(g.kind))continue;const q=accKeys(a,g);if(q.k&&!m.has(q.k))m.set(q.k,g);if(!m.has(q.t))m.set(q.t,g)}}
+  ACCOL={k,m};return m}
+function accCol(x){const m=accColMap(),g=m.get(x.k)||m.get(x.t);if(g)return gCol(g,gArt(g),true);
+  const ck='v'+accHash(String(x.t||x.k||x.n||'')),c=ACOL[ck],u=accCover(x);if(c)return c;if(c!==''&&u)acolLazy(ck,u);return acolFallback({title:x.n,id:ck})}
+function pfStatRow(P,st){const b=accBase(P.items),yr=new Date().getFullYear(),inY=y=>b.filter(x=>x.kind==='a'&&x.d&&x.d.slice(0,4)===String(y)).length,ny=inY(yr),py=inY(yr-1),f=v=>v?v.toFixed(1):'–';
+  const t=[[st.al,'albums rated',st.al?'avg '+f(st.aAvg):'']];
+  if(P.songs>0)t.push([Number(P.songs),'songs rated',P.savg?'avg '+f(P.savg):'']);
+  if(ny||py)t.push([ny,'albums rated in '+yr,py?(ny>py?(ny-py)+' more than '+(yr-1):ny<py?(py-ny)+' fewer than '+(yr-1):'same as '+(yr-1)):'']);
+  if(st.sc)t.push([st.sc,'shows &amp; films','avg '+f(st.sAvg)]);
+  return `<div class="pfs">${t.map(([n,l,s],i)=>`<div class="pvrise" style="--d:${i+1}"><b>${Number(n).toLocaleString()}</b><span>${l}</span>${s?`<i class="pvmono">${s}</i>`:''}</div>`).join('')}</div>`}
+function pfShelf(P){const top=accBest(P.self,accBase(P.items).filter(x=>x.kind==='a')).slice(0,5);if(!top.length)return '';
+  return `<section class="pfsec"><div class="pvch"><h3 class="pvh2">Top shelf</h3><span class="pvmono pvmut">${P.self?'your':esc(P.name)+'’s'} 5 highest, ties broken by song average, then plays</span><span style="flex:1"></span><button class="pvb sm" data-act="ptab" data-v="a">See all albums →</button></div>
+    <div class="pfsh">${top.map((x,i)=>{const c=accCol(x);return `<button type="button" class="pfsh-i pvhov pvrise" style="--d:${i+1}" data-act="palb" data-key="${esc(accPk(x))}" aria-label="${esc(x.n||'Untitled')}, rated ${fmt(x.r)}"><span class="pfsh-a">${pvPack(i?160:190,accCover(x),c,x.n,x.r*10)}<span class="pfsh-n">${i+1}</span></span>
+      <span class="pfsh-t"><span><b>${esc(x.n||'Untitled')}</b><span class="pvsm">${esc(accArtText(x))}${x.d&&fmtRd(x.d)?' · '+esc(fmtRd(x.d)):''}</span></span>${pvPill(x.r,c)}</span></button>`}).join('')}</div></section>`}
+/* a friend's page: how your tastes line up */
+function pfTaste(P,mine){let M;try{M=accMatch(P.items,mine)}catch(e){return ''}if(!M||!M.n)return '';
+  const both=accBase(P.items).filter(x=>x.kind==='a').map(x=>({x,m:M.mine(x)})).filter(o=>o.m!=null);
+  const split=both.filter(o=>Math.abs(o.x.r-o.m)>=1).sort((p,q)=>Math.abs(q.x.r-q.m)-Math.abs(p.x.r-p.m)).slice(0,5);
+  const agree=both.filter(o=>Math.abs(o.x.r-o.m)<.05).sort((p,q)=>q.x.r-p.x.r).slice(0,5);
+  const lov=accBest(false,accBase(P.items).filter(x=>x.kind==='a'&&x.r>=8.5&&M.mine(x)==null)).slice(0,6);
+  const h=accHueOf(P),me=ACC.me||{},hm=accHueOf(me);
+  const row=o=>{const c=accCol(o.x),d=o.x.r-o.m;return `<button type="button" class="pft-r pvrowh" data-act="palb" data-key="${esc(accPk(o.x))}">${pvSleeve(46,accCover(o.x),c,o.x.n)}<span class="pft-t"><b>${esc(o.x.n||'Untitled')}</b><span class="pvsm">${esc(accArtText(o.x))}</span></span><span class="pvmono pft-s">${esc(P.name)} <b>${fmt(o.x.r)}</b> · you <b>${fmt(o.m)}</b>${Math.abs(d)>=.05?` <b class="pft-d">${d>0?'+':'−'}${fmt(Math.abs(d))}</b>`:''}</span></button>`};
+  return `<section class="pft pvrise"><div class="pft-m"><span class="pft-recs">${pvRec(170,{label:accFace(P),li:'30%',lc:`hsl(${h} 45% 40%)`,lit:M.pct,spin:'slow'})}${pvRec(170,{label:accFace(me),li:'30%',lc:`hsl(${hm} 45% 40%)`,cls:'pft-r2',spin:'slow'})}</span>
+      <span class="pft-mt"><b>${M.pct}%</b><span class="pvsub">taste match</span><span class="pvsm">from ${M.n} thing${M.n===1?'':'s'} you both rated</span></span></div>
+    <div class="pft-g">
+      ${split.length?`<div class="pvcard pvdg"><h3 class="pvh3">Where you split</h3>${split.map(row).join('')}</div>`:''}
+      ${agree.length?`<div class="pvcard pvdg"><h3 class="pvh3">Where you agree</h3>${agree.map(row).join('')}</div>`:''}
+      ${lov.length?`<div class="pvcard pvdg pft-lov"><h3 class="pvh3">${esc(P.name)} loves, you haven’t heard</h3>${lov.map(x=>{const c=accCol(x),art=accArts(x)[0]||'',on=art&&llOn(art,x.n);return `<div class="pft-r">${pvSleeve(46,accCover(x),c,x.n)}<span class="pft-t"><b>${esc(x.n||'Untitled')}</b><span class="pvsm">${esc(accArtText(x))}</span></span>${pvPill(x.r,c)}${art?`<button type="button" class="pvb xs${on?'':' w'}" data-act="pflisten" data-a="${esc(art)}" data-t="${esc(x.n||'')}" data-from="${esc(P.name)}’s page"${on?' disabled':''}>${on?'On your list':'+ Listen list'}</button>`:''}</div>`}).join('')}</div>`:''}
+    </div></section>`}
+function pfHabits(P){if(!P.self)return '';let n=0,d=0;
+  try{const m=accColMap();for(const x of accBase(P.items)){if(x.kind!=='a')continue;const g=m.get(x.k)||m.get(x.t);if(!g)continue;const sa=relAvg(g);if(sa){n++;d+=x.r-sa}}}catch(e){}
+  if(n<3)return '';const v=d/n;return `<p class="pvsm pfhab">${Math.abs(v)<.05?'Your albums and their songs score about the same':`Your albums ${v>0?'beat':'trail'} their songs by <b>${v>0?'+':'−'}${Math.abs(v).toFixed(1)}</b> on average`} (${n} albums with rated songs).</p>`}
 function profileHtml(P,mine){
-  const st=accStats(P.items,P.self),match=P.self?null:accMatch(P.items,mine);
-  const sec=P.self&&UI.pTab==='c'?accManageHtml(P):UI.pTab==='a'||UI.pTab==='s'?accListHtml(P,match):accStatsHtml(st,P)+`<div class="pf-ov">${accInsightsHtml(P)}${accVinylHtml(P)}</div>`;
-  return accHeroHtml(Object.assign({},P,{n:accBase(P.items).length}),st,match,P.extra)+accTabsHtml(P)+sec;
+  const st=accStats(P.items,P.self),match=P.self?null:accMatch(P.items,mine),b=accBase(P.items),al=b.filter(x=>x.kind==='a');
+  const t=UI.pTab==='a'||UI.pTab==='s'||(UI.pTab==='c'&&P.self)?UI.pTab:'o';
+  const sec=t==='c'?`<div class="pfset">${accManageHtml(P)}</div>`:t==='a'||t==='s'?`<div class="pflist">${accListHtml(P,match)}</div>`
+    :pfStatRow(P,st)+(P.self?'':pfTaste(P,mine))+pfShelf(P)+`<section class="pfsec pfspec"><div class="pvch"><h3 class="pvh2">Score spectrum</h3><span class="pvmono pvmut">tap a score to see those albums</span></div>${accStatsHtml(st,P)}</section><div class="pfov">${accInsightsHtml(P)}</div>`;
+  const top=accBest(P.self,al).slice(0,3).map(accCol),h=accHueOf(P),ac=hslHex(h,.45,.38);
+  const first=al.filter(x=>/^\d{4}-\d\d/.test(x.d||'')).map(x=>x.d).sort()[0];
+  const since=first?new Date(+first.slice(0,4),+first.slice(5,7)-1,1).toLocaleDateString([],{month:'short',year:'numeric'}):'';
+  const line=[al.length+' album'+(al.length===1?'':'s'),st.al?'Albums '+st.aAvg.toFixed(1):'',P.savg?'Songs '+Number(P.savg).toFixed(1):'',P.friends!=null?P.friends+' friend'+(P.friends===1?'':'s'):''].filter(Boolean).join(' · ');
+  const tabs=[['o','Overview'],['a',`Albums<span>${st.al}</span>`]].concat(st.sc||P.self?[['s',`Shows &amp; films<span>${st.sc}</span>`]]:[]).concat(P.self?[['c','Settings']]:[]);
+  const me=ACC.me||{},share=P.self?!!me.share:true;
+  const btns=P.self?`<button class="pvb pvg" data-act="acccopy"><span class="pvmono" style="font-size:13px;opacity:.8">CODE</span><b class="pvmono" style="letter-spacing:.1em">${esc(me.code||'')}</b><span class="pvsm" style="color:inherit">${ACX.copied?'Copied':''}</span></button><button class="pvb pvg" data-act="ptab" data-v="c"><span style="color:${share?'#9ff0b8':'#ffd27a'}">●</span> ${share?'Friends can see your page':'Your page is private'}</button><button class="pvb pvg" data-act="frshare">Share my page</button>`
+    :`${UI.fFrom==='sheet'?`<button class="pvb pvg" data-act="frback">← Friends</button>`:`<button class="pvb pvg" data-act="view" data-v="account">← Your page</button>`}${match&&match.n>=3?`<span class="pvb pvg" style="cursor:default"><b>${match.pct}%</b> taste match</span>`:''}`;
+  return `${pvBg([ac,top[0]||ac,top[1]||hslHex((h+40)%360,.4,.3)])}
+    <div class="pvhero pfhero"><div class="pvht pvrise"><span class="pvk">${P.self?'Your page':esc(P.name)+'’s page'}${since?' · rating since '+esc(since):''}</span><h2 class="pvh" id="ac-h">${esc(P.name)}</h2><p class="pvsub">${esc(line)}</p>
+      <div class="pvset-sb">${btns}</div>${al.length?`<p class="pvsm" style="max-width:420px">Every bead on ${P.self?'your':'this'} record is an album, best on the outer edge. Tap one to pull it out.</p>`:''}</div>
+      <div class="pfrec pvrise" style="--d:2">${accVinylHtml(P)}</div></div>
+    <div class="pftabs">${pvSeg('ptab',t,tabs,'Page sections',false)}</div>
+    <div class="pfbody">${sec}</div>`;
 }
 /* the album pop-up on an account page: tap a cover to see its rating, the day it was rated and, on your own page, every song's rating */
 const accPk=x=>(x.k||x.t||x.n||'')+'|'+(x.d||'');
@@ -10143,27 +10275,27 @@ function accountView(){
   const anim=UI.pAnim;
   let h;
   if(!accOn()){
-    h=`<section class="settings pf" aria-labelledby="ac-h"><h2 id="ac-h">Account</h2>
-      <div class="setcard acc"><h3>Sign in</h3>
+    h=`<section class="pv pfv" aria-labelledby="ac-h">${pvBg(['#2f8f86','#1d5a55','#5a6e78'])}<div class="pvhero"><div class="pvht pvrise"><span class="pvk">Your page</span><h2 id="ac-h" class="pvh">Account</h2><p class="pvsub">A page of your own, friends, and how alike your tastes are.</p></div></div>
+      <div class="setcard acc pvcard pvdg"><h3>Sign in</h3>
       <p class="note">Make an account with Google to get a page of your own, add friends, and open their pages to see what they rated and how alike your tastes are. Your ratings, song ratings and written album reviews are shared only with friends you accept, and you can switch that off any time. Your log stays on this device unless you turn on Keep my log on all my devices after signing in.</p>
       <div id="g-btn" class="gbtn" aria-label="Sign in with Google"></div>${ACX.busy==='in'?'<span class="note">Signing in…</span>':''}${ACX.msg?`<span class="msg ${ACX.ok?'ok':'err'}" role="status">${esc(ACX.msg)}</span>`:''}
       <p class="note">Playback keeps your Google name and a private id, never your email address. <a href="privacy.html" target="_blank" rel="noopener">Privacy policy</a></p></div></section>`;
   }else{
     const items=accItems(),ss=accSongStats(),F=ACX.fr,P={self:true,songs:ss.n,savg:ss.avg,name:ACC.me.name,hue:ACC.me.hue,pic:ACC.me.pic,pop:ACX.popAv,friends:F?F.friends.length:0,items,extra:`<span class="pf-code">Code <b>${esc(ACC.me.code)}</b></span>`};
-    h=`<section class="settings pf" aria-labelledby="ac-h"><h2 id="ac-h" class="sr">Your page</h2>${profileHtml(P,null)}</section>`;
+    h=`<section class="pv pfv${UI.pAnim?'':' pvnoanim'}" aria-labelledby="ac-h">${profileHtml(P,null)}</section>`;
   }
   UI.pAnim=false;UI.pAnimL=false;UI.pAnimF=false;UI.pAnimI=false;UI.pHintIn='';ACX.popAv=false;return h;
 }
 function friendView(){
   const uid=UI.fid,c=ACX.prof[uid]||{},F=ACX.fr,known=F&&[].concat(F.friends,F.incoming,F.outgoing).find(x=>x.uid===uid);
-  const back=UI.fFrom==='sheet'?`<button class="btn pf-back" data-act="frback">← Friends</button>`:`<button class="btn pf-back" data-act="view" data-v="account">← Account</button>`;
+  const back=UI.fFrom==='sheet'?`<button class="pvb pvg pf-back" data-act="frback">← Friends</button>`:`<button class="pvb pvg pf-back" data-act="view" data-v="account">← Your page</button>`;
   let h;
-  if(!accOn())h=`<section class="settings pf">${back}<p class="note">Sign in to see friends’ pages.</p></section>`;
+  if(!accOn())h=`<section class="pv pfv">${pvBg([])}${back}<p class="pvsub">Sign in to see friends’ pages.</p></section>`;
   else if(c.data){
     const d=c.data,P={self:false,name:d.name,hue:d.hue,pic:d.pic,friends:d.friends,items:d.items,songs:d.songs,savg:d.savg};
-    h=`<section class="settings pf" aria-label="${esc(d.name)}’s page">${back}${profileHtml(P,accItems())}</section>`;
-  }else if(c.err)h=`<section class="settings pf">${back}<div class="setcard"><h3>${esc(known?known.name:'Friend')}</h3><p class="note">${esc(c.err)}</p></div></section>`;
-  else h=`<section class="settings pf">${back}<div class="pf-hero" style="--h:${accHueOf(known||{})}"><div class="pf-av${accPicOf(known)?' pic':''}" aria-hidden="true">${accFace(known||{})}</div><div class="pf-who"><h2>${esc(known?known.name:'Friend')}</h2><span class="pf-sub">Loading…</span></div></div></section>`;
+    h=`<section class="pv pfv${UI.pAnim?'':' pvnoanim'}" aria-label="${esc(d.name)}’s page">${profileHtml(P,accItems())}</section>`;
+  }else if(c.err)h=`<section class="pv pfv">${pvBg([hslHex(accHueOf(known||{}),.45,.38)])}${back}<div class="pvcard pvdg"><h3 class="pvh2">${esc(known?known.name:'Friend')}</h3><p class="pvsub">${esc(c.err)}</p></div></section>`;
+  else h=`<section class="pv pfv">${pvBg([hslHex(accHueOf(known||{}),.45,.38)])}<div class="pvhero"><div class="pvht"><span class="pvk">Loading…</span><h2 class="pvh">${esc(known?known.name:'Friend')}</h2><div class="pvset-sb">${back}</div></div><div class="pfrec">${pvRec(420,{label:accFace(known||{}),li:'33%',lc:'hsl('+accHueOf(known||{})+' 45% 40%)',spin:'mid'})}</div></div></section>`;
   /* while the friend's page is still loading (nothing but the "Loading…" hero was drawn) keep the entrance flags, so the real page animates in when its data arrives; clearing them here is why nothing animated on a friend's page the first time you opened it */
   if(c.data||c.err||!accOn()){UI.pAnim=false;UI.pAnimL=false;UI.pAnimF=false;UI.pAnimI=false;UI.pHintIn=''}
   return h;
@@ -13348,6 +13480,7 @@ document.addEventListener('click',ev=>{
   else if(act==='pgosc'){UI.pTab=b.dataset.k==='s'?'s':'a';UI.pKind=UI.pTab;UI.pBucket=+b.dataset.v;UI.pMin=0;UI.pYear='';UI.pMon=0;UI.pSort='new';UI.pLim=60;UI.pFOpen=true;UI.pAnimL=true;UI.pAnimF=true;window.scrollTo({top:0})}   /* from a score bar to the albums with exactly that score */
   else if(act==='pgomon'){const[yy,mm]=String(b.dataset.v).split('-');UI.pTab='a';UI.pKind='a';UI.pYear=yy;UI.pMon=+mm;UI.pMin=0;UI.pBucket=0;UI.pSort='new';UI.pLim=60;UI.pFOpen=true;UI.pAnimL=true;UI.pAnimF=true;window.scrollTo({top:0})}   /* from a month bar to that month's albums */
   else if(act==='palb'){UI.pAlb=b.dataset.key}
+  else if(act==='pflisten'){if(llAdd(b.dataset.a,b.dataset.t,'',b.dataset.from))touch()}
   else if(act==='palbx'){UI.pAlb=''}
   else if(act==='accout'){accOut('Signed out.');ACX.ok=true;render();return}
   else if(act==='accdel'){accDelete();return}
