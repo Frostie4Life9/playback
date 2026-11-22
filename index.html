@@ -2368,6 +2368,16 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 /* problem report card: when the page crashes for a friend, offer to send the details to Skyler */
 .pberr{position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:99999;max-width:460px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:12px 14px;border-radius:16px;background:var(--surface);color:var(--ink);border:1px solid var(--warn);box-shadow:0 10px 30px rgba(0,0,0,.28);font:500 14px/1.35 var(--body);opacity:0;transform:translateY(-16px) scale(.98);transition:opacity .28s ease,transform .32s cubic-bezier(.2,.8,.2,1)}
 .pberr.in{opacity:1;transform:none}
+.pbbug{position:fixed;inset:0;z-index:99998;display:flex;align-items:flex-end;justify-content:center;padding:12px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 12px);background:rgb(0 0 0 / 0);transition:background .28s ease}
+.pbbug.in{background:rgb(0 0 0 / .45)}
+.pbbug-c{width:100%;max-width:480px;padding:16px;border-radius:20px;background:var(--surface);color:var(--ink);border:1px solid rgb(127 127 127 / .25);box-shadow:0 16px 40px rgba(0,0,0,.4);font:500 14px/1.4 var(--body);transform:translateY(24px);opacity:0;transition:opacity .28s ease,transform .32s cubic-bezier(.2,.8,.2,1)}
+.pbbug.in .pbbug-c{transform:none;opacity:1}
+.pbbug-c h3{margin:0 0 6px;font-size:18px}
+.pbbug-c textarea{width:100%;box-sizing:border-box;margin:10px 0;min-height:96px;padding:10px 12px;border-radius:12px;border:1px solid rgb(127 127 127 / .35);background:rgb(127 127 127 / .1);color:inherit;font:inherit;resize:vertical}
+.pbbug-c .pbb{display:flex;gap:8px}
+.pbbug-p{margin:0;font-size:13px;opacity:.75}
+.pbbug-m{margin:8px 0 0;min-height:1em;font-size:13px;opacity:.85}
+@media (min-width:700px){.pbbug{align-items:center}}
 .pberr p{margin:0;flex:1 1 200px}
 .pberr small{display:block;color:var(--muted);font-weight:400;font-size:12px;margin-top:2px}
 .pberr .pbb{display:flex;gap:8px}
@@ -4508,6 +4518,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.22-p', note:'REPORT A BUG: a new Report a bug button in Settings, Help & feedback (or Ctrl+Shift+B on a computer, from any page) opens a sheet over the page you are on. Describe what went wrong and the report also carries what Playback was doing: the last taps, any errors, failed network calls, the build and whether this device is running an older cached copy, the device and screen, lite mode, the page and the app state. Never your ratings, sync key or sign-in. The crash card now sends that same full report (and shows for the owner too). Reports land in Owner tools, Bug reports, where each can be copied or marked done; they are kept on the Worker in D1, so they do not use up the daily KV writes.'},
   {v:'2026.11.22-o', note:'STREAMING DATE FIXED AND ON THE TOP LINE: the streaming note vanished after the app restarted, because the start-up tidy rebuilds every imported artist\u2019s albums and dropped it (it also reset the monthly MusicBrainz check, so each artist page would have asked again every visit). Now the rebuild keeps it, a copy is saved with the original date so it can always be restored, and notes already lost come back from Apple Music the next time you open that artist. The note sits at the end of the open album\u2019s top line with a gap instead of dots: Studio album 2020   Streaming Jan 17, 2025. Singles too.'},
   {v:'2026.11.22-n', note:'STREAMING DATE ON THE TOP LINE: the streaming date of a record that came out earlier now sits at the end of the open album\u2019s top line, like Studio album \u00b7 2020 \u00b7 Streaming Jan 17, 2025, instead of on a line of its own. Tap it to change the original date, same as before. Singles show it the same way.'},
   {v:'2026.11.22-m', note:'ORIGINAL RELEASE DATES: a record that reached streaming years after it first came out now sits in the year it was born. Spotify and Apple only know their own date, so Mac Miller\u2019s Faces (a free mixtape in May 2014, on streaming October 2021) landed after his death on the timeline. Playback now asks MusicBrainz, which keeps every edition of a record together with its first release date, and moves a release back when MusicBrainz has it in an earlier year under the same title (remaster, anniversary and deluxe tags ignored; singles only match singles; live albums and compilations never count). The timeline, Eras and oldest/newest sorting all follow the original date, and the open album shows the streaming date at the end of its top line (Studio album \u00b7 2020 \u00b7 Streaming Oct 15, 2021). Tap it, or More \u2192 Set original release date, to type your own date, or clear it to go back to the streaming date; a date you set is never changed again. Each artist page checks itself once a month (and right after an import), and Settings \u2192 Your data \u2192 Original release dates checks every artist at once and lists what moved. It costs no Worker or Spotify calls.'},
@@ -4654,12 +4665,11 @@ const BUILD=CHANGELOG[0].v;
 
 /* ---------- problem reports from friends ----------
    A crash anywhere (or a page that could not be drawn) shows a small card with one button that sends the details to
-   Skyler through the Suggest box. Nothing is sent without the tap. Only friends see it; the owner has the console.
+   Skyler through the Suggest box. Nothing is sent without the tap. Everyone sees it (2026.11.22-p: the owner too); it sends a full bug report (see BUG below).
    Network failures are not reported (they are not bugs), each different error shows once, and at most three per visit. */
 const ERX={seen:new Set(),n:0,el:null,rep:'',busy:false};
 function pbErr(e,where){
   try{
-    if(window.PB_OWNER)return;
     const msg=String((e&&e.message)||e||'').slice(0,160);
     if(!msg||/ResizeObserver|^Script error\.?$|Load failed|Failed to fetch|NetworkError|AbortError/i.test(msg))return;
     const st=String((e&&e.stack)||'').split('\n').slice(1,3).map(x=>x.trim().replace(/https?:\/\/[^\s)]*\//,'')).join(' | ');
@@ -4674,7 +4684,7 @@ function pbErrShow(mode){
   try{
     let el=ERX.el;
     if(!el||!el.isConnected){el=ERX.el=document.createElement('div');el.className='pberr';el.setAttribute('role','status');el.setAttribute('aria-live','polite');document.body.appendChild(el);el.addEventListener('click',pbErrClick)}
-    el.innerHTML=mode==='ask'?`<p>Something went wrong on this page.<small>Sending a report tells Skyler what broke, with your name.</small></p><div class="pbb"><button class="btn primary" data-pe="send">Send report</button><button class="btn" data-pe="no">Not now</button></div>`
+    el.innerHTML=mode==='ask'?`<p>Something went wrong on this page.<small>${window.PB_OWNER?'Send it to your bug reports with what Playback was doing.':'Sending a report tells Skyler what broke and what Playback was doing, with your name.'}</small></p><div class="pbb"><button class="btn primary" data-pe="send">Send report</button><button class="btn" data-pe="no">Not now</button></div>`
       :mode==='busy'?`<p>Sending…</p>`
       :mode==='ok'?`<p>Sent. Thanks, that helps.</p>`
       :`<p>That did not send. Check your connection.</p><div class="pbb"><button class="btn primary" data-pe="send">Try again</button><button class="btn" data-pe="no">Dismiss</button></div>`;
@@ -4688,14 +4698,97 @@ async function pbErrClick(ev){
   if(ERX.busy)return;ERX.busy=true;pbErrShow('busy');
   try{
     let name='';try{name=(ACC&&ACC.me&&ACC.me.name)||''}catch(x){}
-    const r=await fetch(SUG_URL+'/suggest',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:name.slice(0,40),text:ERX.rep})});
-    if(!r.ok)throw 0;
+    await bugSend(ERX.rep,true);
     pbErrShow('ok');setTimeout(pbErrHide,1800);
   }catch(x){pbErrShow('fail')}
   ERX.busy=false;
 }
 window.addEventListener('error',ev=>pbErr(ev.error||ev.message,'page'));
 window.addEventListener('unhandledrejection',ev=>pbErr(ev.reason,'page'));
+/* ---------- 2026.11.22-p BUG REPORTS ----------
+   A small recorder runs from the start: the last 40 taps (which button, on which page), the last 30 errors (including
+   console errors), and the last 20 network calls that failed or were slow. Nothing leaves the device until someone
+   presses Send. Report a bug (Settings, Help & feedback; Ctrl+Shift+B on a computer) opens a sheet over the page you
+   are on; the crash card sends the same full report. Reports go to the Worker's /bug (D1), with the app build, whether
+   this device is running an older cached copy, the device and screen, lite mode, the page and the app's state, but never
+   the log itself, sync keys or sign-in tokens. The owner reads them in Owner tools, Bug reports. */
+const BUG_URL='https://playback-sync.skyfro04.workers.dev';
+const BUG={crumbs:[],errs:[],net:[],cons:[],page:null,el:null,busy:false,msg:'',ok:false,list:null,lbusy:false,lmsg:'',copied:''};
+const bugT=()=>Math.round(performance.now());
+function bugPush(a,x,n){a.push(x);if(a.length>n)a.splice(0,a.length-n)}
+function bugCut(s,n){s=String(s==null?'':s);return s.length>n?s.slice(0,n)+'…':s}
+/* where the person is right now, in a few fields (also kept from the last page before Settings, so a report written there still says where the problem was) */
+function bugPage(){const o={};try{o.view=UI.view||'main';o.tab=UI.tab;try{const a=current();if(a)o.artist=bugCut(a.name,60)}catch(e){}
+  for(const k of ['rOpen','fid','pTab','setSec','libOpen','addOpen'])if(UI[k]!=null&&UI[k]!==false&&UI[k]!=='')o[k]=typeof UI[k]==='object'?'[obj]':bugCut(UI[k],60)}catch(e){o.view='boot'}
+  o.scroll=Math.round(window.scrollY||0);return o}
+function bugLabel(el){if(!el)return '';const t=(el.getAttribute&&(el.getAttribute('aria-label')||el.getAttribute('title')))||el.textContent||'';return bugCut(t.replace(/\s+/g,' ').trim(),40)}
+document.addEventListener('click',ev=>{try{const t=ev.target;if(!t||!t.closest)return;
+  const b=t.closest('[data-act],button,a,[role="button"],input,select,summary,label')||t;
+  const c={t:bugT()};if(b.dataset&&b.dataset.act){c.act=b.dataset.act;if(b.dataset.v)c.v=bugCut(b.dataset.v,40);if(b.dataset.id)c.id=bugCut(b.dataset.id,40)}
+  else c.el=(b.tagName||'').toLowerCase()+(b.className&&typeof b.className==='string'?'.'+b.className.trim().split(/\s+/).slice(0,2).join('.'):'');
+  const l=bugLabel(b);if(l)c.label=l;
+  try{c.view=UI.view||'main';if(UI.view!=='settings')BUG.page=bugPage()}catch(e){}
+  bugPush(BUG.crumbs,c,40)}catch(e){}},true);
+window.addEventListener('popstate',()=>{try{bugPush(BUG.crumbs,{t:bugT(),nav:'back'},40)}catch(e){}});
+document.addEventListener('visibilitychange',()=>{try{bugPush(BUG.crumbs,{t:bugT(),vis:document.visibilityState},40)}catch(e){}});
+function bugErr(e,where){try{bugPush(BUG.errs,{t:bugT(),where:where||'page',msg:bugCut((e&&e.message)||e,300),stack:bugCut(String((e&&e.stack)||'').split('\n').slice(0,6).map(x=>x.trim().replace(/https?:\/\/[^\s)]*\//,'')).join(' | '),700)},30)}catch(x){}}
+window.addEventListener('error',ev=>{if(ev.target&&ev.target!==window&&ev.target.tagName){return}bugErr(ev.error||ev.message,'page')});
+window.addEventListener('unhandledrejection',ev=>bugErr(ev.reason,'promise'));
+['error','warn'].forEach(k=>{const o=console[k];if(!o)return;console[k]=function(){try{bugPush(BUG.cons,{t:bugT(),k,msg:bugCut(Array.from(arguments).map(a=>a&&a.stack?a.message+' '+String(a.stack).split('\n')[1]:typeof a==='object'?(()=>{try{return JSON.stringify(a)}catch(e){return String(a)}})():String(a)).join(' '),300)},20)}catch(e){}return o.apply(this,arguments)}});
+/* failed or slow network calls: host and path only (never the query, which can hold keys) */
+(()=>{const f=window.fetch;if(!f)return;window.fetch=function(u,o){const s=typeof u==='string'?u:(u&&u.url)||'',m=((o&&o.method)||(u&&u.method)||'GET').toUpperCase(),t0=performance.now();
+  let where=s;try{const x=new URL(s,location.href);where=(x.host===location.host?'':x.host)+x.pathname}catch(e){}
+  const p=f.apply(this,arguments);
+  try{p.then(r=>{const ms=Math.round(performance.now()-t0);if(!r.ok||ms>4000)bugPush(BUG.net,{t:bugT(),m,u:bugCut(where,120),st:r.status,ms},20)},e=>{bugPush(BUG.net,{t:bugT(),m,u:bugCut(where,120),st:0,err:bugCut(e&&e.message||e,80),ms:Math.round(performance.now()-t0)},20)})}catch(e){}
+  return p}})();
+/* the app's state, small: no functions, page elements or long lists */
+function bugState(){try{return bugCut(JSON.stringify(UI,(k,v)=>{if(typeof v==='function')return undefined;if(v&&v.nodeType)return '[el]';if(v instanceof Set)return '[Set '+v.size+']';if(v instanceof Map)return '[Map '+v.size+']';if(typeof v==='string')return bugCut(v,120);if(Array.isArray(v)&&v.length>12)return v.slice(0,12).concat(['…'+v.length]);return v}),7000)}catch(e){return 'unavailable: '+e.message}}
+async function bugBuild(note,auto){
+  const now=bugT(),rel=a=>a.map(x=>Object.assign({},x,{t:((x.t-now)/1000).toFixed(1)+'s'}));
+  let cache=[],ctl=false,waiting=false;try{ctl=!!(navigator.serviceWorker&&navigator.serviceWorker.controller);if(window.caches)cache=(await caches.keys()).filter(k=>/^playback/.test(k));
+    const reg=navigator.serviceWorker&&await navigator.serviceWorker.getRegistration();waiting=!!(reg&&reg.waiting)}catch(e){}
+  const d={};try{Object.assign(d,{ua:navigator.userAgent,w:innerWidth,h:innerHeight,sw:screen.width,sh:screen.height,dpr:devicePixelRatio,touch:navigator.maxTouchPoints||0,
+    standalone:!!(matchMedia('(display-mode: standalone)').matches||navigator.standalone),dark:matchMedia('(prefers-color-scheme: dark)').matches,reduceMotion:matchMedia('(prefers-reduced-motion: reduce)').matches,
+    lang:navigator.language,tz:Intl.DateTimeFormat().resolvedOptions().timeZone,cores:navigator.hardwareConcurrency||0,mem:navigator.deviceMemory||0,online:navigator.onLine})}catch(e){}
+  try{d.lite=LITE.on;d.litePref=LITE.pref}catch(e){}try{d.motion=pvMotion()}catch(e){}
+  let log={};try{log={artists:(S.music||[]).length,shows:(S.screen||[]).length,bytes:SV.bytes||0}}catch(e){}
+  let sync={};try{sync={on:syncOn(),own:ownSync(),status:SYS.status,msg:bugCut(SYS.msg||'',120),signedIn:accOn()}}catch(e){}
+  const pageNow=bugPage(),r={v:1,build:BUILD,auto:!!auto,note:note||'',when:new Date().toString(),url:location.pathname+location.hash,
+    cache:{names:cache,stale:cache.length?!cache.includes('playback-'+BUILD):null,controlled:ctl,updateWaiting:waiting},
+    page:pageNow,pageBefore:pageNow.view==='settings'?BUG.page:null,device:d,log,sync,
+    errors:rel(BUG.errs),console:rel(BUG.cons),network:rel(BUG.net),taps:rel(BUG.crumbs),state:bugState()};
+  let j=JSON.stringify(r);
+  for(const k of ['state','console','taps'])if(j.length>55000){r[k]=k==='state'?bugCut(r.state,1500):r[k].slice(-8);j=JSON.stringify(r)}
+  return j}
+async function bugSend(note,auto){
+  let name='';try{name=(ACC&&ACC.me&&ACC.me.name)||''}catch(e){}
+  const report=await bugBuild(note,auto);
+  const r=await fetch(BUG_URL+'/bug',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:name.slice(0,40),owner:!!window.PB_OWNER,auto:!!auto,build:BUILD,note:String(note||'').slice(0,1000),report})});
+  if(r.status===404||r.status===405){   /* a Worker that has not updated yet: fall back to the old one-line Suggest box */
+    const s=await fetch(BUG_URL+'/suggest',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:name.slice(0,40),text:('[bug] '+BUILD+' · '+(note||'')+' · '+(BUG.errs.slice(-1)[0]||{}).msg).slice(0,600)})});
+    if(!s.ok)throw new Error('send failed');return}
+  if(r.status===429)throw new Error('Too many reports from here this hour. Try again later.');
+  if(!r.ok)throw new Error('That did not send. Check your connection.');
+}
+/* the sheet: drawn on its own, over whatever page is open, so it survives the app redrawing under it */
+function bugOpen(){try{
+  let el=BUG.el;if(!el||!el.isConnected){el=BUG.el=document.createElement('div');el.className='pbbug';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-labelledby','pbbug-h');document.body.appendChild(el);
+    el.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('[data-bg]');if(!b)return;ev.stopPropagation();if(b.dataset.bg==='x')bugClose();else if(b.dataset.bg==='send')bugGo()});
+    el.addEventListener('keydown',ev=>{if(ev.key==='Escape')bugClose()})}
+  const pg=(UI.view==='settings'&&BUG.page)||bugPage(),where=[pg.view==='main'?(pg.tab==='screen'?'Screen':'Music'):pg.view,pg.artist].filter(Boolean).join(' · ');
+  el.innerHTML=`<div class="pbbug-c"><h3 id="pbbug-h">Report a bug</h3>
+    <p class="pbbug-p">What went wrong, and what did you expect? The report also carries what Playback was doing (recent taps, errors, your device and the page${where?': <b>'+esc(where)+'</b>':''}), never your ratings or keys.</p>
+    <textarea id="pbbug-t" maxlength="1000" rows="4" placeholder="e.g. Tapped Deluxe on Discovery and the record vanished"></textarea>
+    <div class="pbb"><button class="btn primary" data-bg="send">Send report</button><button class="btn" data-bg="x">Cancel</button></div><p class="pbbug-m" role="status"></p></div>`;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{el.classList.add('in');const t=document.getElementById('pbbug-t');if(t)t.focus()}));
+}catch(e){}}
+function bugClose(){const el=BUG.el;if(!el)return;el.classList.remove('in');setTimeout(()=>{if(!el.classList.contains('in'))el.remove()},300)}
+async function bugGo(){if(BUG.busy)return;const t=document.getElementById('pbbug-t'),m=BUG.el&&BUG.el.querySelector('.pbbug-m'),note=t?t.value.trim():'';
+  if(!note){if(m)m.textContent='Write a line about what happened first.';return}
+  BUG.busy=true;if(m)m.textContent='Sending…';
+  try{await bugSend(note,false);if(m)m.textContent='Sent. Thanks, that helps.';setTimeout(bugClose,1400)}catch(e){if(m)m.textContent=e.message||'That did not send.'}
+  BUG.busy=false}
+document.addEventListener('keydown',ev=>{if(ev.ctrlKey&&ev.shiftKey&&(ev.key==='B'||ev.key==='b')){ev.preventDefault();bugOpen()}});
 const KEY='playback_v1';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function sid(...p){const s=p.join('|').toLowerCase();let x=5381;for(let i=0;i<s.length;i++)x=((x<<5)+x+s.charCodeAt(i))>>>0;return 'i'+x.toString(36)}
@@ -9780,6 +9873,28 @@ async function sugChange(qs){
   sugLoad();
 }
 
+/* owner: the bug report inbox (Worker /bug, read with the sync key or owner login) */
+async function bugCall(method,qs){
+  const r=await fetch(SY.url.replace(/\/+$/,'')+'/bug'+(qs||''),{method,cache:'no-store',headers:{...syH()}});
+  if(!r.ok)throw new Error(r.status===401?'Your sync key was not accepted.':r.status===404?'Your Worker does not have this yet. It updates itself from GitHub; try again in a minute.':'Could not reach your Worker.');
+  return r.json();
+}
+function bugCard(){
+  const l=BUG.list,ago=t=>{const m=Math.round((Date.now()-t)/60000);return m<60?m+' min ago':m<2160?Math.round(m/60)+' h ago':new Date(t).toLocaleDateString(undefined,{month:'short',day:'numeric'})};
+  return `<div class="setcard sug"><h3>Bug reports</h3>
+    <p class="note">Sent from Report a bug or the crash card. Copy one to paste it to Claude, or just ask Claude to check the bug reports.</p>
+    <div class="tools"><button class="btn primary" data-act="bugload" ${BUG.lbusy?'disabled':''}>${l?'Refresh':'Load reports'}</button>${l&&l.length?'<button class="btn" data-act="bugclear">Clear all</button>':''}</div>
+    ${BUG.lmsg?`<span class="msg err">${esc(BUG.lmsg)}</span>`:''}
+    ${l?(l.length?`<ul>${l.map(x=>`<li><span class="who">${esc(x.name||(x.owner?'You':'Someone'))}${x.auto?' · crash':''} · ${esc(ago(x.t))} · ${esc(x.build||'')}</span><p>${esc(x.note||'(no note)')}</p><div class="tools"><button class="btn" data-act="bugcopy" data-id="${esc(x.id)}">${BUG.copied===x.id?'Copied':'Copy full report'}</button><button class="btn" data-act="bugdel" data-id="${esc(x.id)}">Done</button></div></li>`).join('')}</ul>`:'<p class="note">Nothing yet.</p>'):''}
+  </div>`;
+}
+async function bugLoad(){if(BUG.lbusy)return;BUG.lbusy=true;BUG.lmsg='';render();
+  try{const j=await bugCall('GET');BUG.list=Array.isArray(j.items)?j.items:[]}catch(e){BUG.lmsg=e.message==='Failed to fetch'?'Could not reach your Worker.':e.message}
+  BUG.lbusy=false;render()}
+async function bugCopy(id){try{const j=await bugCall('GET','?id='+encodeURIComponent(id));const x=j.item||{};
+  await navigator.clipboard.writeText('Playback bug report '+x.id+' ('+new Date(x.t).toLocaleString()+', '+(x.name||'')+')\nNote: '+(x.note||'')+'\n'+x.report);BUG.copied=id}catch(e){BUG.lmsg='Could not copy: '+(e.message||e)}render()}
+async function bugDel(qs){try{await bugCall('DELETE',qs)}catch(e){BUG.lmsg=e.message;render();return}bugLoad()}
+
 /* ---------- accounts: Google sign-in, friend codes, friends' ratings ----------
    Optional. Your log never leaves this device just because you sign in (unless you turn on account sync, see accSyncHtml): signing in only publishes a short list of your
    album and show ratings (title, artist, rating) to the Playback Worker, and only friends you have accepted can
@@ -10755,12 +10870,14 @@ function settingsView(){
   const cl=CHANGELOG.slice(0,6);
   const help=`<section id="pvs-help" class="pvcard pvdg pvrise" data-sec="help" style="--d:5"><div class="pvch"><h2 class="pvh2">Help &amp; feedback</h2></div>
     ${own?pvRow('ideas feature idea','Ideas for Playback','Jot down a feature idea; it goes to your ideas list',`<button class="pvb sm" data-act="pvidea">New idea</button>`):''}
+    ${pvRow('report bug problem broken crash feedback','Report a bug','Something broken or acting strange? Describe it and the report carries what Playback was doing. On a computer: Ctrl+Shift+B from any page',`<button class="pvb sm w" data-act="bugopen">Report a bug</button>`)}
     ${pvRow('whats new changelog build','What’s new','Build '+esc(BUILD),pvMoreBtn('new','Changelog'),pvPanel('new',`<ol class="pvset-cl">${cl.map(x=>{const t=String(x.note||''),dot=t.search(/[.:](\s|$)/),h=dot>0&&dot<90?t.slice(0,dot):t.slice(0,80);return `<li><span class="pvmono">${esc(x.v)}</span><details><summary><b>${esc(h)}</b></summary><p class="note">${esc(t)}</p></details></li>`}).join('')}</ol>`))}
     ${pvRow('privacy policy','Privacy','Playback keeps your Google name and a private id, never your email',`<a class="pvb sm" href="privacy.html" target="_blank" rel="noopener">Privacy policy</a>`)}
   </section>`;
   /* Owner tools */
   const ownS=own?`<section id="pvs-own" class="pvcard pvdg pvrise" data-sec="own" style="--d:6"><div class="pvch"><h2 class="pvh2">Owner tools</h2><span class="pvmono pvmut">only you see these</span></div>
     ${ownSync()&&GCID?pvRow('people using playback users','People using Playback',USX.list?USX.list.length+' accounts':'Everyone who made an account',pvMoreBtn('users','Open'),pvPanel('users',sfe('usersCard',usersCard))):''}
+    ${ownSync()?pvRow('bug reports inbox crash errors','Bug reports',BUG.list?BUG.list.length+' waiting':'Reports from you and friends, with the taps, errors and device behind each one',pvMoreBtn('bugs','Open'),pvPanel('bugs',sfe('bugCard',bugCard))):''}
     ${pvRow('suggestions inbox friends','Suggestions inbox','What friends send from their Suggest box',pvMoreBtn('sugo','Open'),pvPanel('sugo',sfe('sugCard',sugCard)))}
     ${pvRow('rating dates private history','Rating dates','Your private list on the Worker',pvMoreBtn('rd','Manage'),pvPanel('rd',sfe('rdSide',rdSide)))}
     ${pvRow('screen collection hidden','Screen &amp; Collection','Hidden from friends while they’re in progress','<span class="pvmono pvmut">owner only</span>')}
@@ -13779,6 +13896,11 @@ document.addEventListener('click',ev=>{
     const i=VSTEPS.findIndex(v=>v[0]===UI.vStep),nv=document.querySelectorAll('.vw-nav');
     if(nv[0]){nv[0].dataset.v=VSTEPS[Math.max(0,i-1)][0];nv[0].disabled=i<=0}if(nv[1]){nv[1].dataset.v=VSTEPS[Math.min(4,i+1)][0];nv[1].disabled=i>=4}}return}
   else if(act==='sugload'){sugLoad();return}
+  else if(act==='bugopen'){bugOpen();return}
+  else if(act==='bugload'){bugLoad();return}
+  else if(act==='bugcopy'){bugCopy(id);return}
+  else if(act==='bugdel'){bugDel('?id='+encodeURIComponent(id));return}
+  else if(act==='bugclear'){bugDel('?all=1');return}
   else if(act==='usload'){usLoad();return}
   else if(act==='sugdel'){sugChange('?id='+encodeURIComponent(id));return}
   else if(act==='friendopen'){if(UI.frOpen){UI.fFrom='sheet';UI.fPrev=UI.view==='friend'?null:UI.view;UI.frOpen=false}else UI.fFrom='account';UI.view='friend';UI.fid=b.dataset.u;pReset();UI.pAnim=true;UI.rOpen=null;window.scrollTo({top:0});if(ACX.prof[UI.fid])ACX.prof[UI.fid].at=0}

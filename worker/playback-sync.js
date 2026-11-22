@@ -1,5 +1,5 @@
 /* =========================================================
-   Playback — sync  (worker version 19, 2026.11.18)
+   Playback — sync  (worker version 20, 2026.11.22)
    Cloudflare Worker + KV. Same setup pattern as protocol-sync
    and gamelog-sync.
 
@@ -582,6 +582,68 @@ async function sugOwner(request, env, url) {
   return reply({ error: 'method not allowed' }, 405);
 }
 
+/* ---------- bug reports (version 20) ----------
+   POST   /bug  {name?, owner?, auto?, build?, note?, report}  needs NO key, like /suggest: the app's Report a bug sheet
+                and its crash card send a full report (errors, the last taps, device, page and app state). Kept in D1
+                (CATALOG), not KV, so reports never eat KV's 1,000 daily writes. A report is cut to 60 KB, one address
+                may send 8 an hour, and only the newest 150 are kept. The address itself is never stored, only a short hash.
+   GET    /bug        (x-sync-key or owner login)  -> {items:[{id,t,name,owner,auto,build,note,bytes}]}, newest first
+   GET    /bug?id=<id>                             -> {item:{...,report}}
+   DELETE /bug?id=<id> or ?all=1                    removes one or all.                                              */
+const BUG_MAX = 150, BUG_BYTES = 60000;
+let bugReady = false;
+async function bugTable(env) {
+  if (bugReady) return;
+  await env.CATALOG.prepare('CREATE TABLE IF NOT EXISTS bugs (id TEXT PRIMARY KEY, t INTEGER NOT NULL, ip TEXT, name TEXT, owner INTEGER, auto INTEGER, build TEXT, note TEXT, report TEXT)').run();
+  await env.CATALOG.prepare('CREATE INDEX IF NOT EXISTS bugs_t ON bugs (t)').run();
+  bugReady = true;
+}
+async function bugIp(request) {
+  const raw = new TextEncoder().encode('pb-bug|' + (request.headers.get('cf-connecting-ip') || 'x'));
+  const h = new Uint8Array(await crypto.subtle.digest('SHA-256', raw));
+  return Array.from(h.slice(0, 8), b => b.toString(16).padStart(2, '0')).join('');
+}
+async function bugPost(request, env) {
+  if (!env.CATALOG) return reply({ error: 'missing the CATALOG D1 binding' }, 500);
+  const raw = await request.text();
+  if (raw.length > BUG_BYTES * 2) return reply({ error: 'too big' }, 413);
+  let b; try { b = JSON.parse(raw); } catch (e) { return reply({ error: 'bad body' }, 400); }
+  if (!b || typeof b !== 'object') return reply({ error: 'bad body' }, 400);
+  let report = typeof b.report === 'string' ? b.report : JSON.stringify(b.report || {});
+  if (report.length > BUG_BYTES) report = report.slice(0, BUG_BYTES);
+  const note = String(b.note || '').trim().slice(0, 1000), name = String(b.name || '').trim().slice(0, 40), build = String(b.build || '').slice(0, 24);
+  if (!note && report.length < 3) return reply({ error: 'empty' }, 400);
+  await bugTable(env);
+  const ip = await bugIp(request), now = Date.now();
+  const recent = await env.CATALOG.prepare('SELECT COUNT(*) AS n FROM bugs WHERE ip = ?1 AND t > ?2').bind(ip, now - 3600000).first();
+  if (recent && recent.n >= 8) return reply({ error: 'too many' }, 429);
+  const id = now.toString(36) + Math.random().toString(36).slice(2, 6);
+  await env.CATALOG.prepare('INSERT INTO bugs (id, t, ip, name, owner, auto, build, note, report) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)')
+    .bind(id, now, ip, name, b.owner ? 1 : 0, b.auto ? 1 : 0, build, note, report).run();
+  await env.CATALOG.prepare('DELETE FROM bugs WHERE id NOT IN (SELECT id FROM bugs ORDER BY t DESC LIMIT ?1)').bind(BUG_MAX).run();
+  return reply({ ok: true, id });
+}
+async function bugOwner(request, env, url) {
+  if (!env.CATALOG) return reply({ error: 'missing the CATALOG D1 binding' }, 500);
+  await bugTable(env);
+  const id = url.searchParams.get('id') || '';
+  if (request.method === 'GET') {
+    if (id) {
+      const item = await env.CATALOG.prepare('SELECT id, t, name, owner, auto, build, note, report FROM bugs WHERE id = ?1').bind(id).first();
+      return item ? reply({ item }) : reply({ error: 'not found' }, 404);
+    }
+    const r = await env.CATALOG.prepare('SELECT id, t, name, owner, auto, build, note, LENGTH(report) AS bytes FROM bugs ORDER BY t DESC LIMIT ?1').bind(BUG_MAX).all();
+    return reply({ items: r.results || [] });
+  }
+  if (request.method === 'DELETE') {
+    if (url.searchParams.get('all') === '1') { await env.CATALOG.prepare('DELETE FROM bugs').run(); return reply({ ok: true }); }
+    if (!id) return reply({ error: 'no id' }, 400);
+    await env.CATALOG.prepare('DELETE FROM bugs WHERE id = ?1').bind(id).run();
+    return reply({ ok: true });
+  }
+  return reply({ error: 'method not allowed' }, 405);
+}
+
 /* ---------- accounts (version 11) ----------
    Sign in with Google, friends by code, and friends' ratings. Lives in the same D1 database as the
    catalog cache (CATALOG); the tables are created the first time anyone signs in. Nothing here touches
@@ -1004,11 +1066,13 @@ export default {
     if (url.pathname === '/brief' && request.method === 'GET') return briefGet(env, url);   /* its own read-only key */
     if (url.pathname === '/photo' && request.method === 'GET') return photoGet(env, url);   /* signed link, no sync key */
     if (url.pathname === '/suggest' && request.method === 'POST') return sugPost(request, env);   /* open to friends, rate limited */
+    if (url.pathname === '/bug' && request.method === 'POST') return bugPost(request, env);   /* open to friends, rate limited, kept in D1 */
     if (url.pathname.startsWith('/acct/')) return acct(request, env, url);   /* Google sign-in token or its own session token, never the sync key */
     const given = (request.headers.get('x-sync-key') || '').trim();
     /* the sync key, or (version 13) the signed-in owner account's token */
     if (!keyMatches(given, String(env.SECRET).trim()) && !(await ownerViaToken(env, request))) return reply({ error: 'unauthorized' }, 401);
     if (url.pathname === '/suggest') return sugOwner(request, env, url);
+    if (url.pathname === '/bug') return bugOwner(request, env, url);
     if (url.pathname === '/users') return request.method === 'GET' ? usersList(env) : reply({ error: 'method not allowed' }, 405);   /* owner only: every Google account (version 15) */
     if (url.pathname === '/rating-dates') {   /* the owner's private list of rating days (kept in KV, not in the public repo) */
       if (request.method === 'GET') return new Response((await env.STATE.get('rating-dates')) || '[]', { headers: JSON_H });
