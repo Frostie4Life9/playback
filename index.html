@@ -3545,6 +3545,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.21-p', note:'ONE \u201cHIGHEST RATED\u201d ORDER EVERYWHERE, AND READABLE SONG SCORES ON THE SHARE CARD: every highest or lowest sort now breaks ties the same way the album rank does: album rating, then song average (left-out songs stay out), then plays. That covers the big record and the Albums wall on account pages, the best-album pick, the month and top-artist cards, the year card, History sorted by score, Stats\u2019 top albums and an artist\u2019s Releases sorted by rating. On a friend\u2019s page the song average comes from the song ratings they share (plays are not shared). On the share card the little score records next to each song are bigger, with a larger number, so they read at phone size.'},
   {v:'2026.11.21-o', note:'RANKS THAT DO NOT TIE: an album\u2019s rank (on the inside left of the open album) used to go by the album rating alone, so every 10 was #1 and every 9 shared the same spot. Albums are now ordered by album rating, then by song average (songs you left out of the average stay out), then by plays, more plays ranking higher. Only albums even on all three share a rank. The rank also shows when you have rated just one album by an artist, as #1 of 1, with where it sits across your whole library underneath.'},
   {v:'2026.11.21-n', note:'SMOOTHER SHARE ANIMATION: the animated share card now plays at about 33 frames a second instead of 20, so the record turns, the ring fills and the song bars grow without stepping. Each frame lines up exactly with how GIFs time their frames, so the motion no longer drifts unevenly, and the record now eases up to speed instead of jumping straight into a full spin. Making the animation takes a little longer.'},
   {v:'2026.11.21-m', note:'PLAY, A RICHER INSIDE LEFT, AND THE LAST OLD-STYLE PIECES RESTYLED: an open album has a Play button that starts it from the first song on Spotify, on whichever device has Spotify open (reconnect Spotify once in Settings so Play is allowed to start music). Settings > Play button can switch it to Apple Music, which opens the album in Apple Music. The inside left now shows full spins and hours listened under Plays (song lengths come from Apple Music, once per album), where the album ranks among every album you have rated under the artist rank, and a Hidden gem: a song you rate high but rarely play. The record on the inside left shows which listen you are on. The song average moved out of the album rating pill to its own line heading the song list, so it is not mistaken for the album score. The friends card, the song rating editor and the share card and sheet now use the album\'s colors and the record look. The share sheet also opens above an open album on phones again.'},
@@ -6051,7 +6052,7 @@ function statSide(){
     h+=`</div>`;
   }
   if(D.alb.length){
-    const top=[...D.alb].sort((x,y)=>y.r-x.r||y.avg-x.avg||x.title.localeCompare(y.title)).slice(0,10)
+    const top=[...D.alb].sort((x,y)=>rkCmp([x.r,x.avg,relPlays(x.g,x.dx)],[y.r,y.avg,relPlays(y.g,y.dx)])||x.title.localeCompare(y.title)).slice(0,10)
       .map(x=>({id:x.a.id,t:x.title,sub:x.a.name,v:fmt(x.r)}));
     const gap=D.alb.filter(x=>x.n>=3).map(x=>({...x,d:x.r-x.avg}));
     const up=gap.filter(x=>x.d>=.5).sort((x,y)=>y.d-x.d).slice(0,3).map(x=>({id:x.a.id,t:x.title,sub:x.a.name,v:'+'+f1(x.d)}));
@@ -7195,7 +7196,7 @@ function historyList(anim){
   const cmp=(x,y)=>x.title.localeCompare(y.title),dc=(x,y)=>x.d>y.d?1:x.d<y.d?-1:0;
   let n=0;
   if(UI.hs==='high'){
-    L.sort((x,y)=>y.r-x.r||dc(y,x)||cmp(x,y));
+    {const K=e=>e._rk||(e._rk=e.sg?[e.r,0,relPlays(e.g)]:(k=>[e.r,k[1],k[2]])(rkG(e.g,e.dx)));L.sort((x,y)=>rkCmp(K(x),K(y))||dc(y,x)||cmp(x,y))}
     return `<ol class="hl">${L.map(e=>rhRow(e,n++,anim)).join('')}</ol>`;
   }
   const dated=L.filter(e=>e.d).sort(UI.hs==='old'?(x,y)=>dc(x,y)||cmp(x,y):(x,y)=>dc(y,x)||cmp(x,y)),und=L.filter(e=>!e.d).sort(cmp);
@@ -8410,11 +8411,11 @@ function accBase(items){
 /* every way an item can be recognised on someone else's page: its MusicBrainz id, its own key, and title plus each of its artists */
 const accKeysOf=x=>{const o=[];if(x.k)o.push('k:'+x.k);if(x.t)o.push('t:'+x.t);
   if(x.kind==='a'&&x.n&&!/~dx$/.test(x.t||'')){const tt=nTitle(x.n);for(const a of accArts(x)){const na=nArtist(a);if(na)o.push('a:'+na+'|'+tt)}}return o};
-function accStats(items){
+function accStats(items,self){
   const b=accBase(items),al=b.filter(x=>x.kind==='a'),sc=b.filter(x=>x.kind==='s');
   const avg=l=>l.length?l.reduce((s,x)=>s+x.r,0)/l.length:0,hist=Array(10).fill(0);
   for(const x of b)hist[Math.min(10,Math.max(1,Math.round(x.r)))-1]++;
-  return{al:al.length,sc:sc.length,aAvg:avg(al),sAvg:avg(sc),hist,top:b.slice().sort((x,y)=>y.r-x.r)[0]||null};
+  return{al:al.length,sc:sc.length,aAvg:avg(al),sAvg:avg(sc),hist,top:accBest(self,b.filter(x=>x.kind==='a'))[0]||accBest(self,b)[0]||null};
 }
 /* how alike two people's ratings are, over what both rated: 100 means identical, about 0 means opposite ends of the scale */
 function accMatch(theirs,mine){
@@ -8477,14 +8478,14 @@ const accAvg=l=>l.length?l.reduce((t,x)=>t+x.r,0)/l.length:0;
 const ACC_SORTS=[['hi','Highest'],['lo','Lowest'],['new','Newest rated'],['old','Oldest rated'],['az','A–Z']];
 const ACC_MINS=[[0,'All'],[10,'10'],[9,'9+'],[8,'8+'],[7,'7+'],[-7,'Under 7']];
 const accPassMin=(r,m)=>!m||(m===10?r>=10:m<0?r<-m:r>=m);
-function accSortFn(sort){
-  const nm=x=>String(x.n||''),ar=x=>accArtText(x);
+function accSortFn(sort,self){
+  const nm=x=>String(x.n||''),ar=x=>accArtText(x),K=accRk(self);
   switch(sort){
-    case 'lo':return(x,y)=>x.r-y.r||nm(x).localeCompare(nm(y));
+    case 'lo':return(x,y)=>rkCmp(K(y),K(x))||nm(x).localeCompare(nm(y));
     case 'new':return(x,y)=>(!x.d)-(!y.d)||String(y.d||'').localeCompare(String(x.d||''))||y.r-x.r;
     case 'old':return(x,y)=>(!x.d)-(!y.d)||String(x.d||'').localeCompare(String(y.d||''))||y.r-x.r;
     case 'az':return(x,y)=>ar(x).localeCompare(ar(y))||nm(x).localeCompare(nm(y));
-    default:return(x,y)=>y.r-x.r||nm(x).localeCompare(nm(y));
+    default:return(x,y)=>rkCmp(K(x),K(y))||nm(x).localeCompare(nm(y));
   }
 }
 function accTabsHtml(P){
@@ -8512,7 +8513,7 @@ function accInsightsHtml(P){
     const lab=k=>pMonthName(k,true)+' ’'+k.slice(2,4);
     const sk=UI.pSelMon,si=shown.findIndex(x=>x.k===sk);let monInfo;
     if(si>=0){
-      const mk=shown[si],ls=dated.filter(x=>x.d.slice(0,7)===mk.k).sort((p,q)=>q.r-p.r||String(p.n).localeCompare(String(q.n))),pv=shown[si-1],nx=shown[si+1];
+      const mk=shown[si],ls=accBest(P.self,dated.filter(x=>x.d.slice(0,7)===mk.k)),pv=shown[si-1],nx=shown[si+1];
       monInfo=`<div class="pf-info${UI.pAnimI==='mo'?' pf-opn':''}"><div class="pf-ih"><button class="pf-st" data-act="pmo" data-v="${pv?pv.k:''}" aria-label="Previous month"${pv?'':' disabled'}>‹</button><b>${esc(pMonthName(mk.k))}</b><button class="pf-st" data-act="pmo" data-v="${nx?nx.k:''}" aria-label="Next month"${nx?'':' disabled'}>›</button></div>
         ${ls.length?`<p class="note">${ls.length} album${ls.length===1?'':'s'} · avg ${accAvg(ls).toFixed(1)} · best: ${esc(ls[0].n||'Untitled')} (${fmt(ls[0].r)})</p>${pfCovs(ls,`data-act="pgomon" data-v="${mk.k}"`)}<div class="pf-go"><button class="btn" data-act="pgomon" data-v="${mk.k}">See ${ls.length===1?'it':'them'} in Albums →</button></div>`:`<p class="note">Nothing rated this month.</p>`}</div>`;
     }else monInfo=`<p class="note pf-hint${pfHintIn('mo')}">Tap a bar to see that month.</p>`;
@@ -8522,7 +8523,7 @@ function accInsightsHtml(P){
       <div class="pf-mini"><div><b>${best.n}</b><span>busiest month (${esc(lab(best.k))})</span></div><div><b>${act} of ${mo.length}</b><span>months with a rating</span></div><div><b>${(dated.length/mo.length).toFixed(1)}</b><span>albums a month</span></div></div></div>`;
   }
   const ga={};for(const x of al)for(const nm of accArts(x))(ga[nm]=ga[nm]||[]).push(x)
-  const ta=Object.entries(ga).filter(([,l])=>l.length>=2).map(([name,l])=>({name,l:l.slice().sort((p,q)=>q.r-p.r),avg:accAvg(l)})).sort((p,q)=>q.avg-p.avg||q.l.length-p.l.length||p.name.localeCompare(q.name)).slice(0,5);
+  const ta=Object.entries(ga).filter(([,l])=>l.length>=2).map(([name,l])=>({name,l:accBest(P.self,l),avg:accAvg(l)})).sort((p,q)=>q.avg-p.avg||q.l.length-p.l.length||p.name.localeCompare(q.name)).slice(0,5);
   if(ta.length)h+=`<div class="pf-card pf-c-top${an}" style="--i:${n++}"><h3>Top artists<small>by average · 2+ albums</small></h3>${ta.map((a,i)=>`<div class="pf-ta" style="--i:${i}"><span class="pf-fan">${a.l.slice(0,3).map(x=>{const u=accCover(x);return `<span class="pcv"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(u)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span>`}).join('')}</span><span class="pt"><b>${esc(a.name)}</b><small>${a.l.length} albums</small></span><span class="pf-tar"><b class="pn">${a.avg.toFixed(1)}</b><span class="bar"><i style="width:${(a.avg*10).toFixed(0)}%"></i></span></span></div>`).join('')}</div>`;
   return h;
 }
@@ -8538,7 +8539,7 @@ function accListHtml(P,match){
   const sort=ACC_SORTS.some(x=>x[0]===UI.pSort)?UI.pSort:'hi',grid=kind==='a'&&UI.pView!=='l';
   const inYear=base.filter(x=>!yr||(x.d&&x.d.slice(0,4)===yr));
   const inMon=inYear.filter(x=>!mon||(x.d&&+x.d.slice(5,7)===mon));
-  const list=inMon.filter(x=>accPassMin(x.r,mn)&&(!bk||accBucket(x.r)===bk)).sort(accSortFn(sort));
+  const list=inMon.filter(x=>accPassMin(x.r,mn)&&(!bk||accBucket(x.r)===bk)).sort(accSortFn(sort,self));
   const noun=kind==='a'?['album','albums']:['title','titles'];
   const byR=(sort==='hi'||sort==='lo'),grp=byR||((sort==='new'||sort==='old')&&list.some(x=>x.d));const gk=x=>byR?String(x.r):(x.d?x.d.slice(0,7):'');
   const gs={};if(grp)for(const x of list){const k=gk(x);const g=gs[k]||(gs[k]={n:0,s:0});g.n++;g.s+=x.r}
@@ -8602,10 +8603,10 @@ function vlLayout(n){
 /* how each order reads: [short, caption] */
 const VLS={hi:['best at the outer edge','best at the outer edge spiralling in to the lowest'],lo:['lowest at the outer edge','lowest at the outer edge spiralling in to the best'],new:['most recently rated at the outer edge','most recently rated at the outer edge spiralling in to the oldest (albums with no rated-on date go last)'],old:['oldest rated at the outer edge','oldest rated at the outer edge spiralling in to the newest (albums with no rated-on date go last)'],az:['A to Z by artist from the outer edge','A to Z by artist from the outer edge in']};
 function accVinylHtml(P){
-  const all=accBase(P.items).filter(x=>x.kind==='a').slice().sort((a,b)=>b.r-a.r||String(a.n).localeCompare(String(b.n)));
+  const all=accBest(P.self,accBase(P.items).filter(x=>x.kind==='a'));
   if(!all.length){VL.items=[];return ''}
   const sort=ACC_SORTS.some(x=>x[0]===UI.vlSort)?UI.vlSort:'hi',quick=!!UI.vlAnim;UI.vlAnim=false;
-  const items=all.slice(0,600).sort(accSortFn(sort)),{d,pts}=vlLayout(items.length);   /* the 600 best are kept, then put in the chosen order from the outer edge in */
+  const items=all.slice(0,600).sort(accSortFn(sort,P.self)),{d,pts}=vlLayout(items.length);   /* the 600 best are kept, then put in the chosen order from the outer edge in */
   VL.items=items;VL.pin=-1;VL.def=vlLabel(null,P);
   const anim=pfAn()||(quick?' pf-in':''),h=accHueOf(P),big=d>=22;
   let grooves='';for(let r=104;r<=288;r+=3.6)grooves+=`<circle cx="300" cy="300" r="${r.toFixed(1)}"/>`;
@@ -8686,7 +8687,7 @@ let pfRz=null;
 window.addEventListener('resize',()=>{clearTimeout(pfRz);pfRz=setTimeout(pfFit,80)});
 document.addEventListener('keydown',ev=>{if((ev.key==='Enter'||ev.key===' ')&&ev.target.classList&&ev.target.classList.contains('vl-b')){ev.preventDefault();ev.target.dispatchEvent(new MouseEvent('click',{bubbles:true}))}});
 function profileHtml(P,mine){
-  const st=accStats(P.items),match=P.self?null:accMatch(P.items,mine);
+  const st=accStats(P.items,P.self),match=P.self?null:accMatch(P.items,mine);
   const sec=P.self&&UI.pTab==='c'?accManageHtml(P):UI.pTab==='a'||UI.pTab==='s'?accListHtml(P,match):accStatsHtml(st,P)+`<div class="pf-ov">${accInsightsHtml(P)}${accVinylHtml(P)}</div>`;
   return accHeroHtml(Object.assign({},P,{n:accBase(P.items).length}),st,match,P.extra)+accTabsHtml(P)+sec;
 }
@@ -10523,12 +10524,13 @@ async function shareScene(a,g,withSongs,wide){
         x.save();shRound(x,cx,cy,cw,rh,16);x.fillStyle=light?'rgb(0 0 0 / .07)':'rgb(255 255 255 / .09)';x.fill();x.clip();
         if(v){const fg=x.createLinearGradient(cx,0,cx+cw,0);fg.addColorStop(0,'rgba('+gl+','+(light?.22:.26)+')');fg.addColorStop(1,'rgba('+gl+',.06)');x.fillStyle=fg;x.fillRect(cx,cy,cw*Math.min(1,v/10)*bp,rh)}x.restore();
         x.textAlign='left';x.fillStyle=inkSoft;x.font='500 22px Archivo,sans-serif';x.fillText(String(k+1),cx+18,cy+rh/2+8);
-        x.fillStyle=ink;x.font='500 27px Archivo,sans-serif';x.fillText(shFit(x,(it.title||'').trim(),cw-130),cx+62,cy+rh/2+9);
-        {const mx=cx+cw-34,my=cy+rh/2,mr=22;x.save();x.globalAlpha=v?1:.55;x.fillStyle='rgb(14 12 12)';x.beginPath();x.arc(mx,my,mr,0,7);x.fill();
-          x.lineWidth=1;x.strokeStyle='rgb(255 255 255 / .08)';x.beginPath();x.arc(mx,my,mr-6,0,7);x.stroke();
-          if(v){x.lineWidth=4;x.lineCap='round';x.strokeStyle=`rgb(${gl})`;x.beginPath();x.arc(mx,my,mr-2,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,v/10)*bp);x.stroke()}
-          x.fillStyle='#ece8e4';x.beginPath();x.arc(mx,my,14,0,7);x.fill();
-          x.globalAlpha=v?bp:.55;x.fillStyle='#111';x.textAlign='center';x.textBaseline='middle';x.font='800 '+(v&&String(fmt(v)).length>2?14:17)+'px Archivo,sans-serif';x.fillText(v?fmt(v):'–',mx,my+1);x.restore();x.textBaseline='alphabetic'}})}
+        x.fillStyle=ink;x.font='500 27px Archivo,sans-serif';x.fillText(shFit(x,(it.title||'').trim(),cw-142),cx+62,cy+rh/2+9);
+        /* 2026.11.21-p: bigger score records with a larger label and number, so they read at phone size */
+        {const mx=cx+cw-34,my=cy+rh/2,mr=26;x.save();x.globalAlpha=v?1:.55;x.fillStyle='rgb(14 12 12)';x.beginPath();x.arc(mx,my,mr,0,7);x.fill();
+          x.lineWidth=1;x.strokeStyle='rgb(255 255 255 / .08)';x.beginPath();x.arc(mx,my,mr-5,0,7);x.stroke();
+          if(v){x.lineWidth=4.5;x.lineCap='round';x.strokeStyle=`rgb(${gl})`;x.beginPath();x.arc(mx,my,mr-2,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,v/10)*bp);x.stroke()}
+          x.fillStyle='#ece8e4';x.beginPath();x.arc(mx,my,19.5,0,7);x.fill();
+          x.globalAlpha=v?bp:.55;x.fillStyle='#111';x.textAlign='center';x.textBaseline='middle';x.font='800 '+(v&&String(fmt(v)).length>2?19:25)+'px Archivo,sans-serif';x.fillText(v?fmt(v):'–',mx,my+1.5);x.restore();x.textBaseline='alphabetic'}})}
   }
   return {W:OUTW,PX,H,LOOP,REVEAL,paint,name,f,text:'My '+f.what+' rating for '+name+' by '+a.name+': '+(f.r?fmt(f.r)+'/10':f.avg.toFixed(1)+'/10 song average')}}
 /* Animated card: paints the card at each moment, then writes a looping GIF. One shared 255-color palette, a fixed dither
@@ -10622,7 +10624,7 @@ function yrYears(items){const by={};for(const x of accBase(items))if(x.kind==='a
 function yrData(items,year){
   const al=accBase(items).filter(x=>x.kind==='a'&&(x.d||'').slice(0,4)===String(year)),mon=Array(12).fill(0);
   for(const x of al)mon[+x.d.slice(5,7)-1]++;
-  const top=al.slice().sort((p,q)=>q.r-p.r||String(q.d).localeCompare(String(p.d))||String(p.n).localeCompare(String(q.n)));
+  const top=accBest(true,al);   /* the year card is always your own */
   return{year:String(year),n:al.length,avg:accAvg(al),top,mon,best:mon.reduce((p,n,i)=>n>mon[p]?i:p,0),tens:al.filter(x=>x.r>=10).length,artists:new Set(al.flatMap(accArts)).size};
 }
 const yrLoad=url=>new Promise(res=>{if(!url)return res(null);const im=new Image();im.crossOrigin='anonymous';im.onload=()=>res(im);im.onerror=()=>res(null);im.src=url;setTimeout(()=>res(null),6000)});
@@ -11035,10 +11037,25 @@ function relKind(a){return UI.rel&&UI.rel.aid===a.id&&REL_KINDS[UI.rel.kind]?UI.
 function relScore(g){const r=RATEABLE.includes(g.kind)?rating(g.id):0;if(r)return r;const rs=g.items.map(i=>avgR(i.id)).filter(Boolean);return rs.length?rs.reduce((x,y)=>x+y,0)/rs.length:0}
 /* the average of a release's rated songs (its standard songs): settles a tie between two releases rated the same */
 function relAvg(g){const rs=stdItems(g).map(i=>avgR(i.id)).filter(Boolean);return rs.length?rs.reduce((x,y)=>x+y,0)/rs.length:0}
+/* 2026.11.21-p: ONE RANKING EVERYWHERE. "Highest rated" anywhere in the app orders releases the same way as the album rank:
+   your rating, then the song average (songs left out of the average stay out), then plays (more plays ranks higher). */
+function relPlays(g,dx){return (dx?g.items:stdItems(g)).reduce((t,i)=>t+(plN(i.id)||0),0)}
+function rkG(g,dx){if(!dx)return [relScore(g),relAvg(g),relPlays(g)];const rs=g.items.map(i=>avgR(i.id)).filter(Boolean);return [rating(dxId(g)),rs.length?rs.reduce((x,y)=>x+y,0)/rs.length:0,relPlays(g,true)]}
+function rkCmp(p,q){return (q[0]-p[0])||(Math.abs(q[1]-p[1])<1e-9?0:q[1]-p[1])||(q[2]-p[2])}   /* best first */
+/* the same three keys for rows on an account page. On your own page the song average and plays come from your log; on a
+   friend's page the song average comes from the song ratings they share (plays are not shared, so they cannot break a tie there) */
+function accRk(self){
+  const own=new Map();
+  if(self)for(const a of S.music||[])for(const g of a.groups||[]){if(!RATEABLE.includes(g.kind))continue;const{t}=accKeys(a,g);if(!own.has(t))own.set(t,rkG(g));if(hasDx(g)&&!own.has(t+'~dx'))own.set(t+'~dx',rkG(g,true))}
+  const memo=new Map();
+  return x=>{let k=memo.get(x);if(k)return k;const o=own.get(x.t);
+    if(o)k=[x.r,o[1],o[2]];else{const tr=Array.isArray(x.tr)?x.tr.map(q=>+q[1]).filter(Boolean):[];k=[x.r,tr.length?tr.reduce((s2,v)=>s2+v,0)/tr.length:0,0]}
+    memo.set(x,k);return k}}
+const accBest=(self,l)=>{const K=accRk(self);return l.slice().sort((x,y)=>rkCmp(K(x),K(y))||String(x.n).localeCompare(String(y.n)))};
 function relList(a){const k=relKind(a),so=relSort();let L=a.groups.filter(g=>k==='all'||relKindOf(g)===k);
   const yr=g=>String(g.year||''),hp=g=>g.items.length?g.items.filter(i=>isDone(i.id)).length/g.items.length:0,ix=new Map(a.groups.map((g,i)=>[g,i]));
   const cmp={new:(x,y)=>(!yr(x))-(!yr(y))||(yr(x)<yr(y)?1:yr(x)>yr(y)?-1:0),old:(x,y)=>(!yr(x))-(!yr(y))||(yr(x)<yr(y)?-1:yr(x)>yr(y)?1:0),
-    rhi:(x,y)=>(!relScore(x))-(!relScore(y))||relScore(y)-relScore(x)||relAvg(y)-relAvg(x),rlo:(x,y)=>(!relScore(x))-(!relScore(y))||relScore(x)-relScore(y)||(!relAvg(x))-(!relAvg(y))||relAvg(x)-relAvg(y),
+    rhi:(x,y)=>(!relScore(x))-(!relScore(y))||rkCmp(rkG(x),rkG(y)),rlo:(x,y)=>(!relScore(x))-(!relScore(y))||relScore(x)-relScore(y)||(!relAvg(x))-(!relAvg(y))||relAvg(x)-relAvg(y)||relPlays(x)-relPlays(y),
     heard:(x,y)=>hp(y)-hp(x),left:(x,y)=>hp(x)-hp(y),az:(x,y)=>String(x.title).localeCompare(String(y.title),undefined,{sensitivity:'base'})}[so];
   /* sorted by your rating, albums, EPs and singles each keep to their own group: an 8 for an album and an 8 for a single mean different things */
   const gk=(so==='rhi'||so==='rlo')&&k==='all'?g=>REL_GORD.indexOf(relKindOf(g)):()=>0;
@@ -11086,8 +11103,7 @@ function gfInfo(a,g,dx,shown){
   /* 2026.11.21-o: ranks no longer tie on the album score alone. Albums are ordered by your album rating, then by the song
      average (songs left out of the average stay out), then by plays (more plays ranks higher). Only albums still even on all
      three share a rank. Shown even with one rated album, as "#1 of 1", since the line under it ranks it across your whole log. */
-  if(can&&rating(g.id)){const gk=relKindOf(g),rkKey=x=>{const its=stdItems(x),rs=its.map(i=>avgR(i.id)).filter(Boolean);return [rating(x.id),rs.length?rs.reduce((t,v)=>t+v,0)/rs.length:0,its.reduce((t,i)=>t+(plN(i.id)||0),0)]},
-      rkCmp=(p,q)=>(q[0]-p[0])||(Math.abs(q[1]-p[1])<1e-9?0:q[1]-p[1])||(q[2]-p[2]),me=rkKey(g),
+  if(can&&rating(g.id)){const gk=relKindOf(g),rkKey=x=>rkG(x),me=rkKey(g),
       place=keys=>({pos:keys.filter(k=>rkCmp(k,me)<0).length+1,tie:keys.filter(k=>rkCmp(k,me)===0).length>1});
     const kin=a.groups.filter(x=>RATEABLE.includes(x.kind)&&relKindOf(x)===gk&&rating(x.id)).map(rkKey);   /* ranked against its own kind: albums against albums, EPs against EPs */
     if(kin.length){const ak=place(kin);
