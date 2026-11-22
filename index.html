@@ -4494,6 +4494,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.22-j', note:'A COMPOSER\u2019S PLAYS COUNT ON ANY RECORDING: plays of a composer are now matched by the piece, not the exact track title. Spotify calls your most played Debussy track \u201cClair de Lune, L. 32\u201d, while Debussy\u2019s page has Clair de lune inside Suite bergamasque, so its 174 plays never reached it. Now any recording of Clair de lune counts on that song (and any Des pas sur la neige on the Pr\u00e9ludes, and so on), so you can rate it and it shows its plays. Updating an artist who was imported before composers were handled (the 3-album Apple version of Debussy) now spots that he is a composer too and rebuilds him by work.'},
   {v:'2026.11.22-i', note:'COMPOSERS IMPORT PROPERLY: adding a classical composer like Claude Debussy used to break. Spotify lists him on thousands of releases (every pianist\u2019s Clair de lune), so the import ran out of Spotify\u2019s allowance, and Apple Music only found 3 albums because it credits the performers. Now a composer comes in by WORK: Playback reads his most played recordings, groups them into the pieces they belong to, and brings each piece in once from its most played recording. Suites and sets (Suite bergamasque, La mer, the Pr\u00e9ludes) come in whole with their movements and get an album rating; single pieces (R\u00eaverie, Syrinx) come in as singles. A lone Clair de lune folds into Suite bergamasque instead of showing twice, and pieces he only orchestrated (Satie\u2019s Gymnop\u00e9dies) stay out. The performer shows as \u201cwith\u201d, and the dates are the recording\u2019s. This takes about 30 to 50 Spotify calls instead of thousands, and composers are spotted from MusicBrainz (\u201cFrench composer\u201d) or from Spotify listing more than 400 releases. Check for new releases on a composer reads him the same way.'},
   {v:'2026.11.22-h', note:'REDESIGN POLISH. Scoring habits on your page now says how much your albums beat (or trail) their songs on average. On phones, the Stats top 3 sit side by side as a small podium instead of stacking, and the song rows have more room for titles. History\u2019s month column is a little wider, so long month names like September no longer push the timeline sideways.'},
   {v:'2026.11.22-g', note:'ACCOUNT PAGES REDESIGN (yours and friends\u2019). The page colors now come from your account color mixed with your top-rated albums (a friend\u2019s page uses theirs). The big bead record is the hero beside your name, a stats line, your friend code chip, whether friends can see your page, and Share my page; tapping a bead still pops that album out. The tabs are glass pills (Overview, Albums, Shows & films, Settings). OVERVIEW: a row of big numbers; TOP SHELF, your 5 highest with records peeking out (same tie-break ranking as everywhere); the SCORE SPECTRUM (tap a score to see those albums); ALBUMS RATED PER MONTH where each block is one album in its own color; and the Year in review, Scoring habits and Top artists cards. Albums and Settings keep everything they had, in the new look. A FRIEND\u2019S PAGE adds two overlapping records with your taste match, WHERE YOU SPLIT and WHERE YOU AGREE, and WHAT THEY LOVE THAT YOU HAVEN\u2019T HEARD, with one tap to add it to your Listen list (it remembers it came from their page).'},
@@ -6517,7 +6518,7 @@ async function mbImport(art,where,forceMb,forceSrc){
   let phase='mb',hint=forceMb?' This one came from MusicBrainz because '+SRC_NAME[want==='mb'?'sp':want]+' was not available. Tap Rebuild from '+SRC_NAME[want==='mb'?'sp':want]+' later for its covers and exact tracklists.':forceSrc==='am'?' This one came from Apple Music because Spotify was not available. Tap Rebuild from Spotify later for Spotify\u2019s own tracklists and covers.':'';
   try{
     let groups=null,sp=null;
-    if(!art.aka){try{art.aka=mbAkas(await mbGet('artist/'+art.id,{inc:'aliases'}))}catch(e){if(e.code==='cancel')throw e;art.aka=(existing&&existing.aka)||[]}}   /* his other names, so Spotify and your RYM list land on the same artist */
+    if(!art.aka){try{const x=await mbGet('artist/'+art.id,{inc:'aliases'});art.aka=mbAkas(x);if(/\bcomposer\b/i.test(x.disambiguation||''))MBX.composer=true}catch(e){if(e.code==='cancel')throw e;art.aka=(existing&&existing.aka)||[]}}   /* the MusicBrainz note also tells a composer apart, for artists imported before composers were */   /* his other names, so Spotify and your RYM list land on the same artist */
     akaRemember(art);existing=findExisting();
     if(pick==='sp'){
       phase='sp';
@@ -7708,10 +7709,21 @@ function spIndex(){
   for(const a of S.music){const base=new Map(),alt=[];
     for(const g of a.groups){const gk=nTitle(g.title);for(const i of g.items){const k=mbItemKey(i);
       if(k.includes('~'))alt.push({k,g:gk,id:i.id});else{const b=k.split('@')[0];if(!base.has(b))base.set(b,[]);base.get(b).push({g:gk,id:i.id})}}}
-    const n=nArtist(a.name);if(!m.has(n))m.set(n,{base,alt})}
+    /* a composer's songs also answer to the piece's own name, so any recording of it counts ("Clair de Lune, L. 32"
+       finds Clair de lune in Suite bergamasque); a lone piece answers to its name, a movement to its movement name */
+    let piece=null;
+    if(a.composer){piece=new Map();const nm=cmpNames([a.name]);
+      for(const g of a.groups)for(const i of g.items){const p=cmpSplit(i.title,nm);for(const k of p.mv?[p.mvKey]:[p.key])if(k&&!piece.has(k))piece.set(k,i.id)}}
+    const n=nArtist(a.name);if(!m.has(n))m.set(n,{base,alt,piece,names:a.composer?cmpNames([a.name]):null})}
   return m;
 }
 function spFind(idx,x){
+  const f=spFind0(idx,x);if(f.id)return f;
+  for(const n of x.a){const e=idx.get(nArtist(n));if(!e||!e.piece)continue;
+    const p=cmpSplit(x.t,e.names),id=(p.mvKey&&e.piece.get(p.mvKey))||e.piece.get(p.key);if(id)return{id}}
+  return f;
+}
+function spFind0(idx,x){
   let e=null;for(const n of x.a){e=idx.get(nArtist(n));if(e)break}
   if(!e)return{why:'artist'};
   const sp=mbSplit(x.t),key=mbKeyOf(x.t),al=nTitle(x.al);
