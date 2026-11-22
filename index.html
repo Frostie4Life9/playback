@@ -2635,6 +2635,8 @@ html.lite #lx .lxbg i{animation:none;filter:blur(70px)}
 @keyframes lxSpin{to{transform:rotate(360deg)}}
 /* the preview: the artist photo fades out to the left and bottom, like the artist page header */
 #lx .lxspot{flex:1 1 520px;min-width:0;position:relative;min-height:clamp(420px,46vh,560px)}
+#lx .lxphw{position:absolute;z-index:1;top:0;right:0;left:var(--lxl,52%);height:var(--lxh,620px);pointer-events:none;will-change:transform}
+#lx .lxph.lxin{animation:lxFade .7s ease both}
 #lx .lxph{position:absolute;inset:0;overflow:hidden;background:linear-gradient(160deg,color-mix(in srgb,var(--x1) 80%,#fff),var(--x1) 45%,color-mix(in srgb,var(--x1) 55%,#000));
   -webkit-mask-image:linear-gradient(to right,transparent,#000 34%),linear-gradient(to top,transparent,#000 32%);-webkit-mask-composite:source-in;
   mask-image:linear-gradient(to right,transparent,#000 34%),linear-gradient(to top,transparent,#000 32%);mask-composite:intersect;transition:background 1.2s}
@@ -2651,7 +2653,6 @@ html.lite #lx .lxbg i{animation:none;filter:blur(70px)}
 #lx .lxplay{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;color:#fff;background:rgb(255 255 255 / .18);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);transition:background .2s}
 #lx .lxplay:hover{background:rgb(255 255 255 / .3)}#lx .lxplay svg{width:20px;height:20px}
 #lx .lxspot.lxsw .lxst{animation:lxSw .55s cubic-bezier(.2,.8,.2,1) both}
-#lx .lxspot.lxsw .lxph:not(.lxold){animation:lxFade .7s ease both}
 @keyframes lxSw{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @keyframes lxFade{from{opacity:0}to{opacity:1}}
 /* controls: glass pills like the Releases filter on an artist page */
@@ -2710,7 +2711,7 @@ html.lite #lx .lxbg i{animation:none;filter:blur(70px)}
   #lx.libin .lxrec:not(.sm){animation:lxDrop .7s cubic-bezier(.2,.8,.2,1) .12s backwards}
   #lx.libin .lxring{animation:lxRing 1.4s cubic-bezier(.2,.8,.2,1) .45s backwards}
   #lx.libin .lxarm{animation:lxArm .9s cubic-bezier(.3,.7,.2,1) .5s backwards}
-  #lx.libin .lxspot{animation:lxFade .8s ease .1s backwards}
+  #lx.libin .lxphw .lxph{animation:lxFade .8s ease .1s backwards}
   #lx.libin .lxst{animation:lxSw .7s cubic-bezier(.2,.8,.2,1) .25s backwards}
   #lx.libin .llist .lsec{animation:lxSw .5s cubic-bezier(.2,.8,.2,1) .26s backwards}
   #lx.libin .llist .lgrid>*{animation:lxTile .55s cubic-bezier(.2,.8,.2,1) .3s backwards}
@@ -2723,8 +2724,8 @@ html.lite #lx .lxbg i{animation:none;filter:blur(70px)}
 @media (min-width:761px){
   body:has(#lx){overflow:hidden}
   body:has(#lx) .top{position:relative;z-index:85}
-  #lx.side.libfull{display:flex;flex-direction:column;position:fixed;z-index:80;inset:var(--libtop,90px) 0 0 0;height:auto;max-height:none;margin:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;background:transparent;padding:14px clamp(18px,3vw,48px) 72px;animation:lxIn .35s ease both}
-  #lx .libbody{flex:none;width:100%;max-width:1760px;margin:0 auto;padding:0}
+  #lx.side.libfull{display:block;position:fixed;z-index:80;inset:0;height:auto;max-height:none;margin:0;overflow:hidden;background:transparent;padding:0;animation:lxIn .35s ease both}
+  #lx .libbody{position:absolute;z-index:2;inset:var(--libtop,90px) 0 0 0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;margin:0;padding:14px max(clamp(18px,3vw,48px),calc((100% - 1760px) / 2)) 72px}
   #lx .lwrap{flex:none;flex-direction:row;gap:20px;align-items:flex-start}
   #lx .llist{flex:1;min-width:0;min-height:0}
   #lx .lrail{display:flex;flex-direction:column;align-items:center;flex:none;position:sticky;top:20px;width:34px;padding:10px 0;border-radius:999px;background:rgb(0 0 0 / .26);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
@@ -2737,6 +2738,7 @@ html.lite #lx .lxbg i{animation:none;filter:blur(70px)}
 /* phones: the same page, stacked. The whole page scrolls (title included), the groups get a header row instead of a gutter */
 @media (max-width:760px){
   #lx .lxbg{z-index:79}
+  #lx .lxphw{display:none}
   #lx.side.libfull .libbody{position:fixed;inset:0;z-index:80;background:transparent;overflow-y:auto;overflow-x:hidden;padding:calc(18px + env(safe-area-inset-top,0px)) 16px calc(110px + env(safe-area-inset-bottom,0px));gap:16px}
   #lx .lxhero{min-height:0;gap:12px}
   #lx .lxlib{flex-basis:100%;gap:10px;padding:0}
@@ -3731,6 +3733,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.21-t', note:'ARTIST LIBRARY PHOTO, NO SHARP CORNER: the artist photo in the library\u2019s preview now works like the artist page header. It runs to the top and right edges of the window (behind the top bar) and fades only on the left and bottom, instead of sitting in a box with a hard top-right corner. It slides away with the page as you scroll.'},
   {v:'2026.11.21-s', note:'A NEW ARTIST LIBRARY, MADE LIKE AN ARTIST PAGE: All artists is now a page of its own instead of a dark grey sheet. The whole window takes an artist\u2019s colors (the last one you opened), and on a PC pointing at an artist slowly bleeds the page into their colors and shows them on the right with their photo, numbers, Open artist and Play. On the left: a big Artists title, your library numbers (artists, album and song averages, releases) and your library\u2019s own record, one slice per artist sized by the songs you\u2019ve heard, with a ring for everything heard and the arm swinging over as it opens. Search, Show, Sort and Add artist are glass pills like the Releases filter. The groups (A\u2013Z, rating or progress) run down a timeline like the years on an artist\u2019s Releases, with the big letter sticking as you scroll, and a glass A\u2013Z rail on the right. Tiles lose the grey card: a score tinted in the artist\u2019s color, a ring on the record for how much you\u2019ve heard, and a small bar under the name. On a phone it\u2019s the same page stacked, with the record beside the title. Closing it puts you back where you were on the artist page.'},
   {v:'2026.11.21-r', note:'CLEARER GROOVES ON THE SHARE CARD: the lit grooves on the share card\u2019s record are brighter, a little thicker and softly glow in the album\u2019s color, so the color reads clearly while the record still looks real.'},
   {v:'2026.11.21-q', note:'SHARE CARD POLISH AND A STORY SIZE: the record on the share card is now a solid record with a soft shadow, fine grooves and lit grooves tinted in the album\u2019s color, so it reads as vinyl even on pale covers. Song bars fill deeper in the album color, so your favorite songs stand out. Favorites are chips, each with its score on a little record, popping in one by one in the animation. A footer shows whose log it is and the month, with the Playback mark. The share sheet has a new Post / Story switch: Story makes a 1080 \u00d7 1920 card for Instagram and Snapchat stories, still or animated.'},
@@ -7554,8 +7557,13 @@ function lRedraw(){const el=document.getElementById('llist');if(el)el.innerHTML=
 const lxOn=()=>UI.tab==='music'&&!!UI.libOpen&&!UI.view;
 let LXS=null,LXT=0,LXC={k:null,v:null},LXY=null;
 const lxEl=()=>document.querySelector('#lx:not(.libghost)');
-const lxScroller=()=>{const s=lxEl();if(!s)return null;
-  if(matchMedia('(max-width:760px)').matches){const b=s.querySelector(':scope>.libbody');return b||null}return s};
+const lxScroller=()=>{const s=lxEl();return s?s.querySelector(':scope>.libbody'):null};
+/* where the photo layer sits: from the left edge of the preview column to the window's right edge, from the window's top to the bottom of the hero */
+function lxGeo(){const side=lxEl(),box=lxScroller(),sp=side&&side.querySelector('.lxspot'),w=side&&side.querySelector('.lxphw');if(!sp||!w||!box)return;
+  const r=sp.getBoundingClientRect(),st=box.scrollTop;side.style.setProperty('--lxl',Math.round(r.left)+'px');side.style.setProperty('--lxh',Math.round(r.bottom+st)+'px');
+  w.style.transform='translateY('+(-st)+'px)';
+  if(!box._lxs){box._lxs=1;box.addEventListener('scroll',()=>{const ww=side.querySelector('.lxphw');if(ww)ww.style.transform='translateY('+(-box.scrollTop)+'px)'},{passive:true})}}
+addEventListener('resize',()=>{if(lxEl())lxGeo()},{passive:true});
 function lxCols(a){const P=heroPalette(a,true).map(x=>x.col),f=acolFallback({title:a.name,id:a.id});
   return [P[0]||f,P[1]||P[0]||f,P[2]||P[1]||P[0]||f]}
 function lxStats(){const k=(S.mtime||0)+':'+S.music.length+':'+ACOLV;if(LXC.k===k)return LXC.v;
@@ -7576,9 +7584,12 @@ function lxLine(a){const mean=v=>v.length?(v.reduce((x,y)=>x+y,0)/v.length).toFi
   return [aAvg&&'Albums '+aAvg,sAvg&&'Songs '+sAvg,n+' release'+(n===1?'':'s'),p>=100?'Finished':p+'% heard'].filter(Boolean).join(' · ')}
 const LX_ARROW='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 const LX_PLAY='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 4.8v14.4L19 12z" fill="currentColor"/></svg>';
-function lxSpotHtml(a){const e=current(),ph=lxArt(a),cur=!!(e&&e.id===a.id),ini=([...lName(a)][0]||'#').toUpperCase();
+/* the artist photo is its own layer on the page, not inside the scrolling content: like the artist page header it runs to the
+   window's top and right edges (behind the top bar) and fades only on the left and bottom. It moves up as the page scrolls. */
+function lxPhHtml(a){const ph=lxArt(a),ini=([...lName(a)][0]||'#').toUpperCase();
+  return `<div class="lxph" data-aid="${esc(a.id)}"><span class="lxini" aria-hidden="true">${esc(ini)}</span>${ph?`<img src="${esc(ph)}" alt="" decoding="async" onerror="this.remove()">`:''}</div>`}
+function lxSpotHtml(a){const e=current(),cur=!!(e&&e.id===a.id);
   return `<div class="lxspot" data-aid="${esc(a.id)}">
-    <div class="lxph"><span class="lxini" aria-hidden="true">${esc(ini)}</span>${ph?`<img src="${esc(ph)}" alt="" decoding="async" onerror="this.remove()">`:''}</div>
     <div class="lxst">
       <span class="lxk">${cur?'Last opened':'Preview'}</span>
       <b class="lxn">${esc(a.name)}</b>
@@ -7615,9 +7626,9 @@ function lxSpot(id){const side=lxEl();if(!side)return;const a=S.music.find(x=>x.
   const c=lxCols(a);side.style.setProperty('--x1',c[0]);side.style.setProperty('--x2',c[1]);side.style.setProperty('--x3',c[2]);
   const sp=side.querySelector('.lxspot');if(!sp||sp.dataset.aid===String(id))return;
   const t=document.createElement('template');t.innerHTML=lxSpotHtml(a).trim();const nw=t.content.firstElementChild;
-  const op=sp.querySelector('.lxph'),np=nw.querySelector('.lxph');
-  if(op&&np&&!noMotion()){op.classList.add('lxold');np.parentNode.insertBefore(op,np);setTimeout(()=>op.remove(),900)}
-  nw.classList.add('lxsw');sp.replaceWith(nw)}
+  nw.classList.add('lxsw');sp.replaceWith(nw);
+  const w=side.querySelector('.lxphw');if(w){const old=[...w.querySelectorAll('.lxph:not(.lxold)')],t2=document.createElement('template');t2.innerHTML=lxPhHtml(a).trim();const np=t2.content.firstElementChild;
+    old.forEach(o=>{o.classList.add('lxold');setTimeout(()=>o.remove(),noMotion()?0:900)});if(!noMotion())np.classList.add('lxin');w.appendChild(np)}}
 document.addEventListener('mouseover',ev=>{const t=ev.target.closest&&ev.target.closest('#lx .tile[data-act="sel"]');if(!t||!matchMedia('(hover:hover)').matches)return;
   clearTimeout(LXT);LXT=setTimeout(()=>lxSpot(t.dataset.id),60)});
 document.addEventListener('focusin',ev=>{const t=ev.target.closest&&ev.target.closest('#lx .tile[data-act="sel"]');if(t)lxSpot(t.dataset.id)});
@@ -7627,7 +7638,8 @@ function lxAfter(was,y,opened){const side=lxEl();
   if(!matchMedia('(max-width:760px)').matches){
     if(opened){LXY=scrollY;if(scrollY)window.scrollTo(0,0)}
     const tp=document.querySelector('#app .top')||document.querySelector('.top');side.style.setProperty('--libtop',Math.max(0,tp?tp.getBoundingClientRect().bottom:0)+'px')}
-  const box=lxScroller();if(box&&y&&!opened)box.scrollTop=y}
+  const box=lxScroller();if(box&&y&&!opened)box.scrollTop=y;
+  lxGeo();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{if(lxEl())lxGeo()})}
 
 /* the record slides out of its sleeve as the sleeve scrolls into view. Which sleeves are on screen is
    remembered across redraws, so a tap never replays or resets the motion. */
@@ -7824,7 +7836,7 @@ function mainAside(e,list){const full=!!(UI.libOpen&&e);   /* in the full artist
   const lx=full&&UI.tab==='music';if(lx&&LIBIN)LXS=null;
   const la=lx?(S.music.find(x=>x.id===LXS)||e):null,lc=la?lxCols(la):null;
   return `<aside class="side ${UI.libOpen||!e?'libopen':''}${UI.libOpen&&e?' libfull':''}${LIBIN&&UI.libOpen&&e?' libin':''}${lx?' lx':''}"${lx?` id="lx" style="--x1:${esc(lc[0])};--x2:${esc(lc[1])};--x3:${esc(lc[2])}"`:''}>
-      ${lx?'<div class="lxbg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i></div>':''}
+      ${lx?'<div class="lxbg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i></div><div class="lxphw" aria-hidden="true">'+lxPhHtml(la)+'</div>':''}
       ${e?`<button class="libbtn" data-act="lib" aria-expanded="${!!UI.libOpen}"><span class="label">${UI.tab==='music'?'Artists':'Shows & films'} \u00b7 ${list.length}</span><b>${esc(e.name||e.title)}</b><span class="libsw">${UI.libOpen?'Close':'Switch'}</span></button>`:''}
       <div class="libbody">
       ${sideFinder(list)}
