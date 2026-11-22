@@ -3756,6 +3756,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.21-v', note:'APPLE MUSIC ALBUM COVERS: album covers now come from Apple Music by default, like artist photos. They\u2019re sharper, and the open album shows them at full size (1200 px). Each artist is checked once (their page first, then the rest of your library slowly in the background), straight from your device to Apple, so your Worker isn\u2019t used. A cover is only swapped when the title matches and the track count lines up (explicit copies win over clean ones), so a wrong edition doesn\u2019t slip in; anything without a sure match keeps its old cover. Deluxe editions get their own Apple cover too. Albums you imported from Apple Music were saved at a small size and are now sharper. The Spotify / Apple Music switch for an artist\u2019s photo now flips their album covers too (it shows up for any artist with Apple covers), and album colors stay the same as before.'},
   {v:'2026.11.21-u', note:'ARTIST LIBRARY PREVIEW, TAKE TWO: the photo now fades exactly like the artist page header (an Apple Music photo is shown whole on the right, with the same soft eased fades on the left and bottom, and no colored box behind it). And once you scroll past the top of the library, a slim preview bar rides along at the top of the list, so pointing at any artist further down still shows their photo, name, numbers, Open artist and Play, in their colors.'},
   {v:'2026.11.21-t', note:'ARTIST LIBRARY PHOTO, NO SHARP CORNER: the artist photo in the library\u2019s preview now works like the artist page header. It runs to the top and right edges of the window (behind the top bar) and fades only on the left and bottom, instead of sitting in a box with a hard top-right corner. It slides away with the page as you scroll.'},
   {v:'2026.11.21-s', note:'A NEW ARTIST LIBRARY, MADE LIKE AN ARTIST PAGE: All artists is now a page of its own instead of a dark grey sheet. The whole window takes an artist\u2019s colors (the last one you opened), and on a PC pointing at an artist slowly bleeds the page into their colors and shows them on the right with their photo, numbers, Open artist and Play. On the left: a big Artists title, your library numbers (artists, album and song averages, releases) and your library\u2019s own record, one slice per artist sized by the songs you\u2019ve heard, with a ring for everything heard and the arm swinging over as it opens. Search, Show, Sort and Add artist are glass pills like the Releases filter. The groups (A\u2013Z, rating or progress) run down a timeline like the years on an artist\u2019s Releases, with the big letter sticking as you scroll, and a glass A\u2013Z rail on the right. Tiles lose the grey card: a score tinted in the artist\u2019s color, a ring on the record for how much you\u2019ve heard, and a small bar under the name. On a phone it\u2019s the same page stacked, with the record beside the title. Closing it puts you back where you were on the artist page.'},
@@ -7844,7 +7845,7 @@ function render(){
   if(keepHx){const e=document.querySelector('.hx .hxrow');if(e&&!e.scrollLeft)e.scrollLeft=keepHx}
   if(keepSim){const e=document.querySelector('.simrow');if(e&&!e.scrollLeft)e.scrollLeft=keepSim}
   phHiLoad();
-  phAmLoad();
+  phAmLoad();amcLoad();
   dtLoad();
   if(UI.alb){const a=(S.music||[]).find(x=>x.id===UI.alb.aid),g=a&&a.groups.find(x=>String(x.id)===UI.alb.g);if(g&&READY&&navigator.onLine)msLoad(a,g)}
   hxDrift();
@@ -8970,7 +8971,7 @@ function accColOf(x){
   return{key,col:c||acolFallback({title:x.n,id:key})};
 }
 function vlPopHtml(x){
-  const u=accCover(x),big=u.replace(/\/front-250$/,'/front-500'),when=x.d&&fmtRd(x.d)?'Rated '+fmtRd(x.d):'';
+  const u=accCover(x),big=amBig(u.replace(/\/front-250$/,'/front-500')),when=x.d&&fmtRd(x.d)?'Rated '+fmtRd(x.d):'';
   const segs=Array.from({length:10},(_,i)=>`<i><u style="width:${Math.round(Math.max(0,Math.min(1,x.r-i))*100)}%"></u></i>`).join('');
   const ac=accColOf(x);
   return `<div class="vl-bk"></div><div class="vl-pop acx" data-acol="${esc(ac.key)}" style="--ac:${ac.col}" role="dialog" aria-label="${esc(x.n||'Untitled')}" tabindex="-1"><div class="ac-pack"><span class="ac-disc" aria-hidden="true"></span><div class="vl-pc" style="--c:${accHue(x.n)}"><b aria-hidden="true">${accIni(x.n)}</b>${u?`<img src="${esc(big)}" data-s="${esc(u)}" alt="" decoding="async" onerror="if(this.src!==this.dataset.s){this.src=this.dataset.s}else{this.remove()}">`:''}</div></div><div class="vl-pm"><h4>${esc(x.n||'Untitled')}</h4><small>${esc(accArtText(x))}</small><div class="vl-pr"><b>${fmt(x.r)}</b><span class="vl-seg" role="img" aria-label="Rated ${fmt(x.r)} out of 10">${segs}</span></div>${when?`<small class="vl-w">${esc(when)}</small>`:''}${(UI.view==='account'?!!accLocalAlbum(x):Array.isArray(x.tr)&&x.tr.length)?`<button class="btn vl-songs" data-act="palb" data-key="${esc(accPk(x))}">Song ratings</button>`:''}</div></div>`;
@@ -9032,7 +9033,7 @@ function albumSheet(){
   const items=self?accItems():fr.items,base=accBase(items),x=base.find(y=>accPk(y)===UI.pAlb);
   if(!x)return '';
   const who=self?'':fr.name,m=self?null:accMatch(items,accItems()).mine(x);
-  const u=accCover(x),big=u.replace(/\/front-250$/,'/front-500'),when=x.d&&fmtRd(x.d)?fmtRd(x.d):'';
+  const u=accCover(x),big=amBig(u.replace(/\/front-250$/,'/front-500')),when=x.d&&fmtRd(x.d)?fmtRd(x.d):'';
   const segs=Array.from({length:10},(_,i)=>`<i><u style="width:${Math.round(Math.max(0,Math.min(1,x.r-i))*100)}%"></u></i>`).join('');
   let trk='';
   if(x.kind!=='a')trk='';
@@ -10131,9 +10132,9 @@ function amPhoto(a){return a.aimg?a.aimg+'/'+(innerWidth<700?'1600x1600bb.jpg':'
 function phSrcPref(a){return a&&a.phsrc==='sp'?'sp':'am'}   /* Apple Music's photo by default (sharper); Spotify is the choice in Details */
 function phPick(a){return phSrcPref(a)==='am'&&a.aimg?amPhoto(a):(spPhoto(a)||amPhoto(a))}
 function hxSrcHtml(a){
-  if(!a||!a.aimg||!spPhoto(a))return '';
-  const am=phPick(a)===amPhoto(a);
-  return `<div class="hsrc" role="group" aria-label="Artist photo source"><span class="hsl">Photo</span><button type="button" data-act="hsrc" data-v="sp" aria-pressed="${!am}">Spotify</button><button type="button" data-act="hsrc" data-v="am" aria-pressed="${am}">Apple Music</button></div>`;
+  if(!a||!((a.aimg&&spPhoto(a))||amcHas(a)))return '';
+  const am=phSrcPref(a)==='am';
+  return `<div class="hsrc" role="group" aria-label="Artist photo and album cover source"><span class="hsl">${a.aimg&&spPhoto(a)?'Photo &amp; covers':'Covers'}</span><button type="button" data-act="hsrc" data-v="sp" aria-pressed="${!am}">Spotify</button><button type="button" data-act="hsrc" data-v="am" aria-pressed="${am}">Apple Music</button></div>`;
 }
 let PHSEEN='';   /* which artist's photo (id|url) has already faded in, so a redraw of the same page never replays the fade */
 function phSeen(im){const h=im.closest('.hero[data-aid]');PHSEEN=(h?h.dataset.aid:'')+'|'+im.getAttribute('src')}
@@ -10153,6 +10154,7 @@ function phXfade(im,want){
 function phSetSrc(v){
   const h=document.querySelector('.head.hero.hx'),a=h&&(S.music||[]).find(x=>x.id===h.dataset.aid);if(!a)return;
   const nv=v==='am'?'am':'sp';if(phSrcPref(a)!==nv){if(nv==='sp')a.phsrc='sp';else delete a.phsrc;save()}   /* this artist only */
+  if(amcApply(a)){save();renderSoon()}   /* 2026.11.21-v: the switch takes the artist's album covers with it */
   h.querySelectorAll('.hsrc button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===(v==='am'?'am':'sp'))));
   const im=h.querySelector('.hphoto img'),u=phPick(a);if(!im||!u||im.getAttribute('src')===u)return;
   const still=matchMedia('(prefers-reduced-motion:reduce)').matches,t=new Image();
@@ -10160,6 +10162,69 @@ function phSetSrc(v){
   const ph=im.parentNode,go=()=>{if(ph)ph.classList.toggle('am',u===amPhoto(a));im.src=u;requestAnimationFrame(()=>{im.style.opacity='1'})};
   t.onload=()=>setTimeout(go,still?0:200);t.onerror=()=>{im.style.opacity='1'};t.src=u;
 }
+/* ===== APPLE MUSIC ALBUM COVERS (2026.11.21-v) =====
+   Covers come from Apple Music by default, like artist photos: they are sharper (Apple serves any size, the open album
+   asks for 1200 px), and the artist's own Spotify/Apple switch now flips their covers too. Each artist is looked up once,
+   straight from this device to Apple (no Worker calls): one search for the artist if their Apple id is not known yet, then
+   one call for all their albums. A release is only given Apple's cover when the title matches and the track count is
+   within a song or two (clean copies lose to explicit ones), so a wrong edition never slips in; anything without a sure
+   match keeps the cover it had. The original cover is kept (img0) so switching back is instant. Album colors are left as
+   they were read from the original cover. Artists are checked when their page opens, and the rest of the library slowly
+   in the background (one artist every 12 s, only while the app is on screen and nothing is importing). */
+const AMC_RE=/^https:\/\/is\d+-ssl\.mzstatic\.com\//;
+const amIsArt=u=>AMC_RE.test(u||'');
+const amSized=(u,n)=>amIsArt(u)?String(u).replace(/\/\d+x\d+(?:bb)?\.(jpg|png|webp)$/i,'/'+n+'x'+n+'bb.$1'):u;
+const amBig=u=>amSized(u,1200);
+const AMC_RECHECK=60*864e5;
+let amcBusy=false;
+const amcT=s=>nrm(String(s||'').replace(/\s+-\s+(?:Single|EP)$/i,''));
+/* put this artist's covers on the side the switch says (Apple by default), keeping the original for switching back */
+function amcApply(a){let ch=false;const want=phSrcPref(a);
+  for(const g of a.groups||[]){
+    if(g.img&&!g.img0&&amIsArt(g.img)&&/\/400x400bb\./.test(g.img)){g.img=amSized(g.img,600);ch=true}   /* Apple-imported covers were saved at 400 px */
+    if(g.amImg){if(!g.img0&&g.img!==g.amImg)g.img0=g.img||'';const t=want==='am'?g.amImg:(g.img0||g.amImg);if(g.img!==t){g.img=t;ch=true}}
+    if(g.amDx){if(!g.dxImg0&&g.dxImg!==g.amDx)g.dxImg0=g.dxImg||'';const t=want==='am'?g.amDx:(g.dxImg0||g.amDx);if(g.dxImg!==t){g.dxImg=t;ch=true}}}
+  return ch}
+const amcHas=a=>(a.groups||[]).some(g=>(g.amImg&&g.img0&&g.amImg!==g.img0)||(g.amDx&&g.dxImg0&&g.amDx!==g.dxImg0));
+function amcNeeds(a){if(!a||!a.groups||!a.groups.length)return false;
+  if(!a.amcAt)return true;if(Date.now()-a.amcAt>AMC_RECHECK)return true;return a.groups.some(g=>!g.amChk)}
+/* one call at a time, spaced like the Apple import (Apple allows about 20 a minute); a "slow down" answer just ends this round */
+async function amcGet(path,params){
+  const wait=amLast+amGap-Date.now();if(wait>0)await mbSleep(wait);amLast=Date.now();
+  const r=await fetch(AM_API+path+'?'+new URLSearchParams({...params,country:amCountry()}));
+  if(!r.ok)throw AMError(r.status===403||r.status===429?'limited':'http',r.status);
+  const j=await r.json();return j.results||[]}
+function amcPick(list,title,n,year){const t=amcT(title);let best=null,bs=-1e9;
+  for(const c of list){if(amcT(c.collectionName)!==t)continue;
+    const tc=+c.trackCount||0;if(n&&tc&&Math.abs(tc-n)>2)continue;
+    const y=+String(c.releaseDate||'').slice(0,4),gy=+String(year||'').slice(0,4);
+    const sc=-(n&&tc?Math.abs(tc-n)*3:0)-(c.collectionExplicitness==='cleaned'?4:0)-(y&&gy?Math.min(5,Math.abs(y-gy)):0);
+    if(sc>bs){bs=sc;best=c}}
+  return best&&best.artworkUrl100?amSized(best.artworkUrl100,600):''}
+async function amcRun(a){if(amcBusy||!a||!navigator.onLine)return;amcBusy=true;
+  try{
+    let id=a.aamid;
+    if(!id){const L=await amcGet('search',{term:a.name,entity:'musicArtist',limit:10});
+      const m=L.find(x=>nrm(x.artistName)===nrm(a.name));if(!m){a.amcAt=Date.now();a.groups.forEach(g=>g.amChk=1);save();return}
+      id=String(m.artistId);a.aamid=id}
+    const L=(await amcGet('lookup',{id,entity:'album',limit:200})).filter(x=>x.wrapperType==='collection');
+    let hit=0;
+    for(const g of a.groups){
+      const std=hasDx(g)?g.items.filter(i=>!i.dx).length:g.items.length,u=amcPick(L,g.title,std,g.year);
+      if(u&&u!==g.amImg){g.amImg=u;hit++}
+      if(hasDx(g)){const d=amcPick(L,dxName(g),g.items.length,g.year);if(d&&d!==g.amDx){g.amDx=d;hit++}}
+      g.amChk=1}
+    a.amcAt=Date.now();amcApply(a);save();
+    if(hit&&!UI.view&&UI.tab==='music')renderSoon()}
+  catch(e){a.amcTry=Date.now()}
+  finally{amcBusy=false}}
+/* the open artist first, when their page draws */
+function amcLoad(){if(!READY||UI.tab!=='music'||UI.view)return;const a=current();if(!a)return;
+  if(amcApply(a)){save();renderSoon();return}
+  if(amcNeeds(a)&&!(a.amcTry&&Date.now()-a.amcTry<6e5))amcRun(a)}
+/* then the rest of the library, slowly */
+setInterval(()=>{if(!READY||amcBusy||document.hidden||!navigator.onLine||(typeof MBX!=='undefined'&&MBX.busy))return;
+  const a=(S.music||[]).find(x=>amcNeeds(x)&&!(x.amcTry&&Date.now()-x.amcTry<6e5));if(a)amcRun(a)},12000);
 /* Apple's artist photo: once per artist, the first time their page opens (the owner only; one Apple lookup if the Apple id is not known yet, then one Worker call) */
 /* Apple's photo for an artist id, through your own Worker (owner) or, for a signed-in friend, through Playback's server
    (Worker 20 keeps every answer for everyone, so each artist is only looked up once for the whole app) */
@@ -11510,14 +11575,14 @@ function gfHtml(a,g){return lsWith(g,()=>{
           <div class="gf-ls">
           <div class="sl-hero">
             ${albBar(g,a)}
-            <div class="sl-pack"><div class="sl-cover">${art?`<img src="${esc(art)}" ${dx&&sArt&&art!==sArt?`data-f="${esc(sArt)}" `:''}alt="" loading="lazy" decoding="async" onerror="if(this.dataset.f){this.src=this.dataset.f;this.removeAttribute('data-f')}else coverErr(this)">`:''}<span class="sl-ph" aria-hidden="true">${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div></div>
+            <div class="sl-pack"><div class="sl-cover">${art?`<img src="${esc(amBig(art))}" ${dx&&sArt&&art!==sArt?`data-f="${esc(sArt)}" `:''}alt="" loading="lazy" decoding="async" onerror="if(this.dataset.f){this.src=this.dataset.f;this.removeAttribute('data-f')}else coverErr(this)">`:''}<span class="sl-ph" aria-hidden="true">${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div></div>
             <div class="sl-meta"><span class="sl-kind">${esc(g.kind)} · ${esc(g.year)}</span><h3>${esc(dx?dxName(g):g.title)}</h3>${dx?'<span class="dxbadge">Deluxe</span>':''}${g.w&&g.w.length?`<span class="sl-w">with ${esc(g.w.join(' & '))}</span>`:''}<span class="sl-sub">${gd} of ${shown.length} heard</span>${rdLine(g,dx)}${lsPager(g)}${UI.wEdit===g.id?`<form class="sl-wf" data-form="gwith" data-a="${a.id}" data-g="${g.id}"><input name="w" value="${esc((g.w||[]).join(' & '))}" placeholder="Other artist, like Kenny Beats" aria-label="Collab with" autocomplete="off" autocapitalize="words"><button>Save</button></form>`:''}</div>
           </div>
           ${dxs.length?`<div class="dxseg" role="group" aria-label="Edition" data-dx="${dx?1:0}"><button type="button" data-act="dxsel" data-g="${g.id}" data-v="0" aria-pressed="${!dx}">Standard<span class="mono">${sd}/${std.length}</span></button><button type="button" class="dx" data-act="dxsel" data-g="${g.id}" data-v="1" aria-pressed="${dx}">Deluxe<span class="mono">${dd}/${g.items.length}</span></button></div>`:''}
           ${gfInfo(a,g,dx,shown)}
           </div>
         </div>
-        <div class="gf-lb" aria-hidden="true"><i class="gf-sh"></i>${art?`<img class="gf-lbg" src="${esc(art)}" alt="" decoding="async" onerror="this.remove()"><img src="${esc(art)}" alt="" decoding="async" onerror="this.remove()">`:''}<span>${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div>
+        <div class="gf-lb" aria-hidden="true"><i class="gf-sh"></i>${art?`<img class="gf-lbg" src="${esc(amBig(art))}" alt="" decoding="async" onerror="this.remove()"><img src="${esc(amBig(art))}" alt="" decoding="async" onerror="this.remove()">`:''}<span>${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div>
       </div>
       <div class="gf-r"><i class="gf-sh" aria-hidden="true"></i>
         <div class="gf-pk r" aria-hidden="true"><div class="gf-vr vgr" style="--vc:var(--ac)">${vgr}<span class="gf-vl">${vrLab}</span></div></div>
