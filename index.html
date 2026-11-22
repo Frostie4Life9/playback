@@ -3408,7 +3408,7 @@ html.lite .pvdg{background:rgb(10 12 12 / .55)}
 .pvb.xs{min-height:34px;padding:0 13px;font-size:13px}
 .pvb.ic{width:48px;padding:0}.pvb.ic.sm{width:40px}
 .pvb.dng{background:rgb(214 53 63 / .24);color:#ffdfe1}.pvb.dng:hover{background:rgb(214 53 63 / .38)}
-.pvb svg{width:18px;height:18px;flex:none}
+.pvb svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .pvseg{display:inline-flex;gap:4px;padding:5px;border-radius:999px;flex-wrap:wrap}
 .pvseg button{border:0;background:transparent;color:rgb(255 255 255 / .9);font:600 15px var(--body);padding:0 20px;min-height:42px;border-radius:999px;cursor:pointer;transition:background .25s,color .25s;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
 .pvseg button span{font:500 12px var(--mono);opacity:.72}
@@ -3469,7 +3469,8 @@ html.lite .pvdg{background:rgb(10 12 12 / .55)}
 .pvslv{position:relative;flex:none;display:grid;place-items:center;width:var(--s,72px);height:var(--s,72px);border-radius:calc(var(--s,72px) * .12);overflow:hidden;background:var(--c,#444);box-shadow:0 14px 30px rgb(0 0 0 / .32),0 0 0 1px rgb(255 255 255 / .12) inset;color:#fff;font:900 calc(var(--s,72px) * .34) Archivo,var(--display)}
 .pvslv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .pvslv::after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgb(255 255 255 / .16),rgb(255 255 255 / 0) 40%,rgb(0 0 0 / .12));pointer-events:none}
-.pvpack{position:relative;display:block;flex:none;width:calc(var(--s,72px) * 1.1);height:var(--s,72px)}
+.pvpack{position:relative;display:block;flex:none;width:calc(var(--ps,72px) * 1.1);height:var(--ps,72px)}
+.pvpack>.pvslv{--s:var(--ps,72px)}
 .pvpack>.pvrec{position:absolute;top:5%;left:calc(var(--ps,72px) * .12);--s:calc(var(--ps,72px) * .9);transition:transform .7s cubic-bezier(.2,.8,.2,1)}
 .pvpack>.pvslv{position:absolute;left:0;top:0;transition:transform .5s cubic-bezier(.2,.8,.2,1)}
 .pvpack.peek>.pvrec{transform:translateX(30%)}
@@ -3620,7 +3621,7 @@ html.lite .pvdg{background:rgb(10 12 12 / .55)}
   .hrow{padding:8px 4px;gap:0 12px}
   .hst{width:48px;height:48px}.hst b{font-size:14px}
   .hmain2{gap:12px}
-  .hmain2 .pvpack{--s:54px!important;--ps:54px!important}
+  .hmain2 .pvpack{--ps:54px!important}
   .hsa{display:none}
   .hn2>b{font-size:17px}
   .hrt2{min-width:0}.hrt2 .pvsegs{width:72px}.hrt2 .pvpill.l{font-size:17px;padding:5px 11px}
@@ -3716,9 +3717,76 @@ html.lite .pvdg{background:rgb(10 12 12 / .55)}
   .stnow{border-right:0;padding-right:0}
   .stre-l{width:100%}
   .stpod{gap:18px;justify-content:center}
-  .stp .pvpack{--s:120px!important;--ps:120px!important}.stp.big .pvpack{--s:150px!important;--ps:150px!important}
+  .stp .pvpack{--ps:120px!important}.stp.big .pvpack{--ps:150px!important}
   .stp-ph{--s:120px!important}.stp.big .stp-ph{--s:150px!important}
   .str-b{display:none}
+}
+/* Listen list: the crate */
+.llover:has(.crate){align-items:flex-end}
+.llsheet.crate{max-width:none;width:calc(100% - 28px);height:calc(100% - 70px);max-height:none;padding:0;border:0;border-radius:34px 34px 0 0;overflow:hidden;background:#141410;color:#fff;box-shadow:0 -20px 60px rgb(0 0 0 / .45)}
+.crate>.pvbg{position:absolute;z-index:0}
+.cr-in{position:relative;z-index:1;height:100%;overflow:auto;overscroll-behavior:contain;padding:14px clamp(18px,3vw,40px) 40px;display:flex;flex-direction:column;gap:30px}
+.cr-grab{align-self:center;width:52px;height:5px;border-radius:3px;background:rgb(255 255 255 / .45);flex:none}
+.cr-h{display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap}
+.cr-ht{flex:1 1 300px;min-width:0}.cr-ht .pvh{font-size:clamp(56px,7vw,104px)}.cr-ht .pvsub{margin-top:12px}
+.cr-add{flex:0 1 560px;display:flex;align-items:center;gap:10px;min-height:58px;padding:0 8px 0 20px;border-radius:999px}
+.cr-add svg{width:20px;height:20px;flex:none;opacity:.85}
+.cr-add input{flex:1;min-width:0;border:0;background:transparent;outline:none;color:#fff;font:500 16px var(--body)}
+.cr-add input::placeholder{color:rgb(255 255 255 / .72)}
+.cr-add>i{width:1px;height:24px;background:rgb(255 255 255 / .3)}
+.cr-add:focus-within{box-shadow:0 0 0 2px rgb(255 255 255 / .6) inset}
+.cr-x{min-height:58px;width:58px}
+.crf{display:grid;grid-template-columns:auto minmax(0,1fr);gap:40px;align-items:center}
+.crf-a{position:relative}
+.crf-a .pvpack.peek>.pvrec{transform:translateX(38%)}
+.crf:hover .crf-a .pvpack>.pvrec{transform:translateX(44%)}
+.crf-a .pvpack>.pvrec>.rd{animation:pvSpin 14s linear infinite}
+.crf-a .pvpack{margin-right:110px}
+.crf-tag{position:absolute;left:12px;top:12px;font-size:11px;font-weight:700;padding:5px 9px;border-radius:6px;background:#fff;color:#141414;z-index:2}
+.crf-t{display:flex;flex-direction:column;gap:16px;min-width:0}
+.crf-t h3{margin:0;font:900 clamp(40px,4.4vw,64px)/.92 Archivo,var(--display);letter-spacing:-.04em;overflow-wrap:anywhere}
+.crf-p{display:flex;align-items:center;gap:14px}.crf-p .pvsegs{flex:1;max-width:360px}.crf-p .pvmono{font-size:14px}
+.crf-f{margin:0;font-size:15px;max-width:520px}.crf-f:empty{display:none}
+.crf-none{padding:20px 0}
+.cr-s{display:flex;flex-direction:column;gap:16px}
+.cr-s>.pvch{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid rgb(255 255 255 / .22)}
+.cr-s .pvh2{font-size:26px}
+.cr-row{display:flex;gap:26px;overflow-x:auto;padding:8px 4px 10px;scrollbar-width:thin}
+.crt{position:relative;flex:none;width:168px;display:flex;flex-direction:column;gap:8px}
+.crt-b{all:unset;cursor:pointer;display:block;transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+.crt:hover .crt-b{transform:translateY(-10px)}
+.crt-b:focus-visible{outline:2px solid #fff;outline-offset:4px;border-radius:10px}
+.crt>b{font:800 15px/1.15 Archivo,var(--display);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:4px}
+.crt>.pvsm{font-size:12px;margin-top:-4px}
+.crt-p{display:flex;align-items:center;gap:8px}.crt-p .pvmono{font-size:11px}
+.crt-s{font-size:10px;color:rgb(255 255 255 / .74)}
+.crt-x{position:absolute;right:-6px;top:-6px;width:30px;height:30px;border-radius:50%;border:0;background:rgb(0 0 0 / .55);color:#fff;display:grid;place-items:center;cursor:pointer;opacity:0;transition:opacity .2s}
+.crt-x svg{width:14px;height:14px}
+.crt:hover .crt-x,.crt-x:focus-visible{opacity:1}
+@media (hover:none){.crt-x{opacity:1}}
+.cr-nr{display:flex;gap:14px;flex-wrap:wrap}
+.crn{display:flex;gap:16px;align-items:center;padding:12px;border-radius:20px;background:rgb(255 255 255 / .1);flex:1 1 280px;min-width:0}
+.crn-a{position:relative;flex:none}
+.crn-d{position:absolute;left:50%;bottom:-9px;transform:translateX(-50%) rotate(-4deg);white-space:nowrap;font-size:10px;font-weight:700;padding:3px 7px;border-radius:5px;background:#141414;color:#fff}
+.crn-d.up{background:#fff;color:#141414}
+.crn-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.crn-t>b{font:800 17px Archivo,var(--display);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crn-b{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.pvb.xs.ic{width:34px;padding:0}.pvb.xs.ic svg{width:14px;height:14px}
+.cr-hd{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.cr-hi{display:flex;align-items:center;gap:12px;opacity:.82}
+.cr-hi>span:nth-child(2){flex:1;min-width:0;display:flex;flex-direction:column}.cr-hi b{font:600 14px var(--body);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cr-hc{position:relative}
+.cr-hc>i{position:absolute;right:-6px;bottom:-6px;width:22px;height:22px;border-radius:50%;background:#fff;color:#141414;display:grid;place-items:center;font:700 12px var(--body);font-style:normal}
+@media (max-width:900px){
+  .llsheet.crate{width:100%;height:100%;border-radius:0}
+  .cr-in{padding-top:calc(14px + env(safe-area-inset-top,0px));padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}
+  .cr-x{position:absolute;top:calc(22px + env(safe-area-inset-top,0px));right:18px;min-height:48px;width:48px}
+  .cr-add{flex-basis:100%;min-height:52px}
+  .crf{grid-template-columns:minmax(0,1fr);gap:20px}
+  .crf-a{justify-self:start}
+  .crf-a .pvpack{--ps:220px!important;margin-right:80px}
+  .crt{width:132px}.crt .pvpack{--ps:132px!important}
 }
 html.pbstill *,html.pbstill *::before,html.pbstill *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
 @media (max-width:900px){.pvset-sync{padding:20px;gap:18px}.pvset-tt{transform:scale(.8);transform-origin:left center;width:140px;height:130px}}
@@ -4276,6 +4344,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.22-e', note:'LISTEN LIST AS THE CRATE. The Listen list is now a wide sheet that rises from the bottom (full screen on a phone) in the colors of the album at the front. UP NEXT is that album, big, with its record pulled out and spinning slowly, its grooves lit for the songs you\u2019ve heard, when you added it and where it came from, friends\u2019 scores when they\u2019ve rated it, a segment bar of songs heard, Play (it tells you which song is next), Open album, Move to back and Remove. The rest stand in the crate as sleeves with their records peeking out; they lift on hover, show a progress bar, and say when they were added, where they came from, or that they\u2019re not in your log yet. Add an album from the bar at the top. Fresh pressings are the new releases with a date stamp (white for ones not out yet), with Add, Artist, Dismiss, Check now and the daily-checks switch. Heard sits last with checkmarks and Clear.'},
   {v:'2026.11.22-d', note:'STATS REDESIGN. Stats now takes its colors from your #1 artist for the range you pick. The top has the range pills and a year menu, the big numbers, and how this period compares with the one before (for example +18% plays and 2 h more), beside your #1 artist with their photo fading in like the artist page header, Open artist and Play. Recently played starts with a turntable for what\u2019s playing now (or the last thing you played), then sleeves with how long ago. Top of the month is a podium for the top 3 (records peeking out of their sleeves, artist photos for Artists), then rows with play bars in each album\u2019s color. Beside it: plays over time as a waveform, and Highlights. Then TIME OF DAY AS A RECORD CLOCK (24 bars around a spinning record, peak hour on the label), day of the week, and a NEW record showing how much of what you play is from artists in your log. Your listening history, imports and the fake-stats preview stay at the bottom.'},
   {v:'2026.11.22-c', note:'HISTORY REDESIGN. History now sits on a color field from the albums you rated most recently, and as you scroll the colors follow the month you\u2019re in. The top has the stats line, a button to add the missing days (it brings the albums with no day to the top) and Export CSV, beside YOUR RATING YEAR: 53 weeks of dots where each lit dot is a day you rated an album, in that album\u2019s color, with the number of days and your best run (switch between years). The list is a timeline: the month name sticks in the left column with its count, average and color dots, a spine runs down like the artist Releases timeline, and each row has a date stamp shaped like a record label (tap it to change the day; the editor opens right under the row), the sleeve with its record peeking out (its lit groove is how many songs you\u2019ve rated, and it slides out and spins on hover), chips for relistens, reviews and the kind, the song average, and the rating pill with ten segments in the album\u2019s color. Albums with no day yet are sleeves at the bottom with a dashed + Day button.'},
   {v:'2026.11.22-b', note:'SETTINGS REDESIGN (first of the six redesigned pages). Settings now sits on a calm color field from the last artist you opened, with a big Settings title, a search box that hides everything that doesn\u2019t match as you type, and a sync turntable that spins while you\u2019re in sync (Save now and Check for newer right on it). On a wide screen a section list on the left follows you down the page. Connections are cards for Spotify, Apple Music, MusicBrainz and Rate Your Music with a status light, and the setup forms open in place under them. On/off switches have a knob that\u2019s a tiny record and turns when you flip it. NEW: a Motion switch (turns off the spinning and sliding on this device), an album-cover default (Apple or Spotify for every artist; an artist\u2019s own switch still wins), a backup reminder interval (7, 14, 21 days or off), Ideas for Playback, and What\u2019s new (the last few builds).'},
@@ -5444,7 +5513,7 @@ function stManage(d,demo){
    day of the week, and how much of what you play is from artists in your log. Your listening history stays last. */
 function stGOf(al,I){const m=I.alg;return m?m.get(al):null}
 function stColOf(img,name,g){if(g)return gCol(g,gArt(g),true);return hslHex(accHue(name||'?'),.48,.5)}
-function stPack(s,img,col,name,spin){return `<span class="pvpack" style="--s:${s}px;--ps:${s}px">${pvRec(Math.round(s*.9),{lc:col,spin:spin?'mid':'',disc:`repeating-radial-gradient(circle,rgb(0 0 0 / .16) 0 1px,transparent 1px 3px),conic-gradient(from 40deg,${col},#151515,${col})`})}${pvSleeve(s,img,col,name)}</span>`}
+function stPack(s,img,col,name,spin){return `<span class="pvpack" style="--ps:${s}px">${pvRec(0,{lc:col,spin:spin?'mid':'',disc:`repeating-radial-gradient(circle,rgb(0 0 0 / .16) 0 1px,transparent 1px 3px),conic-gradient(from 40deg,${col},#151515,${col})`})}${pvSleeve(0,img,col,name)}</span>`}
 function stItem(d,q,kind,i,I){
   if(kind==='r'){const a=d.ar[i],e=I.ar.get(a.k),img=stArt(a.k,e),al=e&&S.music.find(x=>x.id===e.id),col=al?lxCols(al)[0]:hslHex(accHue(a.n),.48,.5);
     return{name:a.n,sub:stHrs(q.mR[i])+' listened',img,aid:e?e.id:'',col,n:q.cR[i],h:stHrs(q.mR[i]),need:!img?[a.k,a.n]:null,photo:true}}
@@ -10001,10 +10070,10 @@ function pvBg(cols,calm){const c=pvCols(cols);return `<div class="pvbg${calm?' c
 function pvECol(e){if(!e)return '#444';if(e.dx)return acolFor(e.g.id+'~dx',e.g.dxImg,{title:e.title,id:e.g.id+'~dx'});return gCol(e.g,e.art,true)}
 /* a record: size in px, an optional label (html), label color, lit groove (0-100 or a conic string) and spin speed */
 function pvRec(s,o){o=o||{};const lit=o.lit==null?'':typeof o.lit==='string'?o.lit:`conic-gradient(${o.lc||'#fff'} 0 ${Math.max(0,Math.min(100,o.lit)).toFixed(1)}%, rgb(255 255 255 / .14) ${Math.max(0,Math.min(100,o.lit)).toFixed(1)}% 100%)`;
-  return `<span class="pvrec${o.cls?' '+o.cls:''}" style="--s:${s}px${o.lc?';--lc:'+o.lc:''}${o.li?';--li:'+o.li:''}" aria-hidden="true"><i class="rd${o.spin?' pvspin '+o.spin:''}"${o.disc?` style="background:${o.disc}"`:''}></i><i class="rs"></i>${lit?`<i class="lt" style="background:${lit}"></i>`:''}<span class="rl">${o.label||''}</span>${o.label?'':'<i class="rh"></i>'}</span>`}
-function pvSleeve(s,art,col,title){return `<span class="pvslv" style="--s:${s}px;--c:${col||'#444'}" aria-hidden="true">${esc(String(title||'?').trim().charAt(0).toUpperCase())}${art?`<img src="${esc(art)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span>`}
+  return `<span class="pvrec${o.cls?' '+o.cls:''}" style="${s?'--s:'+s+'px':''}${o.lc?';--lc:'+o.lc:''}${o.li?';--li:'+o.li:''}" aria-hidden="true"><i class="rd${o.spin?' pvspin '+o.spin:''}"${o.disc?` style="background:${o.disc}"`:''}></i><i class="rs"></i>${lit?`<i class="lt" style="background:${lit}"></i>`:''}<span class="rl">${o.label||''}</span>${o.label?'':'<i class="rh"></i>'}</span>`}
+function pvSleeve(s,art,col,title){return `<span class="pvslv" style="${s?'--s:'+s+'px;':''}--c:${col||'#444'}" aria-hidden="true">${esc(String(title||'?').trim().charAt(0).toUpperCase())}${art?`<img src="${esc(art)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span>`}
 /* a sleeve with its record peeking out (lifts and spins on hover) */
-function pvPack(s,art,col,title,lit,peek){return `<span class="pvpack${peek?' peek':''}" style="--s:${s}px;--ps:${s}px">${pvRec(Math.round(s*.9),{lc:col,lit:lit==null?null:lit})}${pvSleeve(s,art,col,title)}</span>`}
+function pvPack(s,art,col,title,lit,peek){return `<span class="pvpack${peek?' peek':''}" style="--ps:${s}px">${pvRec(0,{lc:col,lit:lit==null?null:lit})}${pvSleeve(0,art,col,title)}</span>`}
 function pvPill(r,col,cls){return `<span class="pvpill${cls?' '+cls:''}" style="--c:${col||'rgb(255 255 255 / .16)'};--ci:${col?pvInk(col):'#fff'}">${fmt(r)}</span>`}
 /* ten segments filled to the rating, in the album's color */
 function pvSegs(r,col){return `<span class="pvsegs" style="--c:${col||'#fff'}" aria-hidden="true">${[1,2,3,4,5,6,7,8,9,10].map(k=>`<i><u style="--f:${r>=k?100:r>k-1?Math.round((r-k+1)*100):0}%"></u></i>`).join('')}</span>`}
@@ -12341,10 +12410,10 @@ function nrHtml(){
     <div class="wl-foot"><button class="link" data-act="nrcheck"${NR.busy?' disabled':''}>${NR.busy?'Checking\u2026':'Check now'}</button><button class="link" data-act="nrauto">${loc.off?'Turn on daily checks':'Turn off daily checks'}</button></div>
     ${NR.msg?`<p class="note" role="status">${esc(NR.msg)}</p>`:''}</div>`;
 }
-function llAdd(artist,title,year){
+function llAdd(artist,title,year,from){
   artist=String(artist||'').trim();title=String(title||'').trim();if(!artist||!title)return false;
   const id=llId(artist,title);if(listenAll().some(x=>x.id===id))return false;
-  S.listen=[{id,artist,title,year:/^\d{4}$/.test(String(year||'').trim())?String(year).trim():'',added:Date.now()},...listenAll()];
+  S.listen=[{id,artist,title,year:/^\d{4}$/.test(String(year||'').trim())?String(year).trim():'',added:Date.now(),...(from?{from:String(from).slice(0,60)}:{})},...listenAll()];
   return true}
 function llResolve(x){
   const a=rtArtist([x.artist]),g=a&&rtGroup(a,x.title);
@@ -12352,27 +12421,47 @@ function llResolve(x){
   const its=stdItems(g),d=its.filter(i=>isDone(i.id)).length;
   const art=g.img||(g.mbid&&!/^sp:/.test(g.mbid)?'https://coverartarchive.org/release-group/'+g.mbid+'/front-250':'');
   return{x,a,g,n:its.length,d,heard:(its.length>0&&d===its.length)||!!rating(g.id),art}}
+/* 2026.11.22-b LISTEN LIST AS "THE CRATE": a wide sheet that rises from the bottom (full screen on a phone) in the colors of
+   the album at the front. Up next is that album, big, its record pulled out with lit grooves for the songs you've heard,
+   where it came from, friends' scores, Play and Move to back. The rest stand in the crate as sleeves (they lift on
+   hover) with a progress bar. Fresh pressings are new releases with a date stamp (white for upcoming). Heard sits last. */
+function llAgo(t){if(!t)return '';const d=Math.floor((Date.now()-t)/864e5);return d<1?'today':d===1?'yesterday':d<14?d+' days ago':new Date(t).toLocaleDateString([],{month:'short',day:'numeric'})}
+function llCol(r){return r.g?gCol(r.g,r.art,true):acolFallback({title:r.x.title,id:r.x.id})}
+function llFriends(r){try{if(!r.a||!r.g||!accOn())return '';const{k,t}=accKeys(r.a,r.g),L=accRowsFor('music:'+r.a.id,k||'',t).slice(0,3);
+  return L.map((x,i)=>`${esc(x.name)}${i?' ':' gave it '}${/^8/.test(fmt(x.r))?'an':'a'} ${fmt(x.r)}`).join(' · ')}catch(e){return ''}}
 function listenSide(){
   const L=listenAll().map(llResolve),todo=L.filter(r=>!r.heard).sort((p,q)=>(q.x.added||0)-(p.x.added||0)),done=L.filter(r=>r.heard).sort((p,q)=>(q.x.added||0)-(p.x.added||0));
-  const row=(r,i)=>{const x=r.x,sub=esc(x.artist)+(x.year||r.g&&/^\d{4}/.test(r.g.year)?' · '+esc(x.year||String(r.g.year).slice(0,4)):'');
-    const st=r.heard?'Heard':!r.g?'Not in your log yet':r.n?r.d+'/'+r.n+' heard':'No songs listed yet';
-    return `<li class="${r.heard?'heard':''}" style="--i:${Math.min(i||0,9)}"><span class="wl-art" ${r.art?`style="background:var(--sunk) url('${esc(r.art)}') center/cover"`:''} aria-hidden="true"></span>
-      <span class="wl-meta"><b>${esc(x.title)}</b><span>${sub}</span></span>
-      <span class="wl-st">${st}${r.g&&r.n&&!r.heard?`<span class="bar" aria-hidden="true"><i style="width:${r.d/r.n*100}%"></i></span>`:''}</span>
-      <span class="wl-act">${r.a?`<button class="link" data-act="llgo" data-a="${r.a.id}"${r.g?` data-g="${r.g.id}"`:''}>Open</button>`:''}<button class="link" data-act="lldel" data-id="${x.id}" aria-label="Remove ${esc(x.title)} from the listen list">Remove</button></span></li>`};
-  return `<div class="llsheet" id="listenpanel" role="dialog" aria-modal="true" aria-label="Listen list">
-    <div class="llhead"><h2>Listen list</h2><span class="mono">${todo.length} to hear${done.length?' · '+done.length+' heard':''}</span><button class="tact" data-act="llclose" aria-label="Close">${ICO.close}</button></div>
-    <div class="wl">
-      ${nrHtml()}
-      <form class="wl-add" data-form="listen">
-        <input id="wl-artist" name="artist" list="wl-artists" placeholder="Artist" autocomplete="off" required aria-label="Artist">
-        <input id="wl-title" name="title" placeholder="Album" autocomplete="off" required aria-label="Album">
-        <button class="btn primary">Add album</button>
-        <datalist id="wl-artists">${S.music.map(a=>`<option value="${esc(a.name)}"></option>`).join('')}</datalist>
-      </form>
-      ${L.length?`<ul>${todo.map(row).join('')}${done.map(row).join('')}</ul>`:'<p class="note">Add the albums you want to get to. You can also tap Add to listen list under any album in your log. An entry fills in its cover and your progress by itself once the artist is in your log, and moves to the bottom when you have heard it.</p>'}
-      ${done.length?`<div class="wl-foot"><button class="link" data-act="llclear">Clear the ${done.length} heard</button></div>`:''}
-    </div></div>`}
+  const left=todo.reduce((t,r)=>t+Math.max(0,r.n-r.d),0),f=todo[0],fc=f?llCol(f):'#6a5a3a';
+  const NRL=nrList(),loc=nrLoc(),an=NR.anim;NR.anim=false;
+  const yr=r=>r.x.year||(r.g&&/^\d{4}/.test(r.g.year)?String(r.g.year).slice(0,4):'');
+  let front='';
+  if(f){const fr=llFriends(f),nx=f.g?stdItems(f.g).findIndex(i=>!isDone(i.id)):-1;
+    front=`<div class="crf pvhov pvrise" style="--d:1"><div class="crf-a">${pvPack(300,f.art,fc,f.x.title,f.n?f.d/f.n*100:0,true)}<span class="crf-tag pvmono">UP NEXT</span></div>
+      <div class="crf-t"><span class="pvlab">Front of the crate${f.x.added?' · added '+esc(llAgo(f.x.added)):''}${f.x.from?' · from '+esc(f.x.from):''}</span>
+        <h3>${esc(f.x.title)}</h3><p class="pvsub">${esc([f.x.artist,yr(f),f.n?f.n+' songs':''].filter(Boolean).join(' · '))}</p>
+        ${f.n?`<div class="crf-p">${f.n<=40?`<span class="pvsegs" style="--c:#fff">${Array.from({length:f.n},(_,i)=>`<i><u style="--f:${i<f.d?100:0}%"></u></i>`).join('')}</span>`:`<span class="pvbar" style="flex:1"><i style="--w:${f.d/f.n*100}%"></i></span>`}<span class="pvmono">${f.d} of ${f.n} heard</span></div>`:`<p class="pvsm">${f.g?'No songs listed yet.':'Not in your log yet. Add the artist and this fills in by itself.'}</p>`}
+        <p class="pvsm crf-f">${fr?fr+'. ':''}${f.g?'Lit grooves on the record fill in as you check off each song.':''}</p>
+        <div class="pvset-sb">${f.g&&f.a&&f.n?`<button class="pvb w" data-act="alplay" data-a="${esc(f.a.id)}" data-g="${esc(f.g.id)}">${ICO_PLAY} ${nx>0?'Play (next: song '+(nx+1)+')':'Play'}</button>`:''}${f.a?`<button class="pvb" data-act="llgo" data-a="${f.a.id}"${f.g?` data-g="${f.g.id}"`:''}>Open album</button>`:''}${todo.length>1?`<button class="pvb" data-act="llback" data-id="${esc(f.x.id)}">Move to back</button>`:''}<button class="pvb ic" data-act="lldel" data-id="${esc(f.x.id)}" aria-label="Remove ${esc(f.x.title)} from the listen list">${ICO.close}</button></div></div></div>`}
+  const crate=todo.slice(1).map((r,i)=>{const c=llCol(r);return `<div class="crt pvhov pvrise" style="--d:${i+2}"><button type="button" class="crt-b" ${r.a?`data-act="llgo" data-a="${r.a.id}"${r.g?` data-g="${r.g.id}"`:''}`:'disabled'} aria-label="${esc(r.x.title)} by ${esc(r.x.artist)}">${pvPack(168,r.art,c,r.x.title,r.n?r.d/r.n*100:null)}</button>
+    <b>${esc(r.x.title)}</b><span class="pvsm">${esc(r.x.artist)}</span>
+    <span class="crt-p"><span class="pvbar" style="flex:1"><i style="--w:${r.n?r.d/r.n*100:0}%"></i></span><span class="pvmono">${r.n?r.d?r.d+'/'+r.n:'new':'–'}</span></span>
+    <span class="pvmono crt-s"${!r.g?' style="color:#ffd27a"':''}>${!r.g?'NOT IN YOUR LOG YET':r.x.from?'FROM '+esc(r.x.from).toUpperCase():r.x.added?'ADDED '+esc(new Date(r.x.added).toLocaleDateString([],{month:'short',day:'numeric'})).toUpperCase():''}</span>
+    <button type="button" class="crt-x" data-act="lldel" data-id="${esc(r.x.id)}" aria-label="Remove ${esc(r.x.title)}">${ICO.close}</button></div>`}).join('');
+  const fresh=NRL.map((x,i)=>{const up=x.d>todayISO(),dd=hYmd(x.d);return `<div class="crn pvhov${an?' pvrise':''}" style="--d:${i}"><span class="crn-a">${pvSleeve(88,x.img,acolFallback({title:x.t,id:x.id}),x.t)}<span class="crn-d pvmono${up?' up':''}">${up?'OUT ':''}${dd?esc(dd.toLocaleDateString([],up?{weekday:'short',month:'short',day:'numeric'}:{month:'short',day:'numeric'}).toUpperCase()):''}</span></span>
+    <span class="crn-t"><b>${esc(x.t)}</b><span class="pvsm">${esc(x.a)} · ${x.ep?'EP':'Album'}</span><span class="crn-b"><button class="pvb xs w" data-act="nradd" data-id="${esc(x.id)}">+ Add</button>${S.music.some(y=>y.id===x.aid)?`<button class="pvb xs" data-act="nrgo" data-id="${esc(x.id)}">Artist</button>`:''}<button class="pvb xs ic" data-act="nrx" data-id="${esc(x.id)}" aria-label="Dismiss ${esc(x.t)}">${ICO.close}</button></span></span></div>`}).join('');
+  return `<div class="llsheet crate" id="listenpanel" role="dialog" aria-modal="true" aria-label="Listen list">${pvBg(f?[fc,f.g?acolFallback({title:f.x.artist}):fc,fc]:['#6a5a3a','#4a5a2a','#d9c9a3'])}<div class="cr-in">
+    <span class="cr-grab" aria-hidden="true"></span>
+    <div class="cr-h"><div class="cr-ht"><span class="pvk">The crate</span><h2 class="pvh">Listen list</h2><p class="pvsub">${todo.length} to hear${done.length?' · '+done.length+' heard':''}${left?' · '+left+' song'+(left===1?'':'s')+' left':''}</p></div>
+      <form class="cr-add pvg" data-form="listen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><input id="wl-artist" name="artist" list="wl-artists" placeholder="Artist" autocomplete="off" required aria-label="Artist"><i aria-hidden="true"></i><input id="wl-title" name="title" placeholder="Album" autocomplete="off" required aria-label="Album"><button class="pvb sm w">Add</button><datalist id="wl-artists">${S.music.map(a=>`<option value="${esc(a.name)}"></option>`).join('')}</datalist></form>
+      <button class="pvb pvg ic cr-x" data-act="llclose" aria-label="Close listen list">${ICO.close}</button></div>
+    ${front||`<p class="pvsub crf-none pvrise">Nothing in the crate. Add the albums you want to get to here, or tap Add to listen list under any album in your log. An entry fills in its cover and your progress by itself once the artist is in your log, and moves to Heard when you've heard it.</p>`}
+    ${crate?`<section class="cr-s"><div class="pvch"><h3 class="pvh2">Next in the crate</h3><span class="pvmono pvmut">newest first</span></div><div class="cr-row">${crate}</div></section>`:''}
+    <section class="cr-s"><div class="pvch"><h3 class="pvh2">Fresh pressings</h3><span class="pvmono pvmut">new from your artists, last two months, checked daily</span><span style="flex:1"></span><button class="pvb xs" data-act="nrcheck"${NR.busy?' disabled':''}>${NR.busy?'Checking…':'↻ Check now'}</button><button class="pvb xs" data-act="nrauto">${loc.off?'Daily checks off':'Daily checks on'}</button>${NRL.length>1?'<button class="pvb xs" data-act="nrclear">Dismiss all</button>':''}</div>
+      ${NRL.length?`<div class="cr-nr">${fresh}</div>`:'<p class="pvsm">Nothing new right now. Playback looks at Apple Music once a day while it’s open and lists any album or EP from your artists that came out in the last two months.</p>'}
+      ${NR.msg?`<p class="pvsm" role="status">${esc(NR.msg)}</p>`:''}</section>
+    ${done.length?`<section class="cr-s"><div class="pvch"><h3 class="pvh2">Heard</h3><span class="pvmono pvmut">${done.length}</span><span style="flex:1"></span><button class="pvb xs" data-act="llclear">Clear the ${done.length} heard</button></div>
+      <div class="cr-hd">${done.map(r=>`<div class="cr-hi"><span class="cr-hc">${pvSleeve(52,r.art,llCol(r),r.x.title)}<i aria-hidden="true">✓</i></span><span><b>${esc(r.x.title)}</b><span class="pvsm">${esc(r.x.artist)}${r.g&&rating(r.g.id)?' · rated '+fmt(rating(r.g.id)):''}</span></span><button class="pvb xs ic" data-act="lldel" data-id="${esc(r.x.id)}" aria-label="Remove ${esc(r.x.title)}">${ICO.close}</button></div>`).join('')}</div></section>`:''}
+  </div></div>`}
 const llCount=()=>listenAll().map(llResolve).filter(r=>!r.heard).length;
 
 /* Which of an artist's releases show, and in what order. The kind filter belongs to the artist you are on
@@ -13075,7 +13164,7 @@ document.addEventListener('click',ev=>{
   else if(act==='llopen'){UI.llOpen=true;UI.llAnim=true}
   else if(act==='nrcheck'){nrScan(true);return}
   else if(act==='nrauto'){const l=nrLoc();l.off=l.off?0:1;nrSave(l);NR.msg=l.off?'Daily checks are off. Check now still works.':'Daily checks are on.'}
-  else if(act==='nradd'){const x=nrList().find(y=>y.id===b.dataset.id);if(x){llAdd(x.a,x.t,x.d.slice(0,4));S.nr.list=nrList().filter(y=>y.id!==x.id);touch();briefPush()}}
+  else if(act==='nradd'){const x=nrList().find(y=>y.id===b.dataset.id);if(x){llAdd(x.a,x.t,x.d.slice(0,4),'new releases');S.nr.list=nrList().filter(y=>y.id!==x.id);touch();briefPush()}}
   else if(act==='nrgo'){nrGo(b.dataset.id)}
   else if(act==='nrx'){S.nr.list=nrList().filter(y=>y.id!==b.dataset.id);touch();briefPush()}
   else if(act==='nrclear'){S.nr.list=[];touch();briefPush()}
@@ -13200,6 +13289,7 @@ document.addEventListener('click',ev=>{
   else if(act==='shareopen'){const a=S.music.find(x=>x.id===b.dataset.a),g=a&&a.groups.find(x=>x.id===b.dataset.g);if(g)shareOpen(a,g);return}
   else if(act==='lltog'){const a=S.music.find(x=>x.id===b.dataset.a),g=a&&a.groups.find(x=>x.id===b.dataset.g);if(!g)return;
     if(llOn(a.name,g.title)){const lid=llId(a.name,g.title);S.listen=listenAll().filter(x=>x.id!==lid)}else llAdd(a.name,g.title,g.year);touch()}
+  else if(act==='llback'){const L=listenAll(),x=L.find(y=>y.id===b.dataset.id);if(x){x.added=Math.min(...L.map(y=>y.added||0))-1;touch()}}
   else if(act==='lldel'){S.listen=listenAll().filter(x=>x.id!==id);touch()}
   else if(act==='llclear'){S.listen=listenAll().filter(x=>!llResolve(x).heard);touch()}
   else if(act==='llgo'){UI.view=null;UI.rel=null;UI.tab='music';UI.sel.music=b.dataset.a;UI.libOpen=false;UI.rOpen=null;UI.llOpen=false;UI.filter='all';
