@@ -4494,6 +4494,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.22-i', note:'COMPOSERS IMPORT PROPERLY: adding a classical composer like Claude Debussy used to break. Spotify lists him on thousands of releases (every pianist\u2019s Clair de lune), so the import ran out of Spotify\u2019s allowance, and Apple Music only found 3 albums because it credits the performers. Now a composer comes in by WORK: Playback reads his most played recordings, groups them into the pieces they belong to, and brings each piece in once from its most played recording. Suites and sets (Suite bergamasque, La mer, the Pr\u00e9ludes) come in whole with their movements and get an album rating; single pieces (R\u00eaverie, Syrinx) come in as singles. A lone Clair de lune folds into Suite bergamasque instead of showing twice, and pieces he only orchestrated (Satie\u2019s Gymnop\u00e9dies) stay out. The performer shows as \u201cwith\u201d, and the dates are the recording\u2019s. This takes about 30 to 50 Spotify calls instead of thousands, and composers are spotted from MusicBrainz (\u201cFrench composer\u201d) or from Spotify listing more than 400 releases. Check for new releases on a composer reads him the same way.'},
   {v:'2026.11.22-h', note:'REDESIGN POLISH. Scoring habits on your page now says how much your albums beat (or trail) their songs on average. On phones, the Stats top 3 sit side by side as a small podium instead of stacking, and the song rows have more room for titles. History\u2019s month column is a little wider, so long month names like September no longer push the timeline sideways.'},
   {v:'2026.11.22-g', note:'ACCOUNT PAGES REDESIGN (yours and friends\u2019). The page colors now come from your account color mixed with your top-rated albums (a friend\u2019s page uses theirs). The big bead record is the hero beside your name, a stats line, your friend code chip, whether friends can see your page, and Share my page; tapping a bead still pops that album out. The tabs are glass pills (Overview, Albums, Shows & films, Settings). OVERVIEW: a row of big numbers; TOP SHELF, your 5 highest with records peeking out (same tie-break ranking as everywhere); the SCORE SPECTRUM (tap a score to see those albums); ALBUMS RATED PER MONTH where each block is one album in its own color; and the Year in review, Scoring habits and Top artists cards. Albums and Settings keep everything they had, in the new look. A FRIEND\u2019S PAGE adds two overlapping records with your taste match, WHERE YOU SPLIT and WHERE YOU AGREE, and WHAT THEY LOVE THAT YOU HAVEN\u2019T HEARD, with one tap to add it to your Listen list (it remembers it came from their page).'},
   {v:'2026.11.22-f', note:'FRIENDS SHEET REDESIGN. Friends is now a glass drawer on the right over whatever page you\u2019re on (a full-height sheet on a phone), with your friends\u2019 faces at the top. ACTIVITY: requests sit at the top with Accept and Decline, then what friends rated grouped Today / Yesterday / This week, each one a sleeve with the friend\u2019s face on it, their rating pill, review snippets, and NEW: the gap to your own score ("you 8.5 +1"). FRIENDS: each friend is a sleeve in their account color with a record whose lit groove is your taste match (once you\u2019ve opened their page), the last album they rated tucked in the corner, sorted by best match or A to Z. Friends who aren\u2019t sharing are dimmed. ADD: your friend code as a ticket with Copy and Share, three short steps, the code box, and the requests waiting for them.'},
@@ -5984,6 +5985,7 @@ function mbMessage(e,q){
   if(c==='busy')return 'MusicBrainz is limiting requests right now (it allows about one a second, shared by everyone). Wait a minute and try again. Nothing in your log was changed.';
   if(c==='http')return 'MusicBrainz sent back an error ('+e.status+'). Try again in a few minutes. Nothing in your log was changed.';
   if(c==='nomatch')return 'No artists on MusicBrainz match “'+q+'”. Check the spelling, or try fewer words.';
+  if(c==='empty'&&MBX.composer)return 'Could not read this composer\u2019s works from Spotify or Apple Music. Try again in a few minutes. Nothing in your log was changed.';
   if(c==='empty')return 'MusicBrainz has no official releases with tracklists for this artist, so there was nothing to import.';
   if(c==='cancel')return 'Import cancelled. Nothing in your log was changed.';
   return 'Something went wrong while reading MusicBrainz. Nothing in your log was changed.';
@@ -6509,7 +6511,8 @@ async function mbImport(art,where,forceMb,forceSrc){
   if(MBX.busy)return;
   const findExisting=()=>S.music.find(x=>x.mbid===art.id)||S.music.find(x=>x.id===sid('artist',art.name)&&!x.mbid)||S.music.find(x=>!x.mbid&&nArtist(x.name)===nArtist(art.name));
   let existing=findExisting();
-  Object.assign(MBX,{busy:true,cancel:false,err:'',report:'',spFallback:null,where,errWhere:where,aid:existing?existing.id:null,name:art.name,step:'Asking MusicBrainz',n:0,of:0,note:''});render();
+  Object.assign(MBX,{busy:true,cancel:false,err:'',report:'',spFallback:null,where,errWhere:where,aid:existing?existing.id:null,name:art.name,step:'Asking MusicBrainz',n:0,of:0,note:'',
+    composer:!!(art.composer||(existing&&existing.composer)||/\bcomposer\b/i.test(art.dis||''))});render();
   const want=importSource(),pick=forceMb?'mb':(forceSrc||want);
   let phase='mb',hint=forceMb?' This one came from MusicBrainz because '+SRC_NAME[want==='mb'?'sp':want]+' was not available. Tap Rebuild from '+SRC_NAME[want==='mb'?'sp':want]+' later for its covers and exact tracklists.':forceSrc==='am'?' This one came from Apple Music because Spotify was not available. Tap Rebuild from Spotify later for Spotify\u2019s own tracklists and covers.':'';
   try{
@@ -6520,8 +6523,9 @@ async function mbImport(art,where,forceMb,forceSrc){
       phase='sp';
       try{const c=await spFetchCatalog(art,existing);
         MBX.step='Sorting out duplicates';mbProgress();
-        groups=spBuild(c.albums,c.artist.id,MBX.versions);sp=c.artist;
-        if(c.cached)hint+=' '+c.cached+' of '+c.albums.length+' tracklists came from copies saved on this device, so Spotify was only asked for '+(c.albums.length-c.cached)+'.';
+        groups=spBuild(c.albums,c.artist.id,c.composer||MBX.versions);sp=c.artist;
+        if(c.composer)hint+=CMP_HINT(c.works);
+        else if(c.cached)hint+=' '+c.cached+' of '+c.albums.length+' tracklists came from copies saved on this device, so Spotify was only asked for '+(c.albums.length-c.cached)+'.';
         if(!groups.length){groups=null;sp=null;hint=' Spotify had no releases for this artist, so this came from MusicBrainz.'}}
       catch(e){if(e.code!=='nomatch')throw e;hint=' Could not find '+art.name+' on Spotify, so this came from MusicBrainz.'}
       phase='mb';
@@ -6529,13 +6533,15 @@ async function mbImport(art,where,forceMb,forceSrc){
       phase='am';
       try{const c=await amFetchCatalog(art,existing);
         MBX.step='Sorting out duplicates';mbProgress();
-        groups=spBuild(c.albums,c.artist.id,MBX.versions);sp=c.artist;
-        if(c.cached)hint+=' '+c.cached+' of '+c.albums.length+' tracklists came from copies saved on this device, so Apple Music was only asked for '+(c.albums.length-c.cached)+'.';
+        groups=spBuild(c.albums,c.artist.id,c.composer||MBX.versions);sp=c.artist;
+        if(c.composer)hint+=CMP_HINT(c.works);
+        else if(c.cached)hint+=' '+c.cached+' of '+c.albums.length+' tracklists came from copies saved on this device, so Apple Music was only asked for '+(c.albums.length-c.cached)+'.';
         if(!groups.length){groups=null;sp=null;hint=' Apple Music had no releases for this artist, so this came from MusicBrainz.'}}
       catch(e){if(e.code!=='nomatch')throw e;hint=' Could not find '+art.name+' on Apple Music, so this came from MusicBrainz.'}
       phase='mb';
       if(spCid()&&ownSync()&&(SY.wv||0)===3&&!(S.cfg&&S.cfg.importSrc))hint+=' Paste the updated sync Worker into Cloudflare to get tracklists straight from Spotify.';
     }
+    if(!groups&&MBX.composer)throw MBError('empty');   /* MusicBrainz lists every recording of a composer too: far too many to read */
     if(!groups){
       const rels=await mbFetchCatalog(art.id);
       if(MBX.cancel)throw MBError('cancel');
@@ -6545,6 +6551,7 @@ async function mbImport(art,where,forceMb,forceSrc){
     }
     const ex=findExisting();if(ex)undoTake(ex);                       /* so the import can be undone */
     const r=mbMerge(art,groups,MBX.versions,false,sp);
+    if(MBX.composer){const ar=S.music.find(x=>x.id===r.aid);if(ar)ar.composer=true}   /* updates read him by work too */
     if(ex&&r.added>0){const ar=S.music.find(x=>x.id===r.aid);if(ar&&ar.aimg)ar.aimgNew=Date.now()}   /* new releases came in: look at their Apple photo again when their page opens */
     mergeSameArtists();
     touch();
@@ -7371,6 +7378,7 @@ async function spFetchCatalog(art,existing){
     if(!hit)throw SPError('nomatch');
     id=hit.id;name=hit.name;simg=spImg(hit.images);
   }
+  if(MBX.composer)return spComposerCatalog(id,name,simg,cmpNames([name,art.name]));
   const albums=[],seen=new Set();let off=0,lim=50;
   MBX.step='Reading releases';mbProgress();
   for(let guard=0;guard<60;guard++){
@@ -7378,6 +7386,8 @@ async function spFetchCatalog(art,existing){
     try{j=await spApi('artists/'+id+'/albums?'+new URLSearchParams({include_groups:'album,single,compilation',market:'from_token',limit:lim,offset:off}))}
     catch(e){if(e.code==='http'&&e.status===400&&lim>10){lim=10;continue}throw e}
     const got=j.items||[];
+    /* hundreds of releases is a classical composer (every recording of his music): read him by work instead */
+    if(!off&&(j.total||0)>400){MBX.composer=true;return spComposerCatalog(id,name,simg,cmpNames([name,art.name]))}
     for(const x of got)if(x&&x.id&&!seen.has(x.id)){seen.add(x.id);albums.push(x)}
     off+=got.length;MBX.n=albums.length;MBX.of=Math.max(j.total||0,albums.length);mbProgress();
     if(!got.length||!j.next)break;                 /* Spotify's next/total can run past the end: an empty page stops it */
@@ -7407,6 +7417,7 @@ async function spFetchCatalog(art,existing){
   }finally{spcSave()}                                   /* even a cut-off run keeps what it read */
   return{artist:{id,name,img:simg},albums,cached,spared};
 }
+const CMP_HINT=n=>' Composers have thousands of recordings, so this brought in his '+n+' most played works, each from its most played recording (the performer shows as \u201cwith\u201d), and dates are the recording\u2019s.';
 const SP_ED=/\b(deluxe|remaster(ed)?|edition|anniversary|expanded|extended|complete|collector'?s?|platinum|ultimate|bonus|special|explicit|clean|reissue)\b/i;
 const spEd=s=>nrm(String(s).replace(/\s*[\(\[]([^\)\]]*)[\)\]]/g,(m,x)=>SP_ED.test(x)?' ':m).replace(/\s+[-–—]\s+(.+)$/,(m,x)=>SP_ED.test(x)?'':m))||nrm(s);
 const SP_LIVE=/[\(\[]\s*live\b|\s[-–—]\s*live\b|\blive (at|in|from|on)\b|^live$/i;
@@ -7508,6 +7519,7 @@ async function amFetchCatalog(art,existing){
   amGap=3200;
   MBX.step='Finding the artist on Apple Music';MBX.n=0;MBX.of=0;mbProgress();
   const names=[alias||art.name,...((art.aka)||(existing&&existing.aka)||[])].slice(0,4);
+  if(MBX.composer)return amComposerCatalog(art,cmpNames([alias||art.name]));
   if(!id){
     const keys=new Set([nArtist(art.name),...names.map(nArtist)]);let hit=null;
     for(const q of names){
@@ -7552,6 +7564,122 @@ async function amFetchCatalog(art,existing){
     }
   }finally{spcSave()}
   return{artist:{id,name,img:'',am:true},albums,cached};
+}
+/* ---------- classical composers ----------
+   A composer's catalog is every orchestra's and pianist's recording of his music: Debussy has thousands of releases
+   on Spotify (far past the quota) and Apple lists his albums under the performers, so a normal import breaks. A
+   composer comes in by WORK instead: his most played tracks are read, grouped into the piece they belong to, and each
+   piece comes in once, from its most played recording (a whole work with its movements, or a single piece). About 30-50
+   Spotify calls in all, or a handful of Apple ones. The recording's performer shows as "with". */
+const CMP_CAT=/,?\s*\b(?:L|CD|Op|BWV|K|KV|HWV|M|RCT|D|WoO|Hob|FWV|TrV|Sz|BB|JB|RV|HV|WAB|TH)\.?\s*\d+[a-z]?(?:\s*(?:No\.?|Nr\.?)\s*\d+)?(?:\s*\/\s*\d+)?\b/g;
+const CMP_NUM={suite:'',livre:'book',heft:'book',i:'1',ii:'2',iii:'3',un:'1',une:'1',one:'1',deux:'2',two:'2',trois:'3',three:'3',quatre:'4',four:'4',cinq:'5',five:'5',six:'6',sept:'7',seven:'7',huit:'8',eight:'8',douze:'12',twelve:'12'};
+const cmpKey=s=>nrm(s).split(' ').map(w=>w in CMP_NUM?CMP_NUM[w]:w).filter(Boolean).join(' ').replace(/\b(\w+?)s\b/g,'$1');   /* "Deux arabesques" and "2 Arabesques" are one work */
+function cmpNames(names){const out=new Set();for(const n of names){const t=String(n||'').trim();if(!t)continue;out.add(t);const last=t.split(/\s+/).pop();if(last&&last.length>3)out.add(last)}return [...out]}
+function cmpSplit(raw,names){
+  let s=String(raw||'').replace(/\s*[\(\[][^\)\]]*[\)\]]/g,'').replace(/\s+-\s+(?:live\b|remaster|\d{4}\b).*$/i,'').trim();
+  for(const n of names){const re=new RegExp('^'+amRe(n)+'\\s*[:\\-–—]\\s+','i');if(re.test(s)){s=s.replace(re,'');break}}
+  /* "Work: III. Movement", "Work; Movement", "Work - III. Movement" and "Work. III. Movement" all split the same way */
+  const cut=/:\s|;\s|\s[-\u2013]\s(?=(?:[IVX]+|\d+|No)\b)|\.\s(?=[IVX]+\.)/.exec(s),i=cut?cut.index:-1,
+    head=(i>0?s.slice(0,i):s).replace(/[\s,;/.]+$/,'');
+  const work=head.replace(CMP_CAT,'').replace(/[\s,;/]+$/,'').trim()||head;
+  const mv=i>0?s.slice(i+cut[0].length).trim():'';
+  return{show:head,work,mv,key:cmpKey(work),mvKey:mv?cmpKey(mv.replace(/^(?:[IVXLC]+|\d+|No\.?\s*\d+)[.,:]?\s+/i,'')):''};
+}
+/* tracks (best first) -> one pick per work: [{key,show,rep,mv:true|false}] ; a lone piece that is also a movement
+   of a work found here ("Clair de lune" on its own, from Suite bergamasque) is left to that work */
+function cmpWorks(tracks,names){
+  const works=new Map();
+  const own=new Set(names.map(cmpKey));
+  for(const t of tracks){const p=cmpSplit(t.name,names);if(!p.key||own.has(p.key))continue;
+    const w=works.get(p.key);
+    if(!w)works.set(p.key,{key:p.key,show:p.show,work0:p.work,rep:t,cands:[t],mv:!!p.mv,mvs:new Set(p.mvKey?[p.mvKey]:[]),mv1:p.mv});
+    else{if(p.mv){w.mv=true;w.mvs.add(p.mvKey);w.mv1=w.mv1||p.mv}if(w.cands.length<3)w.cands.push(t)}}
+  const inWork=new Set();for(const w of works.values())if(w.mv)for(const k of w.mvs)inWork.add(k);
+  return [...works.values()].filter(w=>w.mv||!inWork.has(w.key));
+}
+/* a work found with only one movement on its recording is named by that movement: "Clair de lune (Suite bergamasque)" */
+const cmpTitle=(w,n)=>w.mv&&n<2&&w.mv1?w.mv1.replace(/^(?:[IVXLC]+|\d+|No\.?\s*\d+)[.,:]?\s+/i,'')+' ('+w.work0+')':w.show;
+/* a lone piece that turned out to be a movement of a work brought in whole ("Des pas sur la neige" is one of the Préludes) goes */
+function cmpTidy(albums,names){
+  const mv=new Set();for(const a of albums)if(a.album_type==='album')for(const t of a.tracks){const k=cmpSplit(t.name,names).mvKey;if(k)mv.add(k)}
+  return albums.filter(a=>a.album_type==='album'||!mv.has(cmpKey(a.name)));
+}
+const CMP_MAX=60;   /* the most played pieces; more can come with Check for new releases later */
+async function spComposerCatalog(id,name,simg,names){
+  MBX.step='Reading his most played recordings';MBX.n=0;MBX.of=200;mbProgress();
+  const tracks=[],seen=new Set();let off=0,lim=50;
+  for(let p=0;p<24&&off<200;p++){
+    let j;
+    try{j=await spApi('search?'+new URLSearchParams({q:'artist:"'+name+'"',type:'track',market:'from_token',limit:lim,offset:off}))}
+    catch(e){if(e.code==='http'&&e.status===400&&lim>10){lim=10;continue}throw e}
+    const got=(j.tracks&&j.tracks.items)||[];
+    for(const t of got)if(t&&t.id&&!seen.has(t.id)&&t.album&&(t.artists||[]).some(x=>x&&x.id===id)){seen.add(t.id);tracks.push(t)}
+    off+=got.length;MBX.n=Math.min(off,200);mbProgress();
+    if(!got.length||!(j.tracks&&j.tracks.next))break;
+  }
+  /* Spotify's order is its own relevance; popularity (when Spotify still sends it) puts the most played recording first */
+  tracks.forEach((t,i)=>t._i=i);
+  tracks.sort((a,b)=>((b.popularity||0)-(a.popularity||0))||(a._i-b._i));
+  const works=cmpWorks(tracks,names).slice(0,CMP_MAX);
+  const multi=works.filter(w=>w.mv),albumIds=[...new Set(multi.flatMap(w=>w.cands.slice(0,2).map(t=>t.album.id)))].slice(0,30);
+  MBX.step='Reading the full works';MBX.n=0;MBX.of=albumIds.length;mbProgress();
+  const full=new Map();
+  for(const aid of albumIds){
+    const j=await spApi('albums/'+aid+'?market=from_token');
+    const tr=((j.tracks&&j.tracks.items)||[]).slice();let next=j.tracks&&j.tracks.next,g=0;
+    while(next&&g++<20){const k=await spApi(spRel(next));tr.push(...(k.items||[]));next=k.next}
+    full.set(aid,{tr,img:spPickImg(j.images||[])});MBX.n++;mbProgress();
+  }
+  const used=new Map(),albums=[];
+  for(const w of works){
+    let al=w.rep.album,f=full.get(al.id),tr=[w.rep];
+    if(w.mv)for(const c of w.cands.slice(0,2)){const F=full.get(c.album.id);if(!F)continue;
+      const m=F.tr.filter(t=>t&&t.name&&(t.artists||[]).some(x=>x&&x.id===id)&&cmpSplit(t.name,names).key===w.key);
+      if(m.length>tr.length){tr=m;al=c.album;f=F;w.rep=c}}
+    const n=used.get(al.id)||0;used.set(al.id,n+1);
+    const perf=(w.rep.artists||[]).filter(x=>x&&x.id!==id).slice(0,2);
+    albums.push({id:n?al.id+'.'+n:al.id,name:cmpTitle(w,tr.length),album_type:w.mv&&tr.length>=2?'album':'single',release_date:al.release_date||'',
+      total_tracks:tr.length,artists:[{id,name},...perf.map(x=>({id:x.id,name:x.name}))],img:(f&&f.img)||spPickImg(al.images||[]),
+      tracks:tr.map(t=>({name:t.name,type:'track',explicit:!!t.explicit,is_playable:t.is_playable,artists:(t.artists||[]).map(x=>({id:x.id,name:x.name}))}))});
+  }
+  const kept=cmpTidy(albums,names);
+  return{artist:{id,name,img:simg},albums:kept,cached:0,composer:true,works:kept.length};
+}
+/* Apple lists a composer's music under the performers and its search mixes in other composers, so only tracks
+   whose album is plainly his (his name and no one else's "Name:" in the album title) are kept */
+async function amComposerCatalog(art,names){
+  const name=names[0],sur=names.find(n=>!/\s/.test(n))||name;
+  MBX.step='Reading his most played recordings';MBX.n=0;MBX.of=0;mbProgress();
+  const res=await amApi('search',{term:name,entity:'song',limit:200});
+  const surRe=new RegExp('(^|[^\\p{L}])'+amRe(sur)+'(?=$|[^\\p{L}])','iu');
+  const mixed=new RegExp(amRe(sur)+'\\s*[\\-–&/,]|[\\-–&/,]\\s*'+amRe(sur),'iu');
+  const mine=c=>{const cn=String(c.collectionName||''),tn=String(c.trackName||'').replace(/\s*[\(\[][^\)\]]*[\)\]]/g,'');   /* "(Orchestrated by Claude Debussy)" is someone else's piece */
+    if(surRe.test(tn))return true;
+    if(!surRe.test(cn)||mixed.test(cn))return false;
+    const others=(cn.match(/[\p{Lu}][\p{L}'.\-]+:/gu)||[]).filter(x=>!surRe.test(x));return !others.length};
+  const tracks=res.filter(r=>r&&r.wrapperType==='track'&&r.collectionId&&mine(r)).map(r=>({...r,name:String(r.trackName||'')}));
+  const works=cmpWorks(tracks,names).slice(0,CMP_MAX);
+  const need=[...new Set(works.filter(w=>w.mv).flatMap(w=>w.cands.map(t=>t.collectionId)))].slice(0,60);
+  MBX.step='Reading the full works';MBX.n=0;MBX.of=need.length;mbProgress();
+  const full=new Map();
+  for(let i=0;i<need.length;i+=10){
+    const rows=await amApi('lookup',{id:need.slice(i,i+10).join(','),entity:'song',limit:200});
+    for(const r of rows){if(!r||r.wrapperType!=='track')continue;if(!full.has(r.collectionId))full.set(r.collectionId,[]);full.get(r.collectionId).push(r)}
+    MBX.n=Math.min(need.length,i+10);mbProgress();
+  }
+  const id='cmp:'+nrm(name).replace(/\s+/g,'-'),used=new Map(),albums=[];
+  for(const w of works){
+    let c=w.rep,tr=[c];
+    if(w.mv)for(const k of w.cands){const m=(full.get(k.collectionId)||[]).filter(t=>cmpSplit(t.trackName,names).key===w.key)
+      .sort((a,b)=>(a.discNumber||1)-(b.discNumber||1)||(a.trackNumber||0)-(b.trackNumber||0));if(m.length>tr.length){tr=m;c=k}}
+    const n=used.get(c.collectionId)||0;used.set(c.collectionId,n+1);
+    albums.push({id:'am:'+c.collectionId+(n?'.'+n:''),name:cmpTitle(w,tr.length),album_type:w.mv&&tr.length>=2?'album':'single',release_date:String(c.releaseDate||'').slice(0,10),
+      total_tracks:tr.length,artists:[{id,name},{id:'n:'+nrm(c.artistName||''),name:c.artistName||''}].filter(x=>x.name),
+      img:String(c.artworkUrl100||'').replace(/\/\d+x\d+(?:bb)?\.(?:jpg|png|webp)$/i,'/400x400bb.jpg'),
+      tracks:tr.map(t=>({name:String(t.trackName||''),type:'track',explicit:false,is_playable:t.isStreamable!==false,artists:[{id,name},{id:'n:'+nrm(t.artistName||''),name:t.artistName||''}]}))});
+  }
+  const kept=cmpTidy(albums,names);
+  return{artist:{id,name,img:'',am:true},albums:kept,cached:0,composer:true,works:kept.length};
 }
 function amImportMessage(e){
   if(e.code==='network')return 'Could not reach Apple Music. Check your connection and try again. Nothing in your log was changed.';
@@ -13635,7 +13763,7 @@ document.addEventListener('click',ev=>{
   }
   else if(act==='mbpick'){MBX.pick=MBX.results&&MBX.results[+b.dataset.i]||null;MBX.err=''}
   else if(act==='mbback'){MBX.pick=null}
-  else if(act==='mbgo'){if(MBX.pick)mbImport({id:MBX.pick.id,name:MBX.pick.name},'side');return}
+  else if(act==='mbgo'){if(MBX.pick)mbImport({id:MBX.pick.id,name:MBX.pick.name,dis:MBX.pick.dis||''},'side');return}
   else if(act==='mbcancel'){MBX.cancel=true;MBX.note='cancelling';mbProgress();return}
   else if(act==='mbdismiss'){MBX.report='';MBX.err=''}
   else if(act==='mbundo'){const aid=b.dataset.a;if(UI.undoArm!==aid){UI.undoArm=aid}else{UI.undoArm=null;if(undoApply(aid)){MBX.report='Put back as it was before the last import.';MBX.err='';MBX.aid=aid;MBX.errWhere='sheet'}}}
@@ -13644,7 +13772,7 @@ document.addEventListener('click',ev=>{
   else if(act==='mbviamb'){const art=MBX.spFallback;if(!art||MBX.busy)return;MBX.spFallback=null;mbImport(art,MBX.errWhere==='side'?'side':'sheet',true);return}
   else if(act==='mbrefresh'){const a=S.music.find(x=>x.id===b.dataset.a);if(!a)return;
     const mbid=a.mbid||(a.id===sid('artist','radiohead')?RH_MBID:null);if(!mbid)return;
-    MBX.versions=!!a.mbVersions;mbImport({id:mbid,name:a.name},'sheet');return}
+    MBX.versions=!!a.mbVersions;mbImport({id:mbid,name:a.name,composer:!!a.composer},'sheet');return}
   else if(act==='mbprefill'){const a=S.music.find(x=>x.id===b.dataset.a);if(!a)return;UI.addOpen=true;
     mbSearch(a.name).then(()=>{const el=document.getElementById('mb-q');if(el)el.scrollIntoView({behavior:'smooth',block:'center'})});return}
   else if(act==='tmpick'){const x=TMX.results&&TMX.results[+b.dataset.i];if(x)tmImport(x,'side');return}
