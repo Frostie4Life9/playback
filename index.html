@@ -2082,6 +2082,8 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 @keyframes sdin{0%{opacity:0;transform:translateY(6px) scale(.92);filter:blur(3px)}60%{opacity:1;transform:translateY(-1px) scale(1.04);filter:none}100%{transform:none}}
 @media (prefers-reduced-motion:no-preference){.sl-rd.sd-new{animation:sdin .6s cubic-bezier(.2,.8,.2,1) .35s both}}
 .sl-rd{text-decoration:none;font-weight:600;font-size:13px;letter-spacing:.02em;color:color-mix(in srgb,var(--hi) 88%,transparent)}
+.sl-od{text-decoration:none;font-weight:500;font-size:12px;letter-spacing:.02em;color:color-mix(in srgb,var(--ink) 62%,transparent)!important}
+.pvorl{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:4px;font-size:13px}.pvorl li{display:flex;gap:8px;justify-content:space-between}.pvorl li span:last-child{opacity:.7;white-space:nowrap}
 .sl-wf{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap}
 .sl-wf input{flex:1 1 150px;min-width:0;min-height:40px;padding:0 12px;border-radius:10px;border:1px solid color-mix(in srgb,var(--hi) 38%,transparent);background:color-mix(in srgb,var(--hi) 10%,transparent);color:var(--hi);font:500 15px var(--body)}
 .sl-wf button{min-height:40px;padding:0 14px;border-radius:10px;border:1px solid color-mix(in srgb,var(--hi) 38%,transparent);background:color-mix(in srgb,var(--hi) 16%,transparent);color:var(--hi);font:600 14px var(--body);cursor:pointer}
@@ -4506,6 +4508,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.22-m', note:'ORIGINAL RELEASE DATES: a record that reached streaming years after it first came out now sits in the year it was born. Spotify and Apple only know their own date, so Mac Miller\u2019s Faces (a free mixtape in May 2014, on streaming October 2021) landed after his death on the timeline. Playback now asks MusicBrainz, which keeps every edition of a record together with its first release date, and moves a release back when MusicBrainz has it in an earlier year under the same title (remaster, anniversary and deluxe tags ignored; singles only match singles; live albums and compilations never count). The timeline, Eras and oldest/newest sorting all follow the original date, and the open album shows the streaming date as a small On streaming line. Tap it, or More \u2192 Set original release date, to type your own date, or clear it to go back to the streaming date; a date you set is never changed again. Each artist page checks itself once a month (and right after an import), and Settings \u2192 Your data \u2192 Original release dates checks every artist at once and lists what moved. It costs no Worker or Spotify calls.'},
   {v:'2026.11.22-l', note:'PICKED RECORDINGS STAY THEIR OWN: a release you add by search for a composer keeps its own songs even when an imported work has the same title, and Check for new releases never folds them into the imported ones or merges a picked album into an imported one with the same name. Song and album counts in the search say 1 song, not 1 songs.'},
   {v:'2026.11.22-k', note:'ADD A RELEASE BY SEARCH: the Add a release sleeve at the end of an artist\u2019s Releases now starts with a search. Type a song, album or performer (like Clair de lune, or Martin Jones) and Playback asks Spotify (or Apple Music, if that is where your imports come from) for that artist\u2019s matching songs and albums, with cover, performer and year. Add song brings in that exact recording as a single; Add its album or Add album brings in the whole album, keeping only that artist\u2019s songs when an album mixes composers. It costs one or two calls, made for composers and other huge catalogs you can\u2019t import whole. Releases added this way stay when you Check for new releases, for a composer each picked recording keeps its own songs (so you can rate Martin Jones\u2019s Clair de lune apart from the one in Suite bergamasque), for anyone else a song already on the page is skipped, and the new release opens right away. Your plays of that exact recording count on it. Adding by hand is still there under Or add one by hand.'},
   {v:'2026.11.22-j', note:'A COMPOSER\u2019S PLAYS COUNT ON ANY RECORDING: plays of a composer are now matched by the piece, not the exact track title. Spotify calls your most played Debussy track \u201cClair de Lune, L. 32\u201d, while Debussy\u2019s page has Clair de lune inside Suite bergamasque, so its 174 plays never reached it. Now any recording of Clair de lune counts on that song (and any Des pas sur la neige on the Pr\u00e9ludes, and so on), so you can rate it and it shows its plays. Updating an artist who was imported before composers were handled (the 3-album Apple version of Debussy) now spots that he is a composer too and rebuilds him by work.'},
@@ -6184,6 +6187,67 @@ async function dtLoad(){
     save();if(n&&document.querySelector('.head.hero.hx[data-aid="'+a.id+'"]'))renderSoon()}
   catch(e){a.dtTry=Date.now()-13*864e5}   /* Apple busy or offline: try again tomorrow */
   finally{DTF.busy=false}}
+/* ORIGINAL RELEASE DATES (2026.11.22-m). Spotify and Apple only know the date a release came out on THEIR service, so a
+   mixtape that only reached streaming years later (Mac Miller's Faces: a free download May 11, 2014, on streaming Oct 15,
+   2021) landed in the wrong era. MusicBrainz keeps every edition of a record in one release group, and that group's
+   first-release-date is the record's real birthday. One browse of the artist's release groups (1-5 calls, straight from this
+   device, no Worker) finds it. A release only moves when MusicBrainz has it in an EARLIER YEAR under the same title (remaster /
+   anniversary / deluxe tags ignored), singles only match singles, and live albums and compilations never count. The streaming
+   date stays on the release as g.ed and shows as "On streaming ..." in the open album. Original dates live in a.orig by title,
+   so they survive re-imports; a date set by hand (src 'hand') is never changed by the lookup. */
+const ORF={busy:false,all:false,n:0,of:0,moved:[],msg:''};
+const origKey=t=>dtBare(String(t||'').replace(/\s*[\(\[][^)\]]*\b(remaster(ed)?|anniversary|deluxe|expanded|edition|version|reissue)\b[^)\]]*[\)\]]/ig,'').replace(/\s[-–]\s[^-–]*\b(remaster(ed)?|anniversary|deluxe|edition|reissue)\b.*$/i,''));
+function origApply(a){if(!a||!a.orig||!a.groups)return 0;let n=0;
+  for(const g of a.groups){const o=a.orig[nTitle(g.title)];if(!o||!o.d)continue;
+    const cur=g.dt||String(g.year||'');if(cur===o.d||(o.d.length===4&&String(g.year)===o.d&&!g.dt))continue;
+    if(!g.ed&&/^\d{4}/.test(cur))g.ed=cur;
+    g.year=o.d.slice(0,4);if(o.d.length>=7)g.dt=o.d;else delete g.dt;n++}
+  return n}
+/* back to the streaming date (an original date cleared by hand) */
+function origUndo(g){if(!g||!g.ed)return;g.year=g.ed.slice(0,4);if(g.ed.length>=7)g.dt=g.ed;else delete g.dt;delete g.ed}
+function origShow(d){return dtShow({dt:d.length>=7?d:'',year:d.slice(0,4)})}
+async function origFind(a){
+  if(!a||!a.mbid||a.example||!a.groups)return [];
+  const skip=new Set(['live','compilation','remix','dj-mix','demo','interview','spokenword','audiobook','audio drama','field recording']);
+  const by=new Map();let off=0;
+  for(let p=0;p<5;p++){
+    const j=await mbGet('release-group',{artist:a.mbid,limit:100,offset:off}),L=(j&&j['release-groups'])||[];
+    for(const r of L){const raw=String(r['first-release-date']||''),fd=dtClean(raw)||(/^\d{4}$/.test(raw)&&raw!=='9999'?raw:'');if(!fd)continue;
+      if((r['secondary-types']||[]).some(x=>skip.has(String(x).toLowerCase())))continue;
+      const k=origKey(r.title)+(r['primary-type']==='Single'?'|s':'|a'),o=by.get(k);
+      if(!o||fd.slice(0,4)<o.slice(0,4)||(fd.slice(0,4)===o.slice(0,4)&&(fd.length>o.length||(fd.length===o.length&&fd<o))))by.set(k,fd)}
+    off+=L.length;if(!L.length||off>=((j&&j['release-group-count'])||0))break}
+  a.orig=a.orig||{};const moved=[];
+  for(const g of a.groups){if(g.src==='kept'||!g.title)continue;
+    const gk=nTitle(g.title),ex=a.orig[gk];if(ex&&ex.src==='hand')continue;
+    const t=g.kind==='Single'?'|s':'|a';let d='';
+    for(const k of [origKey(g.title)+t,g.dxTitle?origKey(g.dxTitle)+t:'']){const x=k&&by.get(k);if(x&&(!d||x.slice(0,4)<d.slice(0,4)))d=x}
+    const cur=String(g.ed||g.dt||g.year||'');if(!d||!/^\d{4}/.test(cur))continue;
+    const dy=+d.slice(0,4),cy=+cur.slice(0,4);if(dy>=cy||cy-dy>60)continue;   /* only an earlier year means a later reissue */
+    if(!ex||ex.d!==d){a.orig[gk]={d,src:'mb'};moved.push({aid:a.id,artist:a.name,title:g.title,from:cur,to:d})}}
+  origApply(a);a.origAt=Date.now();return moved}
+/* on an artist's page: once a month, or right after an import (which clears a.origAt) */
+async function origLoad(){
+  const h=document.querySelector('.head.hero.hx');if(!h||ORF.busy||MBX.busy||!READY||!window.fetch||!navigator.onLine)return;
+  const a=(S.music||[]).find(x=>x.id===h.dataset.aid);if(!a||a.example||!a.mbid||(a.origAt&&a.origAt>Date.now()-30*864e5))return;
+  ORF.busy=true;
+  try{const m=await origFind(a);touch();
+    if(m.length){if(document.querySelector('.head.hero.hx[data-aid="'+a.id+'"]'))renderSoon();
+      pbToast(m.length===1?`<span><b>${esc(m[0].title)}</b> moved to ${esc(m[0].to.slice(0,4))}, when it first came out (on streaming ${esc(m[0].from.slice(0,4))})</span>`:`<span>${m.length} releases moved to the year they first came out</span>`,6000)}}
+  catch(e){a.origAt=Date.now()-29*864e5}   /* MusicBrainz busy or offline: try again tomorrow */
+  finally{ORF.busy=false}}
+/* Settings: check every imported artist once (the backfill) */
+async function origAll(){
+  if(ORF.busy||MBX.busy)return;const list=(S.music||[]).filter(a=>a.mbid&&!a.example);
+  Object.assign(ORF,{busy:true,all:true,n:0,of:list.length,moved:[],msg:''});render();
+  try{for(const a of list){ORF.n++;if(UI.view==='settings')render();
+      try{ORF.moved.push(...await origFind(a))}catch(e){if(e&&e.code==='cancel')break;if(e&&e.code==='offline'){ORF.msg='You went offline, so the check stopped. Tap again to finish.';break}}}
+    touch();ORF.msg=ORF.msg||(ORF.moved.length?'':'Every release already had its original date.')}
+  finally{ORF.busy=false;render()}}
+function origLine(g,a){
+  if(UI.oEdit===g.id){const o=a&&a.orig&&a.orig[nTitle(g.title)];
+    return `<form class="sl-wf" data-form="gorig" data-a="${a.id}" data-g="${g.id}"><input name="od" value="${esc(o&&o.d?o.d:g.dt||String(g.year||''))}" placeholder="2014-05-11 or 2014" inputmode="numeric" aria-label="Original release date (year, or year-month-day). Leave empty to use the streaming date" autocomplete="off"><button>Save</button></form>`}
+  return g.ed?`<button type="button" class="sl-wb sl-od" data-act="oedit" data-g="${g.id}" title="First came out ${esc(origShow(g.dt||String(g.year)))}" aria-label="First came out ${esc(origShow(g.dt||String(g.year)))}, on streaming ${esc(origShow(g.ed))}. Change the original date">On streaming ${esc(origShow(g.ed))}</button>`:''}
 function mbDateKey(d){d=String(d||'');const p=d.split('-');return d?(p[0]||'9999')+'-'+(p[1]||'99')+'-'+(p[2]||'99'):'9999-99-99'}
 /* the longest other edition is "the deluxe": its title and cover (release-level cover art) */
 function mbDeluxeLook(eds,base){
@@ -6453,6 +6517,7 @@ function mbMerge(art,incoming,versions,tidy,sp){
   if(kept.length)a.groups.push({id:sid(a.id,'kept'),src:'kept',title:'Kept from your earlier list',year:'—',kind:srcKey==='am'?'Not on Apple Music':fromSp?'Not on Spotify':'Not in the MusicBrainz import',items:kept});
   a.mbid=art.id;if(!tidy){a.name=ARTIST_SHOW[nArtist(art.name)]||(sp&&!sp.am&&sp.name)||art.name;if(sp&&!sp.am)a.snameAt=Date.now();a.mbVersions=!!versions;a.mbAt=Date.now();a.src=srcKey;if(sp&&!sp.am){a.spid=sp.id;if(sp.img)a.simg=sp.img}if(sp&&sp.am){a.amid=sp.id;a.amname=sp.name}if(art.aka){a.akaAt=Date.now()}}
   akaSet(a,art,sp&&!sp.am?sp:null,prevName);
+  origApply(a);delete a.origAt;   /* original release dates outlive the rebuild; new releases get looked up next visit */
   for(const g of a.groups){if(rating(g.id))continue;const o=oldR.find(x=>x[0]===nTitle(g.title));if(o)S.marks[g.id]={...(S.marks[g.id]||{}),r:o[1]}}
   for(const g of a.groups){if(!hasDx(g)||rating(dxId(g)))continue;
     /* its own deluxe rating from before, or the rating of the separate deluxe album it has just absorbed */
@@ -9013,7 +9078,7 @@ function render(){
   if(keepSim){const e=document.querySelector('.simrow');if(e&&!e.scrollLeft)e.scrollLeft=keepSim}
   phHiLoad();
   phAmLoad();amcLoad();
-  dtLoad();
+  dtLoad();origLoad();
   if(UI.alb){const a=(S.music||[]).find(x=>x.id===UI.alb.aid),g=a&&a.groups.find(x=>String(x.id)===UI.alb.g);if(g&&READY&&navigator.onLine)msLoad(a,g)}
   hxDrift();
   tdPaint();
@@ -10663,6 +10728,9 @@ function settingsView(){
   const data=`<section id="pvs-data" class="pvcard pvdg pvrise" data-sec="data" style="--d:4"><div class="pvch"><h2 class="pvh2">Your data</h2><span class="pvmono pvmut">the numbers behind your log</span></div>
     <div class="pvset-num">${[[L.n,'artists'],[L.rel,'releases'],[L.heard,'songs rated'],[plays,'plays kept']].map(([n,t],i)=>`<div class="pvtile pvrise" style="--d:${i}"><b>${stN(n||0)}</b><span class="pvsm">${t}</span></div>`).join('')}</div>
     ${pvRow('export ratings csv spreadsheet','Export ratings','Spreadsheets (CSV). They double as a backup, since RYM has no import',`<button class="pvb sm" data-act="expalbums">Albums</button><button class="pvb sm" data-act="expsongs">Songs</button>${own?'<button class="pvb sm" data-act="expscreen">Shows &amp; films</button>':''}${pvMoreBtn('exp','More')}`,pvPanel('exp',(EXP.open=true,sfe('expSide',expSide))))}
+    ${pvRow('original release dates reissue mixtape streaming year era','Original release dates',ORF.all&&ORF.busy?`Checking ${ORF.n} of ${ORF.of} artists on MusicBrainz\u2026`:'Moves records that reached streaming years later (like a free mixtape) back to the year they first came out. Each artist page also checks itself once a month',
+      `<button class="pvb sm" data-act="origall"${ORF.busy?' disabled':''}>${ORF.busy&&ORF.all?'Checking\u2026':'Check all artists'}</button>`,
+      ORF.all&&!ORF.busy&&(ORF.msg||ORF.moved.length)?`<div class="pvmore"><div class="pvold">${ORF.msg?`<p class="msg" role="status">${esc(ORF.msg)}</p>`:''}${ORF.moved.length?`<p class="pvsm">${ORF.moved.length} moved. To undo one, open it and tap its On streaming date.</p><ol class="pvorl">${ORF.moved.map(m=>`<li><span><b>${esc(m.title)}</b> \u00b7 ${esc(m.artist)}</span><span>${esc(m.from.slice(0,4))} \u2192 ${esc(origShow(m.to))}</span></li>`).join('')}</ol>`:''}</div></div>`:'')}
     ${pvRow('numbers breakdown ratings statistics','Rating breakdown','How your scores spread across albums, songs and shows',pvMoreBtn('stat','Show'),pvPanel('stat',(STAT.open=true,sfe('statSide',statSide))))}
     ${pvRow('listening history plays stats import','Listening history',plays?stN(plays)+' plays kept. Imports and the Spotify history backfill live on the Stats page':'Imports and the Spotify history backfill live on the Stats page',`<button class="pvb sm" data-act="mmgo" data-v="stats">Open Stats</button>`)}
   </section>`;
@@ -12134,7 +12202,7 @@ function rateDots(id){const r=rating(id);
   return `<span class="rate" role="group" aria-label="Rating out of 10"><span class="dots">${[1,2,3,4,5,6,7,8,9,10].map(d=>`<span class="dot ${r>=d?'full':r>=d-.5?'half':''}"><button data-act="rate" data-id="${id}" data-v="${d-.5}" aria-label="Rate ${fmt(d-.5)}"></button><button data-act="rate" data-id="${id}" data-v="${d}" aria-label="Rate ${d}"></button></span>`).join('')}</span><span class="rv ${r?'set':''}">${r?fmt(r):'–'}</span></span>`}
 function moreBtns(g,dx){
   const id=dx?dxId(g):g.id,sg=g.kind==='Single',rated=sg?sgDone(g):RATEABLE.includes(g.kind)&&rating(id);
-  return `<button class="btn" data-act="wedit" data-g="${g.id}">${g.w&&g.w.length?'Edit collab credit':'Add collab credit'}</button>`
+  return `<button class="btn" data-act="wedit" data-g="${g.id}">${g.w&&g.w.length?'Edit collab credit':'Add collab credit'}</button><button class="btn" data-act="oedit" data-g="${g.id}">${g.ed?'Change original release date':'Set original release date'}</button>`
     +(rated?`<button class="btn" data-act="dedit" data-g="${g.id}">${(sg?sgDate(g):ratedDate(id))?'Change date rated':'Add date rated'}</button>`:'')}
 function formUp(){setTimeout(()=>{const i=document.querySelector('.sl-wf input');if(i){i.scrollIntoView({block:'center',behavior:'smooth'});i.focus({preventScroll:true})}},60)}
 function delGBtn(g,a){const armed=UI.armed===g.id;return `<button class="btn danger ${armed?'armed':''}" data-act="delg" data-g="${g.id}" data-a="${a.id}">${armed?'Tap again to delete this album':'Delete album'}</button>`}
@@ -13085,7 +13153,7 @@ function gfHtml(a,g){return lsWith(g,()=>{
           <div class="sl-hero">
             ${albBar(g,a)}
             <div class="sl-pack"><div class="sl-cover">${art?`<img src="${esc(amBig(art))}" ${dx&&sArt&&art!==sArt?`data-f="${esc(sArt)}" `:''}alt="" loading="lazy" decoding="async" onerror="if(this.dataset.f){this.src=this.dataset.f;this.removeAttribute('data-f')}else coverErr(this)">`:''}<span class="sl-ph" aria-hidden="true">${esc((g.title||'?').trim().charAt(0).toUpperCase())}</span></div></div>
-            <div class="sl-meta"><span class="sl-kind">${esc(g.kind)} · ${esc(g.year)}</span><h3>${esc(dx?dxName(g):g.title)}</h3>${dx?'<span class="dxbadge">Deluxe</span>':''}${g.w&&g.w.length?`<span class="sl-w">with ${esc(g.w.join(' & '))}</span>`:''}<span class="sl-sub">${gd} of ${shown.length} heard</span>${rdLine(g,dx)}${lsPager(g)}${UI.wEdit===g.id?`<form class="sl-wf" data-form="gwith" data-a="${a.id}" data-g="${g.id}"><input name="w" value="${esc((g.w||[]).join(' & '))}" placeholder="Other artist, like Kenny Beats" aria-label="Collab with" autocomplete="off" autocapitalize="words"><button>Save</button></form>`:''}</div>
+            <div class="sl-meta"><span class="sl-kind">${esc(g.kind)} · ${esc(g.year)}</span><h3>${esc(dx?dxName(g):g.title)}</h3>${dx?'<span class="dxbadge">Deluxe</span>':''}${g.w&&g.w.length?`<span class="sl-w">with ${esc(g.w.join(' & '))}</span>`:''}<span class="sl-sub">${gd} of ${shown.length} heard</span>${rdLine(g,dx)}${origLine(g,a)}${lsPager(g)}${UI.wEdit===g.id?`<form class="sl-wf" data-form="gwith" data-a="${a.id}" data-g="${g.id}"><input name="w" value="${esc((g.w||[]).join(' & '))}" placeholder="Other artist, like Kenny Beats" aria-label="Collab with" autocomplete="off" autocapitalize="words"><button>Save</button></form>`:''}</div>
           </div>
           ${dxs.length?`<div class="dxseg" role="group" aria-label="Edition" data-dx="${dx?1:0}"><button type="button" data-act="dxsel" data-g="${g.id}" data-v="0" aria-pressed="${!dx}">Standard<span class="mono">${sd}/${std.length}</span></button><button type="button" class="dx" data-act="dxsel" data-g="${g.id}" data-v="1" aria-pressed="${dx}">Deluxe<span class="mono">${dd}/${g.items.length}</span></button></div>`:''}
           ${gfInfo(a,g,dx,shown)}
@@ -13118,7 +13186,7 @@ function gfSingleHtml(a,g,v){const {sArt,col,colD,dx,gd,shown,vgr,vrLab,trackRow
       <div class="gf-pk r" aria-hidden="true"><div class="gf-vr vgr" style="--vc:var(--ac)">${vgr}<span class="gf-vl">${vrLab}</span></div></div>
       <div class="gf-rs">
       <div class="gf-rh"><span class="gf-lbl">${esc([g.kind,dtShow(g)].filter(Boolean).join(' \u00b7 '))}</span><button type="button" class="gf-x" data-act="gfclose" aria-label="Close ${esc(g.title)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-      <div class="sg7-meta"><h3>${esc(g.title)}</h3>${g.w&&g.w.length?`<span class="sl-w">with ${esc(g.w.join(' & '))}</span>`:''}<span class="sl-sub">${gd} of ${shown.length} heard</span>${rdLine(g,dx)}${lsPager(g)}${albBar(g,a)}${UI.wEdit===g.id?`<form class="sl-wf" data-form="gwith" data-a="${a.id}" data-g="${g.id}"><input name="w" value="${esc((g.w||[]).join(' & '))}" placeholder="Other artist, like Kenny Beats" aria-label="Collab with" autocomplete="off" autocapitalize="words"><button>Save</button></form>`:''}</div>
+      <div class="sg7-meta"><h3>${esc(g.title)}</h3>${g.w&&g.w.length?`<span class="sl-w">with ${esc(g.w.join(' & '))}</span>`:''}<span class="sl-sub">${gd} of ${shown.length} heard</span>${rdLine(g,dx)}${origLine(g,a)}${lsPager(g)}${albBar(g,a)}${UI.wEdit===g.id?`<form class="sl-wf" data-form="gwith" data-a="${a.id}" data-g="${g.id}"><input name="w" value="${esc((g.w||[]).join(' & '))}" placeholder="Other artist, like Kenny Beats" aria-label="Collab with" autocomplete="off" autocapitalize="words"><button>Save</button></form>`:''}</div>
       ${friendStrip(g,a,dx)}
       ${g.items.length?'':'<p class="note">No songs listed yet. Tap the details button (i) up top to fill them in.</p>'}
       ${g.items.length&&!rows.length?'<p class="note gf-none">Every song here is heard. Tap the ear button up top to show them all.</p>':''}
@@ -13607,7 +13675,7 @@ document.addEventListener('click',ev=>{
   if(!b){if(UI.mm&&!ev.target.closest('.mmenu')){UI.mm=false;UI.mmAnim=false;render()}return}
   const act=b.dataset.act,id=b.dataset.id;
   const mmWas=!!UI.mm;UI.mm=false;UI.mmAnim=false;   /* any tap closes the Music menu; tapping Music again below toggles it */
-  if(['tog','ropen','rclear','dedit','rvedit','rvdel','grpall','lsnew','lltog'].includes(act)&&b.closest('.lsold'))return;   /* an earlier listen is view only */
+  if(['tog','ropen','rclear','dedit','oedit','rvedit','rvdel','grpall','lsnew','lltog'].includes(act)&&b.closest('.lsold'))return;   /* an earlier listen is view only */
   if(act!=='del'&&act!=='delg'&&act!=='lsrm')UI.armed=null;
   if(act!=='mbundo')UI.undoArm=null;
   if((act==='frclose'&&UI.frOpen||act==='llclose'&&UI.llOpen)&&sheetOut(act==='frclose'?'fr':'ll'))return;
@@ -13822,6 +13890,8 @@ document.addEventListener('click',ev=>{
   else if(act==='grpall'){const a=S.music.find(x=>x.id===b.dataset.a),g=a.groups.find(x=>x.id===b.dataset.g),its=viewItems(g),full=its.every(i=>isDone(i.id))&&!its.some(i=>lsCar(g,i.id));
     its.forEach(i=>lsOwn(i.id));its.forEach(i=>S.marks[i.id]={...(S.marks[i.id]||{}),done:!full});if(!full){slLitAsk(g);slPulseAsk(g.id,0)}touch()}
   else if(act==='wedit'){UI.wEdit=UI.wEdit===b.dataset.g?null:b.dataset.g;formUp()}
+  else if(act==='oedit'){UI.oEdit=UI.oEdit===b.dataset.g?null:b.dataset.g;formUp()}
+  else if(act==='origall'){origAll()}
   else if(act==='dedit'){UI.dEdit=UI.dEdit===b.dataset.g?null:b.dataset.g;formUp()}
   else if(act==='rvedit'){UI.rvEdit=b.dataset.id;UI.rvAnim=null;setTimeout(()=>{const t=document.querySelector('.rv-f textarea');if(t){t.scrollIntoView({block:'center',behavior:'smooth'});t.focus({preventScroll:true});t.setSelectionRange(t.value.length,t.value.length)}},60)}
   else if(act==='rvcancel'){UI.rvEdit=null}
@@ -13999,6 +14069,14 @@ document.addEventListener('submit',ev=>{
   if(kind==='gwith'){const a=S.music.find(x=>x.id===f.dataset.a),g=a&&a.groups.find(x=>x.id===f.dataset.g);
     if(g){const w=[...new Set(String(d.w||'').split(/\s*(?:&|,|\band\b|\u00d7)\s*/i).map(x=>x.trim()).filter(Boolean))];if(w.length)g.w=w;else delete g.w;linkTwins();touch()}
     UI.wEdit=null;render();return}
+  if(kind==='gorig'){const a=S.music.find(x=>x.id===f.dataset.a),g=a&&a.groups.find(x=>x.id===f.dataset.g);
+    if(g){const v=String(d.od||'').trim(),k=nTitle(g.title);a.orig=a.orig||{};
+      if(/^\d{4}(-\d\d(-\d\d)?)?$/.test(v)&&+v.slice(0,4)>1800&&v<=todayISO()){
+        if(g.ed&&(g.ed===v||(v.length===4&&g.ed.slice(0,4)===v))){origUndo(g);a.orig[k]={d:'',src:'hand'}}   /* same as the streaming date: no separate original */
+        else{if(!g.ed&&!(g.dt||String(g.year)).startsWith(v))g.ed=g.dt||String(g.year);a.orig[k]={d:v,src:'hand'};origApply(a);if(g.ed&&(g.dt||String(g.year))===g.ed)delete g.ed}}
+      else if(!v){origUndo(g);a.orig[k]={d:'',src:'hand'}}
+      touch()}
+    UI.oEdit=null;render();return}
   if(kind==='grev'){const id=f.dataset.id,v=String(d.rv||'').replace(/\r\n?/g,'\n').trim().slice(0,REVMAX);
     if(rating(id)){const m0={...S.marks[id]};if(v)m0.rv=v;else delete m0.rv;S.marks[id]=m0;touch()}
     UI.rvEdit=null;UI.rvAnim=v?id:null;if(v)setTimeout(()=>{UI.rvAnim=null},700);render();return}
