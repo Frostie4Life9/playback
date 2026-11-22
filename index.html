@@ -3788,6 +3788,76 @@ html.lite .pvdg{background:rgb(10 12 12 / .55)}
   .crf-a .pvpack{--ps:220px!important;margin-right:80px}
   .crt{width:132px}.crt .pvpack{--ps:132px!important}
 }
+/* Friends sheet */
+.pvfr{align-items:stretch;justify-content:flex-end}
+.pvfr .llbk{background:rgb(0 0 0 / .32)}
+.pvfr .frsheet{margin:14px;width:min(640px,calc(100% - 28px));max-width:none;max-height:none;height:auto;border:0;border-radius:32px;padding:26px 14px 20px;color:#fff;background:rgb(18 16 15 / .62);-webkit-backdrop-filter:blur(30px) saturate(1.3);backdrop-filter:blur(30px) saturate(1.3);box-shadow:0 30px 80px rgb(0 0 0 / .5),0 0 0 1px rgb(255 255 255 / .14) inset;display:flex;flex-direction:column;gap:18px;overflow:auto;overscroll-behavior:contain;font-family:var(--body)}
+html.lite .pvfr .frsheet{background:rgb(22 20 19 / .96);-webkit-backdrop-filter:none;backdrop-filter:none}
+@media (prefers-reduced-motion:no-preference){.pvfr.fr-in .frsheet{animation:frSlide .5s cubic-bezier(.2,.9,.25,1) both}.pvfr.out .frsheet{animation:frSlideOut .26s cubic-bezier(.5,0,.75,.4) both}}
+@keyframes frSlide{from{transform:translateX(110%)}}
+@keyframes frSlideOut{to{transform:translateX(110%)}}
+.frh{display:flex;align-items:center;gap:14px;padding:0 12px}
+.frh h2{flex:1;margin:0;font:900 56px/.9 Archivo,var(--display);letter-spacing:-.035em}
+.frh-avs{display:flex;margin-right:4px}.frh-avs>.pvav{margin-left:-10px}
+.frtabs{align-self:flex-start;margin:0 12px}
+.frb{display:flex;flex-direction:column;gap:6px}
+.frp{padding:6px 12px}
+.fxq{margin:0 12px 8px;border-radius:22px;padding:16px 18px;background:rgb(255 255 255 / .14);box-shadow:0 0 0 1px rgb(255 255 255 / .2) inset;display:flex;flex-direction:column;gap:12px}
+.fxq-h{display:flex;align-items:center;gap:10px}.fxq-h b{font:800 16px Archivo,var(--display)}
+.fxq-dot{width:10px;height:10px;border-radius:50%;background:#fff;animation:frRip 2.6s ease-out infinite}
+@keyframes frRip{0%{box-shadow:0 0 0 0 rgb(255 255 255 / .5)}70%{box-shadow:0 0 0 14px rgb(255 255 255 / 0)}100%{box-shadow:0 0 0 0 rgb(255 255 255 / 0)}}
+.fxq-r{display:flex;align-items:center;gap:12px;margin-top:8px}
+.fxq-t{flex:1;min-width:0}.fxq-t b,b.fxq-t{font:600 15px var(--body)}
+.frg{padding:14px 14px 2px}
+.frf{all:unset;cursor:pointer;display:flex;gap:16px;padding:14px;border-radius:20px;align-items:flex-start}
+.frf:focus-visible{outline:2px solid #fff}
+.frf-a{position:relative;flex:none}
+.frf-av{position:absolute;left:-6px;bottom:-6px;z-index:2}
+.frf-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.frf-t .pvsm b{color:#fff}
+.frf-n{font:800 19px/1.12 Archivo,var(--display);overflow-wrap:anywhere}
+.frf-rv{margin-top:6px;font:italic 500 14px/1.45 var(--body);color:rgb(255 255 255 / .88)}
+.frf-r{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex:none}
+.frf-y{font-size:12px;color:rgb(255 255 255 / .8)}.frf-y b{color:#fff}.frf-y b+b{color:#ffd27a}.frf-y b.eq{color:rgb(255 255 255 / .75)}
+.frl-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px}
+.frl{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:26px 18px;padding:4px 12px}
+.frc{position:relative;display:flex;flex-direction:column;gap:12px;min-width:0}
+.frc.off{opacity:.5}
+.frc-b{all:unset;cursor:pointer;display:block}
+.frc-b:disabled{cursor:default}
+.frc-p{position:relative;display:block;width:189px;max-width:100%;height:150px}
+.frc-p>.pvrec{position:absolute;left:39px;top:6px;transition:transform .7s cubic-bezier(.2,.8,.2,1)}
+.frc-p>.pvrec .rl{color:#fff;font-size:30px;background:var(--lc)}
+.frc:hover .frc-p>.pvrec{transform:translateX(14%)}.frc:hover .frc-p>.pvrec>.rd{animation:pvSpin 3.2s linear infinite}
+.frc-s{position:absolute;left:0;top:0;width:150px;height:150px;border-radius:14px;box-shadow:0 14px 30px rgb(0 0 0 / .32);transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+.frc:hover .frc-s{transform:translateY(-3px) rotate(-1deg)}
+.frc-l{position:absolute;right:10px;bottom:10px}
+.frc-lt{position:absolute;left:12px;bottom:12px;font-size:10px;letter-spacing:.1em;color:#141414;opacity:.85}
+.frc-t .pvh3{font-size:18px}.frc-t b:not(.pvh3){color:#fff}
+.frc-x{position:absolute;right:0;top:0;width:30px;height:30px;border-radius:50%;border:0;background:rgb(0 0 0 / .55);color:#fff;display:grid;place-items:center;cursor:pointer;opacity:0;transition:opacity .2s}
+.frc-x svg{width:14px;height:14px}.frc:hover .frc-x,.frc-x:focus-visible{opacity:1}
+.fra{display:flex;flex-direction:column;gap:22px;padding:4px 12px}
+.frt{position:relative;border-radius:24px;padding:22px 24px;background:linear-gradient(135deg,rgb(255 255 255 / .95),rgb(255 255 255 / .82));color:#141414;overflow:hidden}
+.frt-r{position:absolute;right:-40px;top:-40px;opacity:.9}
+.frt-r .rl{color:#fff;font-size:40px;background:var(--lc)}
+.frt-k{font-size:11px;letter-spacing:.14em;opacity:.7}
+.frt-c{font:800 clamp(30px,4vw,46px)/1.1 var(--mono);letter-spacing:.1em;margin:10px 0 16px;position:relative}
+.frt-b{display:flex;gap:10px;position:relative}.frt-b .pvb{background:#141414;color:#fff}
+.frt-perf{position:absolute;left:0;right:0;bottom:0;height:8px;background:repeating-linear-gradient(90deg,#141414 0 8px,transparent 8px 16px);opacity:.12}
+.fra-s{list-style:none;margin:0;padding:0;display:flex;gap:14px}
+.fra-s li{flex:1;min-width:0;display:flex;gap:10px;align-items:flex-start}.fra-s b{font:900 28px/1 Archivo,var(--display);opacity:.9}
+.fra-f>div{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}.fra-f .pvin{flex:1 1 200px}
+.fra-f input{font-family:var(--mono);letter-spacing:.12em;text-transform:uppercase}
+@media (max-width:760px){
+  .pvfr{align-items:flex-end}
+  .pvfr .frsheet{margin:0;width:100%;height:calc(100% - env(safe-area-inset-top,0px) - 10px);border-radius:28px 28px 0 0;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+  @media (prefers-reduced-motion:no-preference){.pvfr.fr-in .frsheet{animation:frup .42s cubic-bezier(.2,.9,.25,1) both}.pvfr.out .frsheet{animation:frdown .26s cubic-bezier(.5,0,.75,.4) both}}
+  .frh h2{font-size:42px}
+  .frf .pvpack{--ps:64px!important}
+  .frl{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .frc-p{transform:scale(.82);transform-origin:left top;height:124px}
+  .fra-s{flex-direction:column;gap:8px}
+}
 html.pbstill *,html.pbstill *::before,html.pbstill *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
 @media (max-width:900px){.pvset-sync{padding:20px;gap:18px}.pvset-tt{transform:scale(.8);transform-origin:left center;width:140px;height:130px}}
 </style>
@@ -4344,6 +4414,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.22-f', note:'FRIENDS SHEET REDESIGN. Friends is now a glass drawer on the right over whatever page you\u2019re on (a full-height sheet on a phone), with your friends\u2019 faces at the top. ACTIVITY: requests sit at the top with Accept and Decline, then what friends rated grouped Today / Yesterday / This week, each one a sleeve with the friend\u2019s face on it, their rating pill, review snippets, and NEW: the gap to your own score ("you 8.5 +1"). FRIENDS: each friend is a sleeve in their account color with a record whose lit groove is your taste match (once you\u2019ve opened their page), the last album they rated tucked in the corner, sorted by best match or A to Z. Friends who aren\u2019t sharing are dimmed. ADD: your friend code as a ticket with Copy and Share, three short steps, the code box, and the requests waiting for them.'},
   {v:'2026.11.22-e', note:'LISTEN LIST AS THE CRATE. The Listen list is now a wide sheet that rises from the bottom (full screen on a phone) in the colors of the album at the front. UP NEXT is that album, big, with its record pulled out and spinning slowly, its grooves lit for the songs you\u2019ve heard, when you added it and where it came from, friends\u2019 scores when they\u2019ve rated it, a segment bar of songs heard, Play (it tells you which song is next), Open album, Move to back and Remove. The rest stand in the crate as sleeves with their records peeking out; they lift on hover, show a progress bar, and say when they were added, where they came from, or that they\u2019re not in your log yet. Add an album from the bar at the top. Fresh pressings are the new releases with a date stamp (white for ones not out yet), with Add, Artist, Dismiss, Check now and the daily-checks switch. Heard sits last with checkmarks and Clear.'},
   {v:'2026.11.22-d', note:'STATS REDESIGN. Stats now takes its colors from your #1 artist for the range you pick. The top has the range pills and a year menu, the big numbers, and how this period compares with the one before (for example +18% plays and 2 h more), beside your #1 artist with their photo fading in like the artist page header, Open artist and Play. Recently played starts with a turntable for what\u2019s playing now (or the last thing you played), then sleeves with how long ago. Top of the month is a podium for the top 3 (records peeking out of their sleeves, artist photos for Artists), then rows with play bars in each album\u2019s color. Beside it: plays over time as a waveform, and Highlights. Then TIME OF DAY AS A RECORD CLOCK (24 bars around a spinning record, peak hour on the label), day of the week, and a NEW record showing how much of what you play is from artists in your log. Your listening history, imports and the fake-stats preview stay at the bottom.'},
   {v:'2026.11.22-c', note:'HISTORY REDESIGN. History now sits on a color field from the albums you rated most recently, and as you scroll the colors follow the month you\u2019re in. The top has the stats line, a button to add the missing days (it brings the albums with no day to the top) and Export CSV, beside YOUR RATING YEAR: 53 weeks of dots where each lit dot is a day you rated an album, in that album\u2019s color, with the number of days and your best run (switch between years). The list is a timeline: the month name sticks in the left column with its count, average and color dots, a spine runs down like the artist Releases timeline, and each row has a date stamp shaped like a record label (tap it to change the day; the editor opens right under the row), the sleeve with its record peeking out (its lit groove is how many songs you\u2019ve rated, and it slides out and spins on hover), chips for relistens, reviews and the kind, the song average, and the rating pill with ten segments in the album\u2019s color. Albums with no day yet are sleeves at the bottom with a dashed + Day button.'},
@@ -9883,11 +9954,59 @@ function friendsBtn(){
   return `<button class="tact tlab tfr${cur?' cur':''}" data-l="Friends" data-act="fropen" aria-haspopup="dialog" aria-expanded="${cur}" aria-label="Friends${n?', '+n+' request'+(n===1?'':'s')+' waiting':''}">${ICO.friends}${n?`<i class="tbadge" aria-hidden="true">${n}</i>`:''}</button>`;
 }
 /* the Friends sheet: slides up over whatever you are on (music, screen, collection...) so closing it puts you right back */
+/* 2026.11.22-b THE FRIENDS SHEET: a glass drawer on the right over whatever page you're on (a full-height sheet on a phone),
+   with no colors of its own. Activity: requests at the top, then what friends rated grouped Today / Yesterday / This week /
+   Earlier, each as a sleeve with the friend's face, their rating pill, the gap to your own score and a review snippet.
+   Friends: each friend is a sleeve in their account color with a record whose lit groove is your taste match (once you've
+   opened their page), and the last album they rated. Add: your friend code as a ticket, three steps, the code box and
+   the requests waiting for them. */
+function frAv(x,s){return `<span class="pvav" style="--s:${s}px;--h:${accHueOf(x)};font-size:${Math.round(s*.4)}px" aria-hidden="true">${accFace(x)}</span>`}
+function frDayGroup(d){const dd=hYmd(d);if(!dd)return 'Earlier';const t=new Date();t.setHours(0,0,0,0);const n=Math.round((t-dd)/864e5);return n<=0?'Today':n===1?'Yesterday':n<7?'This week':n<31?'This month':'Earlier'}
+function frReq(F,b){if(!F||!F.incoming.length)return '';
+  return `<div class="fxq pvrise"><div class="fxq-h"><span class="fxq-dot"></span><b>${F.incoming.length} want${F.incoming.length===1?'s':''} to be friends</b></div>${F.incoming.map(x=>`<div class="fxq-r">${frAv(x,42)}<div class="fxq-t"><b>${esc(x.name)}</b>${x.rated!=null?`<div class="pvsm">${x.rated} rated</div>`:''}</div><button class="pvb sm w" data-act="accaccept" data-u="${esc(x.uid)}"${b}>Accept</button><button class="pvb sm ic" data-act="accremove" data-u="${esc(x.uid)}" aria-label="Decline ${esc(x.name)}"${b}>${ICO.close}</button></div>`).join('')}</div>`}
+function frFeed(){
+  if(!FEED.rows)return FEED.err?`<p class="pvsm frp">${esc(FEED.err)}</p>`:'<p class="pvsm frp">Loading what your friends rated…</p>';
+  if(!FEED.rows.length)return `<p class="pvsm frp">Nothing yet. When a friend who shares their page rates an album, it shows up here, newest first.</p>`;
+  let M=null;try{M=accMatch([],accItems())}catch(e){}
+  const ani=FEED.anim;FEED.anim=false;let cur='',o='';
+  FEED.rows.forEach((x,i)=>{const g=frDayGroup(x.d);if(g!==cur){cur=g;o+=`<div class="pvlab frg">${g}</div>`}
+    const who=accWho(x),u=accCover(x),col=hslHex(accHue(x.n||'?'),.45,.55),mine=M&&x.kind==='a'?M.mine(x):null,df=mine!=null?x.r-mine:null;
+    const rv=x.rv?String(x.rv).replace(/\s+/g,' '):'',sn=rv.length>140?rv.slice(0,139)+'…':rv,art=accArtText(x);
+    o+=`<button type="button" class="frf pvrowh pvhov${ani?' pvrise':''}" style="--d:${Math.min(i,14)}" data-act="fdopen" data-u="${esc(x.uid)}" data-key="${esc(accPk(x))}" data-kind="${x.kind==='a'?'a':'s'}">
+      <span class="frf-a">${pvPack(84,u,col,x.n)}<span class="frf-av">${frAv(who,30)}</span></span>
+      <span class="frf-t"><span class="pvsm"><b>${esc(x.name)}</b> rated${x.d?' · '+esc(fmtRd(x.d)):''}</span><b class="frf-n">${esc(x.n||'Untitled')}</b>${art?`<span class="pvsm">${esc(art)}</span>`:''}${sn?`<span class="frf-rv">“${esc(sn)}”</span>`:''}</span>
+      <span class="frf-r">${pvPill(x.r,col,'l')}${mine!=null?`<span class="pvmono frf-y">you <b>${fmt(mine)}</b> <b class="${Math.abs(df)<.05?'eq':''}">${Math.abs(df)<.05?'same':(df>0?'+':'−')+fmt(Math.abs(df))}</b></span>`:''}</span></button>`});
+  return o}
+function frList(F,b){const fr=F?F.friends.slice():[];if(!F)return '<p class="pvsm frp">Loading friends…</p>';
+  if(!fr.length)return `<p class="pvsm frp">No friends yet. Share your code from Add.</p>`;
+  let mine=null;try{mine=accItems()}catch(e){}
+  const last=new Map();for(const x of FEED.rows||[])if(!last.has(x.uid))last.set(x.uid,x);
+  const mt=x=>{const c=ACX.prof[x.uid];if(!mine||!c||!c.data||!c.data.items)return null;const m=accMatch(c.data.items,mine);return m.n>=3?m.pct:null};
+  const L=fr.map(x=>({x,m:mt(x)})).sort((p,q)=>UI.frSort==='az'?String(p.x.name).localeCompare(String(q.x.name)):((q.m==null?-1:q.m)-(p.m==null?-1:p.m))||((q.x.rated||0)-(p.x.rated||0)));
+  return `<div class="frl-h"><b class="pvh3">${fr.length} friend${fr.length===1?'':'s'}</b><span class="pvmono pvmut">lit groove = taste match</span><span style="flex:1"></span>${pvSeg('frsort',UI.frSort==='az'?'az':'m',[['m','Best match'],['az','A to Z']],'Sort friends')}</div>
+    <div class="frl">${L.map(({x,m},i)=>{const h=accHueOf(x),c1=`hsl(${h} 55% 58%)`,c2=`hsl(${h} 50% 30%)`,lx=last.get(x.uid),lu=lx?accCover(lx):'',off=x.share===false;
+      return `<div class="frc pvhov pvrise${off?' off':''}" style="--d:${Math.min(i,12)}"><button type="button" class="frc-b"${off?' disabled':` data-act="friendopen" data-u="${esc(x.uid)}"`} aria-label="${esc(x.name)}${m!=null?', '+m+'% match':''}">
+        <span class="frc-p">${pvRec(138,{lit:m==null?null:m,label:accFace(x),lc:c1,li:'30%',disc:`repeating-radial-gradient(circle,rgb(0 0 0 / .16) 0 1px,transparent 1px 3px),conic-gradient(from 40deg,${c1},${c2},${c1})`})}<span class="frc-s" style="background:radial-gradient(circle at 30% 25%,hsl(${h} 60% 70%),${c1} 45%,${c2})">${lx?`<span class="frc-l">${pvSleeve(45,lu,hslHex(accHue(lx.n||'?'),.45,.55),lx.n)}</span><span class="pvmono frc-lt">LAST RATED</span>`:''}</span></span></button>
+        <div class="frc-t"><b class="pvh3">${esc(x.name)}</b><div class="pvsm">${off?'not sharing':(x.rated||0)+' rated'}${m!=null?` · <b>${m}%</b> match`:''}</div></div>
+        <button type="button" class="frc-x" data-act="accremove" data-u="${esc(x.uid)}" aria-label="Remove ${esc(x.name)}"${b}>${ICO.close}</button></div>`}).join('')}</div>`}
+function frAdd(F,b){const me=ACC.me,h=accHueOf(me);
+  return `<div class="fra pvrise"><div class="frt"><span class="frt-r">${pvRec(170,{spin:'slow',label:accFace(me),li:'30%',lc:`hsl(${h} 42% 38%)`,disc:`repeating-radial-gradient(circle,rgb(0 0 0 / .16) 0 1px,transparent 1px 3px),conic-gradient(from 40deg,hsl(${h} 50% 30%),hsl(${h} 50% 50%),hsl(${h} 50% 20%),hsl(${h} 50% 30%))`})}</span>
+      <div class="pvmono frt-k">YOUR FRIEND CODE</div><div class="frt-c" aria-label="Friend code ${esc(me.code.split('').join(' '))}">${esc(me.code)}</div>
+      <div class="frt-b"><button class="pvb sm" data-act="acccopy">${ACX.copied?'Copied':'Copy'}</button><button class="pvb sm" data-act="frshare">Share</button></div><i class="frt-perf"></i></div>
+    <ol class="fra-s"><li><b>1</b><span class="pvsm">Send them your code</span></li><li><b>2</b><span class="pvsm">They enter it here</span></li><li><b>3</b><span class="pvsm">You accept, and your pages open to each other</span></li></ol>
+    <form data-form="accadd" class="fra-f"><label class="pvlab" for="acc-code">Add a friend</label><div><span class="pvin pvg"><input id="acc-code" name="code" maxlength="9" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Their 8-letter code" required></span><button class="pvb w"${b}>Send request</button></div></form>
+    ${F&&F.outgoing.length?`<div><div class="pvlab">Waiting for them</div>${F.outgoing.map(x=>`<div class="fxq-r">${frAv(x,40)}<b class="fxq-t">${esc(x.name)}</b><button class="pvb xs" data-act="accremove" data-u="${esc(x.uid)}"${b}>Cancel</button></div>`).join('')}</div>`:''}</div>`}
 function friendsSheet(){
-  const body=accOn()?accFriendsCardHtml(true,true):`<p class="note">Sign in to add friends and open their pages.</p><div class="tools"><button class="btn primary" data-act="frgo">Sign in</button></div>`;
-  ACX.anim=false;
   const fin=UI.frAnim?' fr-in':'';UI.frAnim=false;
-  return `<div class="llover frover${fin}"><button class="llbk" data-act="frclose" aria-label="Close friends"></button><section class="llsheet frsheet" role="dialog" aria-modal="true" aria-labelledby="fr-h"><div class="llhead"><h2 id="fr-h">Friends</h2><button class="tact" data-act="frclose" aria-label="Close friends">${ICO.close}</button></div>${body}</section></div>`;
+  let body,head='';
+  if(!accOn())body=`<p class="pvsm frp">Sign in to add friends and open their pages.</p><div class="frp"><button class="pvb w" data-act="frgo">Sign in</button></div>`;
+  else{const F=ACX.fr,b=ACX.busy?' disabled':'',nf=F?F.friends.length:0,tab=UI.frTab==='add'?'add':nf?frTab():'add';
+    head=`<div class="frh-avs">${(F?F.friends:[]).slice(0,4).map(x=>frAv(x,34)).join('')}</div>`;
+    const tabs=`<div class="pvseg pvg frtabs" role="group" aria-label="Friends view"><button type="button" data-act="frtab" data-v="feed" aria-pressed="${tab==='feed'}">Activity</button><button type="button" data-act="frtab" data-v="list" aria-pressed="${tab==='list'}">Friends${nf?`<span>${nf}</span>`:''}</button><button type="button" data-act="frtab" data-v="add" aria-pressed="${tab==='add'}">+ Add</button></div>`;
+    const msg=ACX.msg?`<p class="msg ${ACX.ok?'ok':'err'} frp" role="status">${esc(ACX.msg)}</p>`:'';
+    body=tabs+`<div class="frb">${msg}${tab==='add'?frAdd(F,b):(frReq(F,b)+(tab==='feed'?frFeed():frList(F,b)))}</div>`}
+  ACX.anim=false;
+  return `<div class="llover frover pvfr${fin}"><button class="llbk" data-act="frclose" aria-label="Close friends"></button><section class="llsheet frsheet" role="dialog" aria-modal="true" aria-labelledby="fr-h"><div class="frh"><h2 id="fr-h">Friends</h2>${head}<button class="pvb ic" data-act="frclose" aria-label="Close friends">${ICO.close}</button></div>${body}</section></div>`;
 }
 /* (old full-page version, no longer reachable) the Friends page: just the friends list (requests, friends, add by code), no scrolling past your own stats */
 function friendsView(){
@@ -13156,7 +13275,9 @@ document.addEventListener('click',ev=>{
   else if(act==='addclose'){lxAddClose();return}
   else if(act==='lxsortm'){lxSortMenu(b);return}
   else if(act==='fropen'){UI.frOpen=true;UI.frAnim=true;UI.llOpen=false;ACX.anim=!!ACX.fr;FEED.anim=true;if(accOn()){accFriends(true);accFeed(false)}}
-  else if(act==='frtab'){UI.frTab=b.dataset.v==='list'?'list':'feed';if(UI.frTab==='feed'){FEED.anim=true;accFeed(false)}else ACX.anim=true}
+  else if(act==='frsort'){UI.frSort=b.dataset.v}
+  else if(act==='frshare'){const t='Add me on Playback. My friend code is '+(ACC.me&&ACC.me.code||'')+'. '+location.origin+location.pathname;if(navigator.share){navigator.share({text:t}).catch(()=>{});return}(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{ACX.ok=true;ACX.msg='Copied a message with your code.';render()}).catch(()=>{});return}
+  else if(act==='frtab'){UI.frTab=['list','add'].includes(b.dataset.v)?b.dataset.v:'feed';if(UI.frTab==='feed'){FEED.anim=true;accFeed(false)}else ACX.anim=true}
   else if(act==='fdopen'){UI.fFrom='sheet';UI.fPrev=UI.view==='friend'?null:UI.view;UI.frOpen=false;UI.view='friend';UI.fid=b.dataset.u;pReset();UI.pAnim=true;UI.rOpen=null;if(b.dataset.kind==='a')UI.pAlb=b.dataset.key;window.scrollTo({top:0});if(ACX.prof[UI.fid])ACX.prof[UI.fid].at=0}
   else if(act==='frclose'){UI.frOpen=false}
   else if(act==='frgo'){UI.frOpen=false;UI.view='account';pReset();UI.pAnim=true;window.scrollTo({top:0})}
