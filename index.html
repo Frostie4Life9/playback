@@ -3365,6 +3365,7 @@ html.lite .hx .hxfp{-webkit-backdrop-filter:none;backdrop-filter:none;background
 body:has(.pv){background:#0b0f0d}
 body:has(.pv) .top{position:relative;z-index:6}
 body:has(.pv)>footer,body:has(.pv) footer{position:relative;z-index:2}
+body:has(.pv) .top .sync{color:rgb(255 255 255 / .85)}
 body:has(.pv) .buildid{color:rgb(255 255 255 / .6)}
 .pv{--x1:#3d5048;--x2:#5a6e78;--x3:#7a6650;position:relative;z-index:1;color:#fff;display:flex;flex-direction:column;gap:30px;width:100%;max-width:1760px;margin:0 auto;padding-bottom:40px;font-family:var(--body);-webkit-font-smoothing:antialiased}
 .pv *{box-sizing:border-box}
@@ -3468,7 +3469,7 @@ html.lite .pvdg{background:rgb(10 12 12 / .55)}
 .pvslv{position:relative;flex:none;display:grid;place-items:center;width:var(--s,72px);height:var(--s,72px);border-radius:calc(var(--s,72px) * .12);overflow:hidden;background:var(--c,#444);box-shadow:0 14px 30px rgb(0 0 0 / .32),0 0 0 1px rgb(255 255 255 / .12) inset;color:#fff;font:900 calc(var(--s,72px) * .34) Archivo,var(--display)}
 .pvslv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .pvslv::after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgb(255 255 255 / .16),rgb(255 255 255 / 0) 40%,rgb(0 0 0 / .12));pointer-events:none}
-.pvpack{position:relative;flex:none;width:calc(var(--s,72px) * 1.1);height:var(--s,72px)}
+.pvpack{position:relative;display:block;flex:none;width:calc(var(--s,72px) * 1.1);height:var(--s,72px)}
 .pvpack>.pvrec{position:absolute;top:5%;left:calc(var(--ps,72px) * .12);--s:calc(var(--ps,72px) * .9);transition:transform .7s cubic-bezier(.2,.8,.2,1)}
 .pvpack>.pvslv{position:absolute;left:0;top:0;transition:transform .5s cubic-bezier(.2,.8,.2,1)}
 .pvpack.peek>.pvrec{transform:translateX(30%)}
@@ -3626,6 +3627,98 @@ html.lite .pvdg{background:rgb(10 12 12 / .55)}
   .hed{margin-left:0}
   .htq{max-width:none;flex-basis:100%}
   .hund-g{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:14px}
+}
+/* Stats */
+.sthero{align-items:stretch;min-height:clamp(420px,52vh,540px)}
+.sthero>.pvht{justify-content:center}
+.stctl{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.stnums{display:flex;flex-wrap:wrap;margin-left:-24px;margin-top:8px;row-gap:14px}
+.stnums>div{padding:0 24px;border-left:1px solid rgb(255 255 255 / .24);display:flex;flex-direction:column}
+.stnums b{font:900 clamp(44px,4.6vw,68px)/.95 Archivo,var(--display);letter-spacing:-.045em;font-variant-numeric:tabular-nums}
+.stnums span{font:600 16px var(--body);margin-top:6px}
+.stcmp{font-size:12px}
+.sttop{flex:1 1 520px;min-width:0;position:relative;min-height:0;border-radius:0 28px 0 0;overflow:hidden;display:flex;align-items:flex-end}
+.sttop.ph{min-height:460px}
+.sttop-ph{position:absolute;inset:0;-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 34%),linear-gradient(to top,transparent 0%,#000 30%);-webkit-mask-composite:source-in;mask-image:linear-gradient(to right,transparent 0%,#000 34%),linear-gradient(to top,transparent 0%,#000 30%);mask-composite:intersect;animation:pvFade 1.2s ease both}
+.sttop-ph img{width:100%;height:100%;object-fit:cover;object-position:50% 25%}
+@keyframes pvFade{from{opacity:0}}
+.sttop-t{position:relative;display:flex;flex-direction:column;gap:12px;padding:0 0 8px 8px}
+.sttop-n{font:900 clamp(48px,5vw,84px)/.9 Archivo,var(--display);letter-spacing:-.04em;overflow-wrap:anywhere}
+.st-demo2{flex-direction:row;align-items:center;gap:16px;flex-wrap:wrap;padding:18px 24px}.st-demo2>span{flex:1 1 300px}
+.stre{display:flex;flex-direction:column;gap:16px}
+.stre .pvch{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.stre-r{display:flex;gap:20px;align-items:flex-start;min-width:0}
+.stnow{all:unset;cursor:pointer;flex:none;display:flex;align-items:center;gap:22px;padding-right:26px;margin-right:6px;border-right:1px solid rgb(255 255 255 / .22)}
+.stnow:focus-visible{outline:2px solid #fff;outline-offset:4px;border-radius:18px}
+.stnow-tt{position:relative;width:190px;height:170px;display:block;flex:none}
+.stnow-p{position:absolute;inset:0;border-radius:18px;background:linear-gradient(160deg,rgb(255 255 255 / .2),rgb(255 255 255 / .06));box-shadow:0 0 0 1px rgb(255 255 255 / .18) inset}
+.stnow-r{position:absolute;left:14px;top:12px}
+.stnow-t{display:flex;flex-direction:column;gap:6px;max-width:220px}
+.stnow-t>b{font:800 24px/1.05 Archivo,var(--display)}
+.stnow-t time{font-size:11px}
+.stre-l{display:flex;gap:20px;overflow-x:auto;scrollbar-width:none;min-width:0;padding:6px 4px 10px;mask-image:linear-gradient(90deg,#000 90%,transparent);-webkit-mask-image:linear-gradient(90deg,#000 90%,transparent)}
+.strc{all:unset;cursor:pointer;flex:none;display:flex;flex-direction:column;gap:6px;width:118px}
+.strc .pvslv{transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+.strc:hover .pvslv{transform:translateY(-4px) rotate(-1.5deg)}
+.strc>b{font:600 14px var(--body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:4px}
+.strc>.pvsm{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.strc>time{font-size:11px}
+.strc:disabled,.stnow:disabled,.stp:disabled,.str:disabled{cursor:default}
+.stgrid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:26px;align-items:start}
+.stmain .pvch{align-items:center}
+.stside{display:flex;flex-direction:column;gap:26px}
+.stpod{display:flex;gap:34px;align-items:flex-end;padding:34px 0 10px;flex-wrap:wrap}
+.stp{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:12px;min-width:0;max-width:280px}
+.stp-a{position:relative;display:block}
+.stp-n{position:absolute;left:-10px;top:-26px;font:900 64px/1 Archivo,var(--display);letter-spacing:-.05em;text-shadow:0 4px 22px rgb(0 0 0 / .35)}
+.stp.big .stp-n{font-size:84px}
+.stp-t{display:flex;flex-direction:column;gap:3px}
+.stp-t>b{font:800 18px/1.1 Archivo,var(--display)}.stp.big .stp-t>b{font-size:22px}
+.stp-t .pvmono{font-size:13px;margin-top:6px}.stp-t .pvmono b{font:900 20px Archivo,var(--display)}.stp.big .stp-t .pvmono b{font-size:26px}
+.stp-ph{position:relative;display:grid;place-items:center;width:var(--s);height:var(--s);border-radius:50%;overflow:hidden;background:var(--c);font:900 48px Archivo,var(--display);box-shadow:0 14px 34px rgb(0 0 0 / .38);transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+.stp-ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.stp:hover .stp-ph{transform:scale(1.03) rotate(-2deg)}
+.str{all:unset;cursor:pointer;display:flex;align-items:center;gap:16px;padding:8px 12px;border-radius:16px}
+.str-k{width:28px;text-align:right;font:900 20px Archivo,var(--display);opacity:.75;flex:none}
+.str-t{flex:1 1 200px;min-width:0;display:flex;flex-direction:column;gap:2px}
+.str-t>b{font:600 16px var(--body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.str-b{flex:0 1 30%;height:6px}
+.str-c{font-size:12px;width:84px;text-align:right;flex:none}.str-c b{font-size:14px}
+.stwv{display:flex;gap:3px;align-items:center;height:170px}
+.stwv>span{flex:1;display:flex;flex-direction:column;justify-content:center;height:100%;transform-origin:center}
+.stwv i{display:block;border-radius:3px;background:rgb(255 255 255 / .34)}
+.stax{display:flex;justify-content:space-between;font-size:11px;margin-top:6px}
+.sthi{gap:14px}
+.sthi>div{display:flex;flex-direction:column;gap:4px}
+.sthi b{font:900 38px/1 Archivo,var(--display);letter-spacing:-.03em}
+.stgrid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:26px}
+.stclk{position:relative;width:min(330px,100%);aspect-ratio:1;margin:0 auto}
+.stclk svg{width:100%;height:100%;overflow:visible}
+.stclk svg line{animation:pvFade .6s ease both;animation-delay:calc(var(--d) * 30ms)}
+.stclk svg text{fill:rgb(255 255 255 / .55);font:500 11px var(--mono)}
+.stclk-r{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.9)}
+.stclk-l{display:flex;flex-direction:column;align-items:center;line-height:1}.stclk-l b{font:900 17px Archivo,var(--display)}.stclk-l i{font:500 7px var(--mono);letter-spacing:.1em;font-style:normal;margin-top:3px}
+.stdw{display:flex;gap:12px;align-items:flex-end;height:190px;padding-top:10px}
+.stdw>span{flex:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px}
+.stdw>span>.pvgrow{width:100%;border-radius:10px;background:rgb(255 255 255 / .34)}
+.stdw .pvmono{font-size:11px}
+.stlog{display:flex;align-items:center;gap:18px;margin-top:14px;padding-top:18px;border-top:1px solid rgb(255 255 255 / .13)}
+.stlog b{font:700 16px var(--body)}
+.pv .pvc-legacy{gap:12px}
+.pv .pvc-legacy>.setcard{background:transparent;box-shadow:none;padding:0}
+.pv .pvc-legacy h3{font:800 22px Archivo,var(--display)}
+@media (max-width:1100px){.stgrid,.stgrid2{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:900px){
+  .sthero{min-height:0}
+  .sttop{flex-basis:100%;border-radius:24px}.sttop.ph{min-height:380px}
+  .stnums{margin-left:-14px}.stnums>div{padding:0 14px}
+  .stre-r{flex-direction:column}
+  .stnow{border-right:0;padding-right:0}
+  .stre-l{width:100%}
+  .stpod{gap:18px;justify-content:center}
+  .stp .pvpack{--s:120px!important;--ps:120px!important}.stp.big .pvpack{--s:150px!important;--ps:150px!important}
+  .stp-ph{--s:120px!important}.stp.big .stp-ph{--s:150px!important}
+  .str-b{display:none}
 }
 html.pbstill *,html.pbstill *::before,html.pbstill *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
 @media (max-width:900px){.pvset-sync{padding:20px;gap:18px}.pvset-tt{transform:scale(.8);transform-origin:left center;width:140px;height:130px}}
@@ -4183,6 +4276,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.22-d', note:'STATS REDESIGN. Stats now takes its colors from your #1 artist for the range you pick. The top has the range pills and a year menu, the big numbers, and how this period compares with the one before (for example +18% plays and 2 h more), beside your #1 artist with their photo fading in like the artist page header, Open artist and Play. Recently played starts with a turntable for what\u2019s playing now (or the last thing you played), then sleeves with how long ago. Top of the month is a podium for the top 3 (records peeking out of their sleeves, artist photos for Artists), then rows with play bars in each album\u2019s color. Beside it: plays over time as a waveform, and Highlights. Then TIME OF DAY AS A RECORD CLOCK (24 bars around a spinning record, peak hour on the label), day of the week, and a NEW record showing how much of what you play is from artists in your log. Your listening history, imports and the fake-stats preview stay at the bottom.'},
   {v:'2026.11.22-c', note:'HISTORY REDESIGN. History now sits on a color field from the albums you rated most recently, and as you scroll the colors follow the month you\u2019re in. The top has the stats line, a button to add the missing days (it brings the albums with no day to the top) and Export CSV, beside YOUR RATING YEAR: 53 weeks of dots where each lit dot is a day you rated an album, in that album\u2019s color, with the number of days and your best run (switch between years). The list is a timeline: the month name sticks in the left column with its count, average and color dots, a spine runs down like the artist Releases timeline, and each row has a date stamp shaped like a record label (tap it to change the day; the editor opens right under the row), the sleeve with its record peeking out (its lit groove is how many songs you\u2019ve rated, and it slides out and spins on hover), chips for relistens, reviews and the kind, the song average, and the rating pill with ten segments in the album\u2019s color. Albums with no day yet are sleeves at the bottom with a dashed + Day button.'},
   {v:'2026.11.22-b', note:'SETTINGS REDESIGN (first of the six redesigned pages). Settings now sits on a calm color field from the last artist you opened, with a big Settings title, a search box that hides everything that doesn\u2019t match as you type, and a sync turntable that spins while you\u2019re in sync (Save now and Check for newer right on it). On a wide screen a section list on the left follows you down the page. Connections are cards for Spotify, Apple Music, MusicBrainz and Rate Your Music with a status light, and the setup forms open in place under them. On/off switches have a knob that\u2019s a tiny record and turns when you flip it. NEW: a Motion switch (turns off the spinning and sliding on this device), an album-cover default (Apple or Spotify for every artist; an artist\u2019s own switch still wins), a backup reminder interval (7, 14, 21 days or off), Ideas for Playback, and What\u2019s new (the last few builds).'},
   {v:'2026.11.22-a', note:'PHONE AND ALBUM FIXES. NO MORE GLITCHING WITH AN ALBUM OPEN: things finishing in the background (Apple covers being matched for other artists, play counts, Spotify\u2019s auto-check, friends\u2019 ratings, sync) used to rebuild the whole artist page under an open album, even when nothing on it had changed. Now a background update leaves the page alone unless something on it really changed, and an open album\u2019s covers never switch under you (they switch when it closes). LIBRARY PHOTO: the old photo now fades out while the new one fades in, so there is no snap at the end of the fade. PHONE LIBRARY: the A\u2013Z letters no longer sit on top of the + and Sort (they slide in once you scroll past them), the Add an artist fields are full size again, and the page fades under the status bar instead of being cut off. OPEN ALBUM ON A PHONE: it looks like a record jacket now. The cover is printed once across both inside pages (it was zoomed 3x and cut off oddly), the pages have a card grain and jacket corners, and the inside left has its own record sleeved in the outer edge, like the desktop\u2019s 2LP. FASTER: opening, closing and switching albums, the Standard/Deluxe swap and turning to another listen all play about 40% faster, with the same moves. The phone\u2019s pause before zooming into the inside left is shorter. OPENING AN ARTIST ON A PHONE: the page no longer scrolls down after it opens, so the record flies straight to the turntable instead of aiming low and being dragged up, and it stutters less in the air. SINGLES: fanning out a stack takes the top single off first, then the ones under it (the reverse of how they stack). DELUXE: an album with a deluxe edition shows the deluxe record too, peeking out behind the standard one in its own color, and the two records swap along with their sleeves.'},
@@ -5237,9 +5331,9 @@ const stHour=h=>(h%12||12)+(h<12?' AM':' PM');
 /* covers and links for what is in the log: artist and album pictures, and which artist page to open */
 function stImgs(){
   const sig=plSig();if(PL.img&&PL.imgSig===sig)return PL.img;
-  const m={ar:new Map(),al:new Map()};
+  const m={ar:new Map(),al:new Map(),alg:new Map()};
   for(const a of S.music){const k=nArtist(a.name),g0=a.groups.find(g=>g.img);m.ar.set(k,{img:a.simg||a.img||(g0?g0.img:''),id:a.id});
-    for(const g of a.groups){const lk=k+'|'+plAlbKey(g.title);if(!m.al.has(lk)||(g.img&&!m.al.get(lk)))m.al.set(lk,g.img||'')}}
+    for(const g of a.groups){const lk=k+'|'+plAlbKey(g.title);if(!m.alg.has(lk))m.alg.set(lk,g);if(!m.al.has(lk)||(g.img&&!m.al.get(lk)))m.al.set(lk,g.img||'')}}
   PL.img=m;PL.imgSig=sig;return m;
 }
 function stQ(d,r){
@@ -5342,42 +5436,101 @@ function stManage(d,demo){
   h+=`<details><summary class="note">How to get your history from Apple Music</summary><ol class="note steps"><li>On a computer, open <a href="https://privacy.apple.com/" target="_blank" rel="noopener">privacy.apple.com</a>, sign in, and choose <b>Request a copy of your data</b>.</li><li>Tick <b>Apple Media Services information</b> and finish the request. Apple can take up to 7 days and emails you when it is ready.</li><li>Download every zip part from Apple’s email. Choose the zip here, or unzip it and choose <b>Apple Music Play Activity.csv</b> from the <b>Apple Music Activity</b> folder.</li></ol><p class="note">Apple’s file only reaches back as far as Apple keeps it, and it never replaces Spotify plays. Playback keeps no Apple plays after the export, because Apple does not offer a free way to read them as they happen (it needs a $99 a year developer account), so repeat the export now and then. Songs match across services, so a song you play on both adds up.</p></details></div>`;
   return h;
 }
+/* ---------- Stats (2026.11.22-b redesign) ----------
+   The page takes its colors from your #1 artist for the range. Hero: range pills, big numbers, how this period compares
+   with the one before, and the #1 artist with their photo fading in like the artist page header. Recently played: a
+   turntable for the latest play, then sleeves with how long ago. Top list: a podium for the top 3, then rows with play
+   bars in each album's color. Side: plays over time as a waveform, Highlights. Then time of day as a record clock,
+   day of the week, and how much of what you play is from artists in your log. Your listening history stays last. */
+function stGOf(al,I){const m=I.alg;return m?m.get(al):null}
+function stColOf(img,name,g){if(g)return gCol(g,gArt(g),true);return hslHex(accHue(name||'?'),.48,.5)}
+function stPack(s,img,col,name,spin){return `<span class="pvpack" style="--s:${s}px;--ps:${s}px">${pvRec(Math.round(s*.9),{lc:col,spin:spin?'mid':'',disc:`repeating-radial-gradient(circle,rgb(0 0 0 / .16) 0 1px,transparent 1px 3px),conic-gradient(from 40deg,${col},#151515,${col})`})}${pvSleeve(s,img,col,name)}</span>`}
+function stItem(d,q,kind,i,I){
+  if(kind==='r'){const a=d.ar[i],e=I.ar.get(a.k),img=stArt(a.k,e),al=e&&S.music.find(x=>x.id===e.id),col=al?lxCols(al)[0]:hslHex(accHue(a.n),.48,.5);
+    return{name:a.n,sub:stHrs(q.mR[i])+' listened',img,aid:e?e.id:'',col,n:q.cR[i],h:stHrs(q.mR[i]),need:!img?[a.k,a.n]:null,photo:true}}
+  if(kind==='t'){const t=d.tk[i],a=d.ar[t.a],e=I.ar.get(a.k),la=q.lastAl[i],al=la>=0?d.al[la]:null,img=al?(I.al.get(al.k)||''):'',g=al?stGOf(al.k,I):null;
+    return{name:t.t,sub:a.n,img,aid:e?e.id:'',col:stColOf(img,al?al.n:t.t,g),n:q.cT[i],h:stHrs(q.mT[i])}}
+  const al=d.al[i],a=d.ar[al.a],e=I.ar.get(a.k),img=I.al.get(al.k)||'',g=stGOf(al.k,I);
+  return{name:al.n,sub:a.n,img,aid:e?e.id:'',col:stColOf(img,al.n,g),n:q.cA[i],h:stHrs(q.mA[i]),g}}
+function stPodium(d,q,kind,limit){
+  const top=plTop(q,kind,0),I=stImgs(),need=[];if(!top.length)return '<p class="pvsm">Nothing played in this time.</p>';
+  const it=top.slice(0,Math.min(limit,top.length)).map(i=>{const x=stItem(d,q,kind,i,I);if(x.need)need.push(x.need);return x});
+  if(need.length&&!d.demo)stPhotos(need);
+  const mx=it[0].n||1,go=x=>x.aid?` data-act="splgo" data-a="${esc(x.aid)}"`:' disabled';
+  const pod=it.slice(0,3).map((x,k)=>{const big=k===0,s=big?200:160;
+    const art=x.photo?`<span class="stp-ph" style="--s:${s}px;--c:${x.col}">${esc(accIni(x.name))}${x.img?`<img src="${esc(x.img)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span>`:stPack(s,x.img,x.col,x.name,big);
+    return `<button type="button" class="stp pvhov pvrise${big?' big':''}" style="--d:${k+1};order:${[2,1,3][k]}"${go(x)}><span class="stp-a">${art}<span class="stp-n">${k+1}</span></span><span class="stp-t"><b>${esc(x.name)}</b><span class="pvsm">${esc(kind==='r'?x.h:x.sub)}</span><span class="pvmono"><b>${stN(x.n)}</b> plays${kind==='r'?'':' · '+esc(x.h)}</span></span></button>`}).join('');
+  const rows=it.slice(3).map((x,k)=>`<button type="button" class="str pvrowh pvhov pvrise" style="--d:${Math.min(k,16)*.6}"${go(x)}><span class="str-k">${k+4}</span>${x.photo?`<span class="pvav" style="--s:52px;background:${x.col}">${x.img?`<img src="${esc(x.img)}" alt="" loading="lazy" onerror="this.remove()">`:esc(accIni(x.name))}</span>`:pvSleeve(52,x.img,x.col,x.name)}<span class="str-t"><b>${esc(x.name)}</b><span class="pvsm">${esc(kind==='r'?x.h:x.sub)}</span></span><span class="str-b pvbar"><i style="--w:${Math.max(3,Math.round(x.n/mx*100))}%;--c:${x.col}"></i></span><span class="pvmono str-c"><b>${stN(x.n)}</b> plays</span></button>`).join('');
+  return `<div class="stpod">${pod}</div>${rows}${top.length>limit?`<div class="pvset-sb"><button type="button" class="pvb sm" data-act="stmore">Show ${Math.min(25,top.length-limit)} more</button><span class="pvsm">${stN(limit)} of ${stN(top.length)}</span></div>`:''}`}
+function stRecent2(d,n){
+  const E=d.ts.length;if(!E)return '';
+  const I=stImgs(),need=[],lim=Math.min(n,E),row=j=>{const i=E-1-j,t=d.tk[d.ti[i]],a=d.ar[t.a],al=d.al[d.ai[i]],e=I.ar.get(a.k),aimg=stArt(a.k,e),img=(al&&I.al.get(al.k))||aimg,g=al?stGOf(al.k,I):null;
+    if(!aimg&&!img)need.push([a.k,a.n]);return{i,t,a,al,e,img,col:stColOf(img,al?al.n:t.t,g)}};
+  const f=row(0),now=Date.now()/1000-d.ts[f.i]<12*60;
+  const go=x=>x.e?`data-act="splgo" data-a="${esc(x.e.id)}"`:'disabled';
+  const rest=[];for(let j=1;j<lim;j++){const x=row(j);rest.push(`<button type="button" class="strc pvhov pvrise" style="--d:${j}" ${go(x)}>${pvSleeve(118,x.img,x.col,x.t.t)}<b>${esc(x.t.t)}</b><span class="pvsm">${esc(x.a.n)}</span><time class="pvmono pvmut st-ago" data-t="${d.ts[x.i]}">${stAgo(d.ts[x.i])}</time></button>`)}
+  if(need.length&&!d.demo)stPhotos(need);
+  return `<section class="stre"><div class="pvch"><h3 class="pvh2">Recently played</h3><span class="pvmono pvmut">from Spotify, as it happens</span><span style="flex:1"></span>${E>lim?`<button type="button" class="pvb xs" data-act="strmore">Show ${Math.min(10,E-lim)} more</button>`:''}</div>
+    <div class="stre-r"><button type="button" class="stnow pvrise" ${go(f)}><span class="stnow-tt"><i class="stnow-p"></i><span class="stnow-r">${pvRec(146,{lc:f.col,spin:now?'':'slow',label:f.img?`<img src="${esc(f.img)}" alt="" onerror="this.remove()">`:'',li:'33%',disc:`repeating-radial-gradient(circle,rgb(0 0 0 / .16) 0 1px,transparent 1px 3px),conic-gradient(from 40deg,${f.col},#2b2420,${f.col})`})}</span><i class="pvarm" style="left:168px;top:14px;width:5px;height:104px;transform:rotate(${now?24:6}deg)"></i><i class="pvknob" style="left:161px;top:8px;width:18px;height:18px"></i></span>
+      <span class="stnow-t"><span class="pvlab" style="color:${now?'#9ff0b8':'rgb(255 255 255 / .8)'}">${now?'<span class="pvpulse">●</span> Playing now':'Last played'}</span><b>${esc(f.t.t)}</b><span class="pvsm">${esc(f.a.n)}${f.al&&f.al.n?' · '+esc(f.al.n):''}</span><time class="pvmono pvmut st-ago" data-t="${d.ts[f.i]}">${stAgo(d.ts[f.i])}</time></span></button>
+      <div class="stre-l">${rest.join('')}</div></div></section>`}
+function stWave(q,r){const b=plBuckets(q.days,r);if(!b.length)return '';const mx=Math.max(1,...b.map(x=>x.n)),pk=b.reduce((p,x)=>x.n>p.n?x:p,b[0]);
+  const k=Math.min(3,b.length),ticks=[];for(let i=0;i<k;i++)ticks.push(b[k===1?0:Math.round(i*(b.length-1)/(k-1))].l);
+  return `<div class="stwv" role="img" aria-label="Plays over time. Busiest: ${esc(pk.t)}, ${stN(pk.n)} plays.">${b.map((x,i)=>`<span class="pvgrow" style="--d:${Math.min(i,60)}" title="${esc(x.t)}: ${stN(x.n)} plays"><i style="height:${x.n?Math.max(4,Math.round(x.n/mx*100)):2}%${x===pk?';background:#fff':''}"></i></span>`).join('')}</div><div class="pvmono pvmut stax">${ticks.map(t=>`<span>${esc(t).toUpperCase()}</span>`).join('')}</div>`}
+function stClock(q){const mx=Math.max(1,...q.hrs),pk=q.hrs.indexOf(Math.max(...q.hrs)),lo=q.hrs.indexOf(Math.min(...q.hrs));
+  const lines=q.hrs.map((v,h)=>{const a=(h/24)*Math.PI*2-Math.PI/2,r0=112,r1=r0+8+v/mx*82,c=Math.cos(a),s=Math.sin(a);
+    return `<line x1="${(200+c*r0).toFixed(1)}" y1="${(200+s*r0).toFixed(1)}" x2="${(200+c*r1).toFixed(1)}" y2="${(200+s*r1).toFixed(1)}" stroke="${h===pk?'#fff':'rgb(255 255 255 / .42)'}" stroke-width="9" stroke-linecap="round" style="--d:${h}"><title>${stHour(h)}: ${stN(v)} plays</title></line>`}).join('');
+  const lab=[[0,'12 AM'],[6,'6 AM'],[12,'12 PM'],[18,'6 PM']].map(([h,t])=>{const a=(h/24)*Math.PI*2-Math.PI/2;return `<text x="${(200+Math.cos(a)*92).toFixed(1)}" y="${(204+Math.sin(a)*92).toFixed(1)}" text-anchor="middle">${t}</text>`}).join('');
+  return `<div class="stclk"><svg viewBox="0 0 400 400" role="img" aria-label="Plays by hour of the day; most around ${stHour(pk)}">${lines}</svg>
+    <span class="stclk-r">${pvRec(176,{spin:'slow',lc:'#fff',li:'30%',label:`<span class="stclk-l"><b>${stHour(pk)}</b><i>PEAK HOUR</i></span>`})}</span></div>
+    <p class="pvsm">Mostly around <b>${stHour(pk)}</b>. Quietest at ${stHour(lo)}.</p>`}
 function statsView(){
   const demo=!!(UI.stDemo&&PL.demo),d=demo?PL.demo:PL.d;
-  if(!d){plLoad().then(()=>{if(UI.view==='stats')renderSoon()});return `<section class="colv stv"><p class="note" role="status">Loading your play history…</p></section>`}
-  const anim=UI.stAnim;UI.stAnim=false;
-  if(!d.ts.length)return `<section class="colv stv${anim?' stanim':''}" aria-labelledby="st-h"><div class="col-hero st-hero"><div class="col-hero-t"><span class="sl-kind">Your listening</span><h2 id="st-h">Stats</h2></div></div><div class="setcard"><h3>Nothing to show yet</h3><p class="note">Stats needs your play history. Playback now counts every play Spotify reports, from any artist, and your Spotify data export fills in the past. Want to see what it will look like first?</p><div class="tools"><button type="button" class="btn primary" data-act="stdemo">Preview with fake stats</button></div></div>${stManage(d,false)}</section>`;
+  const bgc=['#3d5048','#5a6e78','#7a6650'];
+  if(!d){plLoad().then(()=>{if(UI.view==='stats')renderSoon()});return `<section class="pv pvst">${pvBg(bgc)}<p class="pvsub" role="status">Loading your play history…</p></section>`}
+  const anim=UI.stAnim||PVIN;UI.stAnim=false;
+  if(!d.ts.length)return `<section class="pv pvst" aria-labelledby="st-h">${pvBg(bgc)}<div class="pvhero"><div class="pvht pvrise"><span class="pvk">Your listening</span><h2 id="st-h" class="pvh">Stats</h2><p class="pvsub">Stats needs your play history. Playback counts every play Spotify reports, from any artist, and your Spotify data export fills in the past. Want to see what it will look like first?</p><div class="pvset-sb"><button type="button" class="pvb w" data-act="stdemo">Preview with fake stats</button></div></div></div><div class="pvcard pvdg pvc-legacy">${stManage(d,false)}</div></section>`;
   const now=Math.floor(Date.now()/1000),last=d.ts[d.ts.length-1];
   const key=UI.stR||(last>now-28*86400?'4w':'all'),r=plRange(d,key,now),q=stQ(d,r);
-  const kind=UI.stK||'t',limit=UI.stN||25,chip=(act,v,t,cur)=>`<button type="button" class="chip" data-act="${act}" data-v="${v}" aria-pressed="${cur===v}">${t}</button>`;
+  const kind=UI.stK||'t',limit=UI.stN||12;
   const y0=new Date(d.ts[0]*1000).getFullYear(),y1=new Date(last*1000).getFullYear(),yrs=[];for(let y=y1;y>=y0;y--)yrs.push(y);
   const days=Math.max(1,r.k==='all'?(now-d.ts[0])/86400:Math.min(r.span,(Math.min(r.to,now)-r.from)/86400)),avg=q.n/days;
-  const pkH=q.hrs.indexOf(Math.max(...q.hrs)),dn=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],wk=[1,2,3,4,5,6,0];
-  const pkD=q.dow.indexOf(Math.max(...q.dow));
-  if(anim)setTimeout(rhCount,30);
-  return `<section class="colv stv${anim?' stanim':''}" aria-labelledby="st-h">
-    <div class="col-hero hh-hero st-hero">
-      <div class="col-hero-t"><span class="sl-kind">${esc(r.label)}</span><h2 id="st-h">Stats</h2></div>
-      <div class="col-hero-n"><div><b data-n="${q.n}">${stN(q.n)}</b><span>Plays</span></div><div><b data-n="${Math.round(q.ms/36e5)}">${stN(q.ms/36e5)}</b><span>Hours</span></div><div><b data-n="${q.nT}">${stN(q.nT)}</b><span>Songs</span></div><div><b data-n="${q.nR}">${stN(q.nR)}</b><span>Artists</span></div></div>
-    </div>
-    ${demo?`<div class="st-demo" role="status"><span><b>Fake stats.</b> Made-up listening to show what this page looks like. None of it is yours and none of it is saved.</span><button type="button" class="btn" data-act="stdemooff">Back to my stats</button></div>`:''}
-    ${stRecent(d,UI.stRN||10)}
-    <div class="st-ctl"><div class="hchips" role="group" aria-label="Time range">${[['4w','4 weeks'],['6m','6 months'],['12m','12 months'],['ytd','This year'],['all','All time']].map(x=>chip('strange',x[0],x[1],r.k)).join('')}</div>${yrs.length>1?`<select id="styr" class="st-sel" aria-label="Pick a year"><option value="">Year…</option>${yrs.map(y=>`<option value="${y}"${r.k==='y'+y?' selected':''}>${y}</option>`).join('')}</select>`:''}</div>
-    ${q.n?`<div class="st-grid">
-      <div class="setcard st-main"><div class="hchips" role="group" aria-label="What to rank">${chip('stkind','t','Songs',kind)}${chip('stkind','r','Artists',kind)}${chip('stkind','a','Albums',kind)}</div>${stList(d,q,kind,limit)}</div>
-      <div class="st-side">
-        <div class="setcard"><h3>Plays over time</h3>${stActivity(q,r)}</div>
-        <div class="setcard st-hi"><h3>Highlights</h3><dl>
-          <div><dt>Per day</dt><dd>${avg>=10?stN(avg):avg.toFixed(1)}<small> plays on average</small></dd></div>
-          ${q.best?`<div><dt>Busiest day</dt><dd>${stN(q.best.n)}<small> plays · ${esc(stDay(q.best.dk))}</small></dd></div>`:''}
-          <div><dt>Longest streak</dt><dd>${stN(q.streak)}<small> day${q.streak===1?'':'s'} in a row${q.streakEnd?' · ended '+esc(stDay(q.streakEnd)):''}</small></dd></div>
-          ${r.k!=='all'?`<div><dt>New to you</dt><dd>${stN(q.newT)}<small> songs from ${stN(q.newR)} new artist${q.newR===1?'':'s'}</small></dd></div>`:`<div><dt>Albums</dt><dd>${stN(q.nA)}<small> played</small></dd></div>`}
-        </dl></div>
-        <div class="setcard"><h3>Time of day</h3>${stBars(q.hrs,q.hrs.map((_,h)=>stHour(h)),'st-hrs')}<div class="st-ax" aria-hidden="true"><span>12 AM</span><span>6 AM</span><span>12 PM</span><span>6 PM</span><span>11 PM</span></div><p class="note">Mostly around <b>${stHour(pkH)}</b>.</p></div>
-        <div class="setcard"><h3>Day of the week</h3>${stBars(wk.map(i=>q.dow[i]),wk.map(i=>dn[i]),'st-dow')}<div class="st-ax st-ax7" aria-hidden="true">${wk.map(i=>`<span>${dn[i]}</span>`).join('')}</div><p class="note">Most plays on <b>${['Sundays','Mondays','Tuesdays','Wednesdays','Thursdays','Fridays','Saturdays'][pkD]}</b>.</p></div>
+  /* the period before, for "+18% vs the 4 weeks before" */
+  let cmp='';if(r.k!=='all'){const len=Math.min(r.to,now+1)-r.from,pk='p|'+(d.demo?'d':'r')+'|'+PL.ver+'|'+r.k+'|'+Math.floor(Date.now()/60000);let p=PL.q.get(pk);if(!p){p=plQuery(d,r.from-len,r.from);PL.q.set(pk,p)}
+    if(p.n){const pc=Math.round((q.n-p.n)/p.n*100),dh=(q.ms-p.ms)/36e5;cmp=`${pc>=0?'+':'−'}${Math.abs(pc)}% plays vs the ${/^y/.test(r.k)?'year':'period'} before · ${Math.abs(dh)<1?'about the same time':Math.round(Math.abs(dh))+' h '+(dh>0?'more':'less')}`}}
+  const I=stImgs(),tr=plTop(q,'r',1)[0],top=tr!=null?stItem(d,q,'r',tr,I):null,topA=top&&top.aid?S.music.find(x=>x.id===top.aid):null;
+  const cols=topA?lxCols(topA):top?[top.col,hslHex((accHue(top.name)+40)%360,.4,.32),hslHex((accHue(top.name)+200)%360,.35,.28)]:bgc;
+  const sh=Math.round(q.n?(top?top.n:0)/q.n*100:0);
+  let inLog=0;for(let i=0;i<q.cR.length;i++)if(q.cR[i]&&I.ar.has(d.ar[i].k))inLog+=q.cR[i];const pLog=q.n?Math.round(inLog/q.n*100):0;
+  const dn=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],wk=[1,2,3,4,5,6,0],pkD=q.dow.indexOf(Math.max(...q.dow)),dmx=Math.max(1,...q.dow);
+  const ranges=[['4w','4 weeks'],['6m','6 months'],['12m','12 months'],['ytd','This year'],['all','All time']];
+  return `<section class="pv pvst${anim?'':' pvnoanim'}" aria-labelledby="st-h">${pvBg(cols)}
+    <div class="pvhero sthero"><div class="pvht pvrise"><span class="pvk">Your listening · ${esc(r.label.toLowerCase())}</span><h2 id="st-h" class="pvh">Stats</h2>
+      <div class="stctl">${pvSeg('strange',r.k,ranges,'Time range',false)}${yrs.length>1?`<label class="pvb pvg hsel"><span class="pvsr">Pick a year</span><select id="styr"><option value="">Year</option>${yrs.map(y=>`<option value="${y}"${r.k==='y'+y?' selected':''}>${y}</option>`).join('')}</select><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></label>`:''}</div>
+      <div class="stnums">${[[q.n,'plays'],[q.ms/36e5,'hours'],[q.nT,'songs'],[q.nR,'artists']].map(([v,t])=>`<div><b>${stN(v)}</b><span>${t}</span></div>`).join('')}</div>
+      ${cmp?`<span class="pvmono pvmut stcmp">${cmp}</span>`:''}</div>
+      ${top?`<div class="sttop pvrise${top.img?' ph':''}" style="--d:2">${top.img?`<div class="sttop-ph"><img src="${esc(top.img)}" alt="" decoding="async" onerror="this.parentNode.remove()"></div>`:''}
+        <div class="sttop-t"><span class="pvk">Your #1 artist ${r.k==='4w'?'this month':r.k==='all'?'of all time':'for '+esc(r.label.toLowerCase())}</span><b class="sttop-n">${esc(top.name)}</b><span class="pvsub">${stN(top.n)} plays · ${esc(top.h.replace(' h',' hours'))} · ${sh}% of everything you played</span>
+        <div class="pvset-sb">${top.aid?`<button class="pvb w" data-act="splgo" data-a="${esc(top.aid)}">Open artist →</button>`:''}${topA?`<a class="pvb pvg ic" href="${esc(spOpenUrl(topA))}" target="_blank" rel="noopener" aria-label="Play ${esc(top.name)} on Spotify">${ICO_PLAY}</a>`:''}</div></div></div>`:''}</div>
+    ${demo?`<div class="pvcard pvdg st-demo2" role="status"><span><b>Fake stats.</b> Made-up listening to show what this page looks like. None of it is yours and none of it is saved.</span><button type="button" class="pvb sm w" data-act="stdemooff">Back to my stats</button></div>`:''}
+    ${stRecent2(d,UI.stRN||10)}
+    ${q.n?`<div class="stgrid">
+      <section class="pvcard pvdg stmain pvrise"><div class="pvch"><h3 class="pvh2" style="flex:1">Top ${r.k==='4w'?'of the month':r.k==='all'?'of all time':'of '+esc(r.label.toLowerCase())}</h3>${pvSeg('stkind',kind,[['t','Songs'],['r','Artists'],['a','Albums']],'What to rank',false)}</div>${stPodium(d,q,kind,limit)}</section>
+      <div class="stside">
+        <section class="pvcard pvdg pvrise" style="--d:2"><div class="pvch"><h3 class="pvh3">Plays over time</h3><span class="pvmono pvmut">by ${{d:'day',w:'week',m:'month',y:'year'}[r.gran]}</span></div>${stWave(q,r)}</section>
+        <section class="pvcard pvdg sthi pvrise" style="--d:3"><h3 class="pvh3">Highlights</h3>
+          <div><span class="pvlab">Per day</span><span><b>${avg>=10?stN(avg):avg.toFixed(1)}</b> <span class="pvsm">plays on average</span></span></div>
+          ${q.best?`<div><span class="pvlab">Busiest day</span><span><b>${stN(q.best.n)}</b> <span class="pvsm">plays · ${esc(stDay(q.best.dk))}</span></span></div>`:''}
+          <div><span class="pvlab">Longest streak</span><span><b>${stN(q.streak)}</b> <span class="pvsm">day${q.streak===1?'':'s'} in a row${q.streakEnd?' · ended '+esc(stDay(q.streakEnd)):''}</span></span></div>
+          ${r.k!=='all'?`<div><span class="pvlab">New to you</span><span><b>${stN(q.newT)}</b> <span class="pvsm">songs from ${stN(q.newR)} new artist${q.newR===1?'':'s'}</span></span></div>`:`<div><span class="pvlab">Albums</span><span><b>${stN(q.nA)}</b> <span class="pvsm">played</span></span></div>`}</section>
       </div></div>
-      ${q.est&&!demo?`<p class="note">Plays Playback saw live come without a length, so ${stN(q.est)} of these use the song’s usual length for hours.</p>`:''}`:`<div class="setcard"><p class="note">Nothing played in ${esc(r.label.toLowerCase())}. Try a longer range.</p></div>`}
-    ${stManage(d,demo)}
+      <div class="stgrid2">
+        <section class="pvcard pvdg pvrise"><div class="pvch"><h3 class="pvh3">Time of day</h3><span class="pvmono pvmut">a record for the clock</span></div>${stClock(q)}</section>
+        <section class="pvcard pvdg pvrise" style="--d:2"><h3 class="pvh3">Day of the week</h3><div class="stdw">${wk.map(i=>`<span><span class="pvmono">${stN(q.dow[i])}</span><span class="pvgrow" style="--d:${i};height:${Math.max(3,Math.round(q.dow[i]/dmx*100))}%${i===pkD?';background:#fff':''}"></span><span>${dn[i]}</span></span>`).join('')}</div><p class="pvsm">Most plays on <b>${['Sundays','Mondays','Tuesdays','Wednesdays','Thursdays','Fridays','Saturdays'][pkD]}</b>.</p>
+          <div class="stlog">${pvRec(96,{lit:pLog,lc:'#fff',label:`<b class="pvmono" style="font-size:15px;color:#141414">${pLog}%</b>`,li:'30%'})}<div><b>${pLog}% of plays are from artists in your log</b><div class="pvsm">${100-pLog}% are artists you haven’t added yet. Add one and its plays show up on its songs.</div></div></div></section>
+      </div>
+      ${q.est&&!demo?`<p class="pvsm">Plays Playback saw live come without a length, so ${stN(q.est)} of these use the song’s usual length for hours.</p>`:''}`:`<div class="pvcard pvdg"><p class="pvsub">Nothing played in ${esc(r.label.toLowerCase())}. Try a longer range.</p></div>`}
+    <div class="pvcard pvdg pvc-legacy">${stManage(d,demo)}</div>
   </section>`;
 }
 function plSetHtml(){
@@ -5388,9 +5541,9 @@ function plSetHtml(){
 function stAct(act,b){
   if(act==='stdemo'){if(!PL.demo)PL.demo=plDemo();UI.stDemo=true;UI.stR=null;UI.stN=25;UI.stAnim=true;UI.tab='music';UI.view='stats';window.scrollTo({top:0});return true}
   if(act==='stdemooff'){UI.stDemo=false;UI.stR=null;UI.stN=25;UI.stAnim=true;return true}
-  if(act==='strange'){UI.stR=b.dataset.v;UI.stN=25;UI.stAnim=true;return true}
-  if(act==='stkind'){UI.stK=b.dataset.v;UI.stN=25;UI.stAnim=true;return true}
-  if(act==='stmore'){UI.stN=(UI.stN||25)+25;return true}
+  if(act==='strange'){UI.stR=b.dataset.v;UI.stN=12;UI.stAnim=true;return true}
+  if(act==='stkind'){UI.stK=b.dataset.v;UI.stN=12;UI.stAnim=true;return true}
+  if(act==='stmore'){UI.stN=(UI.stN||12)+25;return true}
   if(act==='strmore'){UI.stRN=(UI.stRN||10)+10;return true}
   if(act==='plcheck'){
     const ids=PL.sync&&PL.sync.heard||[];if(!ids.length)return true;
@@ -9848,7 +10001,7 @@ function pvBg(cols,calm){const c=pvCols(cols);return `<div class="pvbg${calm?' c
 function pvECol(e){if(!e)return '#444';if(e.dx)return acolFor(e.g.id+'~dx',e.g.dxImg,{title:e.title,id:e.g.id+'~dx'});return gCol(e.g,e.art,true)}
 /* a record: size in px, an optional label (html), label color, lit groove (0-100 or a conic string) and spin speed */
 function pvRec(s,o){o=o||{};const lit=o.lit==null?'':typeof o.lit==='string'?o.lit:`conic-gradient(${o.lc||'#fff'} 0 ${Math.max(0,Math.min(100,o.lit)).toFixed(1)}%, rgb(255 255 255 / .14) ${Math.max(0,Math.min(100,o.lit)).toFixed(1)}% 100%)`;
-  return `<span class="pvrec${o.cls?' '+o.cls:''}" style="--s:${s}px${o.lc?';--lc:'+o.lc:''}${o.li?';--li:'+o.li:''}" aria-hidden="true"><i class="rd${o.spin?' pvspin '+o.spin:''}"${o.disc?` style="background:${o.disc}"`:''}></i><i class="rs"></i>${lit?`<i class="lt" style="background:${lit}"></i>`:''}<span class="rl">${o.label||''}</span>${o.label&&/<img/.test(o.label)?'':'<i class="rh"></i>'}</span>`}
+  return `<span class="pvrec${o.cls?' '+o.cls:''}" style="--s:${s}px${o.lc?';--lc:'+o.lc:''}${o.li?';--li:'+o.li:''}" aria-hidden="true"><i class="rd${o.spin?' pvspin '+o.spin:''}"${o.disc?` style="background:${o.disc}"`:''}></i><i class="rs"></i>${lit?`<i class="lt" style="background:${lit}"></i>`:''}<span class="rl">${o.label||''}</span>${o.label?'':'<i class="rh"></i>'}</span>`}
 function pvSleeve(s,art,col,title){return `<span class="pvslv" style="--s:${s}px;--c:${col||'#444'}" aria-hidden="true">${esc(String(title||'?').trim().charAt(0).toUpperCase())}${art?`<img src="${esc(art)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">`:''}</span>`}
 /* a sleeve with its record peeking out (lifts and spins on hover) */
 function pvPack(s,art,col,title,lit,peek){return `<span class="pvpack${peek?' peek':''}" style="--s:${s}px;--ps:${s}px">${pvRec(Math.round(s*.9),{lc:col,lit:lit==null?null:lit})}${pvSleeve(s,art,col,title)}</span>`}
