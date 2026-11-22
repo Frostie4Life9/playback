@@ -2635,14 +2635,16 @@ html.lite #lx .lxbg i{animation:none;filter:blur(70px)}
 @keyframes lxSpin{to{transform:rotate(360deg)}}
 /* the preview: the artist photo fades out to the left and bottom, like the artist page header */
 #lx .lxspot{flex:1 1 520px;min-width:0;position:relative;min-height:clamp(420px,46vh,560px)}
-#lx .lxphw{position:absolute;z-index:1;top:0;right:0;left:var(--lxl,52%);height:var(--lxh,620px);pointer-events:none;will-change:transform}
+#lx .lxphw{position:absolute;z-index:1;top:0;right:0;left:min(var(--lxl,52%),40vw);height:var(--lxh,620px);pointer-events:none;will-change:transform}
 #lx .lxph.lxin{animation:lxFade .7s ease both}
-#lx .lxph{position:absolute;inset:0;overflow:hidden;background:linear-gradient(160deg,color-mix(in srgb,var(--x1) 80%,#fff),var(--x1) 45%,color-mix(in srgb,var(--x1) 55%,#000));
-  -webkit-mask-image:linear-gradient(to right,transparent,#000 34%),linear-gradient(to top,transparent,#000 32%);-webkit-mask-composite:source-in;
-  mask-image:linear-gradient(to right,transparent,#000 34%),linear-gradient(to top,transparent,#000 32%);mask-composite:intersect;transition:background 1.2s}
+#lx .lxph{position:absolute;inset:0;overflow:hidden;-webkit-mask-image:linear-gradient(to right,rgb(0 0 0 / 0.000) 0.0%,rgb(0 0 0 / 0.028) 5.8%,rgb(0 0 0 / 0.104) 11.6%,rgb(0 0 0 / 0.216) 17.4%,rgb(0 0 0 / 0.352) 23.2%,rgb(0 0 0 / 0.500) 29.0%,rgb(0 0 0 / 0.648) 34.8%,rgb(0 0 0 / 0.784) 40.6%,rgb(0 0 0 / 0.896) 46.4%,rgb(0 0 0 / 0.972) 52.2%,rgb(0 0 0 / 1.000) 58.0%),linear-gradient(to bottom,rgb(0 0 0 / 1.000) 56.0%,rgb(0 0 0 / 0.972) 60.3%,rgb(0 0 0 / 0.896) 64.6%,rgb(0 0 0 / 0.784) 68.9%,rgb(0 0 0 / 0.648) 73.2%,rgb(0 0 0 / 0.500) 77.5%,rgb(0 0 0 / 0.352) 81.8%,rgb(0 0 0 / 0.216) 86.1%,rgb(0 0 0 / 0.104) 90.4%,rgb(0 0 0 / 0.028) 94.7%,rgb(0 0 0 / 0.000) 99.0%);-webkit-mask-composite:source-in;mask-image:linear-gradient(to right,rgb(0 0 0 / 0.000) 0.0%,rgb(0 0 0 / 0.028) 5.8%,rgb(0 0 0 / 0.104) 11.6%,rgb(0 0 0 / 0.216) 17.4%,rgb(0 0 0 / 0.352) 23.2%,rgb(0 0 0 / 0.500) 29.0%,rgb(0 0 0 / 0.648) 34.8%,rgb(0 0 0 / 0.784) 40.6%,rgb(0 0 0 / 0.896) 46.4%,rgb(0 0 0 / 0.972) 52.2%,rgb(0 0 0 / 1.000) 58.0%),linear-gradient(to bottom,rgb(0 0 0 / 1.000) 56.0%,rgb(0 0 0 / 0.972) 60.3%,rgb(0 0 0 / 0.896) 64.6%,rgb(0 0 0 / 0.784) 68.9%,rgb(0 0 0 / 0.648) 73.2%,rgb(0 0 0 / 0.500) 77.5%,rgb(0 0 0 / 0.352) 81.8%,rgb(0 0 0 / 0.216) 86.1%,rgb(0 0 0 / 0.104) 90.4%,rgb(0 0 0 / 0.028) 94.7%,rgb(0 0 0 / 0.000) 99.0%);mask-composite:intersect}
+#lx .lxph.np{background:linear-gradient(160deg,color-mix(in srgb,var(--x1) 80%,#fff),var(--x1) 45%,color-mix(in srgb,var(--x1) 55%,#000));transition:background 1.2s}
+#lx .lxph.am{-webkit-mask-image:none;mask-image:none}
+#lx .lxph.am img{left:auto;right:0;width:auto;height:100%;max-width:100%;aspect-ratio:1;object-fit:cover;object-position:50% 0;-webkit-mask-image:linear-gradient(to right,rgb(0 0 0 / 0.000) 0.0%,rgb(0 0 0 / 0.028) 5.8%,rgb(0 0 0 / 0.104) 11.6%,rgb(0 0 0 / 0.216) 17.4%,rgb(0 0 0 / 0.352) 23.2%,rgb(0 0 0 / 0.500) 29.0%,rgb(0 0 0 / 0.648) 34.8%,rgb(0 0 0 / 0.784) 40.6%,rgb(0 0 0 / 0.896) 46.4%,rgb(0 0 0 / 0.972) 52.2%,rgb(0 0 0 / 1.000) 58.0%),linear-gradient(to bottom,rgb(0 0 0 / 1.000) 56.0%,rgb(0 0 0 / 0.972) 60.3%,rgb(0 0 0 / 0.896) 64.6%,rgb(0 0 0 / 0.784) 68.9%,rgb(0 0 0 / 0.648) 73.2%,rgb(0 0 0 / 0.500) 77.5%,rgb(0 0 0 / 0.352) 81.8%,rgb(0 0 0 / 0.216) 86.1%,rgb(0 0 0 / 0.104) 90.4%,rgb(0 0 0 / 0.028) 94.7%,rgb(0 0 0 / 0.000) 99.0%);-webkit-mask-composite:source-in;mask-image:linear-gradient(to right,rgb(0 0 0 / 0.000) 0.0%,rgb(0 0 0 / 0.028) 5.8%,rgb(0 0 0 / 0.104) 11.6%,rgb(0 0 0 / 0.216) 17.4%,rgb(0 0 0 / 0.352) 23.2%,rgb(0 0 0 / 0.500) 29.0%,rgb(0 0 0 / 0.648) 34.8%,rgb(0 0 0 / 0.784) 40.6%,rgb(0 0 0 / 0.896) 46.4%,rgb(0 0 0 / 0.972) 52.2%,rgb(0 0 0 / 1.000) 58.0%),linear-gradient(to bottom,rgb(0 0 0 / 1.000) 56.0%,rgb(0 0 0 / 0.972) 60.3%,rgb(0 0 0 / 0.896) 64.6%,rgb(0 0 0 / 0.784) 68.9%,rgb(0 0 0 / 0.648) 73.2%,rgb(0 0 0 / 0.500) 77.5%,rgb(0 0 0 / 0.352) 81.8%,rgb(0 0 0 / 0.216) 86.1%,rgb(0 0 0 / 0.104) 90.4%,rgb(0 0 0 / 0.028) 94.7%,rgb(0 0 0 / 0.000) 99.0%);mask-composite:intersect}
 #lx .lxph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 22%}
 #lx .lxini{position:absolute;right:6%;bottom:-6%;font:900 clamp(200px,22vw,360px)/1 Archivo,var(--display);color:rgb(255 255 255 / .2)}
 #lx .lxph.lxold{z-index:0}
+#lx .lxph:has(img) .lxini{display:none}
 #lx .lxst{position:absolute;left:0;bottom:0;z-index:2;max-width:86%;display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:0 0 6px 4px}
 #lx .lxn{font:900 clamp(48px,4.8vw,84px)/.92 Archivo,var(--display);letter-spacing:-.04em;text-shadow:0 2px 24px rgb(0 0 0 / .25);overflow-wrap:anywhere}
 #lx .lxl{font:500 clamp(15px,1.25vw,19px)/1.35 var(--body);color:rgb(255 255 255 / .95);text-shadow:0 1px 12px rgb(0 0 0 / .25)}
@@ -2717,6 +2719,27 @@ html.lite #lx .lxbg i{animation:none;filter:blur(70px)}
   #lx.libin .llist .lgrid>*{animation:lxTile .55s cubic-bezier(.2,.8,.2,1) .3s backwards}
   #lx.libin .llist .lgrid>:nth-child(2){animation-delay:.34s}#lx.libin .llist .lgrid>:nth-child(3){animation-delay:.38s}#lx.libin .llist .lgrid>:nth-child(4){animation-delay:.42s}#lx.libin .llist .lgrid>:nth-child(5){animation-delay:.46s}#lx.libin .llist .lgrid>:nth-child(6){animation-delay:.5s}#lx.libin .llist .lgrid>:nth-child(7){animation-delay:.54s}#lx.libin .llist .lgrid>:nth-child(n+8){animation-delay:.58s}
 }
+/* the slim preview that follows you once the hero has scrolled away (PC) */
+#lx .lxminiw{position:sticky;top:10px;height:0;z-index:6;margin-bottom:-26px}
+#lx .lxmini{position:absolute;top:0;left:144px;right:54px;height:76px;box-sizing:border-box;border-radius:24px;padding:8px 10px 8px 8px;
+  background-color:color-mix(in srgb,var(--x1) 42%,rgb(10 12 11 / .9));-webkit-backdrop-filter:blur(22px) saturate(1.2);backdrop-filter:blur(22px) saturate(1.2);
+  box-shadow:0 16px 40px rgb(0 0 0 / .3),inset 0 0 0 1px rgb(255 255 255 / .14);
+  opacity:0;transform:translateY(-16px) scale(.98);pointer-events:none;visibility:hidden;
+  transition:opacity .3s ease,transform .45s cubic-bezier(.2,.8,.2,1),visibility 0s .45s,background-color 1.2s cubic-bezier(.2,.8,.2,1)}
+#lx.lxpast .lxmini{opacity:1;transform:none;pointer-events:auto;visibility:visible;transition:opacity .3s ease,transform .45s cubic-bezier(.2,.8,.2,1),visibility 0s,background-color 1.2s cubic-bezier(.2,.8,.2,1)}
+#lx .lxmc{display:flex;align-items:center;gap:14px;height:100%}
+#lx .lxmc.lxsw .lxmt img,#lx .lxmc.lxsw .lxmn{animation:lxSw .45s cubic-bezier(.2,.8,.2,1) both}
+#lx .lxmt{position:relative;flex:none;width:60px;height:60px;border-radius:16px;overflow:hidden;background:color-mix(in srgb,var(--x1) 70%,#000);display:grid;place-items:center;font:900 28px Archivo,var(--display);color:rgb(255 255 255 / .35)}
+#lx .lxmt img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 20%}
+#lx .lxmn{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+#lx .lxmn .lxk{font-size:10px}
+#lx .lxmn b{font:800 21px/1.1 Archivo,var(--display);letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#lx .lxml{font:500 13px var(--body);color:rgb(255 255 255 / .9);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#lx .lxmc .lxopen{height:46px;padding:0 20px;font-size:15px}
+#lx .lxmc .lxplay{width:46px;height:46px}
+#lx.lxpast .llist.wall .lsec{top:102px}
+#lx.lxpast .lrail{top:102px}
+@media (max-width:760px){#lx .lxminiw{display:none}#lx.lxpast .llist.wall .lsec{top:-18px}}
 @keyframes lxDrop{from{opacity:0;transform:translateY(-26px) scale(1.08) rotate(-40deg)}to{opacity:1;transform:none}}
 @keyframes lxRing{from{--lxp:0}}
 @keyframes lxArm{from{transform:rotate(-30deg)}}
@@ -3733,6 +3756,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.21-u', note:'ARTIST LIBRARY PREVIEW, TAKE TWO: the photo now fades exactly like the artist page header (an Apple Music photo is shown whole on the right, with the same soft eased fades on the left and bottom, and no colored box behind it). And once you scroll past the top of the library, a slim preview bar rides along at the top of the list, so pointing at any artist further down still shows their photo, name, numbers, Open artist and Play, in their colors.'},
   {v:'2026.11.21-t', note:'ARTIST LIBRARY PHOTO, NO SHARP CORNER: the artist photo in the library\u2019s preview now works like the artist page header. It runs to the top and right edges of the window (behind the top bar) and fades only on the left and bottom, instead of sitting in a box with a hard top-right corner. It slides away with the page as you scroll.'},
   {v:'2026.11.21-s', note:'A NEW ARTIST LIBRARY, MADE LIKE AN ARTIST PAGE: All artists is now a page of its own instead of a dark grey sheet. The whole window takes an artist\u2019s colors (the last one you opened), and on a PC pointing at an artist slowly bleeds the page into their colors and shows them on the right with their photo, numbers, Open artist and Play. On the left: a big Artists title, your library numbers (artists, album and song averages, releases) and your library\u2019s own record, one slice per artist sized by the songs you\u2019ve heard, with a ring for everything heard and the arm swinging over as it opens. Search, Show, Sort and Add artist are glass pills like the Releases filter. The groups (A\u2013Z, rating or progress) run down a timeline like the years on an artist\u2019s Releases, with the big letter sticking as you scroll, and a glass A\u2013Z rail on the right. Tiles lose the grey card: a score tinted in the artist\u2019s color, a ring on the record for how much you\u2019ve heard, and a small bar under the name. On a phone it\u2019s the same page stacked, with the record beside the title. Closing it puts you back where you were on the artist page.'},
   {v:'2026.11.21-r', note:'CLEARER GROOVES ON THE SHARE CARD: the lit grooves on the share card\u2019s record are brighter, a little thicker and softly glow in the album\u2019s color, so the color reads clearly while the record still looks real.'},
@@ -7562,7 +7586,8 @@ const lxScroller=()=>{const s=lxEl();return s?s.querySelector(':scope>.libbody')
 function lxGeo(){const side=lxEl(),box=lxScroller(),sp=side&&side.querySelector('.lxspot'),w=side&&side.querySelector('.lxphw');if(!sp||!w||!box)return;
   const r=sp.getBoundingClientRect(),st=box.scrollTop;side.style.setProperty('--lxl',Math.round(r.left)+'px');side.style.setProperty('--lxh',Math.round(r.bottom+st)+'px');
   w.style.transform='translateY('+(-st)+'px)';
-  if(!box._lxs){box._lxs=1;box.addEventListener('scroll',()=>{const ww=side.querySelector('.lxphw');if(ww)ww.style.transform='translateY('+(-box.scrollTop)+'px)'},{passive:true})}}
+  const past=()=>{const h=side.querySelector('.lxhero');if(h)side.classList.toggle('lxpast',h.getBoundingClientRect().bottom<box.getBoundingClientRect().top+24)};past();
+  if(!box._lxs){box._lxs=1;box.addEventListener('scroll',()=>{const ww=side.querySelector('.lxphw');if(ww)ww.style.transform='translateY('+(-box.scrollTop)+'px)';past()},{passive:true})}}
 addEventListener('resize',()=>{if(lxEl())lxGeo()},{passive:true});
 function lxCols(a){const P=heroPalette(a,true).map(x=>x.col),f=acolFallback({title:a.name,id:a.id});
   return [P[0]||f,P[1]||P[0]||f,P[2]||P[1]||P[0]||f]}
@@ -7586,8 +7611,8 @@ const LX_ARROW='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="
 const LX_PLAY='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 4.8v14.4L19 12z" fill="currentColor"/></svg>';
 /* the artist photo is its own layer on the page, not inside the scrolling content: like the artist page header it runs to the
    window's top and right edges (behind the top bar) and fades only on the left and bottom. It moves up as the page scrolls. */
-function lxPhHtml(a){const ph=lxArt(a),ini=([...lName(a)][0]||'#').toUpperCase();
-  return `<div class="lxph" data-aid="${esc(a.id)}"><span class="lxini" aria-hidden="true">${esc(ini)}</span>${ph?`<img src="${esc(ph)}" alt="" decoding="async" onerror="this.remove()">`:''}</div>`}
+function lxPhHtml(a){const ph=lxArt(a),ini=([...lName(a)][0]||'#').toUpperCase(),am=!!(ph&&a.aimg&&ph.indexOf(a.aimg)===0);
+  return `<div class="lxph${ph?(am?' am':''):' np'}" data-aid="${esc(a.id)}"><span class="lxini" aria-hidden="true">${esc(ini)}</span>${ph?`<img src="${esc(ph)}" alt="" decoding="async" onerror="this.remove()">`:''}</div>`}
 function lxSpotHtml(a){const e=current(),cur=!!(e&&e.id===a.id);
   return `<div class="lxspot" data-aid="${esc(a.id)}">
     <div class="lxst">
@@ -7596,6 +7621,11 @@ function lxSpotHtml(a){const e=current(),cur=!!(e&&e.id===a.id);
       <span class="lxl">${esc(lxLine(a))}</span>
       <div class="lxbt"><button class="lxopen" data-act="lxopen" data-id="${esc(a.id)}">Open artist${LX_ARROW}</button><a class="lxplay" href="${esc(spOpenUrl(a))}" data-uri="${esc(spAppUri(a))}" onclick="return spApp(event,this)" target="_blank" rel="noopener noreferrer" aria-label="Play ${esc(a.name)} on Spotify">${LX_PLAY}</a></div>
     </div></div>`}
+/* once the hero scrolls away, a slim copy of the preview rides along at the top, so pointing at any artist still shows them */
+function lxMiniHtml(a){const e=current(),cur=!!(e&&e.id===a.id),th=a.aimg?a.aimg+'/200x200bb.jpg':spPhoto(a),ini=([...lName(a)][0]||'#').toUpperCase();
+  return `<div class="lxmc" data-aid="${esc(a.id)}"><span class="lxmt"><span aria-hidden="true">${esc(ini)}</span>${th?`<img src="${esc(th)}" alt="" decoding="async" onerror="this.remove()">`:''}</span>
+    <span class="lxmn"><span class="lxk">${cur?'Last opened':'Preview'}</span><b>${esc(a.name)}</b><span class="lxml">${esc(lxLine(a))}</span></span>
+    <button class="lxopen" data-act="lxopen" data-id="${esc(a.id)}">Open artist${LX_ARROW}</button><a class="lxplay" href="${esc(spOpenUrl(a))}" data-uri="${esc(spAppUri(a))}" onclick="return spApp(event,this)" target="_blank" rel="noopener noreferrer" aria-label="Play ${esc(a.name)} on Spotify">${LX_PLAY}</a></div>`}
 function lxRec(st,sm){return `<div class="lxrec${sm?' sm':''}" aria-hidden="true"><span class="lxrd" style="background-image:repeating-radial-gradient(circle,rgb(0 0 0 / .2) 0 1px,transparent 1px 3px),${st.disc}"></span><span class="lxring" style="--lxp:${st.p}"></span><span class="lxlab"><b>${st.p}%</b><i>Heard</i></span>${sm?'':'<span class="lxarm"><i></i></span>'}</div>`}
 function lxFinder(list,P,c){
   const st=lxStats(),e=current(),a=S.music.find(x=>x.id===LXS)||e,fmtN=n=>n.toLocaleString();
@@ -7609,6 +7639,7 @@ function lxFinder(list,P,c){
     </div>
     ${a?lxSpotHtml(a):''}
   </div>
+  ${a?`<div class="lxminiw"><div class="lxmini">${lxMiniHtml(a)}</div></div>`:''}
   <div class="lfind lxctl">
     <div class="lxq">
       <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg>
@@ -7627,6 +7658,7 @@ function lxSpot(id){const side=lxEl();if(!side)return;const a=S.music.find(x=>x.
   const sp=side.querySelector('.lxspot');if(!sp||sp.dataset.aid===String(id))return;
   const t=document.createElement('template');t.innerHTML=lxSpotHtml(a).trim();const nw=t.content.firstElementChild;
   nw.classList.add('lxsw');sp.replaceWith(nw);
+  const mi=side.querySelector('.lxmini');if(mi){mi.innerHTML=lxMiniHtml(a);if(!noMotion())mi.firstElementChild.classList.add('lxsw')}
   const w=side.querySelector('.lxphw');if(w){const old=[...w.querySelectorAll('.lxph:not(.lxold)')],t2=document.createElement('template');t2.innerHTML=lxPhHtml(a).trim();const np=t2.content.firstElementChild;
     old.forEach(o=>{o.classList.add('lxold');setTimeout(()=>o.remove(),noMotion()?0:900)});if(!noMotion())np.classList.add('lxin');w.appendChild(np)}}
 document.addEventListener('mouseover',ev=>{const t=ev.target.closest&&ev.target.closest('#lx .tile[data-act="sel"]');if(!t||!matchMedia('(hover:hover)').matches)return;
