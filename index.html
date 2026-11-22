@@ -3545,6 +3545,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.21-o', note:'RANKS THAT DO NOT TIE: an album\u2019s rank (on the inside left of the open album) used to go by the album rating alone, so every 10 was #1 and every 9 shared the same spot. Albums are now ordered by album rating, then by song average (songs you left out of the average stay out), then by plays, more plays ranking higher. Only albums even on all three share a rank. The rank also shows when you have rated just one album by an artist, as #1 of 1, with where it sits across your whole library underneath.'},
   {v:'2026.11.21-n', note:'SMOOTHER SHARE ANIMATION: the animated share card now plays at about 33 frames a second instead of 20, so the record turns, the ring fills and the song bars grow without stepping. Each frame lines up exactly with how GIFs time their frames, so the motion no longer drifts unevenly, and the record now eases up to speed instead of jumping straight into a full spin. Making the animation takes a little longer.'},
   {v:'2026.11.21-m', note:'PLAY, A RICHER INSIDE LEFT, AND THE LAST OLD-STYLE PIECES RESTYLED: an open album has a Play button that starts it from the first song on Spotify, on whichever device has Spotify open (reconnect Spotify once in Settings so Play is allowed to start music). Settings > Play button can switch it to Apple Music, which opens the album in Apple Music. The inside left now shows full spins and hours listened under Plays (song lengths come from Apple Music, once per album), where the album ranks among every album you have rated under the artist rank, and a Hidden gem: a song you rate high but rarely play. The record on the inside left shows which listen you are on. The song average moved out of the album rating pill to its own line heading the song list, so it is not mistaken for the album score. The friends card, the song rating editor and the share card and sheet now use the album\'s colors and the record look. The share sheet also opens above an open album on phones again.'},
   {v:'2026.11.21-l', note:'DELUXE RATING PILL IN THE DELUXE\u2019S COLOR: on an album\u2019s Deluxe edition the rating pill (Your deluxe, song average, record) was still tinted with the standard album\u2019s color. It now takes the deluxe\u2019s own color, matching its song rows and cover.'},
@@ -11082,12 +11083,18 @@ function gfInfo(a,g,dx,shown){
     if(known.length&&known.length>=shown.length*.6){const am=known.reduce((t,i)=>t+i.ms,0)/known.length,ms=shown.reduce((t,i)=>t+plN(i.id)*(i.ms||am),0),h=ms/36e5;
       bits.push(h>=1.5?Math.round(h).toLocaleString()+' hours':h>=.95?'1 hour':Math.max(1,Math.round(ms/6e4))+' min')}
     facts.push(`<div class="gfi-f"><span>Plays</span><b>${plays.toLocaleString()}</b><small>${bits.length?bits.join(' · '):shown.filter(i=>plN(i.id)).length+' of '+shown.length+' songs played'}</small></div>`)}
-  if(can&&rating(g.id)){const gk=relKindOf(g),kin=a.groups.filter(x=>RATEABLE.includes(x.kind)&&relKindOf(x)===gk&&rating(x.id));   /* ranked against its own kind: albums against albums, EPs against EPs */
-    if(kin.length>1){const me=rating(g.id),hi=kin.filter(x=>rating(x.id)>me).length,tie=kin.filter(x=>rating(x.id)===me).length>1;
+  /* 2026.11.21-o: ranks no longer tie on the album score alone. Albums are ordered by your album rating, then by the song
+     average (songs left out of the average stay out), then by plays (more plays ranks higher). Only albums still even on all
+     three share a rank. Shown even with one rated album, as "#1 of 1", since the line under it ranks it across your whole log. */
+  if(can&&rating(g.id)){const gk=relKindOf(g),rkKey=x=>{const its=stdItems(x),rs=its.map(i=>avgR(i.id)).filter(Boolean);return [rating(x.id),rs.length?rs.reduce((t,v)=>t+v,0)/rs.length:0,its.reduce((t,i)=>t+(plN(i.id)||0),0)]},
+      rkCmp=(p,q)=>(q[0]-p[0])||(Math.abs(q[1]-p[1])<1e-9?0:q[1]-p[1])||(q[2]-p[2]),me=rkKey(g),
+      place=keys=>({pos:keys.filter(k=>rkCmp(k,me)<0).length+1,tie:keys.filter(k=>rkCmp(k,me)===0).length>1});
+    const kin=a.groups.filter(x=>RATEABLE.includes(x.kind)&&relKindOf(x)===gk&&rating(x.id)).map(rkKey);   /* ranked against its own kind: albums against albums, EPs against EPs */
+    if(kin.length){const ak=place(kin);
       /* and where it sits among every rated album (or EP) in your log; an album on several artists' pages counts once */
-      const seen=new Set(),all=[];for(const x of S.music||[])for(const y of x.groups){if(!RATEABLE.includes(y.kind)||relKindOf(y)!==gk||!rating(y.id))continue;const kk=nTitle(y.title)+'|'+(y.year||'');if(seen.has(kk))continue;seen.add(kk);all.push(rating(y.id))}
-      const ov=all.length>kin.length?`#${all.filter(v=>v>me).length+1} of your ${all.length.toLocaleString()} ${esc((REL_KINDS[gk]||'records').toLowerCase())}`:'';
-      facts.push(`<div class="gfi-f"><span>Rank</span><b>#${hi+1}<i> of ${kin.length}</i></b><small>${ov||((tie?'tied, ':'')+'among '+esc(a.name)+'’s rated '+esc((REL_KINDS[gk]||'records').toLowerCase()))}</small></div>`)}}
+      const seen=new Set(),all=[];for(const x of S.music||[])for(const y of x.groups){if(!RATEABLE.includes(y.kind)||relKindOf(y)!==gk||!rating(y.id))continue;const kk=nTitle(y.title)+'|'+(y.year||'');if(seen.has(kk))continue;seen.add(kk);all.push(rkKey(y))}
+      const lk=place(all),ov=all.length>kin.length?`${lk.tie?'tied ':''}#${lk.pos} of your ${all.length.toLocaleString()} ${esc((REL_KINDS[gk]||'records').toLowerCase())}`:'';
+      facts.push(`<div class="gfi-f"><span>Rank</span><b>#${ak.pos}<i> of ${kin.length}</i></b><small>${ov||((ak.tie?'tied, ':'')+'among '+esc(a.name)+'’s rated '+esc((REL_KINDS[gk]||'records').toLowerCase()))}</small></div>`)}}
   /* ties on the score are settled by plays (2026.11.21-d): of two songs both rated 9, the one you play more is the best song;
      of two rated 6, the one you play less is the weakest. Still even after that, the earlier track wins best and the later one weakest. */
   if(rt.length>1){const pn=x=>plN(x.i.id)||0,ix=x=>shown.indexOf(x.i);
