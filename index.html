@@ -3392,6 +3392,59 @@ html.lite .hx .hxfp{-webkit-backdrop-filter:none;backdrop-filter:none;background
   .hxrel .hxprog .hxt{font-size:17px}
   .hx .rseg button .c{margin-left:4px}
 }
+
+/* ===== 2026.11.23-k: the welcome screen on a new log, made like the library page ===== */
+#lx.lxe{--x1l:color-mix(in srgb,var(--x1) 55%,#fff);--x3l:color-mix(in srgb,var(--x3) 45%,#fff)}
+#lx .lxrec0 .lxrd{background:repeating-radial-gradient(circle,rgb(255 255 255 / .07) 0 1px,transparent 1px 4px),radial-gradient(circle,#1d1b22 0 60%,#131217)}
+#lx .lxrec0 .lxlab{background:color-mix(in srgb,var(--x1) 55%,#fff);color:#fff}
+#lx .lxrec0 .lxlab b{color:#fff;text-shadow:0 1px 6px rgb(0 0 0 / .25)}
+#lx .lxrec0 .lxlab i{color:rgb(255 255 255 / .9)}
+#lx .lxstart{flex:1 1 520px;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;gap:14px;padding:0 0 6px 4px;min-height:clamp(420px,46vh,560px)}
+#lx .lxsh{margin:0;font:900 clamp(52px,5.4vw,96px)/.92 Archivo,var(--display);letter-spacing:-.04em;color:#fff;text-shadow:0 2px 24px rgb(0 0 0 / .25)}
+#lx .lxsp{margin:0;max-width:30ch;font:500 clamp(16px,1.35vw,21px)/1.4 var(--body);color:rgb(255 255 255 / .94)}
+#lx .lxstart .lxopen svg{width:19px;height:19px}
+#lx .lxstart .lxopen:hover svg{transform:scale(1.1)}
+#lx .lxhow{height:56px;padding:0 24px;border:0;border-radius:999px;color:#fff;font:600 16px var(--body);background:rgb(255 255 255 / .16);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);cursor:pointer;transition:background .2s,transform .15s}
+#lx .lxhow:hover{background:rgb(255 255 255 / .28)}#lx .lxhow:active{transform:scale(.97)}
+#lx .lxstep .tcov{position:relative;display:grid;place-items:center}
+#lx .lxstep .tcov{width:73.5%}
+#lx .lxstep:not(.add) .tcov{background:rgb(255 255 255 / .08);border:1px solid rgb(255 255 255 / .14)}
+#lx .lxstep .tm{margin-top:0;color:rgb(255 255 255 / .78);font:500 12.5px/1.35 var(--body)}
+#lx .lxsn{position:absolute;left:10px;top:10px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#141414;font:700 13px var(--mono)}
+#lx .lxsr{width:70%;height:70%;filter:drop-shadow(0 10px 20px rgb(0 0 0 / .35))}
+#lx .lxs10{display:flex;flex-direction:column;align-items:center;gap:12px;width:70%}
+#lx .lxs10 b{font:900 clamp(40px,3.6vw,56px)/1 Archivo,var(--display);color:#fff}
+#lx .lxs10 i{display:block;width:100%;height:8px;border-radius:8px;background:rgb(255 255 255 / .2);overflow:hidden}
+#lx .lxs10 u{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,var(--x1l),var(--x3l))}
+@media (prefers-reduced-motion:no-preference){
+  #lx .lxsr{animation:lxSpin 9s linear infinite}
+  #lx.libin .lxstart>*{animation:lxSw .7s cubic-bezier(.2,.8,.2,1) backwards}
+  #lx.libin .lxstart>:nth-child(1){animation-delay:.2s}#lx.libin .lxstart>:nth-child(2){animation-delay:.28s}#lx.libin .lxstart>:nth-child(3){animation-delay:.36s}#lx.libin .lxstart>:nth-child(4){animation-delay:.44s}
+  #lx.libin .llist .lgrid>.lxstep{animation-delay:calc(.5s + var(--i) * .09s)}
+  #lx .lxsr circle[stroke^="var"]{animation:lxGlow 2.4s ease-in-out infinite alternate}
+}
+@keyframes lxGlow{from{opacity:.55}to{opacity:1}}
+@media (max-width:760px){
+  #lx .lxstart{min-height:0;justify-content:flex-start;padding:22px 0 8px;gap:12px}
+  #lx .lxsh{font-size:44px}
+  #lx .lxbt{flex-wrap:wrap}
+  #lx .lxstart .lxopen,#lx .lxhow{height:50px}
+  #lx .lxstart .lxopen{flex:1 1 100%;justify-content:center}
+  #lx .lxhow{flex:1 1 100%}
+  #lx .lgrid:has(.lxstep){grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 10px}
+  #lx .lxstep .tm{display:none}
+  #lx .lxstep .tcov{width:100%}
+  #lx .lxsn{width:22px;height:22px;font-size:11px;left:7px;top:7px}
+  #lx .lxs10 b{font-size:28px}
+}
+/* the tour on the new look: a dark glass card */
+.tour-spot{outline-color:#fff;border-radius:999px}
+.tour-card{background:rgb(24 22 30 / .82);color:#fff;border:1px solid rgb(255 255 255 / .14);-webkit-backdrop-filter:blur(22px) saturate(1.3);backdrop-filter:blur(22px) saturate(1.3);box-shadow:0 24px 60px rgb(0 0 0 / .5)}
+.tour-n{color:rgb(255 255 255 / .7)}
+.tour-t{color:rgb(255 255 255 / .92)}
+.tour-dots i{background:rgb(255 255 255 / .25)}.tour-dots i.on{background:#fff}
+.tour-skip{color:rgb(255 255 255 / .75)}.tour-skip:hover{color:#fff}
+.tour-next.btn.primary{background:#fff;color:#141414;border-radius:999px;border:0}
 </style>
 <style id="pv-css">
 /* 2026.11.22-b THE PAGE REDESIGN (Account, Friends, Stats, Listen list, History, Settings) in the Sleeve/Crate look:
@@ -4530,6 +4583,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.23-k', note:'A NEW WELCOME SCREEN: a brand-new log no longer opens on the old grey layout (an empty Artists list on the left, a white Start your log card on the right). It now opens on the library page itself, in the dusk and orchid of the app icon: Artists with a blank record on the left (every artist you add becomes a slice of it), Start your log on the right with Search for an artist and How Playback works, and a Start here row underneath on the same timeline your artists will fill (1 Add an artist, 2 Rate the songs, 3 Rate the album). It all rises in when the app opens, and Search for an artist opens the glass Add an artist sheet. On a phone it stacks. The first-run tour card is now dark glass with white buttons to match.'},
   {v:'2026.11.23-j', note:'ARTIST ART CLEANUP: the fan-art collecting (fanart.tv, TheAudioDB, Deezer) and the Spotify banner helper are removed. Nothing used them automatically anymore, and the collecting still cost sync-Worker calls every time an artist was opened. What stays: each artist\u2019s official Apple and Spotify photos, shared out so the tile, the artist page and the library preview beside the wall don\u2019t show the same one. Details is back to just Spotify / Apple Music.'},
   {v:'2026.11.23-i', note:'APP BAR COLOR: Playback\u2019s color in the app bar at the top (and in your other apps\u2019 bars) is now orchid to match the new icon, instead of the old teal, and the bar shows the new icon.'},
   {v:'2026.11.23-h', note:'NEW APP ICON: Playback has a new icon. A black record on a dusk background, its grooves lit one song at a time from the outer edge in, the way you rate an album, with the last few still dark. A spark sits on the newest lit groove, and the cream label holds a play button inside a 10-segment rating ring. It is used for the home screen, installed app, tab icon and the suite bar. Phones may keep showing the old icon until Playback is removed and added to the home screen again.'},
@@ -8865,7 +8919,7 @@ function lAlbums(sums,q){
   return `<section class="lsect"><div class="lsec" data-sec="Albums"><span>Albums</span><span>${hits.length}</span></div><div class="lgrid">${shown.map(tile).join('')}</div></section>`}
 function sideList(list,e){
   LRAIL=[];LRAZ=false;
-  if(!list.length)return '<p class="lempty">Nothing here yet.</p>';
+  if(!list.length)return lxOn()&&lxEmpty()?lxStartSteps():'<p class="lempty">Nothing here yet.</p>';
   const P=lPrefs(),q=nrm(UI.lq[UI.tab]||'').trim(),raw=(UI.lq[UI.tab]||'').trim(),music=UI.tab==='music';
   LRAZ=P.sort==='az'&&!q;
   /* 2026.11.21-w: searching offers to add what you typed as a new artist */
@@ -8910,7 +8964,10 @@ function lRedraw(){const el=document.getElementById('llist');if(el)el.innerHTML=
    whose slices are your artists (sized by the songs you have heard), a preview of the artist on the right, glass controls,
    and the A–Z (or rating) groups run down a timeline like the Releases do. Pointing at an artist (PC) slowly bleeds the
    page into their colors and swaps the preview, without redrawing anything. */
-const lxOn=()=>UI.tab==='music'&&!!UI.libOpen&&!UI.view;
+/* 2026.11.23-k: a brand-new log (no artists yet) gets the library page too, as its welcome screen, instead of the old grey layout */
+const lxEmpty=()=>UI.tab==='music'&&!UI.view&&!(S.music&&S.music.length);
+const LX_EMPTY_COLS=['#5a3f86','#2c6c74','#9a4f74'];   /* the dusk and orchid of the app icon */
+const lxOn=()=>UI.tab==='music'&&((!!UI.libOpen&&!UI.view)||lxEmpty());
 let LXS=null,LXT=0,LXC={k:null,v:null},LXY=null,LXU=0;
 const lxEl=()=>document.querySelector('#lx:not(.libghost)');
 const lxScroller=()=>{const s=lxEl();return s?s.querySelector(':scope>.libbody'):null};
@@ -8965,7 +9022,38 @@ function lxMiniHtml(a){const e=current(),cur=!!(e&&e.id===a.id),th=lxMiniSrc(a),
     <span class="lxmn"><span class="lxk">${cur?'Last opened':'Preview'}</span><b>${esc(a.name)}</b><span class="lxml">${esc(lxLine(a))}</span></span>
     <button class="lxopen" data-act="lxopen" data-id="${esc(a.id)}">Open artist${LX_ARROW}</button><a class="lxplay" href="${esc(spOpenUrl(a))}" data-uri="${esc(spAppUri(a))}" onclick="return spApp(event,this)" target="_blank" rel="noopener noreferrer" aria-label="Play ${esc(a.name)} on Spotify">${LX_PLAY}</a></div>`}
 function lxRec(st,sm){return `<div class="lxrec${sm?' sm':''}" aria-hidden="true"><span class="lxrd" style="background-image:repeating-radial-gradient(circle,rgb(0 0 0 / .2) 0 1px,transparent 1px 3px),${st.disc}"></span><span class="lxring" style="--lxp:${st.p}"></span><span class="lxlab"><b>${st.p}%</b><i>Rated</i></span>${sm?'':'<span class="lxarm"><i></i></span>'}</div>`}
+/* ===== 2026.11.23-k: THE WELCOME SCREEN, MADE LIKE THE LIBRARY =====
+   A new log opens on the library page in the app icon's dusk colors: Artists with an empty record on the left, Start your log
+   on the right, and three steps underneath on the same timeline the artists will fill. */
+const LX_SEARCH='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg>';
+function lxStartHero(){
+  const rec=`<div class="lxrec lxrec0" aria-hidden="true"><span class="lxrd"></span><span class="lxring" style="--lxp:0"></span><span class="lxlab"><b>0</b><i>Artists</i></span><span class="lxarm"><i></i></span></div>`,
+    recSm=`<div class="lxrec lxrec0 sm" aria-hidden="true"><span class="lxrd"></span><span class="lxlab"><b>0</b></span></div>`;
+  return `<div class="lxhero">
+    <div class="lxlib">
+      <div class="lxtop"><span class="lxkick">Your library</span></div>
+      <div class="lxtitle"><h2 class="lxh">Artists</h2>${recSm}</div>
+      <p class="lxsub">No artists yet</p>
+      <div class="lxrw">${rec}<div class="lxrt"><b>A blank record</b><span>Every artist you add becomes a slice of it</span><small>The ring fills as you rate their songs</small></div></div>
+    </div>
+    <div class="lxstart">
+      <span class="lxk">Welcome to Playback</span>
+      <h2 class="lxsh">Start your log</h2>
+      <p class="lxsp">Search for an artist, then rate the albums you have heard.</p>
+      <div class="lxbt"><button class="lxopen startbtn" data-act="addart">${LX_SEARCH}Search for an artist</button><button class="lxhow" data-act="tourgo">How Playback works</button></div>
+    </div>
+  </div>`}
+function lxStartSteps(){
+  const grooves=n=>Array.from({length:6},(_,j)=>`<circle cx="50" cy="50" r="${44-j*5}" fill="none" stroke="${j<n?'var(--x3l)':'rgb(255 255 255 / .16)'}" stroke-width="2.2"/>`).join('');
+  const rec=n=>`<svg class="lxsr" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="48" fill="#141317"/>${grooves(n)}<circle cx="50" cy="50" r="13" fill="var(--x1l)"/><circle cx="50" cy="50" r="2.5" fill="#141317"/></svg>`;
+  const step=(i,t,d,art)=>`<div class="tile lxstep" style="--i:${i}"><span class="tcov">${art}<span class="lxsn">${i+1}</span></span><span class="tn">${t}</span><span class="tm">${d}</span></div>`;
+  return `<section class="lsect"><div class="lsec lng" data-sec="Start here"><span>Start here</span><span>3 steps</span></div><div class="lgrid">
+    <button class="tile add lxstep" data-act="addart" style="--i:0"><span class="tcov"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="lxsn">1</span></span><span class="tn">Add an artist</span><span class="tm">Their albums come with them</span></button>
+    ${step(1,'Rate the songs','A groove lights up for each one',rec(4))}
+    ${step(2,'Rate the album','1 to 10, halves allowed','<span class="lxs10" aria-hidden="true"><b>8.5</b><i><u style="width:85%"></u></i></span>')}
+  </div></section>`}
 function lxFinder(list,P,c){
+  if(!S.music.length)return lxStartHero();
   const st=lxStats(),e=current(),a=S.music.find(x=>x.id===LXS)||e,fmtN=n=>n.toLocaleString();
   const sub=[st.n+' artist'+(st.n===1?'':'s'),st.aAvg&&'Albums '+st.aAvg,st.sAvg&&'Songs '+st.sAvg,fmtN(st.rel)+' release'+(st.rel===1?'':'s')].filter(Boolean).join(' · ');
   return `<div class="lxhero">
@@ -9282,11 +9370,11 @@ function render(){
   if(GFX)gfFxRun();
 }
 let LIBIN=false;   /* set by renderMain for the one draw that opens the artist menu */
-function mainAside(e,list){const full=!!(UI.libOpen&&e);   /* in the full artist menu the Add an artist box sits inside it (on a phone the menu covers the page, so a box outside it could never be seen) */
+function mainAside(e,list){const emp=!e&&lxEmpty(),full=!!(UI.libOpen&&e)||emp;   /* in the full artist menu the Add an artist box sits inside it (on a phone the menu covers the page, so a box outside it could never be seen) */
   const lx=full&&UI.tab==='music';if(lx&&LIBIN)LXS=null;
-  const la=lx?(S.music.find(x=>x.id===LXS)||e):null,lc=la?lxCols(la):null;
-  return `<aside class="side ${UI.libOpen||!e?'libopen':''}${UI.libOpen&&e?' libfull':''}${LIBIN&&UI.libOpen&&e?' libin':''}${lx?' lx':''}"${lx?` id="lx" style="--x1:${esc(lc[0])};--x2:${esc(lc[1])};--x3:${esc(lc[2])}"`:''}>
-      ${lx?'<div class="lxbg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i></div><div class="lxphw" aria-hidden="true">'+lxPhHtml(la)+'</div>':''}
+  const la=lx?(S.music.find(x=>x.id===LXS)||e):null,lc=la?lxCols(la):LX_EMPTY_COLS,fresh=emp&&!document.querySelector('#lx.lxe');
+  return `<aside class="side ${UI.libOpen||!e?'libopen':''}${full?' libfull':''}${(LIBIN&&UI.libOpen&&e)||fresh?' libin':''}${lx?' lx':''}${emp?' lxe':''}"${lx?` id="lx" style="--x1:${esc(lc[0])};--x2:${esc(lc[1])};--x3:${esc(lc[2])}"`:''}>
+      ${lx?'<div class="lxbg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i></div>'+(la?'<div class="lxphw" aria-hidden="true">'+lxPhHtml(la)+'</div>':''):''}
       ${e?`<button class="libbtn" data-act="lib" aria-expanded="${!!UI.libOpen}"><span class="label">${UI.tab==='music'?'Artists':'Shows & films'} \u00b7 ${list.length}</span><b>${esc(e.name||e.title)}</b><span class="libsw">${UI.libOpen?'Close':'Switch'}</span></button>`:''}
       <div class="libbody">
       ${sideFinder(list)}
@@ -9339,6 +9427,7 @@ function mainSheet0(e){
   /* 2026.11.21-w: while the artist library covers the window, the last artist's page is not drawn under it (it is drawn on the
      one draw that opens the library, so the library can fade in over it). It used to be rebuilt under the library on every redraw. */
   if(e&&UI.tab==='music'&&UI.libOpen&&!UI.view&&!LIBIN)return '<section class="sheet lxunder" aria-hidden="true"></section>';
+  if(!e&&lxEmpty())return '<section class="sheet lxunder" aria-hidden="true"></section>';   /* 2026.11.23-k: the welcome lives on the library page */
   return `<section class="sheet" aria-live="polite">${e?(UI.tab==='music'?backLibBtn()+artistView(e):e.type==='film'?filmView(e):showView(e)):(UI.tab==='music'?startView():'<p class="empty">Tap Add artist or the + button to add your first one.</p>')}</section>`}
 function mainView(e,list,out){const a=mainAside(e,list);if(out)out.aside=a;return `
 
