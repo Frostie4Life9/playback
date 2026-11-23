@@ -11,9 +11,9 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Playback">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<link rel="manifest" href="manifest.webmanifest?v=20261021a">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=20261021a">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=20261021a">
+<link rel="manifest" href="manifest.webmanifest?v=20261123h">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=20261123h">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=20261123h">
 <title>Playback</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Fraunces:ital,opsz,wght@1,9..144,600&family=Manrope:wght@600;700&family=Instrument+Sans:wght@400;500;600&family=Archivo:wdth,wght@100..125,500..900&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -4531,6 +4531,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.23-h', note:'NEW APP ICON: Playback has a new icon. A black record on a dusk background, its grooves lit one song at a time from the outer edge in, the way you rate an album, with the last few still dark. A spark sits on the newest lit groove, and the cream label holds a play button inside a 10-segment rating ring. It is used for the home screen, installed app, tab icon and the suite bar. Phones may keep showing the old icon until Playback is removed and added to the home screen again.'},
   {v:'2026.11.23-g', note:'SPOTIFY BANNERS: the wide banner on an artist\u2019s Spotify page (their own, kept current, 1920 x 1080) can now fill the artist page header on wide screens. Spotify doesn\u2019t hand it out, so it comes from the new Playback Spotify banner helper: install it in Tampermonkey from frostie4life9.github.io/playback/spotify-banner.user.js, then open any artist on open.spotify.com and the next time Playback is open it picks the banner up. With a banner in the header, the library preview and tile get the Apple and Spotify photos, so all three are different. Banner / Spotify / Apple Music in Details switches it per artist; very thin banners are skipped.'},
   {v:'2026.11.23-f', note:'OFFICIAL PHOTOS ONLY, NO ALBUMS: background art from fan sites is no longer picked automatically (much of it was years old, and some was drawn fan art); it is still there under Art / Next in Details if you want one. Album covers no longer stand in for artist photos anywhere. Each artist\u2019s Apple and Spotify photos are shared out so places on the same screen never match: the artist page uses Apple\u2019s, the tile Spotify\u2019s, the library preview never repeats the tile beside it, and Stats avoids the artist page photo.'},
   {v:'2026.11.23-e', note:'ARTIST TILES ARE PHOTOS AGAIN: the last version gave tiles an album when the artist\u2019s other photos were used elsewhere, which made the wall look like albums. Tiles now pick a photo right after the artist page header and always show a photo when the artist has one (an album only when there is none). The library preview and Stats are the places that fall back to albums.'},
