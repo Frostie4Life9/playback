@@ -4531,6 +4531,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.23-c', note:'ART SHARPNESS: some background art is only 1280 pixels wide and looked soft stretched across a wide header (Daniel Caesar). Backgrounds narrower than 1600 pixels are no longer picked automatically (the Art and next buttons in Details still show them), so the header keeps Apple\u2019s sharper photo unless a sharp background is found. Artists are scored again the next time their page opens.'},
   {v:'2026.11.23-b', note:'MORE ARTIST ART, FIT CHECK LOOSENED: the first version only accepted a background when the artist sat well to the right, but the header only fades the far left, so a centered artist looks fine and most good backgrounds were being skipped. Artists already opened are scored again the next time their page opens. In Details, the Art button and the 1/N button show how many backgrounds an artist has.'},
   {v:'2026.11.23-a', note:'MORE ARTIST ART: so the same photo doesn\u2019t show everywhere, Playback now collects extra pictures for each artist from fanart.tv, TheAudioDB and Deezer and picks them itself the first time you open their page. On wide screens the header uses the best wide background (scored on where the artist sits, since the left side fades into the colors, and on fanart.tv likes; duplicates across sites are skipped). If none fits, the Apple or Spotify photo stays. Stats gets a different photo from the library where there is one. To change it, open Details: Art turns background art on, the 1/4 button flips to the next one, and Spotify or Apple Music turns it off for that artist. Phones keep the Apple/Spotify photo. Each artist is checked again every 60 days.'},
   {v:'2026.11.22-q', note:'SUGGEST A CHANGE: press Alt+S on any page (or Settings, Help & feedback, Suggest a change) and jot down something you want changed while it is in front of you. Point at it picks the exact thing you mean: the sheet steps aside, whatever is under your pointer gets an outline, and a tap picks it without pressing it. The suggestion saves the page, artist and open album with it, plus what you pointed at (its text, where it sits and how it looks), so it makes sense later. The same sheet switches to Report a bug, which now also opens with Alt+B (Ctrl+Shift+B still works). Ctrl+Enter sends. Your inbox in Owner tools is now Bugs & suggestions, with a filter for each.'},
@@ -11970,13 +11971,16 @@ async function artProbe(full,prev){
   }
   return null;
 }
+/* the real size of a picture, read straight into an <img> (no CORS needed); 0 when it can't be read */
+const artNat=u=>new Promise(r=>{const i=new Image(),t=setTimeout(()=>r(0),9000);i.onload=()=>{clearTimeout(t);r(i.naturalWidth||0)};i.onerror=()=>{clearTimeout(t);r(0)};i.src=u});
+const ART_MINW=1600;   /* narrower than this looks soft stretched across a wide header: kept in Next, never picked automatically */
 const artSame=(p,q)=>{if(!p||!q)return false;let n=0;for(let i=0;i<64;i++)if(p[i]!==q[i])n++;return n<=10};
 async function artLoad(){
   const h=document.querySelector('.head.hero.hx');if(!h||ARTX.busy||!amArtCan())return;
   const a=(S.music||[]).find(x=>x.id===h.dataset.aid);
   if(!a||a.example||!a.mbid||!/^[0-9a-f-]{36}$/i.test(a.mbid))return;
   const now=Date.now(),old=a.art&&a.art.mb!==a.mbid;
-  if(a.art&&!old&&a.art.v===2&&a.art.at>now-ART_RECHECK)return;   /* v2: the fit check was loosened, so earlier picks are scored again */
+  if(a.art&&!old&&a.art.v===3&&a.art.at>now-ART_RECHECK)return;   /* v3: picks are scored again when the checks change */
   if(a.artTry&&a.artTry>now-864e5)return;   /* a failed try waits a day */
   ARTX.busy=true;a.artTry=now;
   try{
@@ -11992,6 +11996,8 @@ async function artLoad(){
       bg.push({u,sc,ok:place>=.18&&!r.flat?1:0,x:r.cx<.5?0:50});
     }
     bg.sort((p,q)=>q.ok-p.ok||q.sc-p.sc);
+    await Promise.all(bg.slice(0,6).map(async b=>{b.w=await artNat(b.u);if(b.w&&b.w<ART_MINW)b.ok=0}));
+    bg.sort((p,q)=>q.ok-p.ok||q.sc-p.sc);
     /* square photos: keep ones that aren't the Apple or Spotify photo, for Stats */
     const mine=[];
     for(const u of [a.aimg?a.aimg+'/300x300bb.jpg':'',a.simg||a.img||''].filter(Boolean)){const r=await artProbe(u,'');if(r)mine.push(r.hash)}
@@ -12002,7 +12008,7 @@ async function artLoad(){
       sq.push(r.used);   /* the size that loaded: the preview when there is one (Stats shows it small) */
     }
     const prevBg=a.art&&!old?a.art.bg:null,keepPick=a.artI!=null&&prevBg&&prevBg[(a.artI|0)%prevBg.length];
-    a.art={at:Date.now(),mb:a.mbid,v:2,bg:bg.map(b=>[b.u,b.x,b.ok]),sq};
+    a.art={at:Date.now(),mb:a.mbid,v:3,bg:bg.map(b=>[b.u,b.x,b.ok,b.w||0]),sq};
     if(keepPick){const i=a.art.bg.findIndex(b=>b[0]===keepPick[0]);if(i>=0)a.artI=i;else delete a.artI}   /* a hand pick survives a recheck */
     else if(old)delete a.artI;
     delete a.artTry;save();
