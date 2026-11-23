@@ -4531,6 +4531,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.23-e', note:'ARTIST TILES ARE PHOTOS AGAIN: the last version gave tiles an album when the artist\u2019s other photos were used elsewhere, which made the wall look like albums. Tiles now pick a photo right after the artist page header and always show a photo when the artist has one (an album only when there is none). The library preview and Stats are the places that fall back to albums.'},
   {v:'2026.11.23-d', note:'A DIFFERENT PICTURE IN EACH PLACE: an artist no longer shows the same photo on their tile, the artist page, the library preview (Last opened) and Stats. Each place gets its own picture from Apple, Spotify, fanart.tv, TheAudioDB and Deezer, only if it is sharp enough for that size, with copies of the same photo across sites counted once. When there is no other good photo, a place shows the artist\u2019s albums instead (the preview and Stats take the albums after the one on the tile), so nothing gets softer. Extra photos are collected the first time you open an artist, so artists you open get more variety.'},
   {v:'2026.11.23-c', note:'ART SHARPNESS: some background art is only 1280 pixels wide and looked soft stretched across a wide header (Daniel Caesar). Backgrounds narrower than 1600 pixels are no longer picked automatically (the Art and next buttons in Details still show them), so the header keeps Apple\u2019s sharper photo unless a sharp background is found. Artists are scored again the next time their page opens.'},
   {v:'2026.11.23-b', note:'MORE ARTIST ART, FIT CHECK LOOSENED: the first version only accepted a background when the artist sat well to the right, but the header only fades the far left, so a centered artist looks fine and most good backgrounds were being skipped. Artists already opened are scored again the next time their page opens. In Details, the Art button and the 1/N button show how many backgrounds an artist has.'},
@@ -11942,7 +11943,7 @@ function artIs(a,u){const c=artOn(a)&&artCur(a);return !!c&&c[0]===u}
 /* ===== ART PLAN (2026.11.23-d) =====
    One artist shows up in a chain of places: their tile, the artist page header, the library's Preview / Last opened, the slim
    copy of it, and Stats' #1 artist. Each place gets a DIFFERENT picture, and only one that is sharp enough for its size:
-     header (set by the switch: Apple, Spotify or background art)  >  library preview (900 px+)  >  Stats (600 px+)  >  tile (240 px+)  >  slim copy (150 px+)
+     header (set by the switch: Apple, Spotify or background art)  >  tile (240 px+, always a photo if there is one)  >  library preview (900 px+)  >  Stats (600 px+)  >  slim copy (150 px+)
    The pool is Apple's photo, Spotify's, and the square photos from fanart.tv / TheAudioDB / Deezer, with copies of the same
    picture across sites counted once. A place with no distinct sharp photo left shows the artist's music instead of a weaker
    photo: the tile its best-rated album (as before), the preview and Stats the next albums down (Apple's sharp covers only for
@@ -11960,11 +11961,13 @@ function artPlan(a){
   const hd=artOn(a)?'bg':(phSrcPref(a)==='am'&&a.aimg)?'am':sp?'sp':'am';
   const hdH=(P.find(x=>x.id===hd)||{}).h,used=new Set([hd]);
   const take=min=>{const x=P.find(p=>!used.has(p.id)&&p.w>=min&&!(hdH&&p.h&&artSame(p.h,hdH)));if(x)used.add(x.id);return x||null};
-  const hero=take(900),stats=take(600),tile=take(240),mini=take(150);
+  const tile=take(240),hero=take(900),stats=take(600),mini=take(150);   /* the tile picks right after the header: it is how you recognize the artist */
   /* covers, best-rated first; the tile keeps its own best album, the others take the next ones down */
   const tc=lCover(a),cu=new Set(),cv=(a.groups||[]).filter(g=>g.img).map(g=>[g,rating(g.id)||0]).sort((x,y)=>y[1]-x[1]).map(x=>x[0]);
   const cov=big=>{for(const g of cv){if(cu.has(g.id))continue;if(big&&!amIsArt(g.img))continue;cu.add(g.id);return big?amSized(g.img,1200):g.img}return ''};
-  let tileU='';if(tile)tileU=tile.u(400);else if(tc){tileU=tc.u;cu.add(tc.g.id)}
+  /* the tile is always a photo when the artist has one (the header's own photo before any album); an album only when there is no photo at all */
+  const any=P.find(x=>x.id===hd)||P[0];
+  let tileU='';if(tile)tileU=tile.u(400);else if(any)tileU=any.u(400);else if(tc){tileU=tc.u;cu.add(tc.g.id)}
   const heroU=hero?hero.u(1200):cov(true),statsU=stats?stats.u(900):cov(false);
   const p={tile:tileU,hero:heroU,heroSq:hero?!!hero.sq:true,stats:statsU,mini:mini?mini.u(200):''};
   ARTPL.set(a.id,{sig,p});return p;
