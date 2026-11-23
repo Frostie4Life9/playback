@@ -314,21 +314,6 @@ async function artImg(url, ctx) {
   if (ctx) ctx.waitUntil(c.put(ck, r.clone()).catch(() => {}));
   return r;
 }
-async function spBanTest(env) {
-  const out = {};
-  const body = JSON.stringify({ variables: { uri: 'spotify:artist:0du5cEVh5yTK9QJze8zA0C', locale: '', preReleaseV2: false, includeMusicVideoPreviews: false }, operationName: 'queryArtistOverview', extensions: { persistedQuery: { version: 1, sha256Hash: 'eafb1620d783ece118e72fbfede2b0064483e029d3c1aafafa1c2de0e25a89e7' } } });
-  const pf = async (tok, ct) => { try { const r = await fetch('https://api-partner.spotify.com/pathfinder/v2/query', { method: 'POST', headers: Object.assign({ authorization: 'Bearer ' + tok, 'content-type': 'application/json;charset=UTF-8', accept: 'application/json', 'app-platform': 'WebPlayer' }, ct ? { 'client-token': ct } : {}), body }); const t = await r.text(); return { s: r.status, banner: /headerImage[^]{0,300}?ab676186/.test(t), len: t.length, head: r.status === 200 ? '' : t.slice(0, 160) }; } catch (e) { return { err: String(e) }; } };
-  const auth = await getJSON(env, SP_AUTH);
-  out.userTokenFresh = !!(auth && auth.at && Date.now() < (auth.exp || 0));
-  if (out.userTokenFresh) out.withUserToken = await pf(auth.at);
-  for (const [k, u] of [['getAccessToken', 'https://open.spotify.com/get_access_token?reason=transport&productType=web_player'], ['apiToken', 'https://open.spotify.com/api/token?reason=init&productType=web-player']]) {
-    try { const r = await fetch(u, { headers: { 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36', accept: 'application/json' } }); const t = await r.text(); let j = null; try { j = JSON.parse(t); } catch (e) {}
-      out[k] = { s: r.status, gotToken: !!(j && j.accessToken), anon: j ? j.isAnonymous : null, head: j && j.accessToken ? '' : t.slice(0, 160) };
-      if (j && j.accessToken) out[k].pathfinder = await pf(j.accessToken);
-    } catch (e) { out[k] = { err: String(e) }; }
-  }
-  return reply(out);
-}
 async function appleArt(url) {
   const id = (url.searchParams.get('id') || '').replace(/\D/g, '');
   if (!id || id.length > 12) return reply({ error: 'bad id' }, 400);
@@ -1152,8 +1137,7 @@ export default {
     const url = new URL(request.url);
     if (url.pathname === '/brief' && request.method === 'GET') return briefGet(env, url);   /* its own read-only key */
     if (url.pathname === '/photo' && request.method === 'GET') return photoGet(env, url);   /* signed link, no sync key */
-    if (url.pathname === '/art/img' && request.method === 'GET') return artImg(url, ctx);
-    if (url.pathname === '/spban/test' && request.method === 'GET') return spBanTest(env);   /* TEMPORARY: banner feasibility, reports only status codes */   /* art hosts only, for scoring (version 23) */
+    if (url.pathname === '/art/img' && request.method === 'GET') return artImg(url, ctx);   /* art hosts only, for scoring (version 23) */
     if (url.pathname === '/suggest' && request.method === 'POST') return sugPost(request, env);   /* open to friends, rate limited */
     if (url.pathname === '/bug' && request.method === 'POST') return bugPost(request, env);   /* open to friends, rate limited, kept in D1 */
     if (url.pathname.startsWith('/acct/')) return acct(request, env, url);   /* Google sign-in token or its own session token, never the sync key */
