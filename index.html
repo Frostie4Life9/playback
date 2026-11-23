@@ -1428,6 +1428,8 @@ body:has(.head.hero.hx) .backlib{display:none}
 .hx .hphoto img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 20%;animation:hPh .8s ease both}
 @keyframes hPh{from{opacity:0;transform:scale(1.04)}}
 @media (prefers-reduced-motion:reduce){.hx .hphoto img{animation:none}}
+.hx .hphoto.art img{object-position:var(--ox,50%) 30%}
+.hsrc .hsnext{font-variant-numeric:tabular-nums}
 /* Apple's artist photo is a tight square crop: filling the wide header with it cuts off his lower half, so on a wide screen it is shown whole, as tall as the header and pinned to the right, its left edge fading into the colors */
 @media (min-width:761px){
   .hx .hphoto.am img{width:auto;height:100%;max-width:100%;aspect-ratio:1;margin-left:auto;object-position:50% 0;
@@ -4529,6 +4531,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.23-a', note:'MORE ARTIST ART: so the same photo doesn\u2019t show everywhere, Playback now collects extra pictures for each artist from fanart.tv, TheAudioDB and Deezer and picks them itself the first time you open their page. On wide screens the header uses the best wide background (scored on where the artist sits, since the left side fades into the colors, and on fanart.tv likes; duplicates across sites are skipped). If none fits, the Apple or Spotify photo stays. Stats gets a different photo from the library where there is one. To change it, open Details: Art turns background art on, the 1/4 button flips to the next one, and Spotify or Apple Music turns it off for that artist. Phones keep the Apple/Spotify photo. Each artist is checked again every 60 days.'},
   {v:'2026.11.22-q', note:'SUGGEST A CHANGE: press Alt+S on any page (or Settings, Help & feedback, Suggest a change) and jot down something you want changed while it is in front of you. Point at it picks the exact thing you mean: the sheet steps aside, whatever is under your pointer gets an outline, and a tap picks it without pressing it. The suggestion saves the page, artist and open album with it, plus what you pointed at (its text, where it sits and how it looks), so it makes sense later. The same sheet switches to Report a bug, which now also opens with Alt+B (Ctrl+Shift+B still works). Ctrl+Enter sends. Your inbox in Owner tools is now Bugs & suggestions, with a filter for each.'},
   {v:'2026.11.22-p', note:'REPORT A BUG: a new Report a bug button in Settings, Help & feedback (or Ctrl+Shift+B on a computer, from any page) opens a sheet over the page you are on. Describe what went wrong and the report also carries what Playback was doing: the last taps, any errors, failed network calls, the build and whether this device is running an older cached copy, the device and screen, lite mode, the page and the app state. Never your ratings, sync key or sign-in. The crash card now sends that same full report (and shows for the owner too). Reports land in Owner tools, Bug reports, where each can be copied or marked done; they are kept on the Worker in D1, so they do not use up the daily KV writes.'},
   {v:'2026.11.22-o', note:'STREAMING DATE FIXED AND ON THE TOP LINE: the streaming note vanished after the app restarted, because the start-up tidy rebuilds every imported artist\u2019s albums and dropped it (it also reset the monthly MusicBrainz check, so each artist page would have asked again every visit). Now the rebuild keeps it, a copy is saved with the original date so it can always be restored, and notes already lost come back from Apple Music the next time you open that artist. The note sits at the end of the open album\u2019s top line with a gap instead of dots: Studio album 2020   Streaming Jan 17, 2025. Singles too.'},
@@ -5013,6 +5016,7 @@ function mergeSameArtists(){
       if(!keep.simg&&o.simg)keep.simg=o.simg;
       if(!keep.simgHi&&o.simgHi)keep.simgHi=o.simgHi;
       if(!keep.aimg&&o.aimg){keep.aimg=o.aimg;if(o.aamid)keep.aamid=o.aamid}
+      if(!keep.art&&o.art)keep.art=o.art;
       akaSet(keep,{name:o.name,aka:o.aka});
       S.music=S.music.filter(x=>x!==o);
     }
@@ -5729,7 +5733,7 @@ const stHour=h=>(h%12||12)+(h<12?' AM':' PM');
 function stImgs(){
   const sig=plSig();if(PL.img&&PL.imgSig===sig)return PL.img;
   const m={ar:new Map(),al:new Map(),alg:new Map()};
-  for(const a of S.music){const k=nArtist(a.name),g0=a.groups.find(g=>g.img);m.ar.set(k,{img:a.simg||a.img||(g0?g0.img:''),id:a.id});
+  for(const a of S.music){const k=nArtist(a.name),g0=a.groups.find(g=>g.img);m.ar.set(k,{img:artSq(a)||a.simg||a.img||(g0?g0.img:''),id:a.id});
     for(const g of a.groups){const lk=k+'|'+plAlbKey(g.title);if(!m.alg.has(lk))m.alg.set(lk,g);if(!m.al.has(lk)||(g.img&&!m.al.get(lk)))m.al.set(lk,g.img||'')}}
   PL.img=m;PL.imgSig=sig;return m;
 }
@@ -9248,7 +9252,7 @@ function render(){
   if(keepHx){const e=document.querySelector('.hx .hxrow');if(e&&!e.scrollLeft)e.scrollLeft=keepHx}
   if(keepSim){const e=document.querySelector('.simrow');if(e&&!e.scrollLeft)e.scrollLeft=keepSim}
   phHiLoad();
-  phAmLoad();amcLoad();
+  phAmLoad();amcLoad();artLoad();
   dtLoad();origLoad();
   if(UI.alb){const a=(S.music||[]).find(x=>x.id===UI.alb.aid),g=a&&a.groups.find(x=>String(x.id)===UI.alb.g);if(g&&READY&&navigator.onLine)msLoad(a,g)}
   hxDrift();
@@ -11851,7 +11855,7 @@ function heroX(a,all,done,rated,p,phUrl,more,addP){
   const panel=UI.hinfo?`<div class="hxpanel${UI.hinfoOut?' out':pin?' in':''}" role="dialog" aria-label="Artist details">${hxSrcHtml(a)}<div class="hstats"><div><b>${done}<small> /${all.length}</small></b><span>tracks heard</span></div><div><b>${rated}</b><span>rated</span></div><div><b>${a.groups.length}</b><span>releases</span></div></div>${mbArtistBar(a)}<div class="hxpdel">${delBtn(a.id,'Delete artist')}</div></div>`:'';
   return `<div class="head hero hx${hClear()?' hclear':''}${phUrl?'':' nophoto'}" data-aid="${esc(a.id)}" style="${esc(heroStyle(a))}"><div class="hxbg" aria-hidden="true"><div class="hmesh"><i class="hbase"></i><i class="fl fl0"><i class="fb b0"></i><i class="fb b3"></i></i><i class="fl fl1"><i class="fb b1"></i><i class="fb b4"></i></i><i class="fl fl2"><i class="fb b2"></i><i class="fb b5"></i></i></div></div>
     <div class="hxtop">
-    ${phUrl?`<div class="hphoto${a.aimg&&phUrl===amPhoto(a)?' am':''}" aria-hidden="true"><img src="${esc(phUrl)}" alt="" decoding="async"${PHSEEN===a.id+'|'+phUrl?' style="animation:none"':''} onload="phSeen(this)" onerror="this.parentNode.remove()"></div>`:''}<i class="hscrim" aria-hidden="true"></i>
+    ${phUrl?`<div class="hphoto${a.aimg&&phUrl===amPhoto(a)?' am':''}${artIs(a,phUrl)?' art':''}" aria-hidden="true" style="--ox:${artIs(a,phUrl)?artCur(a)[1]:50}%"><img src="${esc(phUrl)}" alt="" decoding="async"${PHSEEN===a.id+'|'+phUrl?' style="animation:none"':''} onload="phSeen(this)" onerror="this.parentNode.remove()"></div>`:''}<i class="hscrim" aria-hidden="true"></i>
     <div class="hxin">
       <button class="hxback" data-act="hback">${ico.back}All artists</button>
       <div class="meta"><h2>${esc(a.name)}</h2>${a.aka&&a.aka.length?`<span class="note">also ${esc(a.aka.slice(0,3).join(' · '))}</span>`:''}</div>
@@ -11878,11 +11882,12 @@ function spPhoto(a){return a.simgHi||a.simg||a.img||''}
 function amPhoto(a){return a.aimg?a.aimg+'/'+(innerWidth<700?'1600x1600bb.jpg':'2400x2400bb.jpg'):''}
 /* the choice is kept on each artist (a.phsrc, synced with the log), so switching one artist to Spotify leaves everyone else on Apple Music */
 function phSrcPref(a){return a&&(a.phsrc==='sp'||(a.phsrc!=='am'&&phDef()==='sp'))?'sp':'am'}   /* Apple Music's photo by default (sharper); Spotify is the choice in Details */
-function phPick(a){return phSrcPref(a)==='am'&&a.aimg?amPhoto(a):(spPhoto(a)||amPhoto(a))}
+function phPick(a){if(artOn(a))return artCur(a)[0];return phSrcPref(a)==='am'&&a.aimg?amPhoto(a):(spPhoto(a)||amPhoto(a))}
 function hxSrcHtml(a){
-  if(!a||!((a.aimg&&spPhoto(a))||amcHas(a)))return '';
-  const am=phSrcPref(a)==='am';
-  return `<div class="hsrc" role="group" aria-label="Artist photo and album cover source"><span class="hsl">${a.aimg&&spPhoto(a)?'Photo &amp; covers':'Covers'}</span><button type="button" data-act="hsrc" data-v="sp" aria-pressed="${!am}">Spotify</button><button type="button" data-act="hsrc" data-v="am" aria-pressed="${am}">Apple Music</button></div>`;
+  const nb=artBgs(a).length;
+  if(!a||!((a.aimg&&spPhoto(a))||amcHas(a)||nb))return '';
+  const on=artOn(a),am=!on&&phSrcPref(a)==='am';
+  return `<div class="hsrc" role="group" aria-label="Artist photo and album cover source"><span class="hsl">${a.aimg&&spPhoto(a)?'Photo &amp; covers':'Covers'}</span><button type="button" data-act="hsrc" data-v="sp" aria-pressed="${!on&&!am}">Spotify</button><button type="button" data-act="hsrc" data-v="am" aria-pressed="${am}">Apple Music</button>${nb?`<button type="button" class="hsart" data-act="hsrc" data-v="art" aria-pressed="${on}" title="Wide background art (shown on wide screens)">Art</button>${nb>1?`<button type="button" class="hsnext" data-act="artnext" aria-label="Next background" title="Next background">${on?((a.artI|0)%nb)+1:1}/${nb} \u203a</button>`:''}`:''}</div>`;
 }
 let PHSEEN='';   /* which artist's photo (id|url) has already faded in, so a redraw of the same page never replays the fade */
 function phSeen(im){const h=im.closest('.hero[data-aid]');PHSEEN=(h?h.dataset.aid:'')+'|'+im.getAttribute('src')}
@@ -11901,14 +11906,111 @@ function phXfade(im,want){
 /* swap the picture in place (no redraw, so the colors keep flowing): fade the old one out, fade the new one in */
 function phSetSrc(v){
   const h=document.querySelector('.head.hero.hx'),a=h&&(S.music||[]).find(x=>x.id===h.dataset.aid);if(!a)return;
-  const nv=v==='am'?'am':'sp';if(phSrcPref(a)!==nv){if(nv===phDef())delete a.phsrc;else a.phsrc=nv;save()}   /* this artist only */
-  if(amcApply(a)){save();renderSoon()}   /* 2026.11.21-v: the switch takes the artist's album covers with it */
-  h.querySelectorAll('.hsrc button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===(v==='am'?'am':'sp'))));
+  if(v==='art'){if(a.artOff||a.artI==null){delete a.artOff;if(a.artI==null)a.artI=0;save()}}   /* 2026.11.23-a: background art, this artist only */
+  else{
+    if(artBgs(a).length&&!a.artOff){a.artOff=1;save()}   /* picking a photo turns this artist's automatic art off */
+    const nv=v==='am'?'am':'sp';if(phSrcPref(a)!==nv){if(nv===phDef())delete a.phsrc;else a.phsrc=nv;save()}   /* this artist only */
+    if(amcApply(a)){save();renderSoon()}}   /* 2026.11.21-v: the switch takes the artist's album covers with it */
+  const sel=artOn(a)?'art':phSrcPref(a);
+  h.querySelectorAll('.hsrc button[data-act="hsrc"]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===sel)));
+  const nx=h.querySelector('.hsnext');if(nx){const n=artBgs(a).length;nx.textContent=(artOn(a)?((a.artI|0)%n)+1:1)+'/'+n+' \u203a'}
   const im=h.querySelector('.hphoto img'),u=phPick(a);if(!im||!u||im.getAttribute('src')===u)return;
   const still=matchMedia('(prefers-reduced-motion:reduce)').matches,t=new Image();
   im.style.animation='none';im.style.transition=still?'none':'opacity .22s ease';im.style.opacity='.0';
-  const ph=im.parentNode,go=()=>{if(ph)ph.classList.toggle('am',u===amPhoto(a));im.src=u;requestAnimationFrame(()=>{im.style.opacity='1'})};
+  const ph=im.parentNode,go=()=>{if(ph){ph.classList.toggle('am',u===amPhoto(a));ph.classList.toggle('art',artIs(a,u));ph.style.setProperty('--ox',(artIs(a,u)?artCur(a)[1]:50)+'%')}im.src=u;requestAnimationFrame(()=>{im.style.opacity='1'})};
   t.onload=()=>setTimeout(go,still?0:200);t.onerror=()=>{im.style.opacity='1'};t.src=u;
+}
+/* ===== MORE ARTIST ART (2026.11.23-a) =====
+   So the same photo doesn't show up everywhere, Playback collects extra pictures for each artist from fanart.tv, TheAudioDB and
+   Deezer (through the sync Worker, version 23, by the artist's MusicBrainz id) and picks them itself, once per artist:
+   - Wide backgrounds are scored for the desktop header: where the detail sits (the left of the header fades into the colors, so a
+     subject on the left loses), the source (fanart.tv backgrounds are made for this; its likes count too) and duplicates (the same
+     picture often sits on both sites). The best one is used automatically if it fits; Art / Next in Details override it.
+   - Square photos that aren't the same picture as the Apple or Spotify photo go to Stats, so it doesn't repeat the library.
+   Picks are kept on the artist (a.art, synced) and looked at again after 60 days. Phones keep the Apple/Spotify photo. */
+const ART_RECHECK=60*864e5,ARTX={busy:false};
+const artWide=()=>innerWidth>=761;
+function artBgs(a){return(a&&a.art&&a.art.bg)||[]}
+function artCur(a){const L=artBgs(a);return L.length?L[(a.artI|0)%L.length]:null}
+/* on when: wide screen, not turned off for this artist, and either picked by hand (Art / Next) or the best one passed the checks */
+function artOn(a){if(!a||a.artOff||!artWide())return false;const L=artBgs(a);return !!L.length&&(a.artI!=null||L[0][2]===1)}
+function artIs(a,u){const c=artOn(a)&&artCur(a);return !!c&&c[0]===u}
+function artSq(a){return(a&&a.art&&a.art.sq&&a.art.sq[0])||''}
+function artNext(){
+  const h=document.querySelector('.head.hero.hx'),a=h&&(S.music||[]).find(x=>x.id===h.dataset.aid);if(!a)return;
+  const n=artBgs(a).length;if(!n)return;
+  a.artI=artOn(a)?((a.artI|0)+1)%n:(a.artI|0);delete a.artOff;save();phSetSrc('art');
+}
+const artBase=()=>((ownSync()&&SY.url)?SY.url:SUG_URL).replace(/\/+$/,'');
+async function artList(a,fresh){
+  const q='/art?mb='+encodeURIComponent(a.mbid)+'&n='+encodeURIComponent(a.name||'')+(fresh?'&fresh=1':'');
+  if(ownSync()&&SY.url){const r=await fetch(SY.url.replace(/\/+$/,'')+q,{cache:'no-store',headers:{...syH()}});
+    const j=await r.json().catch(()=>null);return{status:r.status,j:j||{}}}
+  return accApi('GET',q)}
+/* read a picture's pixels (small preview first, the full one if there is no preview) and work out where its detail sits and a
+   fingerprint (a 64-bit difference hash) to spot the same picture across sites */
+async function artProbe(full,prev){
+  for(const u of (prev&&prev!==full?[prev,full]:[full])){
+    try{
+      const r=await fetch(artBase()+'/art/img?u='+encodeURIComponent(u));if(!r.ok)continue;
+      const bm=await createImageBitmap(await r.blob());
+      const w=96,h=Math.max(8,Math.round(w*bm.height/bm.width)),c=document.createElement('canvas');c.width=w;c.height=h;
+      const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(bm,0,0,w,h);
+      const d=x.getImageData(0,0,w,h).data,g=new Float32Array(w*h);
+      for(let i=0;i<w*h;i++)g[i]=.299*d[i*4]+.587*d[i*4+1]+.114*d[i*4+2];
+      let tot=0,sx=0,sy=0,left=0;
+      for(let yy=1;yy<h-1;yy++)for(let xx=1;xx<w-1;xx++){const i=yy*w+xx,gx=g[i+1]-g[i-1],gy=g[i+w]-g[i-w],m=gx*gx+gy*gy;tot+=m;sx+=m*xx;sy+=m*yy;if(xx<w*.4)left+=m}
+      c.width=9;c.height=8;const y2=c.getContext('2d',{willReadFrequently:true});y2.drawImage(bm,0,0,9,8);
+      const e=y2.getImageData(0,0,9,8).data,lum=i=>.299*e[i*4]+.587*e[i*4+1]+.114*e[i*4+2];let hash='';
+      for(let yy=0;yy<8;yy++)for(let xx=0;xx<8;xx++)hash+=lum(yy*9+xx)<lum(yy*9+xx+1)?'1':'0';
+      const ar=bm.width/bm.height;bm.close&&bm.close();
+      return{used:u,ar,cx:tot?sx/tot/(w-1):.5,cy:tot?sy/tot/(h-1):.5,left:tot?left/tot:.4,hash,flat:tot/(w*h)<40};
+    }catch(e){}
+  }
+  return null;
+}
+const artSame=(p,q)=>{if(!p||!q)return false;let n=0;for(let i=0;i<64;i++)if(p[i]!==q[i])n++;return n<=10};
+async function artLoad(){
+  const h=document.querySelector('.head.hero.hx');if(!h||ARTX.busy||!amArtCan())return;
+  const a=(S.music||[]).find(x=>x.id===h.dataset.aid);
+  if(!a||a.example||!a.mbid||!/^[0-9a-f-]{36}$/i.test(a.mbid))return;
+  const now=Date.now(),old=a.art&&a.art.mb!==a.mbid;
+  if(a.art&&!old&&a.art.at>now-ART_RECHECK)return;
+  if(a.artTry&&a.artTry>now-864e5)return;   /* a failed try waits a day */
+  ARTX.busy=true;a.artTry=now;
+  try{
+    const {status,j}=await artList(a,false);
+    if(status!==200||!j||!Array.isArray(j.bg))return;
+    /* backgrounds: score each, drop near-duplicates (keep the better-ranked copy) */
+    const bg=[],seen=[];
+    for(const [u,p,src,lk] of j.bg.slice(0,8)){
+      const r=await artProbe(u,p);if(!r||r.ar<1.4)continue;   /* not wide enough for the header */
+      if(seen.some(x=>artSame(x,r.hash)))continue;seen.push(r.hash);
+      const place=Math.max(0,Math.min(1,(r.cx-.38)/.27))*.6+Math.max(0,Math.min(1,(.42-r.left)/.25))*.4;   /* detail toward the right, little on the fading left */
+      const sc=(src==='fa'?1:.7)+Math.min(Math.log2(1+(lk||0))*.12,.5)+place*1.2-(r.flat?.6:0);
+      bg.push({u,sc,ok:place>=.35&&!r.flat?1:0,x:r.cx<.5?0:50});
+    }
+    bg.sort((p,q)=>q.ok-p.ok||q.sc-p.sc);
+    /* square photos: keep ones that aren't the Apple or Spotify photo, for Stats */
+    const mine=[];
+    for(const u of [a.aimg?a.aimg+'/300x300bb.jpg':'',a.simg||a.img||''].filter(Boolean)){const r=await artProbe(u,'');if(r)mine.push(r.hash)}
+    const sq=[];
+    for(const [u,p] of (j.sq||[]).slice(0,5)){
+      const r=await artProbe(u,p);if(!r)continue;
+      if(mine.some(x=>artSame(x,r.hash))||seen.some(x=>artSame(x,r.hash)))continue;seen.push(r.hash);
+      sq.push(r.used);   /* the size that loaded: the preview when there is one (Stats shows it small) */
+    }
+    const prevBg=a.art&&!old?a.art.bg:null,keepPick=a.artI!=null&&prevBg&&prevBg[(a.artI|0)%prevBg.length];
+    a.art={at:Date.now(),mb:a.mbid,bg:bg.map(b=>[b.u,b.x,b.ok]),sq};
+    if(keepPick){const i=a.art.bg.findIndex(b=>b[0]===keepPick[0]);if(i>=0)a.artI=i;else delete a.artI}   /* a hand pick survives a recheck */
+    else if(old)delete a.artI;
+    delete a.artTry;save();
+    const cur=document.querySelector('.head.hero.hx[data-aid="'+a.id+'"]');if(!cur)return;
+    const pn=cur.querySelector('.hxpanel');if(pn){const html=hxSrcHtml(a),o=pn.querySelector('.hsrc');if(o)o.outerHTML=html;else if(html)pn.insertAdjacentHTML('afterbegin',html)}
+    if(!cur.querySelector('.hphoto')){if(artOn(a))renderSoon();return}
+    if(artOn(a))phSetSrc('art');   /* the picked background fades in over the photo */
+  }catch(e){}
+  finally{ARTX.busy=false}
 }
 /* ===== APPLE MUSIC ALBUM COVERS (2026.11.21-v) =====
    Covers come from Apple Music by default, like artist photos: they are sharper (Apple serves any size, the open album
@@ -13901,6 +14003,7 @@ document.addEventListener('click',ev=>{
     if(rt&&!matchMedia('(prefers-reduced-motion:reduce)').matches){UI.rClosing=true;const cid=UI.rOpen,fly=rtFlyPrep(cid);rt.classList.remove('rt-in');rt.classList.add('rt-out');
       setTimeout(()=>{UI.rClosing=false;UI.rOpen=null;if(fly)UI.rLand=cid;render()},230);rtFlyGo(fly);return}}
   if(act==='hsrc'){phSetSrc(b.dataset.v);return}
+  if(act==='artnext'){artNext();return}
   if(act==='view'){UI.view=b.dataset.v;UI.rOpen=null;if(UI.view==='account'){pReset();if(b.dataset.tab==='c')UI.pTab='c';UI.pAnim=true}if(UI.view==='friends'){UI.pAnim=true;ACX.anim=true}if(UI.view==='history'){UI.hAnim=true;UI.hEdit=null}window.scrollTo({top:0})}
   else if(act==='lib'){UI.libOpen=!UI.libOpen;UI.libAnim=UI.libOpen;if(UI.libOpen){UI.addOpen=false;lxFlyHome()}else lxGhostClose()}
   else if(act==='addclose'){lxAddClose();return}

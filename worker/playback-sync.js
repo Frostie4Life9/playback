@@ -122,7 +122,7 @@ const CORS = {
   'Access-Control-Allow-Headers': 'content-type, x-sync-key, authorization',
   'Access-Control-Expose-Headers': 'x-pb-worker, retry-after, x-pb-cache',
   'Access-Control-Max-Age': '86400',
-  'x-pb-worker': '22'
+  'x-pb-worker': '23'
 };
 const JSON_H = Object.assign({ 'content-type': 'application/json', 'cache-control': 'no-store' }, CORS);
 const GZ_H = Object.assign({ 'content-type': 'application/gzip', 'cache-control': 'no-store' }, CORS);
@@ -245,6 +245,73 @@ async function appleArtCached(env, url, who) {
     if (r.status === 200) { try { v = (await r.clone().json()).base || 'none'; } catch (e) {} }
     try { await env.CATALOG.prepare('INSERT OR REPLACE INTO catalog (k, v, exp) VALUES (?1, ?2, ?3)').bind(ck, v, Date.now() + (v === 'none' ? AART_MISS_TTL : AART_TTL) * 1000).run(); } catch (e) { /* skip saving */ }
   }
+  return r;
+}
+/* MORE ARTIST ART (version 23): wide backgrounds and extra photos from fanart.tv, TheAudioDB and Deezer, so the same picture
+   doesn't show everywhere. One artist's list (by MusicBrainz id) is saved in CATALOG for 30 days (a miss for 7), shared by
+   everyone; a signed-in friend may ask for ART_CAP fresh ones a day. fanart.tv needs the FANART_KEY secret (without it, the
+   other two still answer). The app scores the pictures itself and remembers its picks, so each artist is looked at once. */
+const ART_TTL = 30 * 86400, ART_MISS_TTL = 7 * 86400, ART_CAP = 120;
+const ART_UA = 'PlaybackApp/1.0 (+https://frostie4life9.github.io/playback/)';
+const ART_HOSTS = /^https:\/\/(assets\.fanart\.tv|r2\.theaudiodb\.com|www\.theaudiodb\.com|cdn-images\.dzcdn\.net|e-cdns-images\.dzcdn\.net|is\d+-ssl\.mzstatic\.com|i\.scdn\.co)\//;
+const artNorm = t => String(t || '').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^\p{L}\p{N}]+/gu, '');
+async function artGet(env, url, who) {
+  const mb = (url.searchParams.get('mb') || '').toLowerCase();
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(mb)) return reply({ error: 'bad id' }, 400);
+  const name = (url.searchParams.get('n') || '').slice(0, 120);
+  const ck = 'art:' + mb;
+  if (env.CATALOG && url.searchParams.get('fresh') !== '1') {
+    const hit = await env.CATALOG.prepare('SELECT v FROM catalog WHERE k = ?1 AND exp > ?2').bind(ck, Date.now()).first('v').catch(() => null);
+    if (hit) return new Response(hit, { headers: Object.assign({ 'x-pb-cache': 'hit' }, JSON_H) });
+  }
+  if (who !== 'owner') { await acctInit(env); if (!(await rlHit(env, 'art:' + who, ART_CAP, 86400))) return reply({ error: 'daily limit' }, 429); }
+  const jget = async u => { try { const r = await fetch(u, { headers: { 'user-agent': ART_UA, accept: 'application/json' } }); return r.ok ? await r.json() : null; } catch (e) { return null; } };
+  const key = env.FANART_KEY ? String(env.FANART_KEY).trim() : '';
+  const [fa, adb, dz] = await Promise.all([
+    key ? jget('https://webservice.fanart.tv/v3/music/' + mb + '?api_key=' + encodeURIComponent(key)) : null,
+    jget('https://www.theaudiodb.com/api/v1/json/123/artist-mb.php?i=' + mb),
+    name ? jget('https://api.deezer.com/search/artist?q=' + encodeURIComponent(name) + '&limit=5') : null
+  ]);
+  /* bg: wide backgrounds, sq: square photos. Each is [address, small preview or '', source, likes] */
+  const out = { bg: [], sq: [], fa: !!fa, adb: !!(adb && adb.artists), dz: !!dz };
+  const ok = u => typeof u === 'string' && ART_HOSTS.test(u) && u.length < 400;
+  const faPrev = u => u.replace('assets.fanart.tv/fanart/', 'assets.fanart.tv/preview/');
+  if (fa) {
+    for (const x of (fa.artistbackground || []).slice(0, 10)) if (ok(x.url)) out.bg.push([x.url, faPrev(x.url), 'fa', +x.likes || 0]);
+    for (const x of (fa.artistthumb || []).slice(0, 4)) if (ok(x.url)) out.sq.push([x.url, faPrev(x.url), 'fa', +x.likes || 0]);
+  }
+  const a = adb && adb.artists && adb.artists[0];
+  if (a) {
+    for (const k of ['strArtistFanart', 'strArtistFanart2', 'strArtistFanart3', 'strArtistFanart4']) if (ok(a[k])) out.bg.push([a[k], a[k] + '/preview', 'adb', 0]);
+    if (ok(a.strArtistThumb)) out.sq.push([a.strArtistThumb, a.strArtistThumb + '/preview', 'adb', 0]);
+  }
+  if (dz && Array.isArray(dz.data) && name) {
+    const want = artNorm(name), m = dz.data.find(x => artNorm(x.name) === want);
+    if (m && ok(m.picture_xl) && !/\/artist\/\//.test(m.picture_xl)) out.sq.push([m.picture_xl, ok(m.picture_medium) ? m.picture_medium : '', 'dz', 0]);   /* an empty hash is Deezer's grey placeholder */
+  }
+  const body = JSON.stringify(out), none = !out.bg.length && !out.sq.length;
+  const gotAll = (!key || fa !== null) && adb !== null && (!name || dz !== null);   /* a source that failed to answer: don't save a half list for 30 days */
+  if (env.CATALOG && (gotAll || !none)) {
+    try { await env.CATALOG.prepare('INSERT OR REPLACE INTO catalog (k, v, exp) VALUES (?1, ?2, ?3)').bind(ck, body, Date.now() + (none ? ART_MISS_TTL : gotAll ? ART_TTL : ART_MISS_TTL) * 1000).run(); } catch (e) { /* the next ask fetches again */ }
+  }
+  return new Response(body, { headers: JSON_H });
+}
+/* A picture from one of the art hosts, passed through with CORS so the app can read its pixels to score it (version 23).
+   Open without a key like /photo, but only for those hosts, and only images under 6 MB. */
+async function artImg(url, ctx) {
+  const u = url.searchParams.get('u') || '';
+  if (!ART_HOSTS.test(u) || u.length > 400) return reply({ error: 'host not allowed' }, 400);
+  const ck = new Request('https://playback-art.cache/?u=' + encodeURIComponent(u));
+  const c = caches.default;
+  let r = await c.match(ck).catch(() => null);
+  if (r) return r;
+  let o;
+  try { o = await fetch(u, { headers: { 'user-agent': ART_UA }, cf: { cacheTtl: 2592000, cacheEverything: true } }); } catch (e) { return reply({ error: 'unreachable' }, 502); }
+  const ct = o.headers.get('content-type') || '';
+  if (!o.ok || !/^image\//.test(ct)) return reply({ error: 'not an image' }, o.status === 404 ? 404 : 502);
+  if (+(o.headers.get('content-length') || 0) > 6e6) return reply({ error: 'too big' }, 413);
+  r = new Response(o.body, { headers: Object.assign({}, CORS, { 'content-type': ct, 'cache-control': 'public, max-age=2592000' }) });
+  if (ctx) ctx.waitUntil(c.put(ck, r.clone()).catch(() => {}));
   return r;
 }
 async function appleArt(url) {
@@ -1006,6 +1073,9 @@ async function acct(request, env, url) {
   /* an artist's Apple Music photo (version 20): saved for everyone, capped per person per day */
   if (path === '/apple/art' && M === 'GET') return appleArtCached(env, url, me.uid);
 
+  /* more art for an artist (version 23): saved for everyone, capped per person per day */
+  if (path === '/art' && M === 'GET') return artGet(env, url, me.uid);
+
   /* what friends rated lately: newest rating days first, only friends who are sharing, only ratings that have a day (version 18) */
   if (path === '/feed' && M === 'GET') {
     const rows = (await env.CATALOG.prepare(
@@ -1059,7 +1129,7 @@ export default {
     if (env.CATALOG && new Date(event.scheduledTime).getUTCHours() === 10) ctx.waitUntil(env.CATALOG.prepare('DELETE FROM acct_rl WHERE exp < ?1').bind(Date.now()).run().catch(() => {}));
   },
 
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
     if (!env.STATE) return reply({ error: 'missing the STATE KV binding' }, 500);
     if (!env.SECRET) return reply({ error: 'missing the SECRET variable' }, 500);
@@ -1067,6 +1137,7 @@ export default {
     const url = new URL(request.url);
     if (url.pathname === '/brief' && request.method === 'GET') return briefGet(env, url);   /* its own read-only key */
     if (url.pathname === '/photo' && request.method === 'GET') return photoGet(env, url);   /* signed link, no sync key */
+    if (url.pathname === '/art/img' && request.method === 'GET') return artImg(url, ctx);   /* art hosts only, for scoring (version 23) */
     if (url.pathname === '/suggest' && request.method === 'POST') return sugPost(request, env);   /* open to friends, rate limited */
     if (url.pathname === '/bug' && request.method === 'POST') return bugPost(request, env);   /* open to friends, rate limited, kept in D1 */
     if (url.pathname.startsWith('/acct/')) return acct(request, env, url);   /* Google sign-in token or its own session token, never the sync key */
@@ -1081,6 +1152,7 @@ export default {
       return reply({ error: 'method not allowed' }, 405);
     }
     if (url.pathname === '/apple/art') return request.method === 'GET' ? appleArtCached(env, url, 'owner') : reply({ error: 'method not allowed' }, 405);
+    if (url.pathname === '/art') return request.method === 'GET' ? artGet(env, url, 'owner') : reply({ error: 'method not allowed' }, 405);
     if (url.pathname === '/spotify/api') return request.method === 'GET' ? spCatalog(env, url) : reply({ error: 'method not allowed' }, 405);
     if (url.pathname === '/spotify/play') return request.method === 'POST' ? spPlay(request, env) : reply({ error: 'method not allowed' }, 405);
     if (url.pathname === '/photo') {
