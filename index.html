@@ -3445,6 +3445,34 @@ html.lite .hx .hxfp{-webkit-backdrop-filter:none;backdrop-filter:none;background
 .tour-dots i{background:rgb(255 255 255 / .25)}.tour-dots i.on{background:#fff}
 .tour-skip{color:rgb(255 255 255 / .75)}.tour-skip:hover{color:#fff}
 .tour-next.btn.primary{background:#fff;color:#141414;border-radius:999px;border:0}
+/* ===== 2026.11.23-l: the import progress box on the new look (it kept the old white card, so its white text vanished) ===== */
+#lx .mbprog,.head.hero .mbprog,.hxpanel .mbprog{gap:10px;border:0;border-radius:20px;padding:16px 18px;color:#fff;background:rgb(255 255 255 / .1);box-shadow:inset 0 0 0 1px rgb(255 255 255 / .14);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+#lx .mbprog .label,.head.hero .mbprog .label,.hxpanel .mbprog .label{margin:0;font:500 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:rgb(255 255 255 / .78)}
+#lx .mbprog .note,.head.hero .mbprog .note,.hxpanel .mbprog .note{margin:0;color:rgb(255 255 255 / .9);font:500 14px var(--body)}
+#lx .mbprog .bar.wide,.head.hero .mbprog .bar.wide,.hxpanel .mbprog .bar.wide{height:8px;border-radius:8px;background:rgb(255 255 255 / .18)}
+#lx .mbprog .bar.wide i,.head.hero .mbprog .bar.wide i,.hxpanel .mbprog .bar.wide i{border-radius:8px;background:linear-gradient(90deg,color-mix(in srgb,var(--x1,#fff) 50%,#fff),#fff);transition:width .45s cubic-bezier(.2,.8,.2,1);position:relative;overflow:hidden}
+#lx .mbprog .btn,.head.hero .mbprog .btn,.hxpanel .mbprog .btn{height:44px;min-height:44px;padding:0 22px;border:0;border-radius:999px;font:700 14px var(--body);color:#fff;background:rgb(255 255 255 / .18);cursor:pointer;transition:background .2s,transform .15s}
+#lx .mbprog .btn:hover,.head.hero .mbprog .btn:hover,.hxpanel .mbprog .btn:hover{background:rgb(255 255 255 / .28)}
+#lx .mbprog .btn:active,.head.hero .mbprog .btn:active,.hxpanel .mbprog .btn:active{transform:scale(.97)}
+@media (prefers-reduced-motion:no-preference){
+  #lx .mbprog .bar.wide i::after,.head.hero .mbprog .bar.wide i::after,.hxpanel .mbprog .bar.wide i::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgb(255 255 255 / .6),transparent);animation:mbShine 1.4s ease-in-out infinite}
+}
+@keyframes mbShine{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+/* 2026.11.23-l: off-screen sleeves skip the library's entrance */
+#lx.libin .llist .noin,.side.libin .llist .noin{animation:none!important}
+/* 2026.11.23-l: the turntable a record is flying to stays put (it used to slide up while the record aimed at it) */
+.sheet.swin .hero.flyin .hxrel>.hxprog,.sheet.swin .hero.flyin .hxprog .hrec{animation:none!important}
+/* 2026.11.23-l: Play one song, in its rating bar */
+.rater .rt-top{align-items:center}
+.rater .rt-play{display:inline-flex;align-items:center;gap:6px;height:30px;margin-left:auto;margin-right:12px;padding:0 13px 0 10px;border:0;border-radius:999px;font:700 12.5px var(--body);color:#141414;background:#fff;cursor:pointer;flex:none;transition:transform .15s,box-shadow .2s,opacity .2s}
+.rater .rt-play svg{width:13px;height:13px;transition:transform .25s}
+.rater .rt-play:hover{box-shadow:0 6px 16px rgb(0 0 0 / .28)}.rater .rt-play:hover svg{transform:scale(1.15)}
+.rater .rt-play:active{transform:scale(.95)}
+.rater .rt-play.busy{opacity:.6;pointer-events:none}
+.rater .rt-play.busy svg{animation:rtPlayB .8s ease-in-out infinite alternate}
+@keyframes rtPlayB{to{transform:scale(.7)}}
+@media (prefers-reduced-motion:no-preference){.rater .rt-play.hit{animation:rtPlayHit .5s cubic-bezier(.2,.8,.2,1)}.rater.rt-in .rt-play{animation:lxSw .45s cubic-bezier(.2,.8,.2,1) .12s backwards}}
+@keyframes rtPlayHit{40%{transform:scale(1.12)}}
 </style>
 <style id="pv-css">
 /* 2026.11.22-b THE PAGE REDESIGN (Account, Friends, Stats, Listen list, History, Settings) in the Sleeve/Crate look:
@@ -4583,6 +4611,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.23-l', note:'FIXES FROM YOUR INBOX: the Importing box (when you add an artist) is now dark glass like the rest of the page instead of a white card whose white text you couldn\u2019t read, and its bar glides instead of redrawing each step. Opening an artist from the library is lighter: the fading copy of the library only carries the sleeves on screen, sleeves off screen skip their entrance, and the artist page under the library is set aside quietly once it is covered. The record no longer flies past the turntable when an artist opens (the turntable was still sliding into place while the record aimed at it). Check now in the Listen list no longer redraws the whole list for every artist it checks; just its button and count change. The Open artist button in the library preview is gone (clicking the tile already opens them). New: a Play button in a song\u2019s rating bar starts that exact song on Spotify, inside its album. Errors from a browser\u2019s built-in crypto wallet (Brave on iPhone) are no longer reported as Playback crashes.'},
   {v:'2026.11.23-k', note:'A NEW WELCOME SCREEN: a brand-new log no longer opens on the old grey layout (an empty Artists list on the left, a white Start your log card on the right). It now opens on the library page itself, in the dusk and orchid of the app icon: Artists with a blank record on the left (every artist you add becomes a slice of it), Start your log on the right with Search for an artist and How Playback works, and a Start here row underneath on the same timeline your artists will fill (1 Add an artist, 2 Rate the songs, 3 Rate the album). It all rises in when the app opens, and Search for an artist opens the glass Add an artist sheet. On a phone it stacks. The first-run tour card is now dark glass with white buttons to match.'},
   {v:'2026.11.23-j', note:'ARTIST ART CLEANUP: the fan-art collecting (fanart.tv, TheAudioDB, Deezer) and the Spotify banner helper are removed. Nothing used them automatically anymore, and the collecting still cost sync-Worker calls every time an artist was opened. What stays: each artist\u2019s official Apple and Spotify photos, shared out so the tile, the artist page and the library preview beside the wall don\u2019t show the same one. Details is back to just Spotify / Apple Music.'},
   {v:'2026.11.23-i', note:'APP BAR COLOR: Playback\u2019s color in the app bar at the top (and in your other apps\u2019 bars) is now orchid to match the new icon, instead of the old teal, and the bar shows the new icon.'},
@@ -4780,8 +4809,15 @@ async function pbErrClick(ev){
   }catch(x){pbErrShow('fail')}
   ERX.busy=false;
 }
-window.addEventListener('error',ev=>pbErr(ev.error||ev.message,'page'));
-window.addEventListener('unhandledrejection',ev=>pbErr(ev.reason,'page'));
+/* 2026.11.23-l: errors that aren't Playback's own are ignored: a browser's built-in crypto wallet (Brave on iPhone sets
+   window.ethereum on every page and throws when it can't) and bare "Script error." from other sites' scripts */
+function pbNoise(ev){try{const e=ev&&(ev.error||ev.reason),m=String((e&&e.message)||(ev&&ev.message)||e||''),st=String((e&&e.stack)||'');
+  if(/\b(ethereum|solana|web3|phantom|tronWeb|__firefox__|webkit\.messageHandlers)\b/i.test(m+' '+st))return true;
+  if(/^Script error\.?$/i.test(m.trim())&&!st)return true;
+  if(ev&&ev.filename!==undefined&&ev.filename!==''&&!/frostie4life9\.github\.io|localhost|127\.0\.0\.1/.test(ev.filename)&&!st.includes('/playback/'))return true;
+  if(ev&&ev.type==='error'&&ev.filename===''&&/^global code@:1/.test(st.trim()))return true}catch(x){}return false}
+window.addEventListener('error',ev=>{if(pbNoise(ev))return;pbErr(ev.error||ev.message,'page')});
+window.addEventListener('unhandledrejection',ev=>{if(pbNoise(ev))return;pbErr(ev.reason,'page')});
 /* ---------- 2026.11.22-p BUG REPORTS ----------
    A small recorder runs from the start: the last 40 taps (which button, on which page), the last 30 errors (including
    console errors), and the last 20 network calls that failed or were slow. Nothing leaves the device until someone
@@ -4809,8 +4845,8 @@ document.addEventListener('click',ev=>{try{const t=ev.target;if(!t||!t.closest)r
 window.addEventListener('popstate',()=>{try{bugPush(BUG.crumbs,{t:bugT(),nav:'back'},40)}catch(e){}});
 document.addEventListener('visibilitychange',()=>{try{bugPush(BUG.crumbs,{t:bugT(),vis:document.visibilityState},40)}catch(e){}});
 function bugErr(e,where){try{bugPush(BUG.errs,{t:bugT(),where:where||'page',msg:bugCut((e&&e.message)||e,300),stack:bugCut(String((e&&e.stack)||'').split('\n').slice(0,6).map(x=>x.trim().replace(/https?:\/\/[^\s)]*\//,'')).join(' | '),700)},30)}catch(x){}}
-window.addEventListener('error',ev=>{if(ev.target&&ev.target!==window&&ev.target.tagName){return}bugErr(ev.error||ev.message,'page')});
-window.addEventListener('unhandledrejection',ev=>bugErr(ev.reason,'promise'));
+window.addEventListener('error',ev=>{if(ev.target&&ev.target!==window&&ev.target.tagName){return}if(pbNoise(ev))return;bugErr(ev.error||ev.message,'page')});
+window.addEventListener('unhandledrejection',ev=>{if(pbNoise(ev))return;bugErr(ev.reason,'promise')});
 ['error','warn'].forEach(k=>{const o=console[k];if(!o)return;console[k]=function(){try{bugPush(BUG.cons,{t:bugT(),k,msg:bugCut(Array.from(arguments).map(a=>a&&a.stack?a.message+' '+String(a.stack).split('\n')[1]:typeof a==='object'?(()=>{try{return JSON.stringify(a)}catch(e){return String(a)}})():String(a)).join(' '),300)},20)}catch(e){}return o.apply(this,arguments)}});
 /* failed or slow network calls: host and path only (never the query, which can hold keys) */
 (()=>{const f=window.fetch;if(!f)return;window.fetch=function(u,o){const s=typeof u==='string'?u:(u&&u.url)||'',m=((o&&o.method)||(u&&u.method)||'GET').toUpperCase(),t0=performance.now();
@@ -6068,9 +6104,9 @@ async function spAlbumId(a,g){const dx=dxOn(g),m=/^sp:([A-Za-z0-9]{22})$/.exec(g
   if(hit){if(dx)g.spalD=hit.id;else g.spal=hit.id;save();return hit.id}
   return dx?spAlbumIdStd(a,g):(m?m[1]:'')}
 function spAlbumIdStd(a,g){const m=/^sp:([A-Za-z0-9]{22})$/.exec(g.mbid||'');return m?m[1]:g.spal||''}
-async function spPlayHere(id){   /* no Worker: this device's own Spotify sign-in */
+async function spPlayHere(id,off){   /* no Worker: this device's own Spotify sign-in */
   await spLocalToken();const H={authorization:'Bearer '+SPL.at,'content-type':'application/json'};
-  const body=JSON.stringify({context_uri:'spotify:album:'+id,offset:{position:0},position_ms:0});
+  const body=JSON.stringify({context_uri:'spotify:album:'+id,offset:off||{position:0},position_ms:0});
   const go=dev=>fetch('https://api.spotify.com/v1/me/player/play'+(dev?'?device_id='+encodeURIComponent(dev):''),{method:'PUT',headers:H,body});
   let r=await go('');
   if(r.status===401||r.status===403){const t=await r.text().catch(()=>'');return {error:/scope|permission/i.test(t)||r.status===401?'scope':'premium'}}
@@ -6078,8 +6114,8 @@ async function spPlayHere(id){   /* no Worker: this device's own Spotify sign-in
     const list=((await d.json().catch(()=>({}))).devices||[]).filter(x=>x&&x.id&&!x.is_restricted);if(!list.length)return {error:'nodevice'};
     r=await go((list.find(x=>x.is_active)||list.find(x=>x.type==='Computer')||list[0]).id)}
   return r.ok||r.status===204?{ok:true}:{error:r.status===404?'nodevice':'spotify'}}
-async function spPlayWk(id){let r;
-  try{r=await fetch(SY.url.replace(/\/+$/,'')+'/spotify/play',{method:'POST',cache:'no-store',headers:{...syH(),'content-type':'application/json'},body:JSON.stringify({album:id})})}catch(e){return {error:'network'}}
+async function spPlayWk(id,off){let r;
+  try{r=await fetch(SY.url.replace(/\/+$/,'')+'/spotify/play',{method:'POST',cache:'no-store',headers:{...syH(),'content-type':'application/json'},body:JSON.stringify(Object.assign({album:id},off&&off.uri?{track:off.uri.slice(14)}:off&&off.position?{pos:off.position}:{}))})}catch(e){return {error:'network'}}
   if(r.status===404||r.status===405)return {error:'old'};if(r.status===401)return {error:'synckey'};
   const j=await r.json().catch(()=>({}));if(r.status===409)return {error:j.error==='not connected'?'none':'scope'};return j}
 async function amAlbumFind(a,g){if(g.amc)return 'https://music.apple.com/album/'+g.amc;
@@ -6120,6 +6156,31 @@ async function albPlay(aid,gid,btn){
     const e=r&&r.error,why=!r||e==='none'?'Connect Spotify in Settings and Play starts albums for you.':e==='nodevice'?'Open Spotify on a device first, then tap Play again.':e==='scope'?'Reconnect Spotify in Settings once so Play can start albums.':e==='premium'?'Spotify only lets apps start music on Premium.':e==='old'?'Your sync Worker is still updating. Try again in a minute.':'Spotify didn’t start it.';
     pbToast(`<span>${why}</span> ${link}`,8000)}
   catch(e){pbToast('Spotify didn’t answer. Try again in a moment.')}
+  finally{if(btn)btn.classList.remove('busy')}}
+/* 2026.11.23-l: PLAY ONE SONG. The Play button in a song's rating bar starts that exact song on Spotify (inside its album, so
+   the album carries on after it). The song is matched on the album's Spotify tracklist by title, falling back to its place on
+   the record. Apple Music users don't get the button. */
+const spTk=t=>dtBare(String(t||'').replace(/\s*[\(\[][^)\]]*(feat|with|ft\.)[^)\]]*[\)\]]/ig,'').replace(/\s+-\s+.*$/,''));
+async function songPlay(aid,gid,iid,btn){
+  const a=(S.music||[]).find(x=>x.id===aid),g=a&&a.groups.find(x=>String(x.id)===String(gid)),i=g&&g.items.find(x=>x.id===iid);if(!i)return;
+  const s=songShow(i),ttl=esc(s.t);
+  if(btn)btn.classList.add('busy');
+  try{let id='';try{id=await spAlbumId(a,g)}catch(e){id=spAlbumIdStd(a,g)}
+    const q=encodeURIComponent(a.name+' '+s.t);
+    if(!id){pbToast(`Couldn\u2019t find ${ttl} on Spotify to start it. <a href="https://open.spotify.com/search/${q}" target="_blank" rel="noopener">Search Spotify</a>`,7000);return}
+    let tid='';
+    try{if(spCanImport()){const j=await spApi('albums/'+id+'?market=from_token'),L=(j&&j.tracks&&j.tracks.items||[]).filter(Boolean),w=spTk(s.t||i.title);
+      const hit=L.find(t=>spTk(t.name)===w)||L.find(t=>spTk(t.name).startsWith(w)||w.startsWith(spTk(t.name)));if(hit&&hit.id)tid=hit.id}}catch(e){}
+    const list=dxOn(g)?g.items:stdItems(g),pos=Math.max(0,list.indexOf(i));
+    const off=tid?{uri:'spotify:track:'+tid}:{position:pos};
+    const open=tid?'https://open.spotify.com/track/'+tid:'https://open.spotify.com/album/'+id,uri=tid?'spotify:track:'+tid:'spotify:album:'+id;
+    const link=`<a href="${esc(open)}" data-uri="${esc(uri)}" onclick="return spApp(event,this)" target="_blank" rel="noopener">Open in Spotify</a>`;
+    let r=null;
+    if(spViaWorker())r=await spPlayWk(id,off);else if(SPL.rt)r=await spPlayHere(id,off);
+    if(r&&r.ok){pbToast(`${ICO_PLAY}<span>Playing <b>${ttl}</b> on Spotify</span>`);if(btn){btn.classList.remove('hit');void btn.offsetWidth;btn.classList.add('hit')}return}
+    const e=r&&r.error,why=!r||e==='none'?'Connect Spotify in Settings and Play starts songs for you.':e==='nodevice'?'Open Spotify on a device first, then tap Play again.':e==='scope'?'Reconnect Spotify in Settings once so Play can start songs.':e==='premium'?'Spotify only lets apps start music on Premium.':e==='old'?'Your sync Worker is still updating. Try again in a minute.':'Spotify didn\u2019t start it.';
+    pbToast(`<span>${why}</span> ${link}`,8000)}
+  catch(e){pbToast('Spotify didn\u2019t answer. Try again in a moment.')}
   finally{if(btn)btn.classList.remove('busy')}}
 function relBtn(g){
   if(!RATEABLE.includes(g.kind)||!rating(g.id))return '';const n=lsRaw(g.id).length;
@@ -6894,7 +6955,12 @@ const mbFallbackBtn=()=>{
   return (MBX.fbFrom==='sp'?'<div><button class="btn" data-act="mbviaam">'+(sp?'Replace with Apple Music (you can undo)':'Use Apple Music this time')+'</button></div>':'')+
     '<div><button class="btn" data-act="mbviamb">'+(sp?'Replace with MusicBrainz (you can undo)':'Use MusicBrainz this time')+'</button></div>'+
     (sp?'<p class="note">This rebuilds the artist\u2019s releases from another source, which groups them a little differently and has different covers and deluxe songs. Undo last import puts it back.</p>':'')};
-function mbProgress(){const el=document.getElementById('mbprog');if(el)el.outerHTML=mbProgHtml()}
+function mbProgress(){const el=document.getElementById('mbprog');if(!el)return;
+  /* 2026.11.23-l: update the bar and text in place, so the bar glides and the box doesn't re-enter on every step */
+  const t=document.createElement('div');t.innerHTML=mbProgHtml();const n=t.firstElementChild;
+  const bi=el.querySelector('.bar i'),nbi=n.querySelector('.bar i'),no=el.querySelector('.note'),nno=n.querySelector('.note'),lb=el.querySelector('.label'),nlb=n.querySelector('.label');
+  if(bi&&nbi&&no&&nno&&lb&&nlb){bi.style.width=nbi.style.width;if(no.textContent!==nno.textContent)no.textContent=nno.textContent;if(lb.textContent!==nlb.textContent)lb.textContent=nlb.textContent}
+  else el.replaceWith(n)}
 function mbSide(){
   if(MBX.busy&&MBX.where==='side')return mbProgHtml();
   let h=`<form class="add" data-form="mbsearch">
@@ -9013,14 +9079,14 @@ function lxSpotHtml(a){const e=current(),cur=!!(e&&e.id===a.id);
       <span class="lxk">${cur?'Last opened':'Preview'}</span>
       <b class="lxn">${esc(a.name)}</b>
       <span class="lxl">${esc(lxLine(a))}</span>
-      <div class="lxbt"><button class="lxopen" data-act="lxopen" data-id="${esc(a.id)}">Open artist${LX_ARROW}</button><a class="lxplay" href="${esc(spOpenUrl(a))}" data-uri="${esc(spAppUri(a))}" onclick="return spApp(event,this)" target="_blank" rel="noopener noreferrer" aria-label="Play ${esc(a.name)} on Spotify">${LX_PLAY}</a></div>
+      <div class="lxbt"><a class="lxplay" href="${esc(spOpenUrl(a))}" data-uri="${esc(spAppUri(a))}" onclick="return spApp(event,this)" target="_blank" rel="noopener noreferrer" aria-label="Play ${esc(a.name)} on Spotify">${LX_PLAY}</a></div>
     </div></div>`}
 /* once the hero scrolls away, a slim copy of the preview rides along at the top, so pointing at any artist still shows them */
 const lxMiniSrc=a=>artPlan(a).mini||(a.aimg?a.aimg+'/200x200bb.jpg':(spPhoto(a)||''));
 function lxMiniHtml(a){const e=current(),cur=!!(e&&e.id===a.id),th=lxMiniSrc(a),ini=([...lName(a)][0]||'#').toUpperCase(),c=lxCols(a);
   return `<div class="lxmc" data-aid="${esc(a.id)}" style="--c1:${esc(c[0])};--c2:${esc(c[1])};--c3:${esc(c[2])}"><span class="lxmt"><span aria-hidden="true">${esc(ini)}</span>${th?`<img src="${esc(th)}" alt="" decoding="async" onerror="this.remove()">`:''}</span><span class="lxmd" aria-hidden="true"><i></i></span>
     <span class="lxmn"><span class="lxk">${cur?'Last opened':'Preview'}</span><b>${esc(a.name)}</b><span class="lxml">${esc(lxLine(a))}</span></span>
-    <button class="lxopen" data-act="lxopen" data-id="${esc(a.id)}">Open artist${LX_ARROW}</button><a class="lxplay" href="${esc(spOpenUrl(a))}" data-uri="${esc(spAppUri(a))}" onclick="return spApp(event,this)" target="_blank" rel="noopener noreferrer" aria-label="Play ${esc(a.name)} on Spotify">${LX_PLAY}</a></div>`}
+    <a class="lxplay" href="${esc(spOpenUrl(a))}" data-uri="${esc(spAppUri(a))}" onclick="return spApp(event,this)" target="_blank" rel="noopener noreferrer" aria-label="Play ${esc(a.name)} on Spotify">${LX_PLAY}</a></div>`}
 function lxRec(st,sm){return `<div class="lxrec${sm?' sm':''}" aria-hidden="true"><span class="lxrd" style="background-image:repeating-radial-gradient(circle,rgb(0 0 0 / .2) 0 1px,transparent 1px 3px),${st.disc}"></span><span class="lxring" style="--lxp:${st.p}"></span><span class="lxlab"><b>${st.p}%</b><i>Rated</i></span>${sm?'':'<span class="lxarm"><i></i></span>'}</div>`}
 /* ===== 2026.11.23-k: THE WELCOME SCREEN, MADE LIKE THE LIBRARY =====
    A new log opens on the library page in the app icon's dusk colors: Artists with an empty record on the left, Start your log
@@ -9160,16 +9226,24 @@ document.addEventListener('keydown',ev=>{const side=lxEl();if(!side||ev.defaultP
   if(nx){nx.focus({preventScroll:true});nx.scrollIntoView({block:'nearest',behavior:noMotion()?'auto':'smooth'})}});
 /* after a draw: the page starts below the top bar, and keeps its scroll across redraws */
 function lxAfter(was,y,opened){const side=lxEl();
-  if(!side){if(was&&LXY!=null&&!UI.libOpen){const yy=LXY;LXY=null;requestAnimationFrame(()=>window.scrollTo(0,yy))}return}
+  if(!side){document.querySelectorAll('#app section.sheet').forEach(x=>{if(x.style.contentVisibility){x.style.contentVisibility='';x.querySelectorAll('.hero.hoff').forEach(h=>h.classList.remove('hoff'))}});
+    if(was&&LXY!=null&&!UI.libOpen){const yy=LXY;LXY=null;requestAnimationFrame(()=>window.scrollTo(0,yy))}return}
   if(!matchMedia('(max-width:760px)').matches){
     if(opened){LXY=scrollY;if(scrollY)window.scrollTo(0,0)}
     const tp=document.querySelector('#app .top')||document.querySelector('.top');side.style.setProperty('--libtop',Math.max(0,tp?tp.getBoundingClientRect().bottom:0)+'px')}
   const box=lxScroller();if(box&&y&&!opened)box.scrollTop=y;
   if(box&&opened&&UI.lxY){box.scrollTop=UI.lxY}
+  /* 2026.11.23-l: only the sleeves on screen play their entrance; the rest just sit there (dozens of off-screen sleeves
+     animating at once is what made opening the library stutter on a phone) */
+  if(opened&&!noMotion()){const H=innerHeight;side.querySelectorAll('.llist .lgrid>*,.llist .entry').forEach(e=>{const r=e.getBoundingClientRect();if(r.bottom<-20||r.top>H+20)e.classList.add('noin')})}
   /* once the library has faded in over it, the artist page underneath is dropped (nothing redraws or animates behind the library) */
-  if(opened)setTimeout(()=>{const s=lxEl();if(s)s.classList.remove('libin')},2200);
+  if(opened)setTimeout(()=>{const s=lxEl();if(s){s.classList.remove('libin');s.querySelectorAll('.noin').forEach(e=>e.classList.remove('noin'))}},2200);
+  /* 2026.11.23-l: the artist page under the library stops being drawn as soon as the library has covered it (cheap), and is
+     only taken apart once the library's own entrance is over, when the phone is idle (tearing it down mid-entrance was a hitch) */
   if(opened){clearTimeout(LXU);LXU=setTimeout(()=>{if(!lxEl())return;const sh=document.querySelector('#app>.shell>section.sheet:not(.lxunder)');if(!sh)return;
-    sh.outerHTML='<section class="sheet lxunder" aria-hidden="true"></section>';heroStart()},700)}
+    sh.style.contentVisibility='hidden';sh.querySelectorAll('.hero').forEach(h=>h.classList.add('hoff'));
+    const drop=()=>{if(!lxEl()||!sh.isConnected)return;sh.outerHTML='<section class="sheet lxunder" aria-hidden="true"></section>';heroStart()};
+    LXU=setTimeout(()=>{if('requestIdleCallback' in window)requestIdleCallback(drop,{timeout:800});else drop()},700)},450)}
   lxGeo();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{if(lxEl())lxGeo()})}
 
 /* the record slides out of its sleeve as the sleeve scrolls into view. Which sleeves are on screen is
@@ -12291,12 +12365,17 @@ function flyOut(F){
   const heroNow=()=>{const h=document.querySelector('.hero[data-aid]');return h&&h.dataset.aid===F.to?h:null};
   const h0=heroNow(),g=F.src,sn=h0&&discSnap(h0);if(!sn||!g)return false;
   h0.classList.add('drop');FLY.active=true;FLY.aid=F.to;
+  /* 2026.11.23-l: the turntable the record is flying to used to still be easing up into place (the page's slide-in) while the
+     record aimed at it, so the record went past its spot and came back. It is put in place right away now. */
+  h0.classList.add('flyin');
   const w=discEl(sn,0);document.body.appendChild(w);flyPut(w,g.x,g.top,g.d,g.xc);
   const t0=performance.now()+(F.old?140:0),A=230,B=540,C=200;
   /* 2026.11.22-a: the turntable's spot and the sleeve's edge are measured a few times a second, not every frame: on a phone each
      measurement forced the page that was still being built to lay itself out, which is what made the record stutter in the air */
   let RR=null,RT=-1e9,CR=null,CT=-1e9;
-  const tR=(dc,now)=>{if(!RR||now-RT>180){RR=dc.getBoundingClientRect();RT=now}return RR},cR=now=>{if(now-CT>180){CR=coverR(F.to);CT=now}return CR};
+  let SM=null;   /* the aim point glides toward each new measurement instead of jumping to it */
+  const tR=(dc,now)=>{if(!RR||now-RT>180){RR=dc.getBoundingClientRect();RT=now}
+    if(!SM)SM={left:RR.left,top:RR.top,width:RR.width};else{SM.left+=(RR.left-SM.left)*.3;SM.top+=(RR.top-SM.top)*.3;SM.width+=(RR.width-SM.width)*.3}return SM},cR=now=>{if(now-CT>180){CR=coverR(F.to);CT=now}return CR};
   const step=now=>{const t=now-t0,h=heroNow(),dc=h&&h.querySelector('.hdisc');
     if(!dc||FLY.aid!==F.to){
       /* another artist was picked (or this one closed) while its record was in the air: it goes home from wherever it is */
@@ -12340,14 +12419,19 @@ function libGhostTake(b){
   if(noMotion()||UI.tab!=='music'||UI.view)return null;const side=b.closest('.side.libfull');if(!side)return null;
   const src=[side,...side.querySelectorAll('*')],sc=[];
   src.forEach((e,i)=>{if(e.scrollTop||e.scrollLeft)sc.push([i,e.scrollTop,e.scrollLeft])});
-  return{g:side.cloneNode(true),sc,pi:src.indexOf(b),shell:!!(side.parentElement&&side.parentElement.classList.contains('shell'))&&matchMedia('(min-width:761px)').matches}   /* on a PC the menu's column rules hang off .shell, so the copy goes back in there; on a phone it sits on the page itself */}
+  /* 2026.11.23-l: the still copy only carries the sleeves you can see. Off-screen ones become empty boxes of the same
+     size, so the copy is a fraction of the library (it used to copy and re-draw every artist, which made the click lag) */
+  const g=side.cloneNode(true),cl=[g,...g.querySelectorAll('*')],H=innerHeight,pi=src.indexOf(b),pk=pi>0?cl[pi]:null,scN=sc.map(([i,t,l])=>[cl[i],t,l]);
+  src.forEach((e,i)=>{if(!e.matches||!e.matches('.tile,.entry'))return;const r=e.getBoundingClientRect();
+    if(r.bottom<-40||r.top>H+40){const c=cl[i];if(c){c.style.height=r.height+'px';c.style.visibility='hidden';c.replaceChildren()}}});
+  return{g,sc:scN,pk,shell:!!(side.parentElement&&side.parentElement.classList.contains('shell'))&&matchMedia('(min-width:761px)').matches}   /* on a PC the menu's column rules hang off .shell, so the copy goes back in there; on a phone it sits on the page itself */}
 function libGhostRun(){const L=UI.libGhost;UI.libGhost=null;if(!L)return;
   document.querySelectorAll('.libghost').forEach(e=>e.remove());
-  const g=L.g,cl=[g,...g.querySelectorAll('*')],pick=L.pi>0?cl[L.pi]:null;
+  const g=L.g,pick=L.pk||null;
   g.classList.remove('libin');g.classList.add('libghost');g.setAttribute('aria-hidden','true');g.inert=true;
   g.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));g.querySelectorAll('[data-act]').forEach(e=>e.removeAttribute('data-act'));
   const sh=document.querySelector('.shell');(L.shell&&sh?sh:document.body).appendChild(g);
-  L.sc.forEach(([i,t,l])=>{const e=cl[i];if(e){e.scrollTop=t;e.scrollLeft=l}});
+  L.sc.forEach(([e,t,l])=>{if(e){e.scrollTop=t;e.scrollLeft=l}});
   const done=()=>{if(g.isConnected)g.remove()};setTimeout(done,1600);
   /* 2026.11.21-w: the artist library's own backing (its colors and photo) goes at once, so the artist page shows straight away
      while the picked sleeve hands its record over. It used to hold the whole library on screen for most of a second. */
@@ -12647,7 +12731,7 @@ function acolFor(key,url,g){const c=ACOL[key];if(c)return c;if(c!==''&&url)acolR
    rating saves when you let go. Clear removes it; Done closes. */
 function rateMeter(id,label,extra,song){const r=rating(id),om=song&&isOmit(id);
   return `<div class="rater${UI.rAnim===id?' rt-in':''}" role="group" aria-label="Rate ${esc(label)}" style="--p:${((r||5)-1)/9*100}%">
-    <div class="rt-top"><span class="rt-l">${esc(label)}</span><b class="rt-v">${r?fmt(r):'\u2013'}</b></div>
+    <div class="rt-top"><span class="rt-l">${esc(label)}</span>${song&&song.a&&plSrc()!=='am'?`<button type="button" class="rt-play" data-act="songplay" data-a="${esc(song.a)}" data-g="${esc(song.g)}" data-id="${esc(id)}" aria-label="Play ${esc(label)} on Spotify" title="Play this song on Spotify">${ICO_PLAY}<span>Play</span></button>`:''}<b class="rt-v">${r?fmt(r):'\u2013'}</b></div>
     <div class="rt-wrap"><div class="rt-rail" aria-hidden="true"><i class="rt-fill"></i><i class="rt-thumb"></i></div>
       <input class="rt-s${r?'':' unset'}" type="range" min="1" max="10" step="0.5" value="${r||5}" data-rate="${id}" aria-label="Rating for ${esc(label)}, out of 10"></div>
     <div class="rt-ticks" aria-hidden="true">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<span>${n}</span>`).join('')}</div>
@@ -13108,20 +13192,26 @@ function nrPrune(){const st=S.nr;if(!st||!Array.isArray(st.list))return false;
   const t=todayISO(),gone=st.list.filter(x=>x.d>t);if(!gone.length)return false;
   gone.forEach(x=>{if(st.seen)delete st.seen[String(x.id).replace(/^am:/,'')]});
   st.list=st.list.filter(x=>!(x.d>t));return true}
+/* the check's own status, updated in place (a full redraw for each artist made the Listen list blink and replay its entrance) */
+function nrPaint(){document.querySelectorAll('[data-act="nrcheck"]').forEach(b=>{b.disabled=NR.busy;const t=NR.busy?'Checking\u2026':(b.classList.contains('link')?'Check now':'\u21bb Check now');if(b.textContent!==t)b.textContent=t;
+  const sec=b.closest('.cr-s,.nrbox');if(!sec)return;let m=sec.querySelector(':scope>[role="status"]');
+  if(!NR.msg){if(m)m.remove();return}
+  if(!m){m=document.createElement('p');m.className=sec.classList.contains('nrbox')?'note':'pvsm';m.setAttribute('role','status');sec.appendChild(m)}
+  if(m.textContent!==NR.msg)m.textContent=NR.msg})}
 async function nrScan(force){
   if(NR.busy||!READY||!window.fetch||!navigator.onLine)return;
   const loc=nrLoc();if(!force&&(loc.off||Date.now()-loc.at<NR_EVERY))return;
-  NR.busy=true;NR.msg='';
+  NR.busy=true;NR.msg='';if(force)nrPaint();
   const arts=S.music.filter(a=>!a.example&&a.name&&a.id).sort((p,q)=>((loc.a[p.id]||{}).t||0)-((loc.a[q.id]||{}).t||0)).slice(0,NR_BATCH);
-  let found=0,i=0,limited=false;
+  let found=0,i=0,limited=false,dtCh=false;
   try{
     for(const a of arts){
-      i++;if(force){NR.msg='Checking '+i+' of '+arts.length+'\u2026';render()}
+      i++;if(force){NR.msg='Checking '+i+' of '+arts.length+'\u2026';nrPaint()}   /* 2026.11.23-l: just the button and count change; the Listen list isn't redrawn per artist */
       const rec=loc.a[a.id]||(loc.a[a.id]={});
       try{
         if(!rec.id&&a.amid)rec.id=String(a.amid);
         if(!rec.id){rec.id=await nrFindId(a);await mbSleep(NR_GAP)}
-        if(rec.id){const res=await nrGet('lookup',{id:rec.id,entity:'album',limit:200});if(dtFill(a,res))save();found+=await nrAdd(a,res,rec.id);await mbSleep(NR_GAP)}
+        if(rec.id){const res=await nrGet('lookup',{id:rec.id,entity:'album',limit:200});if(dtFill(a,res)){save();dtCh=true}found+=await nrAdd(a,res,rec.id);await mbSleep(NR_GAP)}
         rec.t=Date.now();
       }catch(e){if(e&&e.code==='limited'){limited=true;break}rec.t=Date.now()}
       nrSave(loc);
@@ -13130,7 +13220,7 @@ async function nrScan(force){
     loc.at=limited?Date.now()-NR_EVERY+3600e3:Date.now();nrSave(loc);
     NR.busy=false;NR.msg=limited?'Apple Music asked for a pause. Playback will try again in about an hour.':(force?(found?found+' new release'+(found===1?'':'s')+' found.':'Nothing new from '+arts.length+' artists.'):'');
     if(found){NR.anim=true;touch();briefPush()}
-    renderSoon();
+    if(found||!document.querySelector('[data-act="nrcheck"]'))renderSoon();else nrPaint();   /* release dates it filled in show on the next draw */
   }
 }
 function nrGo(id){const x=nrList().find(y=>y.id===id);if(!x)return;
@@ -13463,7 +13553,7 @@ function gfHtml(a,g){return lsWith(g,()=>{
       return `<div class="track sl-t${isOmit(i.id)?' omit':''}${lsCar(g,i.id)?' carry':''} ${i.dx?'dx':''} ${dn?'done':''} ${r?'rated':''} ${UI.rOpen===i.id?'ropen':''} ${UI.rAnim===i.id?'opening':''} ${UI.rLand===i.id?'landing':''}" data-act="ropen" data-id="${i.id}" tabindex="0" role="button" aria-expanded="${UI.rOpen===i.id}" aria-label="${esc(s.t)}: ${r?'rated '+fmt(r)+', ':''}${UI.rOpen===i.id?'close rating':'open rating'}"${i.dx&&UI.dxAnim===g.id?` style="animation-delay:${60+Math.min(k,14)*38}ms"`:''}>${r?`<span class="wash" style="width:${pc}%" aria-hidden="true"></span>`:''}${lsSongBar(g,i.id,pc)}<span class="num">${k+1}</span>
         <span class="ttl">${esc(s.t)}${s.f.length?`<span class="feat">feat. ${esc(s.f.join(', '))}</span>`:''}${isOmit(i.id)?'<span class="omt">Not in song avg</span>':''}</span>${lsSongDelta(g,i.id)}${plBadge(i.id)}
         <button class="check" data-act="tog" data-id="${i.id}" aria-pressed="${dn}" aria-label="${r?'Rated '+fmt(r)+'. ':''}${dn?'Heard':'Not heard'}: ${esc(i.title)}"><svg viewBox="0 0 44 44" aria-hidden="true"><circle class="rg-t" cx="22" cy="22" r="16"/>${r?`<circle class="rg-v" cx="22" cy="22" r="16" stroke-dasharray="${dash}"/>`:''}</svg>${r?`<span class="rg-n">${fmt(r)}</span>`:dn?'<span class="rg-d"></span>':''}</button></div>
-        ${UI.rOpen===i.id?rateMeter(i.id,s.t,simSong(a,i,s.t),true):''}`}).join('');
+        ${UI.rOpen===i.id?rateMeter(i.id,s.t,simSong(a,i,s.t),{a:a.id,g:g.id}):''}`}).join('');
     const anim=UI.gfAnim===String(g.id),rid=dx?dxId(g):g.id,ar=RATEABLE.includes(g.kind)?rating(rid):0,sr=shown.map(i=>avgR(i.id)).filter(Boolean),sav=sr.length?sr.reduce((x,y)=>x+y,0)/sr.length:0;
     const vrLab=ar?`<b>${fmt(ar)}</b><span>rated</span>`:sav?`<b>${sav.toFixed(1)}</b><span>song avg</span>`:`<b>${shown.length?gd+'/'+shown.length:'\u2013'}</b><span>heard</span>`;
     const vgr=rings.map((st,j)=>`<i class="${st===2?'on':st===1?'on fade':''}" style="--d:${(96-j*(52/Math.max(R,1))).toFixed(1)}%;--o:${R-1-j}"></i>`).join('');
@@ -14061,6 +14151,7 @@ document.addEventListener('click',ev=>{
   else if(act==='hback'){UI.libOpen=true;UI.libAnim=true;UI.addOpen=false;lxFlyHome()}
   else if(act==='litepick'){liteSet(b.dataset.v);heroPaint()}
   else if(act==='alplay'){albPlay(b.dataset.a,b.dataset.g,b);return}
+  else if(act==='songplay'){songPlay(b.dataset.a,b.dataset.g,b.dataset.id,b);return}
   else if(act==='plsrc'){try{localStorage.setItem('pb_playsrc',b.dataset.v==='am'?'am':'sp')}catch(e){}}
   else if(act==='pvmore'){UI.pvOpen=UI.pvOpen||{};const k=b.dataset.v,o=!(UI.pvOpen[k]||(k==='sync'&&UI.syncOpen));UI.pvOpen[k]=o;if(k==='sync')UI.syncOpen=o}
   else if(act==='pvsec'){const el=document.getElementById('pvs-'+b.dataset.v);UI.setSec=b.dataset.v;document.querySelectorAll('.pvset .pvnav button').forEach(x=>x.setAttribute('aria-current',String(x===b)));if(el)el.scrollIntoView({behavior:noMotion()?'auto':'smooth',block:'start'});return}

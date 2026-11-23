@@ -1,5 +1,5 @@
 /* =========================================================
-   Playback — sync  (worker version 21, 2026.11.22)
+   Playback — sync  (worker version 23, 2026.11.23)
    Cloudflare Worker + KV. Same setup pattern as protocol-sync
    and gamelog-sync.
 
@@ -75,7 +75,8 @@
                     plays newer than <ms>, oldest first. Checks Spotify first if
                     the last check is over a minute old.
    DELETE /spotify  -> forgets the sign-in and the stored plays.
-   POST   /spotify/play {album} (version 22) -> starts that album from its first song on
+   POST   /spotify/play {album, track?, pos?} (version 22; track/pos version 23) -> starts that album from its first song
+                    (or from the given song) on
                     whichever device has Spotify open (or the only one Spotify
                     lists). {ok} | {error:'nodevice'} | {error:'scope'} (the
                     sign-in predates the play permission: reconnect Spotify).
@@ -481,14 +482,17 @@ async function spAccess(env) {
   }
   return { at: t.at };
 }
-/* PLAY AN ALBUM (version 22): owner only, one album id, always from its first song */
+/* PLAY AN ALBUM (version 22): owner only, one album id, from its first song, or (version 23) from a chosen song */
 async function spPlay(request, env) {
   let b; try { b = JSON.parse(await request.text()); } catch (e) { return reply({ error: 'body is not valid JSON' }, 400); }
   const id = b && typeof b.album === 'string' && /^[A-Za-z0-9]{22}$/.test(b.album) ? b.album : '';
   if (!id) return reply({ error: 'not an album id' }, 400);
   const tk = await spAccess(env); if (tk.res) return tk.res;
   const H = { authorization: 'Bearer ' + tk.at, 'content-type': 'application/json' };
-  const body = JSON.stringify({ context_uri: 'spotify:album:' + id, offset: { position: 0 }, position_ms: 0 });
+  /* version 23: an optional {track} (a song on that album) or {pos} (its place on the album) starts there instead of the first song */
+  const tr = b && typeof b.track === 'string' && /^[A-Za-z0-9]{22}$/.test(b.track) ? b.track : '';
+  const pos = b && Number.isInteger(b.pos) && b.pos > 0 && b.pos < 500 ? b.pos : 0;
+  const body = JSON.stringify({ context_uri: 'spotify:album:' + id, offset: tr ? { uri: 'spotify:track:' + tr } : { position: pos }, position_ms: 0 });
   const go = dev => fetch('https://api.spotify.com/v1/me/player/play' + (dev ? '?device_id=' + encodeURIComponent(dev) : ''), { method: 'PUT', headers: H, body });
   let r = await go('');
   if (r.status === 401 || r.status === 403) { const t = await r.text().catch(() => ''); return reply({ error: /scope|permission/i.test(t) || r.status === 401 ? 'scope' : 'premium' }, 200); }
