@@ -2376,6 +2376,17 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .pbbug-c textarea{width:100%;box-sizing:border-box;margin:10px 0;min-height:96px;padding:10px 12px;border-radius:12px;border:1px solid rgb(127 127 127 / .35);background:rgb(127 127 127 / .1);color:inherit;font:inherit;resize:vertical}
 .pbbug-c .pbb{display:flex;gap:8px}
 .pbbug-p{margin:0;font-size:13px;opacity:.75}
+.pbbug-k{display:flex;gap:4px;padding:3px;margin:0 0 12px;border-radius:999px;background:rgb(127 127 127 / .14);width:max-content}
+.pbbug-k button{border:0;background:none;color:inherit;font:600 12.5px/1 var(--body);padding:7px 12px;border-radius:999px;cursor:pointer;opacity:.7}
+.pbbug-k button[aria-pressed="true"]{background:var(--surface);opacity:1;box-shadow:0 1px 4px rgb(0 0 0 / .18)}
+.pbbug-pkb{margin:0 0 10px}
+.pbbug-pk{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin:0 0 10px;padding:8px 10px;border-radius:12px;background:rgb(127 127 127 / .12);font-size:13px}
+.pbbug-pk span{flex:1 1 180px}
+.pbbug-kb{margin-left:auto;align-self:center;font-size:11.5px;opacity:.55}
+@media (hover:none){.pbbug-kb{display:none}}
+.pbpick-hl{position:fixed;z-index:99999;pointer-events:none;border:2px solid #ffd27a;border-radius:8px;background:rgb(255 210 122 / .14);box-shadow:0 0 0 9999px rgb(0 0 0 / .18);opacity:0;transition:all .08s ease}
+.pbpick-bar{position:fixed;z-index:100000;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:8px 8px 8px 14px;border-radius:999px;background:#141414;color:#fff;font:600 13.5px/1 var(--body);box-shadow:0 8px 24px rgb(0 0 0 / .35)}
+.pbpick-bar .btn{background:rgb(255 255 255 / .14);color:#fff;border:0;padding:7px 12px;border-radius:999px;font:600 12.5px/1 var(--body)}
 .pbbug-m{margin:8px 0 0;min-height:1em;font-size:13px;opacity:.85}
 @media (min-width:700px){.pbbug{align-items:center}}
 .pberr p{margin:0;flex:1 1 200px}
@@ -4518,6 +4529,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.22-q', note:'SUGGEST A CHANGE: press Alt+S on any page (or Settings, Help & feedback, Suggest a change) and jot down something you want changed while it is in front of you. Point at it picks the exact thing you mean: the sheet steps aside, whatever is under your pointer gets an outline, and a tap picks it without pressing it. The suggestion saves the page, artist and open album with it, plus what you pointed at (its text, where it sits and how it looks), so it makes sense later. The same sheet switches to Report a bug, which now also opens with Alt+B (Ctrl+Shift+B still works). Ctrl+Enter sends. Your inbox in Owner tools is now Bugs & suggestions, with a filter for each.'},
   {v:'2026.11.22-p', note:'REPORT A BUG: a new Report a bug button in Settings, Help & feedback (or Ctrl+Shift+B on a computer, from any page) opens a sheet over the page you are on. Describe what went wrong and the report also carries what Playback was doing: the last taps, any errors, failed network calls, the build and whether this device is running an older cached copy, the device and screen, lite mode, the page and the app state. Never your ratings, sync key or sign-in. The crash card now sends that same full report (and shows for the owner too). Reports land in Owner tools, Bug reports, where each can be copied or marked done; they are kept on the Worker in D1, so they do not use up the daily KV writes.'},
   {v:'2026.11.22-o', note:'STREAMING DATE FIXED AND ON THE TOP LINE: the streaming note vanished after the app restarted, because the start-up tidy rebuilds every imported artist\u2019s albums and dropped it (it also reset the monthly MusicBrainz check, so each artist page would have asked again every visit). Now the rebuild keeps it, a copy is saved with the original date so it can always be restored, and notes already lost come back from Apple Music the next time you open that artist. The note sits at the end of the open album\u2019s top line with a gap instead of dots: Studio album 2020   Streaming Jan 17, 2025. Singles too.'},
   {v:'2026.11.22-n', note:'STREAMING DATE ON THE TOP LINE: the streaming date of a record that came out earlier now sits at the end of the open album\u2019s top line, like Studio album \u00b7 2020 \u00b7 Streaming Jan 17, 2025, instead of on a line of its own. Tap it to change the original date, same as before. Singles show it the same way.'},
@@ -4760,35 +4772,84 @@ async function bugBuild(note,auto){
   let j=JSON.stringify(r);
   for(const k of ['state','console','taps'])if(j.length>55000){r[k]=k==='state'?bugCut(r.state,1500):r[k].slice(-8);j=JSON.stringify(r)}
   return j}
-async function bugSend(note,auto){
+/* the open album, by name (UI.alb holds ids only) */
+function bugAlbum(){try{if(!UI.alb)return null;const a=current();if(!a||a.id!==UI.alb.aid)return null;const g=(a.groups||[]).find(x=>String(x.id)===UI.alb.g);if(!g)return null;
+  return{title:bugCut(g.title||g.name||'',80),kind:g.kind||g.type||'',year:String(g.date||g.year||'').slice(0,10),deluxe:!!(UI.dxOpen&&UI.dxOpen[g.id])}}catch(e){return null}}
+/* what something on screen is, for "point at it": enough to find it in the code and on the page */
+function bugDescribe(el){if(!el||!el.getBoundingClientRect)return null;const r=el.getBoundingClientRect(),o={};
+  o.tag=(el.tagName||'').toLowerCase();if(typeof el.className==='string'&&el.className.trim())o.cls=el.className.trim().split(/\s+/).slice(0,4).join(' ');
+  const t=(el.innerText||el.textContent||'').replace(/\s+/g,' ').trim();if(t)o.text=bugCut(t,100);
+  const lab=el.getAttribute('aria-label')||el.getAttribute('title')||el.getAttribute('alt');if(lab)o.label=bugCut(lab,80);
+  const ds={};for(const k in el.dataset||{})ds[k]=bugCut(el.dataset[k],40);if(Object.keys(ds).length)o.data=ds;
+  const act=el.closest('[data-act]');if(act&&act!==el)o.inside=bugCut(act.dataset.act+(act.dataset.v?':'+act.dataset.v:''),60);
+  const sec=el.closest('section,[data-sec],.pvcard,.setcard,dialog,[role="dialog"]');if(sec){const h=sec.querySelector('h1,h2,h3,.pvh,.pvh2');o.section=bugCut((sec.getAttribute('aria-label')||(h&&h.textContent)||sec.className||'').replace(/\s+/g,' ').trim(),60)}
+  const path=[];let n=el;for(let i=0;i<5&&n&&n!==document.body;i++,n=n.parentElement){path.unshift((n.tagName||'').toLowerCase()+(n.id?'#'+n.id:typeof n.className==='string'&&n.className.trim()?'.'+n.className.trim().split(/\s+/)[0]:''))}o.path=path.join(' > ');
+  o.box={x:Math.round(r.left),y:Math.round(r.top),w:Math.round(r.width),h:Math.round(r.height),vw:innerWidth,vh:innerHeight};
+  try{const cs=getComputedStyle(el);o.style={color:cs.color,bg:cs.backgroundColor,font:cs.fontSize+' '+cs.fontWeight}}catch(e){}
+  return o}
+async function bugSend(note,auto,kind,picked){
+  kind=kind==='idea'?'idea':'bug';
   let name='';try{name=(ACC&&ACC.me&&ACC.me.name)||''}catch(e){}
-  const report=await bugBuild(note,auto);
-  const r=await fetch(BUG_URL+'/bug',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:name.slice(0,40),owner:!!window.PB_OWNER,auto:!!auto,build:BUILD,note:String(note||'').slice(0,1000),report})});
+  let report;
+  if(kind==='idea'){const now=bugT(),pg=bugPage();
+    report=JSON.stringify({v:1,kind,build:BUILD,note,when:new Date().toString(),page:pg,pageBefore:pg.view==='settings'?BUG.page:null,album:bugAlbum(),pointedAt:picked||null,
+      device:{w:innerWidth,h:innerHeight,dpr:devicePixelRatio,touch:navigator.maxTouchPoints||0,ua:navigator.userAgent},
+      taps:BUG.crumbs.slice(-8).map(x=>Object.assign({},x,{t:((x.t-now)/1000).toFixed(1)+'s'})),state:bugCut(bugState(),2500)})}
+  else report=await bugBuild(note,auto);
+  const r=await fetch(BUG_URL+'/bug',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({kind,name:name.slice(0,40),owner:!!window.PB_OWNER,auto:!!auto,build:BUILD,note:String(note||'').slice(0,1000),report})});
   if(r.status===404||r.status===405){   /* a Worker that has not updated yet: fall back to the old one-line Suggest box */
-    const s=await fetch(BUG_URL+'/suggest',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:name.slice(0,40),text:('[bug] '+BUILD+' · '+(note||'')+' · '+(BUG.errs.slice(-1)[0]||{}).msg).slice(0,600)})});
+    const s=await fetch(BUG_URL+'/suggest',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:name.slice(0,40),text:('['+kind+'] '+BUILD+' · '+(note||'')+' · '+(BUG.errs.slice(-1)[0]||{}).msg).slice(0,600)})});
     if(!s.ok)throw new Error('send failed');return}
-  if(r.status===429)throw new Error('Too many reports from here this hour. Try again later.');
+  if(r.status===429)throw new Error('Too many sent from here this hour. Try again later.');
   if(!r.ok)throw new Error('That did not send. Check your connection.');
 }
-/* the sheet: drawn on its own, over whatever page is open, so it survives the app redrawing under it */
-function bugOpen(){try{
+/* the sheet: drawn on its own, over whatever page is open, so it survives the app redrawing under it.
+   kind 'bug' (Report a bug) or 'idea' (Suggest a change, with "Point at it" to pick the exact thing on screen) */
+const BUGS={kind:'bug',picked:null,text:''};
+function bugOpen(kind){try{
+  if(kind)BUGS.kind=kind==='idea'?'idea':'bug';
+  const idea=BUGS.kind==='idea';
   let el=BUG.el;if(!el||!el.isConnected){el=BUG.el=document.createElement('div');el.className='pbbug';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-labelledby','pbbug-h');document.body.appendChild(el);
-    el.addEventListener('click',ev=>{const b=ev.target.closest&&ev.target.closest('[data-bg]');if(!b)return;ev.stopPropagation();if(b.dataset.bg==='x')bugClose();else if(b.dataset.bg==='send')bugGo()});
-    el.addEventListener('keydown',ev=>{if(ev.key==='Escape')bugClose()})}
-  const pg=(UI.view==='settings'&&BUG.page)||bugPage(),where=[pg.view==='main'?(pg.tab==='screen'?'Screen':'Music'):pg.view,pg.artist].filter(Boolean).join(' · ');
-  el.innerHTML=`<div class="pbbug-c"><h3 id="pbbug-h">Report a bug</h3>
-    <p class="pbbug-p">What went wrong, and what did you expect? The report also carries what Playback was doing (recent taps, errors, your device and the page${where?': <b>'+esc(where)+'</b>':''}), never your ratings or keys.</p>
-    <textarea id="pbbug-t" maxlength="1000" rows="4" placeholder="e.g. Tapped Deluxe on Discovery and the record vanished"></textarea>
-    <div class="pbb"><button class="btn primary" data-bg="send">Send report</button><button class="btn" data-bg="x">Cancel</button></div><p class="pbbug-m" role="status"></p></div>`;
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{el.classList.add('in');const t=document.getElementById('pbbug-t');if(t)t.focus()}));
+    el.addEventListener('click',ev=>{ev.stopPropagation();const b=ev.target.closest&&ev.target.closest('[data-bg]');if(!b){if(ev.target===el)bugClose();return}
+      if(b.dataset.bg==='x')bugClose();else if(b.dataset.bg==='send')bugGo();else if(b.dataset.bg==='pick')bugPick();else if(b.dataset.bg==='unpick'){BUGS.picked=null;bugKeep();bugOpen()}
+      else if(b.dataset.bg==='kind'){bugKeep();bugOpen(b.dataset.v)}});
+    el.addEventListener('keydown',ev=>{if(ev.key==='Escape')bugClose();if(ev.key==='Enter'&&(ev.ctrlKey||ev.metaKey)){ev.preventDefault();bugGo()}})}
+  const pg=(UI.view==='settings'&&BUG.page)||bugPage(),alb=bugAlbum(),where=[pg.view==='main'?(pg.tab==='screen'?'Screen':'Music'):pg.view,pg.artist,alb&&alb.title].filter(Boolean).join(' · ');
+  const pk=BUGS.picked,mac=/Mac|iPhone|iPad/.test(navigator.platform||''),alt=mac?'⌥':'Alt+';
+  el.innerHTML=`<div class="pbbug-c"><div class="pbbug-k" role="group" aria-label="Kind"><button type="button" data-bg="kind" data-v="idea" aria-pressed="${idea}">Suggest a change</button><button type="button" data-bg="kind" data-v="bug" aria-pressed="${!idea}">Report a bug</button></div>
+    <h3 id="pbbug-h">${idea?'Suggest a change':'Report a bug'}</h3>
+    <p class="pbbug-p">${idea?`Write it down while it’s in front of you. It saves where you are${where?' (<b>'+esc(where)+'</b>)':''}, and you can point at the exact thing you mean.`
+      :`What went wrong, and what did you expect? The report also carries what Playback was doing (recent taps, errors, your device and the page${where?': <b>'+esc(where)+'</b>':''}), never your ratings or keys.`}</p>
+    <textarea id="pbbug-t" maxlength="1000" rows="4" placeholder="${idea?'e.g. Make this button match the album color, or move it up next to the title':'e.g. Tapped Deluxe on Discovery and the record vanished'}">${esc(BUGS.text||'')}</textarea>
+    ${idea?(pk?`<div class="pbbug-pk"><span>Pointing at: <b>${esc(pk.label||pk.text||pk.inside||pk.tag)}</b>${pk.section?' · '+esc(pk.section):''}</span><button type="button" class="btn" data-bg="pick">Change</button><button type="button" class="btn" data-bg="unpick">Clear</button></div>`
+      :`<button type="button" class="btn pbbug-pkb" data-bg="pick">◎ Point at it</button>`):''}
+    <div class="pbb"><button class="btn primary" data-bg="send">${idea?'Save suggestion':'Send report'}</button><button class="btn" data-bg="x">Cancel</button><span class="pbbug-kb">${idea?alt+'S':alt+'B'} · ${mac?'⌘':'Ctrl+'}Enter sends</span></div><p class="pbbug-m" role="status"></p></div>`;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{el.classList.add('in');const t=document.getElementById('pbbug-t');if(t){t.focus();t.setSelectionRange(t.value.length,t.value.length)}}));
 }catch(e){}}
-function bugClose(){const el=BUG.el;if(!el)return;el.classList.remove('in');setTimeout(()=>{if(!el.classList.contains('in'))el.remove()},300)}
-async function bugGo(){if(BUG.busy)return;const t=document.getElementById('pbbug-t'),m=BUG.el&&BUG.el.querySelector('.pbbug-m'),note=t?t.value.trim():'';
-  if(!note){if(m)m.textContent='Write a line about what happened first.';return}
+function bugKeep(){const t=document.getElementById('pbbug-t');if(t)BUGS.text=t.value}
+function bugClose(){const el=BUG.el;if(!el)return;bugKeep();el.classList.remove('in');setTimeout(()=>{if(!el.classList.contains('in'))el.remove()},300)}
+/* point at it: the sheet steps aside, whatever is under the pointer gets an outline, and a tap picks it (without pressing it) */
+function bugPick(){bugKeep();const sh=BUG.el;if(sh)sh.style.display='none';
+  const hl=document.createElement('div');hl.className='pbpick-hl';const bar=document.createElement('div');bar.className='pbpick-bar';bar.innerHTML='Tap the thing you mean <button type="button" class="btn">Cancel</button>';
+  document.body.append(hl,bar);let cur=null;
+  const under=(x,y)=>{const els=document.elementsFromPoint(x,y);return els.find(e=>e!==hl&&!bar.contains(e)&&e!==document.documentElement&&e!==document.body)||null};
+  const show=e=>{if(!e){hl.style.opacity=0;return}const r=e.getBoundingClientRect();Object.assign(hl.style,{opacity:1,left:r.left-3+'px',top:r.top-3+'px',width:r.width+6+'px',height:r.height+6+'px'})};
+  const move=ev=>{const p=ev.touches?ev.touches[0]:ev;cur=under(p.clientX,p.clientY);show(cur)};
+  const done=picked=>{window.removeEventListener('mousemove',move,true);window.removeEventListener('touchstart',move,true);window.removeEventListener('click',click,true);window.removeEventListener('keydown',key,true);
+    hl.remove();bar.remove();if(picked)BUGS.picked=bugDescribe(picked);if(sh){sh.style.display=''}bugOpen()};
+  const click=ev=>{if(bar.contains(ev.target)){ev.preventDefault();ev.stopImmediatePropagation();done(null);return}
+    ev.preventDefault();ev.stopImmediatePropagation();done(under(ev.clientX,ev.clientY)||ev.target)};
+  const key=ev=>{if(ev.key==='Escape'){ev.preventDefault();ev.stopImmediatePropagation();done(null)}};
+  window.addEventListener('mousemove',move,true);window.addEventListener('touchstart',move,{capture:true,passive:true});window.addEventListener('click',click,true);window.addEventListener('keydown',key,true)}
+async function bugGo(){if(BUG.busy)return;const t=document.getElementById('pbbug-t'),m=BUG.el&&BUG.el.querySelector('.pbbug-m'),note=t?t.value.trim():'',idea=BUGS.kind==='idea';
+  if(!note){if(m)m.textContent=idea?'Write what you want changed first.':'Write a line about what happened first.';return}
   BUG.busy=true;if(m)m.textContent='Sending…';
-  try{await bugSend(note,false);if(m)m.textContent='Sent. Thanks, that helps.';setTimeout(bugClose,1400)}catch(e){if(m)m.textContent=e.message||'That did not send.'}
+  try{await bugSend(note,false,BUGS.kind,idea?BUGS.picked:null);BUGS.text='';BUGS.picked=null;if(m)m.textContent=idea?'Saved. Claude can pick it up from your inbox.':'Sent. Thanks, that helps.';setTimeout(bugClose,1200)}catch(e){if(m)m.textContent=e.message||'That did not send.'}
   BUG.busy=false}
-document.addEventListener('keydown',ev=>{if(ev.ctrlKey&&ev.shiftKey&&(ev.key==='B'||ev.key==='b')){ev.preventDefault();bugOpen()}});
+/* shortcuts: Alt+S suggest, Alt+B (or Ctrl+Shift+B) bug. ev.code so Option on a Mac still works */
+document.addEventListener('keydown',ev=>{
+  if(ev.altKey&&!ev.ctrlKey&&!ev.metaKey&&(ev.code==='KeyS'||ev.code==='KeyB')){ev.preventDefault();bugOpen(ev.code==='KeyS'?'idea':'bug');return}
+  if(ev.ctrlKey&&ev.shiftKey&&ev.code==='KeyB'){ev.preventDefault();bugOpen('bug')}});
 const KEY='playback_v1';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function sid(...p){const s=p.join('|').toLowerCase();let x=5381;for(let i=0;i<s.length;i++)x=((x<<5)+x+s.charCodeAt(i))>>>0;return 'i'+x.toString(36)}
@@ -9880,19 +9941,21 @@ async function bugCall(method,qs){
   return r.json();
 }
 function bugCard(){
-  const l=BUG.list,ago=t=>{const m=Math.round((Date.now()-t)/60000);return m<60?m+' min ago':m<2160?Math.round(m/60)+' h ago':new Date(t).toLocaleDateString(undefined,{month:'short',day:'numeric'})};
-  return `<div class="setcard sug"><h3>Bug reports</h3>
-    <p class="note">Sent from Report a bug or the crash card. Copy one to paste it to Claude, or just ask Claude to check the bug reports.</p>
+  let l=BUG.list;const ago=t=>{const m=Math.round((Date.now()-t)/60000);return m<60?m+' min ago':m<2160?Math.round(m/60)+' h ago':new Date(t).toLocaleDateString(undefined,{month:'short',day:'numeric'})};
+  const f=BUG.f||'all',all=l||[];l=l&&f!=='all'?l.filter(x=>(x.kind||'bug')===f):l;
+  return `<div class="setcard sug"><h3>Bugs &amp; suggestions</h3>
+    <p class="note">From Suggest a change, Report a bug and the crash card. Ask Claude to check your inbox, or copy one to paste it.</p>
+    ${all.length?pvSeg('bugf',f,[['all','All '+all.length],['idea','Suggestions '+all.filter(x=>x.kind==='idea').length],['bug','Bugs '+all.filter(x=>(x.kind||'bug')==='bug').length]],'Show'):''}
     <div class="tools"><button class="btn primary" data-act="bugload" ${BUG.lbusy?'disabled':''}>${l?'Refresh':'Load reports'}</button>${l&&l.length?'<button class="btn" data-act="bugclear">Clear all</button>':''}</div>
     ${BUG.lmsg?`<span class="msg err">${esc(BUG.lmsg)}</span>`:''}
-    ${l?(l.length?`<ul>${l.map(x=>`<li><span class="who">${esc(x.name||(x.owner?'You':'Someone'))}${x.auto?' · crash':''} · ${esc(ago(x.t))} · ${esc(x.build||'')}</span><p>${esc(x.note||'(no note)')}</p><div class="tools"><button class="btn" data-act="bugcopy" data-id="${esc(x.id)}">${BUG.copied===x.id?'Copied':'Copy full report'}</button><button class="btn" data-act="bugdel" data-id="${esc(x.id)}">Done</button></div></li>`).join('')}</ul>`:'<p class="note">Nothing yet.</p>'):''}
+    ${l?(l.length?`<ul>${l.map(x=>`<li><span class="who">${x.kind==='idea'?'💡 ':'🐞 '}${esc(x.name||(x.owner?'You':'Someone'))}${x.auto?' · crash':''} · ${esc(ago(x.t))} · ${esc(x.build||'')}</span><p>${esc(x.note||'(no note)')}</p><div class="tools"><button class="btn" data-act="bugcopy" data-id="${esc(x.id)}">${BUG.copied===x.id?'Copied':'Copy'}</button><button class="btn" data-act="bugdel" data-id="${esc(x.id)}">Done</button></div></li>`).join('')}</ul>`:'<p class="note">Nothing yet.</p>'):''}
   </div>`;
 }
 async function bugLoad(){if(BUG.lbusy)return;BUG.lbusy=true;BUG.lmsg='';render();
   try{const j=await bugCall('GET');BUG.list=Array.isArray(j.items)?j.items:[]}catch(e){BUG.lmsg=e.message==='Failed to fetch'?'Could not reach your Worker.':e.message}
   BUG.lbusy=false;render()}
 async function bugCopy(id){try{const j=await bugCall('GET','?id='+encodeURIComponent(id));const x=j.item||{};
-  await navigator.clipboard.writeText('Playback bug report '+x.id+' ('+new Date(x.t).toLocaleString()+', '+(x.name||'')+')\nNote: '+(x.note||'')+'\n'+x.report);BUG.copied=id}catch(e){BUG.lmsg='Could not copy: '+(e.message||e)}render()}
+  await navigator.clipboard.writeText((x.kind==='idea'?'Playback suggestion ':'Playback bug report ')+x.id+' ('+new Date(x.t).toLocaleString()+', '+(x.name||'')+')\nNote: '+(x.note||'')+'\n'+x.report);BUG.copied=id}catch(e){BUG.lmsg='Could not copy: '+(e.message||e)}render()}
 async function bugDel(qs){try{await bugCall('DELETE',qs)}catch(e){BUG.lmsg=e.message;render();return}bugLoad()}
 
 /* ---------- accounts: Google sign-in, friend codes, friends' ratings ----------
@@ -10870,14 +10933,15 @@ function settingsView(){
   const cl=CHANGELOG.slice(0,6);
   const help=`<section id="pvs-help" class="pvcard pvdg pvrise" data-sec="help" style="--d:5"><div class="pvch"><h2 class="pvh2">Help &amp; feedback</h2></div>
     ${own?pvRow('ideas feature idea','Ideas for Playback','Jot down a feature idea; it goes to your ideas list',`<button class="pvb sm" data-act="pvidea">New idea</button>`):''}
-    ${pvRow('report bug problem broken crash feedback','Report a bug','Something broken or acting strange? Describe it and the report carries what Playback was doing. On a computer: Ctrl+Shift+B from any page',`<button class="pvb sm w" data-act="bugopen">Report a bug</button>`)}
+    ${pvRow('suggest change idea feedback point','Suggest a change','Jot down something you want changed, right where you see it. Point at the exact thing, and it saves the page and album with it. On a computer: Alt+S from any page',`<button class="pvb sm w" data-act="bugopen" data-v="idea">Suggest a change</button>`)}
+    ${pvRow('report bug problem broken crash feedback','Report a bug','Something broken or acting strange? Describe it and the report carries what Playback was doing. On a computer: Alt+B from any page',`<button class="pvb sm" data-act="bugopen" data-v="bug">Report a bug</button>`)}
     ${pvRow('whats new changelog build','What’s new','Build '+esc(BUILD),pvMoreBtn('new','Changelog'),pvPanel('new',`<ol class="pvset-cl">${cl.map(x=>{const t=String(x.note||''),dot=t.search(/[.:](\s|$)/),h=dot>0&&dot<90?t.slice(0,dot):t.slice(0,80);return `<li><span class="pvmono">${esc(x.v)}</span><details><summary><b>${esc(h)}</b></summary><p class="note">${esc(t)}</p></details></li>`}).join('')}</ol>`))}
     ${pvRow('privacy policy','Privacy','Playback keeps your Google name and a private id, never your email',`<a class="pvb sm" href="privacy.html" target="_blank" rel="noopener">Privacy policy</a>`)}
   </section>`;
   /* Owner tools */
   const ownS=own?`<section id="pvs-own" class="pvcard pvdg pvrise" data-sec="own" style="--d:6"><div class="pvch"><h2 class="pvh2">Owner tools</h2><span class="pvmono pvmut">only you see these</span></div>
     ${ownSync()&&GCID?pvRow('people using playback users','People using Playback',USX.list?USX.list.length+' accounts':'Everyone who made an account',pvMoreBtn('users','Open'),pvPanel('users',sfe('usersCard',usersCard))):''}
-    ${ownSync()?pvRow('bug reports inbox crash errors','Bug reports',BUG.list?BUG.list.length+' waiting':'Reports from you and friends, with the taps, errors and device behind each one',pvMoreBtn('bugs','Open'),pvPanel('bugs',sfe('bugCard',bugCard))):''}
+    ${ownSync()?pvRow('bug reports suggestions inbox crash errors ideas','Bugs &amp; suggestions',BUG.list?BUG.list.length+' waiting':'Bug reports and suggestions from you and friends, with the page, taps and details behind each one',pvMoreBtn('bugs','Open'),pvPanel('bugs',sfe('bugCard',bugCard))):''}
     ${pvRow('suggestions inbox friends','Suggestions inbox','What friends send from their Suggest box',pvMoreBtn('sugo','Open'),pvPanel('sugo',sfe('sugCard',sugCard)))}
     ${pvRow('rating dates private history','Rating dates','Your private list on the Worker',pvMoreBtn('rd','Manage'),pvPanel('rd',sfe('rdSide',rdSide)))}
     ${pvRow('screen collection hidden','Screen &amp; Collection','Hidden from friends while they’re in progress','<span class="pvmono pvmut">owner only</span>')}
@@ -13896,8 +13960,9 @@ document.addEventListener('click',ev=>{
     const i=VSTEPS.findIndex(v=>v[0]===UI.vStep),nv=document.querySelectorAll('.vw-nav');
     if(nv[0]){nv[0].dataset.v=VSTEPS[Math.max(0,i-1)][0];nv[0].disabled=i<=0}if(nv[1]){nv[1].dataset.v=VSTEPS[Math.min(4,i+1)][0];nv[1].disabled=i>=4}}return}
   else if(act==='sugload'){sugLoad();return}
-  else if(act==='bugopen'){bugOpen();return}
+  else if(act==='bugopen'){bugOpen(b.dataset.v||'bug');return}
   else if(act==='bugload'){bugLoad();return}
+  else if(act==='bugf'){BUG.f=b.dataset.v}
   else if(act==='bugcopy'){bugCopy(id);return}
   else if(act==='bugdel'){bugDel('?id='+encodeURIComponent(id));return}
   else if(act==='bugclear'){bugDel('?all=1');return}

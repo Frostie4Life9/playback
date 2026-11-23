@@ -1,5 +1,5 @@
 /* =========================================================
-   Playback — sync  (worker version 20, 2026.11.22)
+   Playback — sync  (worker version 21, 2026.11.22)
    Cloudflare Worker + KV. Same setup pattern as protocol-sync
    and gamelog-sync.
 
@@ -583,10 +583,10 @@ async function sugOwner(request, env, url) {
 }
 
 /* ---------- bug reports (version 20) ----------
-   POST   /bug  {name?, owner?, auto?, build?, note?, report}  needs NO key, like /suggest: the app's Report a bug sheet
+   POST   /bug  {kind?, name?, owner?, auto?, build?, note?, report}  kind 'bug' (default) or 'idea' (version 21, Suggest a change)  needs NO key, like /suggest: the app's Report a bug sheet
                 and its crash card send a full report (errors, the last taps, device, page and app state). Kept in D1
                 (CATALOG), not KV, so reports never eat KV's 1,000 daily writes. A report is cut to 60 KB, one address
-                may send 8 an hour, and only the newest 150 are kept. The address itself is never stored, only a short hash.
+                may send 20 an hour, and only the newest 150 of each kind are kept. The address itself is never stored, only a short hash.
    GET    /bug        (x-sync-key or owner login)  -> {items:[{id,t,name,owner,auto,build,note,bytes}]}, newest first
    GET    /bug?id=<id>                             -> {item:{...,report}}
    DELETE /bug?id=<id> or ?all=1                    removes one or all.                                              */
@@ -596,6 +596,7 @@ async function bugTable(env) {
   if (bugReady) return;
   await env.CATALOG.prepare('CREATE TABLE IF NOT EXISTS bugs (id TEXT PRIMARY KEY, t INTEGER NOT NULL, ip TEXT, name TEXT, owner INTEGER, auto INTEGER, build TEXT, note TEXT, report TEXT)').run();
   await env.CATALOG.prepare('CREATE INDEX IF NOT EXISTS bugs_t ON bugs (t)').run();
+  try { await env.CATALOG.prepare("ALTER TABLE bugs ADD COLUMN kind TEXT DEFAULT 'bug'").run(); } catch (e) {}   /* version 21; throws once it exists */
   bugReady = true;
 }
 async function bugIp(request) {
@@ -616,11 +617,12 @@ async function bugPost(request, env) {
   await bugTable(env);
   const ip = await bugIp(request), now = Date.now();
   const recent = await env.CATALOG.prepare('SELECT COUNT(*) AS n FROM bugs WHERE ip = ?1 AND t > ?2').bind(ip, now - 3600000).first();
-  if (recent && recent.n >= 8) return reply({ error: 'too many' }, 429);
+  if (recent && recent.n >= 20) return reply({ error: 'too many' }, 429);
+  const kind = b.kind === 'idea' ? 'idea' : 'bug';
   const id = now.toString(36) + Math.random().toString(36).slice(2, 6);
-  await env.CATALOG.prepare('INSERT INTO bugs (id, t, ip, name, owner, auto, build, note, report) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)')
-    .bind(id, now, ip, name, b.owner ? 1 : 0, b.auto ? 1 : 0, build, note, report).run();
-  await env.CATALOG.prepare('DELETE FROM bugs WHERE id NOT IN (SELECT id FROM bugs ORDER BY t DESC LIMIT ?1)').bind(BUG_MAX).run();
+  await env.CATALOG.prepare('INSERT INTO bugs (id, t, ip, name, owner, auto, build, note, report, kind) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)')
+    .bind(id, now, ip, name, b.owner ? 1 : 0, b.auto ? 1 : 0, build, note, report, kind).run();
+  await env.CATALOG.prepare('DELETE FROM bugs WHERE kind = ?2 AND id NOT IN (SELECT id FROM bugs WHERE kind = ?2 ORDER BY t DESC LIMIT ?1)').bind(BUG_MAX, kind).run();
   return reply({ ok: true, id });
 }
 async function bugOwner(request, env, url) {
@@ -629,10 +631,10 @@ async function bugOwner(request, env, url) {
   const id = url.searchParams.get('id') || '';
   if (request.method === 'GET') {
     if (id) {
-      const item = await env.CATALOG.prepare('SELECT id, t, name, owner, auto, build, note, report FROM bugs WHERE id = ?1').bind(id).first();
+      const item = await env.CATALOG.prepare('SELECT id, t, kind, name, owner, auto, build, note, report FROM bugs WHERE id = ?1').bind(id).first();
       return item ? reply({ item }) : reply({ error: 'not found' }, 404);
     }
-    const r = await env.CATALOG.prepare('SELECT id, t, name, owner, auto, build, note, LENGTH(report) AS bytes FROM bugs ORDER BY t DESC LIMIT ?1').bind(BUG_MAX).all();
+    const r = await env.CATALOG.prepare('SELECT id, t, kind, name, owner, auto, build, note, LENGTH(report) AS bytes FROM bugs ORDER BY t DESC LIMIT ?1').bind(BUG_MAX * 2).all();
     return reply({ items: r.results || [] });
   }
   if (request.method === 'DELETE') {
