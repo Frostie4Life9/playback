@@ -817,6 +817,9 @@ details.addart .add{border-top:1px solid var(--line)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .tacc.on{background:hsl(var(--h,180) 42% 38%);border-color:transparent;color:#fff}
 .tacc b{font:800 17px var(--display);font-style:normal}
+/* 2026.11.24-b: on the redesigned dark pages (Stats, History, Settings, Account) the Sign in button was a dark icon with a grey label on a dark field */
+body:has(.wrap>section.pv) .topr .tacc:not(.on):not(.pic){color:#fff;border-color:rgb(255 255 255 / .5);background:rgb(255 255 255 / .1)}
+body:has(.wrap>section.pv) .topr .tlab::after{color:rgb(255 255 255 / .92);text-shadow:0 1px 2px rgb(0 0 0 / .5)}
 .tacc[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:2px}
 .fav{background:hsl(var(--h,180) 42% 38%);color:#fff}
 .linkish{border:0;background:transparent;padding:0;text-align:left;font:inherit;font-weight:700;color:var(--ink);cursor:pointer;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
@@ -1449,6 +1452,7 @@ body:has(.head.hero.hx) .backlib{display:none}
 .head.hero.hx .meta{align-items:flex-start;text-align:left;gap:6px;width:auto}
 .head.hero.hx h2{font:800 clamp(54px,6.6vw,112px)/.9 var(--body);font-stretch:normal;letter-spacing:-.045em;color:#fff;margin:0;overflow-wrap:anywhere}
 .head.hero.hx .meta .note{color:rgb(255 255 255 / .7);font-size:14px}
+.head.hero.hx .meta{max-width:100%;min-width:0}.head.hero.hx .meta>.note{display:block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}   /* 2026.11.24-b: a long "also known as" line ran off both sides of a phone screen */
 .head.hero.hx h2,.hxsub,.head.hero.hx .meta .note,.hxback{text-shadow:0 1px 14px rgb(0 0 0 / .28)}
 .hxsub{margin:14px 0 0;font-size:18px;color:rgb(255 255 255 / .86);font-variant-numeric:tabular-nums}
 .hxact{display:flex;align-items:center;gap:14px;margin-top:26px}
@@ -1977,7 +1981,7 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 /* the record on the inside left: which listen */
 .sl-lab.sl-lsn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;line-height:1}
 .sl-lab.sl-lsn b{font:800 1.5em/1 Archivo,var(--display)}
-.sl-lab.sl-lsn i{font:700 .48em/1 var(--body);font-style:normal;letter-spacing:.12em;text-transform:uppercase;opacity:.75}
+.sl-lab.sl-lsn i,.sl-disc .sl-lab.sl-lsn i{position:static;left:auto;top:auto;width:auto;height:auto;background:none;border-radius:0;will-change:auto;animation:none;font:700 .48em/1 var(--body);font-style:normal;letter-spacing:.12em;text-transform:uppercase;opacity:.75}
 .gfi-f.gfi-gem{grid-column:1/-1;background:linear-gradient(120deg,color-mix(in srgb,var(--acsw) 26%,transparent),color-mix(in srgb,var(--ink) 5%,transparent) 70%);border-color:color-mix(in srgb,var(--acsw) 40%,transparent)}
 /* the songs line under the album pill */
 .gfr-songs{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px;margin:10px 22px 4px 30px;padding:0 4px;color:color-mix(in srgb,var(--ink) 70%,transparent);font-size:12.5px;font-weight:500}
@@ -2017,6 +2021,7 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .gf .rt-foot .link{min-height:36px;padding:0 14px;border-radius:999px;color:var(--ink);font:600 13px var(--body);text-decoration:none;border:1px solid color-mix(in srgb,var(--ink) 22%,transparent);background:transparent}
 .gf .rt-foot .rt-done{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .gf .rt-om{min-height:36px;padding:0 14px;border-color:color-mix(in srgb,var(--ink) 22%,transparent)}
+@media (max-width:520px){.gf .rt-foot{gap:6px}.gf .rt-foot .link,.gf .rt-om{padding:0 11px;white-space:nowrap}.gf .rt-om{margin-right:0;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}}   /* 2026.11.24-b: the three rater buttons stay on one line on a phone */
 .gf .rt-om[aria-pressed="true"]{background:color-mix(in srgb,var(--rc) 45%,transparent);border-color:color-mix(in srgb,var(--rc) 70%,#fff)}
 .gf .rater .simsong .link{color:var(--ink);font-weight:600}
 @media (prefers-reduced-motion:no-preference){.gf .rt-thumb{transition:left .2s cubic-bezier(.25,.9,.3,1),transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .14s}.gf .rt-wrap:has(.rt-s:active) .rt-thumb{transform:scale(1.18) rotate(90deg)}}
@@ -3533,6 +3538,7 @@ html.lite .pvdg{background:rgb(10 12 12 / .55)}
 .pvseg button:hover{background:rgb(255 255 255 / .12)}
 .pvseg button[aria-pressed="true"]{background:#fff;color:#141414}
 .pvseg.sm button{min-height:34px;padding:0 14px;font-size:13px}
+@media (max-width:520px){.pvseg{flex-wrap:nowrap;max-width:100%;overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain}.pvseg::-webkit-scrollbar{display:none}.pvseg button{flex:0 0 auto;padding:0 13px;font-size:14px}.pvseg.sm button{padding:0 11px;font-size:13px}}   /* 2026.11.24-b: on a phone a segmented row stays one row (it slid along instead of wrapping into a lumpy second line) */
 .pvchip{border:0;display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:0 15px;border-radius:999px;font:600 14px var(--body);color:#fff;background:rgb(255 255 255 / .14);cursor:pointer;white-space:nowrap;transition:background .2s}
 .pvchip:hover{background:rgb(255 255 255 / .24)}
 .pvchip[aria-pressed="true"]{background:#fff;color:#141414}
@@ -3686,7 +3692,7 @@ html.lite .pvdg{background:rgb(10 12 12 / .55)}
 .hsel{position:relative;padding:0 16px 0 20px;min-height:54px;gap:6px}
 .hsel select{appearance:none;-webkit-appearance:none;border:0;background:transparent;color:#fff;font:600 15px var(--body);cursor:pointer;outline:none;padding-right:2px}
 .hsel select option{color:#141414}
-.hmo{display:flex;gap:0}
+.hmo{display:flex;gap:0;content-visibility:auto;contain-intrinsic-size:auto 420px}   /* 2026.11.24-b: months off screen are not laid out or painted (History has hundreds of rows) */
 .hmo-l{flex:0 0 260px;max-width:260px;position:relative}
 .hmo-s{position:sticky;top:78px;padding-top:8px}
 .hmo-n{font:900 48px/.9 Archivo,var(--display);letter-spacing:-.035em}
@@ -4058,6 +4064,35 @@ div.pft-r{cursor:default}
 .pfv .vl-sort button,.pfv .vl .chip{border:0;background:rgb(255 255 255 / .14);color:#fff}.pfv .vl-sort button[aria-pressed="true"],.pfv .vl .chip[aria-pressed="true"]{background:#fff;color:#141414}
 html.pbstill *,html.pbstill *::before,html.pbstill *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
 @media (max-width:900px){.pvset-sync{padding:20px;gap:18px}.pvset-tt{transform:scale(.8);transform-origin:left center;width:140px;height:130px}}
+/* ===== 2026.11.24-b PHONE MEMORY AND SMOOTHNESS =====
+   Phones (touch screens with no hover) were running out of graphics memory, which on iPhone makes Safari reload the page
+   ("a problem repeatedly occurred") with no error the app can catch. The biggest costs were soft color pools drawn with a
+   110px blur filter that the phone had to re-blur every frame, six separately drawn color pools on the artist page, and
+   frosted-glass buttons sitting inside frosted-glass cards. Same look, far cheaper:
+   - page and library backgrounds: each pool is a radial gradient (the same soft edge, no blur filter)
+   - artist colors: the pools in a layer wobble together with their layer instead of each being its own drawn layer
+   - the artist colors hold still while an album is open over them, or while the page is hidden under the library
+   - no frosted blur on buttons that already sit on a frosted card */
+@property --bc{syntax:'<color>';inherits:false;initial-value:transparent}
+:is(#lx .lxbg,.pvbg) .b1{--bc:color-mix(in srgb,var(--x1) 86%,#000)}
+:is(#lx .lxbg,.pvbg) .b2{--bc:color-mix(in srgb,var(--x3) 80%,#000)}
+.pvbg .b2{--bc:color-mix(in srgb,var(--x2) 80%,#000)}
+#lx .lxbg .b3{--bc:color-mix(in srgb,var(--x2) 84%,#000)}
+.pvbg .b3{--bc:color-mix(in srgb,var(--x3) 84%,#000)}
+:is(#lx .lxbg,.pvbg) .b4{--bc:color-mix(in srgb,var(--x1) 80%,#000)}
+.pvdg :is(.pvb,.pvseg,.pvin,.hund-b),.pvcard :is(.pvb,.pvseg,.pvin){-webkit-backdrop-filter:none;backdrop-filter:none}
+@media (hover:none) and (pointer:coarse){
+  html #lx .lxbg i,html .pvbg i{filter:none;box-sizing:content-box;padding:130px;margin:-130px;background-color:transparent;
+    background-image:radial-gradient(closest-side,var(--bc) 0,var(--bc) 30%,color-mix(in srgb,var(--bc) 86%,transparent) 44%,color-mix(in srgb,var(--bc) 58%,transparent) 58%,color-mix(in srgb,var(--bc) 28%,transparent) 72%,color-mix(in srgb,var(--bc) 9%,transparent) 86%,transparent 100%);
+    transition:--bc 1.4s cubic-bezier(.2,.8,.2,1)}
+  html .pvbg.calm i{filter:none;opacity:.62}
+  .fl>.fb{animation:none;will-change:auto}
+  .fl{animation:flSpin var(--du) linear infinite var(--dir),flWobP calc(var(--du) * .37) ease-in-out infinite alternate}
+  .fl0{animation-delay:-3s,-2s}.fl1{animation-delay:-10s,-6s}.fl2{animation-delay:-17s,-9s}
+  html.lite .fl{animation:none}
+  body:has(.group.sleeve.gf) .hero .fl,body:has(#lx.libopen) .hero .fl{animation-play-state:paused}
+}
+@keyframes flWobP{0%{scale:.94 1.05}50%{scale:1.04 .97}100%{scale:1.1 .92}}
 </style>
 
 <!-- suite:css v11 · shared by Kitchen, Grocery, Lift, DishLog, Protocol, Rail, Game Log, Playback — edit tools/suite.py in the kitchen repo, not here -->
@@ -4613,6 +4648,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.24-b', note:'PHONE CHECK-UP: Playback on a phone uses much less graphics memory, which is what makes iPhone Safari reload a page on its own (it looks like a crash, and the app can\u2019t catch or report it). The soft color backgrounds behind Library, Stats, History, Settings and Account are drawn as gradients instead of a heavy blur the phone redrew every frame; the artist colors move as three layers instead of six (they still drift and wobble); they hold still while an album is open over them or the library covers them; buttons on frosted cards no longer blur a second time; and History only draws the months on screen. Fixes: the Listen number on the open album\u2019s record no longer sits on top of the word Listen; a long \u201calso known as\u201d line under an artist name (Daniel Caesar) no longer runs off both sides of the screen; the Sign in button is white and readable on the dark pages; segmented rows (Import source, History filters, Stats periods) stay one row and slide instead of wrapping; the song rater\u2019s buttons fit one line (\u201cLeave out of avg\u201d); and record photos from Cover Art Archive in Collection load again (they came as http links the page blocks).'},
   {v:'2026.11.24-a', note:'SCREEN IS NOW THE SHELF (still owner only). Films are a home-video shelf, and every film has a disc with one lit ring per watch. HOME: the player shows your last watch (or Tonight\u2019s pick, a random film from your list that favors your services), with its score, rewatch change and shelf card. Face-out shows your top five (pin your own from a case) with a handwritten shelf card. Up next is your list, with what\u2019s on your services first, plus Return by stickers for films you said are leaving soon. New this week shows your latest watches, with a ticket stub on theater trips. The shelf has every watched film as a spine, split by score bookends, with a spine number (the order you first watched it), a notch per watch, a stub peeking out for theater watches and a gold band if you own the disc. Sort it by score, No., director, decade or year watched, filter it (owned, theater, rewatched, unrated), or search it. OPENING A FILM: the case comes off the shelf, turns to face you, swings open, and the disc drops into the player and spins up as its rings light one by one. Back to the shelf sends the disc home into its spine. THE CASE: the liner notes (ticket stubs in the pocket, rank among everything you\u2019ve rated, time spent with it, rank among the director\u2019s films, the shelf card, owned on 4K/Blu-ray/DVD, where to watch with your services marked, cast, and If you liked this with + list), this watch (day, home or theater, service or format, review), Moments (timestamped scenes that spark on that watch\u2019s ring at the point in the film they happen), friends\u2019 ratings, and the player (rate in half steps, flip between watches, Rewatch, a ring legend with the change from the last watch). The latest rated watch sets the film\u2019s score, so accounts, friends, Stats and exports work as before; films you had already rated got a first watch from their rating. BOX SETS: a show is a slipcase, each season a disc whose edge lights one mark per rated episode; rate the show, seasons and episodes, check episodes off, and read episode descriptions. PEOPLE: directors from TMDB credits with how much of their work you\u2019ve seen; each opens a filmography timeline lit by what you\u2019ve seen, with + Add to list. DIARY: every watch by month (theater watches as ticket stubs). STATS: films, watches, hours, average, theater trips, by month or year, your score spread, genres, decades, where you watch, top directors and most rewatched. Add with Search or + Log a watch (TMDB, or by hand), and set My services. On a phone the case is three swipeable pages (Disc, Liner notes, This watch). Screen now loads its own file the first time you open it, so Music stays as light as before.'},
   {v:'2026.11.23-m', note:'CENTERED: the Choose a Spotify or Apple export button on Stats (and any other file-picker button) has its text centered in the pill again; it sat at the top-left.'},
   {v:'2026.11.23-l', note:'FIXES FROM YOUR INBOX: the Importing box (when you add an artist) is now dark glass like the rest of the page instead of a white card whose white text you couldn\u2019t read, and its bar glides instead of redrawing each step. Opening an artist from the library is lighter: the fading copy of the library only carries the sleeves on screen, sleeves off screen skip their entrance, and the artist page under the library is set aside quietly once it is covered. The record no longer flies past the turntable when an artist opens (the turntable was still sliding into place while the record aimed at it). Check now in the Listen list no longer redraws the whole list for every artist it checks; just its button and count change. The Open artist button in the library preview is gone (clicking the tile already opens them). New: a Play button in a song\u2019s rating bar starts that exact song on Spotify, inside its album. Errors from a browser\u2019s built-in crypto wallet (Brave on iPhone) are no longer reported as Playback crashes.'},
@@ -9758,14 +9794,14 @@ async function colLoadImgs(id){
    of the same album in your log. What is found is kept on the entry (x.scan), so it is looked
    up once; x.art holds the photos you picked yourself, and those win. */
 const ART_SLOTS=[['front','Front'],['back','Back'],['inner','Inner sleeve'],['labA','Label, side A'],['labB','Label, side B']];
-const colSlot=(x,k)=>(x.photos&&x.photos[k]&&x.photos[k].url)||(x.art&&x.art[k])||(x.scan&&x.scan[k])||'';
+const colSlot=(x,k)=>String((x.photos&&x.photos[k]&&x.photos[k].url)||(x.art&&x.art[k])||(x.scan&&x.scan[k])||'').replace(/^http:\/\//,'https://');   /* Cover Art Archive hands out http links, which the page's security policy blocks */
 const myPhoto=(x,k)=>!!(x.photos&&x.photos[k]&&x.photos[k].url);
 /* the center label: your own label photo is framed with the label filling the guide circle (56% of the frame), so it is zoomed to match */
 function colLabel(x,side,fallback){const k=side==='b'?'labB':'labA',own=myPhoto(x,k)?x.photos[k].url:side==='b'&&myPhoto(x,'labA')?x.photos.labA.url:'';
   if(own)return{u:own,z:'179%'};const u=colSlot(x,k)||(side==='b'?colSlot(x,'labA'):'');return u?{u,z:'cover'}:{u:fallback||'',z:'cover'}}
 async function caaTyped(mbid){
   const r=await fetch('https://coverartarchive.org/release/'+mbid,{cache:'no-store'});
-  if(!r.ok)return null;const j=await r.json(),o={},img=i=>(i.thumbnails&&(i.thumbnails['1200']||i.thumbnails.large||i.thumbnails['500']))||i.image;
+  if(!r.ok)return null;const j=await r.json(),o={},img=i=>String((i.thumbnails&&(i.thumbnails['1200']||i.thumbnails.large||i.thumbnails['500']))||i.image||'').replace(/^http:\/\//,'https://');
   const of=t=>(j.images||[]).filter(i=>(i.types||[]).includes(t));
   if(of('Front')[0])o.front=img(of('Front')[0]);if(of('Back')[0])o.back=img(of('Back')[0]);
   const lin=of('Liner').concat(of('Booklet'),of('Poster'));if(lin[0])o.inner=img(lin[0]);
@@ -11418,7 +11454,8 @@ function hSplat(songs,aid,tint,cap){
     if(bw){const pa=A;o[k4]=R*pa+bw[0]*(1-pa);o[k4+1]=G*pa+bw[1]*(1-pa);o[k4+2]=B*pa+bw[2]*(1-pa);o[k4+3]=255*e}
     else{o[k4]=R;o[k4+1]=G;o[k4+2]=B;o[k4+3]=A*255*e}}
   og.putImageData(od,0,0);
-  const url='url("'+oc.toDataURL('image/png')+'")';HSP[key]={sig,svg:url};return url}
+  const url='url("'+oc.toDataURL('image/png')+'")';pc.width=pc.height=oc.width=oc.height=0;   /* 2026.11.24-b: give the canvas memory back now (iPhone Safari caps it and only frees it late) */
+  HSP[key]={sig,svg:url};return url}
 /* Liquid record. One layout (liqParts) is used everywhere the record shows: the small record in the sleeve, the
    record in the air and the one on the turntable, so it is the same record all the way. The paint is two rings
    of overlapping pools, so the record is always full; what shows between pools is a darker blend of the same
@@ -12749,7 +12786,7 @@ function rateMeter(id,label,extra,song){const r=rating(id),om=song&&isOmit(id);
     <div class="rt-wrap"><div class="rt-rail" aria-hidden="true"><i class="rt-fill"></i><i class="rt-thumb"></i></div>
       <input class="rt-s${r?'':' unset'}" type="range" min="1" max="10" step="0.5" value="${r||5}" data-rate="${id}" aria-label="Rating for ${esc(label)}, out of 10"></div>
     <div class="rt-ticks" aria-hidden="true">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<span>${n}</span>`).join('')}</div>
-    <div class="rt-foot">${r?`<button class="link" data-act="rclear" data-id="${id}">Clear</button>`:'<span class="rt-hint">Drag or tap to rate</span>'}${song?`<button type="button" class="rt-om" data-act="romit" data-id="${id}" aria-pressed="${om}">${om?'Left out of song avg':'Leave out of song avg'}</button>`:''}<button class="link rt-done" data-act="rclose">Done</button></div>
+    <div class="rt-foot">${r?`<button class="link" data-act="rclear" data-id="${id}">Clear</button>`:'<span class="rt-hint">Drag or tap to rate</span>'}${song?`<button type="button" class="rt-om" data-act="romit" data-id="${id}" aria-pressed="${om}">${om?'Left out of avg':'Leave out of avg'}</button>`:''}<button class="link rt-done" data-act="rclose">Done</button></div>
     ${extra||''}
   </div>`}
 /* The first rating lands in its circle. When a rater is closed on something that had no rating until now, the big
