@@ -1421,6 +1421,7 @@ html.lite .gfscrim{background:color-mix(in srgb,var(--acsw,#000) 18%,rgb(6 5 10 
    sleeves (your progress record first). The artist list steps aside on a PC. Settings > Artist page turns it off. */
 body:has(.head.hero.hx){overflow-x:clip}
 body:has(.head.hero.hx) .top{position:relative;z-index:6}
+@media (max-width:760px){body:has(#lx.libfull) .top{z-index:auto}}   /* 2026.11.24-d: while the artist page still sits under the library, the dock (inside the top bar) was trapped under the library for its first second and a half */
 body:has(.head.hero.hx) .backlib{display:none}
 .head.hero.hx{--hxpad:calc(1.5vw + 28px);--pull:0px;width:100vw;margin-left:calc(50% - 50vw);margin-right:0;border:0;border-radius:0;background:var(--bg);
   display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;flex-wrap:nowrap;gap:0;
@@ -4650,6 +4651,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.24-d', note:'SNAPPIER LIBRARY ON A PHONE: tapping All artists starts the library about twice as fast. It no longer rebuilds the artist page underneath before fading in, and it no longer measures the page dozens of times over. Coming back to the library, the tile photos you just saw are already there instead of popping in one by one. The bottom bar no longer disappears behind the library for the first second or so.'},
   {v:'2026.11.24-c', note:'SOFT AGAIN: on phones the colors behind the library and the other pages showed as hard-edged circles. They are soft color pools again, as on a computer.'},
   {v:'2026.11.24-b', note:'PHONE CHECK-UP: Playback on a phone uses much less graphics memory, which is what makes iPhone Safari reload a page on its own (it looks like a crash, and the app can\u2019t catch or report it). The soft color backgrounds behind Library, Stats, History, Settings and Account are drawn as gradients instead of a heavy blur the phone redrew every frame; the artist colors move as three layers instead of six (they still drift and wobble); they hold still while an album is open over them or the library covers them; buttons on frosted cards no longer blur a second time; and History only draws the months on screen. Fixes: the Listen number on the open album\u2019s record no longer sits on top of the word Listen; a long \u201calso known as\u201d line under an artist name (Daniel Caesar) no longer runs off both sides of the screen; the Sign in button is white and readable on the dark pages; segmented rows (Import source, History filters, Stats periods) stay one row and slide instead of wrapping; the song rater\u2019s buttons fit one line (\u201cLeave out of avg\u201d); and record photos from Cover Art Archive in Collection load again (they came as http links the page blocks).'},
   {v:'2026.11.24-a', note:'SCREEN IS NOW THE SHELF (still owner only). Films are a home-video shelf, and every film has a disc with one lit ring per watch. HOME: the player shows your last watch (or Tonight\u2019s pick, a random film from your list that favors your services), with its score, rewatch change and shelf card. Face-out shows your top five (pin your own from a case) with a handwritten shelf card. Up next is your list, with what\u2019s on your services first, plus Return by stickers for films you said are leaving soon. New this week shows your latest watches, with a ticket stub on theater trips. The shelf has every watched film as a spine, split by score bookends, with a spine number (the order you first watched it), a notch per watch, a stub peeking out for theater watches and a gold band if you own the disc. Sort it by score, No., director, decade or year watched, filter it (owned, theater, rewatched, unrated), or search it. OPENING A FILM: the case comes off the shelf, turns to face you, swings open, and the disc drops into the player and spins up as its rings light one by one. Back to the shelf sends the disc home into its spine. THE CASE: the liner notes (ticket stubs in the pocket, rank among everything you\u2019ve rated, time spent with it, rank among the director\u2019s films, the shelf card, owned on 4K/Blu-ray/DVD, where to watch with your services marked, cast, and If you liked this with + list), this watch (day, home or theater, service or format, review), Moments (timestamped scenes that spark on that watch\u2019s ring at the point in the film they happen), friends\u2019 ratings, and the player (rate in half steps, flip between watches, Rewatch, a ring legend with the change from the last watch). The latest rated watch sets the film\u2019s score, so accounts, friends, Stats and exports work as before; films you had already rated got a first watch from their rating. BOX SETS: a show is a slipcase, each season a disc whose edge lights one mark per rated episode; rate the show, seasons and episodes, check episodes off, and read episode descriptions. PEOPLE: directors from TMDB credits with how much of their work you\u2019ve seen; each opens a filmography timeline lit by what you\u2019ve seen, with + Add to list. DIARY: every watch by month (theater watches as ticket stubs). STATS: films, watches, hours, average, theater trips, by month or year, your score spread, genres, decades, where you watch, top directors and most rewatched. Add with Search or + Log a watch (TMDB, or by hand), and set My services. On a phone the case is three swipeable pages (Disc, Liner notes, This watch). Screen now loads its own file the first time you open it, so Music stays as light as before.'},
@@ -9278,7 +9280,7 @@ function lxAfter(was,y,opened){const side=lxEl();
   if(box&&opened&&UI.lxY){box.scrollTop=UI.lxY}
   /* 2026.11.23-l: only the sleeves on screen play their entrance; the rest just sit there (dozens of off-screen sleeves
      animating at once is what made opening the library stutter on a phone) */
-  if(opened&&!noMotion()){const H=innerHeight;side.querySelectorAll('.llist .lgrid>*,.llist .entry').forEach(e=>{const r=e.getBoundingClientRect();if(r.bottom<-20||r.top>H+20)e.classList.add('noin')})}
+  if(opened&&!noMotion()){const H=innerHeight,ts=[...side.querySelectorAll('.llist .lgrid>*,.llist .entry')],off=ts.filter(e=>{const r=e.getBoundingClientRect();return r.bottom<-20||r.top>H+20});off.forEach(e=>e.classList.add('noin'))}   /* 2026.11.24-d: all measured first, then marked (marking between measures re-laid-out the page once per tile) */
   /* once the library has faded in over it, the artist page underneath is dropped (nothing redraws or animates behind the library) */
   if(opened)setTimeout(()=>{const s=lxEl();if(s){s.classList.remove('libin');s.querySelectorAll('.noin').forEach(e=>e.classList.remove('noin'))}},2200);
   /* 2026.11.23-l: the artist page under the library stops being drawn as soon as the library has covered it (cheap), and is
@@ -9401,7 +9403,13 @@ function placeRestore(){
 }
 /* 2026.11.21-a: phone era rows that hold more than fits fade at the edge they continue past (.ovr = it scrolls, .sl = slid along, .end = at the end) */
 function hxerEdge(e){const m=e.scrollWidth-e.clientWidth;e.classList.toggle('ovr',m>4);e.classList.toggle('sl',e.scrollLeft>4);e.classList.toggle('end',m>4&&e.scrollLeft>=m-4)}
-function hxerEdges(keep){document.querySelectorAll('.hx .hxer').forEach((e,i)=>{if(keep&&keep[i])e.scrollLeft=keep[i];hxerEdge(e);if(!e._edg){e._edg=1;e.addEventListener('scroll',()=>hxerEdge(e),{passive:true})}})}
+function hxerEdges(keep){
+  if(lxEl()&&UI.libOpen)return;   /* 2026.11.24-d: the artist page is under the library; its rows are measured when it is back */
+  const es=[...document.querySelectorAll('.hx .hxer')];
+  es.forEach((e,i)=>{if(keep&&keep[i])e.scrollLeft=keep[i]});
+  const m=es.map(e=>[e.scrollWidth-e.clientWidth,e.scrollLeft]);   /* every row measured first, then classed (one layout, not one per row) */
+  es.forEach((e,i)=>{const[w,l]=m[i];e.classList.toggle('ovr',w>4);e.classList.toggle('sl',l>4);e.classList.toggle('end',w>4&&l>=w-4);
+    if(!e._edg){e._edg=1;e.addEventListener('scroll',()=>hxerEdge(e),{passive:true})}})}
 addEventListener('resize',()=>hxerEdges(),{passive:true});
 function render(){
   if(!isOwnerUI()){if(UI.tab==='screen')UI.tab='music';if(UI.view==='collection')UI.view=null}   /* a saved tab or a stale link can never land a friend on a hidden page */
@@ -9545,6 +9553,9 @@ function mainSheet0(e){
   /* 2026.11.21-w: while the artist library covers the window, the last artist's page is not drawn under it (it is drawn on the
      one draw that opens the library, so the library can fade in over it). It used to be rebuilt under the library on every redraw. */
   if(e&&UI.tab==='music'&&UI.libOpen&&!UI.view&&!LIBIN)return '<section class="sheet lxunder" aria-hidden="true"></section>';
+  /* 2026.11.24-d: opening the library keeps the artist page that is already on screen (it only has to sit under the fade),
+     instead of building it again from scratch first. That rebuild was most of the second of nothing after tapping All artists. */
+  if(e&&LIBIN&&KEEPSH)return '<section class="sheet" data-keepsh="1"></section>';
   if(!e&&lxEmpty())return '<section class="sheet lxunder" aria-hidden="true"></section>';   /* 2026.11.23-k: the welcome lives on the library page */
   return `<section class="sheet" aria-live="polite">${e?(UI.tab==='music'?backLibBtn()+artistView(e):e.type==='film'?filmView(e):showView(e)):(UI.tab==='music'?startView():'<p class="empty">Tap Add artist or the + button to add your first one.</p>')}</section>`}
 /* 2026.11.24-a: SCREEN ("The Shelf") lives in screen.js and screen.css, fetched the first time the Screen tab opens, so
@@ -11198,11 +11209,15 @@ addEventListener('scroll',()=>{if(UI.view!=='settings')return;clearTimeout(setFi
 
 /* Every redraw rebuilds the page, which makes each cover a brand new picture that paints blank for a moment (the flash when you open a rating).
    So before a redraw, the covers already on screen are kept, and any new cover with the same picture and place in the markup is swapped for the kept one. */
+/* 2026.11.24-d: covers and photos a redraw threw away wait here for a while (the newest 60), so going back to the library
+   gets its tiles' pictures back already decoded instead of every tile painting blank and popping in */
+const IMGPOOL=new Map();
 function keepImgs(fn){
   const m=new Map(),old=new Set();
   const fadeT=new Map();   /* how far into its fade-in each header photo is, so a redraw mid-fade carries on from there */
   document.querySelectorAll('img[src]').forEach(im=>{if(!(im.complete&&im.naturalWidth))return;old.add(im);const k=im.getAttribute('src');if(!m.has(k))m.set(k,[]);m.get(k).push(im);
     if(im.closest('.hphoto')){const an=im.getAnimations&&im.getAnimations()[0];if(an&&an.playState==='running')fadeT.set(im,an.currentTime)}});
+  for(const[k,l]of IMGPOOL){if(!m.has(k))m.set(k,[]);m.get(k).push(...l)}IMGPOOL.clear();
   fn();
   if(!m.size)return;
   for(const l of m.values()){for(let q=l.length-1;q>=0;q--)if(l[q].isConnected)l.splice(q,1)}   /* only covers the redraw threw away */
@@ -11211,12 +11226,14 @@ function keepImgs(fn){
     if(l&&k>=0){const o=l.splice(k,1)[0],ph=!!o.closest('.hphoto');
       if(ph)o.style.animation='none';   /* a photo that finished fading in must not start over */
       im.replaceWith(o);
-      if(ph&&fadeT.has(o)){o.style.animation='';const an=o.getAnimations&&o.getAnimations()[0];if(an)an.currentTime=fadeT.get(o)}}})}
+      if(ph&&fadeT.has(o)){o.style.animation='';const an=o.getAnimations&&o.getAnimations()[0];if(an)an.currentTime=fadeT.get(o)}}});
+  let n=0;for(const[k,l]of m){for(const o of l){if(o.isConnected||n>=60)continue;if(!IMGPOOL.has(k))IMGPOOL.set(k,[]);IMGPOOL.get(k).push(o);n++}}}
 function renderMain(topIn){
   PAINT=null;
   if(!READY){document.getElementById('app').innerHTML='<p class="empty">Loading your log\u2026</p>';return}
   const e=current();
   LIBIN=!!UI.libAnim;UI.libAnim=false;
+  KEEPSH=null;if(LIBIN&&e&&UI.tab==='music'&&!UI.view){const o=document.querySelector('#app>.shell>section.sheet:not(.lxunder)');if(o&&o.querySelector('.hero[data-aid="'+CSS.escape(String(e.id))+'"]'))KEEPSH=o}
   if(UI.mm&&(UI.tab!=='music'||(UI.view&&UI.view!=='history'&&UI.view!=='stats')))UI.mm=false;   /* the Music menu only belongs to Music */   /* the menu's opening animation plays on the one draw that opens it */
   const list=S[UI.tab];
   const top=topIn!=null?topIn:topHTML(),mo={};
@@ -11225,13 +11242,14 @@ function renderMain(topIn){
   <footer>
     <p class="buildid">Build ${esc(BUILD)}</p>
   </footer>`;
+  if(KEEPSH){const ph=document.querySelector('#app section.sheet[data-keepsh]');if(ph)ph.replaceWith(KEEPSH);KEEPSH=null}
   if(!UI.view&&UI.tab==='music'&&mo.aside)PAINT={top,side:asideKey(mo.aside),sheet:SHEET_LAST};
   heroStart();
   tourMaybe();
   if(UI.view==='settings'&&UI.setQ)setFilter();
   if(UI.view==='history')hWatch();
 }
-var PVIN=true,PVLV=undefined;
+var PVIN=true,PVLV=undefined,KEEPSH=null;
 function topHTML(){const out=topHTML0();UI.llAnim=false;return out}
 /* 2026.11.22-a: A QUIET BACKGROUND REDRAW. Things that finish in the background (Apple covers matched for another artist, play counts,
    Spotify's auto-check, friends' ratings, sync) used to rebuild the whole artist page, open album and all, even when nothing on it had
@@ -12290,6 +12308,7 @@ async function phHiLoad(){
   }catch(e){if(e&&(e.code==='quota'||e.code==='limited')){try{localStorage.setItem('pb_imgcool',String(Date.now()+Math.min(Math.max((e.wait||0)*1000,216e5),1728e5)))}catch(_){}}}
 }
 function phPull(){const h=document.querySelector('.head.hero.hx'),app=document.getElementById('app');if(!h||!app)return;
+  if(lxEl()&&UI.libOpen)return;   /* 2026.11.24-d: the artist page is under the library and already placed */
   h.style.marginTop='';h.style.setProperty('--pull','0px');
   const d=Math.max(0,Math.round(h.getBoundingClientRect().top-app.getBoundingClientRect().top));
   h.style.marginTop=(-d)+'px';h.style.setProperty('--pull',d+'px');
