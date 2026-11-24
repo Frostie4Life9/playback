@@ -4651,6 +4651,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.24-g', note:'FROM YOUR LAG REPORT: on your iPhone, going to the library had one long freeze about half a second in, when the artist page underneath was being put to sleep. That step is gone (the page is simply cleared a little later, once the library has settled). Opening an artist also skips two of its extra full-page redraws: Fans also spin fills in its own box instead of redrawing everything.'},
   {v:'2026.11.24-f', note:'LAG TRACE: every tap now quietly times itself for 3 seconds (how long the screen froze, and which of Playback\u2019s drawing steps ran and for how long). The last 12 ride along with Report a bug, so right after something feels laggy, Settings \u2192 Help & feedback \u2192 Report a bug sends the numbers behind it. Nothing is kept once the app closes.'},
   {v:'2026.11.24-e', note:'COVERS AND PHOTOS WORK OFFLINE: album covers and artist photos you have already seen are now saved on the device (up to about 1,200 of them, the oldest dropped first), so with no connection, say on a plane, the library, artist pages and open albums still show their art instead of blank sleeves. Rating, reviews and listens already worked offline and sync when you are back online. Art you have not looked at yet is not saved, so open the albums you want before you go.'},
   {v:'2026.11.24-d', note:'SNAPPIER LIBRARY ON A PHONE: tapping All artists starts the library about twice as fast. It no longer rebuilds the artist page underneath before fading in, and it no longer measures the page dozens of times over. Coming back to the library, the tile photos you just saw are already there instead of popping in one by one. The bottom bar no longer disappears behind the library for the first second or so.'},
@@ -9296,7 +9297,7 @@ document.addEventListener('keydown',ev=>{const side=lxEl();if(!side||ev.defaultP
   if(nx){nx.focus({preventScroll:true});nx.scrollIntoView({block:'nearest',behavior:noMotion()?'auto':'smooth'})}});
 /* after a draw: the page starts below the top bar, and keeps its scroll across redraws */
 function lxAfter(was,y,opened){const side=lxEl();
-  if(!side){document.querySelectorAll('#app section.sheet').forEach(x=>{if(x.style.contentVisibility){x.style.contentVisibility='';x.querySelectorAll('.hero.hoff').forEach(h=>h.classList.remove('hoff'))}});
+  if(!side){document.querySelectorAll('#app section.sheet').forEach(x=>{if(x.style.contentVisibility)x.style.contentVisibility='';x.querySelectorAll('.hero.hoff').forEach(h=>h.classList.remove('hoff'))});
     if(was&&LXY!=null&&!UI.libOpen){const yy=LXY;LXY=null;requestAnimationFrame(()=>window.scrollTo(0,yy))}return}
   if(!matchMedia('(max-width:760px)').matches){
     if(opened){LXY=scrollY;if(scrollY)window.scrollTo(0,0)}
@@ -9310,10 +9311,13 @@ function lxAfter(was,y,opened){const side=lxEl();
   if(opened)setTimeout(()=>{const s=lxEl();if(s){s.classList.remove('libin');s.querySelectorAll('.noin').forEach(e=>e.classList.remove('noin'))}},2200);
   /* 2026.11.23-l: the artist page under the library stops being drawn as soon as the library has covered it (cheap), and is
      only taken apart once the library's own entrance is over, when the phone is idle (tearing it down mid-entrance was a hitch) */
+  /* 2026.11.24-g: an iPhone's lag trace showed one ~280ms frozen frame about half a second in, right when the page under
+     the library was switched to content-visibility:hidden (Safari re-lays-out and re-layers the whole page for that).
+     Now nothing happens to it during the entrance; it is just dropped once, a little later, when the phone is idle. */
   if(opened){clearTimeout(LXU);LXU=setTimeout(()=>{if(!lxEl())return;const sh=document.querySelector('#app>.shell>section.sheet:not(.lxunder)');if(!sh)return;
-    sh.style.contentVisibility='hidden';sh.querySelectorAll('.hero').forEach(h=>h.classList.add('hoff'));
+    sh.querySelectorAll('.hero').forEach(h=>h.classList.add('hoff'));
     const drop=()=>{if(!lxEl()||!sh.isConnected)return;sh.outerHTML='<section class="sheet lxunder" aria-hidden="true"></section>';heroStart()};
-    LXU=setTimeout(()=>{if('requestIdleCallback' in window)requestIdleCallback(drop,{timeout:800});else drop()},700)},450)}
+    LXU=setTimeout(()=>{if('requestIdleCallback' in window)requestIdleCallback(drop,{timeout:800});else drop()},500)},700)}
   lxGeo();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{if(lxEl())lxGeo()})}
 
 /* the record slides out of its sleeve as the sleeve scrolls into view. Which sleeves are on screen is
@@ -13328,10 +13332,10 @@ function nrGo(id){const x=nrList().find(y=>y.id===id);if(!x)return;
    Nothing loads until you open a section; the Worker saves each answer for 30 days, so looking again costs nothing. */
 const SIM={};
 const simKey=(type,artist,title)=>type==='t'?'t:'+nArtist(artist)+'|'+nTitle(title):'a:'+nArtist(artist);
-async function simLoad(type,artist,title){
+async function simLoad(type,artist,title,quiet){
   const k=simKey(type,artist,title),e=SIM[k]||(SIM[k]={});
   if(e.busy||(e.rows&&!e.err))return;
-  e.busy=true;e.err='';e.rows=null;render();
+  e.busy=true;e.err='';e.rows=null;if(!quiet)render();   /* 2026.11.24-g: from the artist page's first draw it already shows "Finding…", so no second full redraw */
   const q='type='+(type==='t'?'track':'artist')+'&artist='+encodeURIComponent(artist)+(type==='t'?'&track='+encodeURIComponent(title):'');
   try{
     let status=0,j={};
@@ -13342,7 +13346,11 @@ async function simLoad(type,artist,title){
       if(status===200&&Array.isArray(j.rows)){e.rows=j.rows;e.anim=true}
       else e.err=status===409?'Similar music is not switched on for this server yet.':status===429?(j.error==='daily limit'?'You have used today\u2019s fresh lookups. Anything you looked up before still opens; try again tomorrow.':'Last.fm is busy. Try again in a minute.'):status===404?'The sync Worker needs its latest update before this works.':'Could not find similar music right now.'}
   }catch(er){e.err='Could not reach Playback\u2019s server. Check your connection.'}
-  e.busy=false;renderSoon();
+  e.busy=false;
+  /* 2026.11.24-g: an artist's Fans also spin answer swaps just that box in, instead of redrawing the whole page */
+  if(type==='a'){const a=current(),bx=a&&a.name===artist&&document.querySelector('.simbox [data-act="simtog"][data-a="'+CSS.escape(String(a.id))+'"]');
+    const box=bx&&bx.closest('.simbox');if(box&&!UI.alb){try{box.outerHTML=simBox(a);simNavSync();return}catch(x){}}}
+  renderSoon();
 }
 function simRow(x,i,type){
   const nm=type==='t'?x.a:x.n,a=rtArtist([nm]),pc=Math.round((x.m||0)*100);
@@ -13405,7 +13413,7 @@ function simShown(){try{return localStorage.getItem(KEY+'_simhide')!=='1'}catch(
 function simBox(a){
   /* open from the start (a friend found it hidden away); Hide folds it up and that choice is remembered on this device */
   const open=simShown(),ao=open&&UI.simAnim?' sim-opening':'';if(open)UI.simAnim=false;
-  if(open&&!SIM[simKey('a',a.name)])setTimeout(()=>simLoad('a',a.name),0);
+  if(open&&!SIM[simKey('a',a.name)])setTimeout(()=>simLoad('a',a.name,'',true),0);
   const e=SIM[simKey('a',a.name)],ok=e&&!e.busy&&!e.err&&e.rows&&e.rows.length,body=open?(ok?simCrate(e,ao):simBody(e,'a',{artist:a.name})):'';
   const arr=open&&ok?`<span class="simnav${ao?' in':''}"><button class="simar" data-simscroll="-1" aria-label="Scroll left" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button><button class="simar" data-simscroll="1" aria-label="Scroll right"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button></span>`:'';
   return `<section class="simbox crate${open?' open':''}"><div class="simh"><h3 class="hxlbl">Fans also spin</h3><button class="simtg" data-act="simtog" data-a="${a.id}" aria-expanded="${open}">${open?'Hide':'Show'}<i aria-hidden="true"></i></button>${arr}</div><small class="simsub">${open?'Similar artists, from Last.fm':'Similar artists'}</small>${open?`<div class="simbody${ao}">${body}</div>`:''}</section>`}
