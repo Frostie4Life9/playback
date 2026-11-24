@@ -1,8 +1,12 @@
 /* Playback service worker: lets the app open offline.
    The page itself is network-first so updates show up right away;
-   icons and the manifest are cache-first. Sync requests to the Worker
+   icons and the manifest are cache-first, and covers and artist photos are
+   kept in their own capped cache so art shows offline. Sync requests to the Worker
    are cross-origin and pass straight through. */
-const CACHE = 'playback-2026.11.24-d';   // keep in step with BUILD in index.html
+const CACHE = 'playback-2026.11.24-e';   // keep in step with BUILD in index.html
+const IMG = 'playback-img';   // album covers and artist photos: kept across builds, capped
+const IMG_MAX = 1200;
+const IMG_HOST = /(^|\.)(scdn\.co|mzstatic\.com|tmdb\.org|coverartarchive\.org|archive\.org|discogs\.com)$/;
 const V = '?v=20261123h';
 const SHELL = ['./', './index.html', './manifest.webmanifest' + V, './icon-192.png' + V, './icon-512.png' + V, './icon-maskable-512.png' + V, './apple-touch-icon.png' + V, './favicon-32.png' + V];
 
@@ -12,7 +16,7 @@ self.addEventListener('install', e => {
 
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys()
-    .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+    .then(keys => Promise.all(keys.filter(k => k !== CACHE && k !== IMG).map(k => caches.delete(k))))
     .then(() => self.clients.claim()));
 });
 
@@ -26,6 +30,11 @@ self.addEventListener('fetch', e => {
     e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(res => {
       const copy = res.clone(); caches.open(CACHE).then(c => c.put(req, copy)); return res;
     })));
+    return;
+  }
+  // Covers and photos: cache-first, so albums you have seen still have their art offline
+  if (req.destination === 'image' && IMG_HOST.test(url.hostname)) {
+    e.respondWith(imgFetch(req));
     return;
   }
   if (url.origin !== self.location.origin) return;
@@ -46,3 +55,32 @@ self.addEventListener('fetch', e => {
   }
   e.respondWith(caches.match(req).then(hit => hit || fetch(req)));
 });
+
+/* Image cache. Cover and photo hosts allow CORS, so we ask for a readable copy (an opaque
+   copy is padded to several MB in the browser's storage count); if the host refuses we
+   fall back to the plain request. A saved opaque copy is not handed to a CORS request. */
+async function imgFetch(req) {
+  const cache = await caches.open(IMG);
+  const hit = await cache.match(req.url);
+  if (hit && !(hit.type === 'opaque' && req.mode === 'cors')) return hit;
+  let res;
+  try {
+    res = await fetch(req.url, { mode: 'cors', credentials: 'omit' });
+  } catch (err) {
+    res = await fetch(req);
+  }
+  if (res && (res.ok || res.type === 'opaque')) {
+    cache.put(req.url, res.clone()).then(imgTrim, () => {});
+  }
+  return res;
+}
+let trimming = false;
+async function imgTrim() {
+  if (trimming) return;
+  trimming = true;
+  try {
+    const cache = await caches.open(IMG);
+    const keys = await cache.keys();
+    for (let i = 0; i < keys.length - IMG_MAX; i++) await cache.delete(keys[i]);
+  } finally { trimming = false; }
+}
