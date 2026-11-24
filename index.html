@@ -4651,6 +4651,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.24-f', note:'LAG TRACE: every tap now quietly times itself for 3 seconds (how long the screen froze, and which of Playback\u2019s drawing steps ran and for how long). The last 12 ride along with Report a bug, so right after something feels laggy, Settings \u2192 Help & feedback \u2192 Report a bug sends the numbers behind it. Nothing is kept once the app closes.'},
   {v:'2026.11.24-e', note:'COVERS AND PHOTOS WORK OFFLINE: album covers and artist photos you have already seen are now saved on the device (up to about 1,200 of them, the oldest dropped first), so with no connection, say on a plane, the library, artist pages and open albums still show their art instead of blank sleeves. Rating, reviews and listens already worked offline and sync when you are back online. Art you have not looked at yet is not saved, so open the albums you want before you go.'},
   {v:'2026.11.24-d', note:'SNAPPIER LIBRARY ON A PHONE: tapping All artists starts the library about twice as fast. It no longer rebuilds the artist page underneath before fading in, and it no longer measures the page dozens of times over. Coming back to the library, the tile photos you just saw are already there instead of popping in one by one. The bottom bar no longer disappears behind the library for the first second or so.'},
   {v:'2026.11.24-c', note:'SOFT AGAIN: on phones the colors behind the library and the other pages showed as hard-edged circles. They are soft color pools again, as on a computer.'},
@@ -4877,6 +4878,29 @@ const bugT=()=>Math.round(performance.now());
 function bugPush(a,x,n){a.push(x);if(a.length>n)a.splice(0,a.length-n)}
 function bugCut(s,n){s=String(s==null?'':s);return s.length>n?s.slice(0,n)+'…':s}
 /* where the person is right now, in a few fields (also kept from the last page before Settings, so a report written there still says where the problem was) */
+/* LAG TRACE (2026.11.24-f): every tap starts a 3-second watch that records how long until the screen first changed,
+   every frame that took too long, and which of Playback's own drawing steps ran and for how long. Only the last 12 taps
+   are kept, in memory, and they ride along with Report a bug, so a laggy moment can be sent right after it happens. */
+const PERF={taps:[],cur:null,fns:{}};
+(()=>{const names=['render','renderMain','keepImgs','topHTML','mainAside','mainView','mainSheet0','artistView','paneSwap','lxPatch','lxAfter','lxGeo','hxerEdges','phPull','heroStart','heroPaint','tdPaint','hSplat','hDisc','save','simLoad','gfKeep','libGhostTake','lxFlyHome','statsView','historyView','settingsView','accountView','screenRoot'];
+  for(const n of names){const o=window[n];if(typeof o!=='function')continue;
+    window[n]=function(){const c=PERF.cur;if(!c)return o.apply(this,arguments);const t=performance.now();
+      try{return o.apply(this,arguments)}finally{const d=performance.now()-t,e=c.fn[n]||(c.fn[n]=[0,0]);e[0]+=d;e[1]++}}}})();
+function perfStart(ev){try{
+  const now=performance.now(),b=ev.target&&ev.target.closest?ev.target.closest('[data-act],button,a,[role="button"]'):null;
+  const c={at:now,what:b?(b.dataset&&b.dataset.act?b.dataset.act+(b.dataset.v?':'+bugCut(b.dataset.v,30):''):bugLabel(b)):(ev.target&&ev.target.tagName||'').toLowerCase(),
+    page:(UI.view||UI.tab||'')+(UI.libOpen?'+lib':'')+(UI.alb?'+album':''),fn:{},slow:[],frames:0,worst:0,heap:0};
+  if(PERF.cur)perfEnd(PERF.cur);PERF.cur=c;
+  let last=now;
+  const tick=t=>{if(PERF.cur!==c)return;const g=t-last;last=t;c.frames++;
+    if(g>34)c.slow.push([Math.round(t-c.at),Math.round(g)]);if(g>c.worst)c.worst=g;
+    if(t-c.at<3000)requestAnimationFrame(tick);else perfEnd(c)};
+  requestAnimationFrame(tick)}catch(e){}}
+function perfEnd(c){if(PERF.cur===c)PERF.cur=null;if(c.done)return;c.done=1;
+  try{if(performance.memory)c.heap=Math.round(performance.memory.usedJSHeapSize/1e6)}catch(e){}
+  const fn={};for(const k in c.fn)fn[k]=Math.round(c.fn[k][0])+'ms x'+c.fn[k][1];
+  bugPush(PERF.taps,{t:bugT(),what:c.what,page:c.page,stallMs:Math.round(c.worst),slowFrames:c.slow.slice(0,25),frames:c.frames,fn,heapMB:c.heap||undefined},12)}
+document.addEventListener('pointerdown',perfStart,true);
 function bugPage(){const o={};try{o.view=UI.view||'main';o.tab=UI.tab;try{const a=current();if(a)o.artist=bugCut(a.name,60)}catch(e){}
   for(const k of ['rOpen','fid','pTab','setSec','libOpen','addOpen'])if(UI[k]!=null&&UI[k]!==false&&UI[k]!=='')o[k]=typeof UI[k]==='object'?'[obj]':bugCut(UI[k],60)}catch(e){o.view='boot'}
   o.scroll=Math.round(window.scrollY||0);return o}
@@ -4915,9 +4939,9 @@ async function bugBuild(note,auto){
   const pageNow=bugPage(),r={v:1,build:BUILD,auto:!!auto,note:note||'',when:new Date().toString(),url:location.pathname+location.hash,
     cache:{names:cache,stale:cache.length?!cache.includes('playback-'+BUILD):null,controlled:ctl,updateWaiting:waiting},
     page:pageNow,pageBefore:pageNow.view==='settings'?BUG.page:null,device:d,log,sync,
-    errors:rel(BUG.errs),console:rel(BUG.cons),network:rel(BUG.net),taps:rel(BUG.crumbs),state:bugState()};
+    errors:rel(BUG.errs),console:rel(BUG.cons),network:rel(BUG.net),taps:rel(BUG.crumbs),lag:rel(PERF.taps),state:bugState()};
   let j=JSON.stringify(r);
-  for(const k of ['state','console','taps'])if(j.length>55000){r[k]=k==='state'?bugCut(r.state,1500):r[k].slice(-8);j=JSON.stringify(r)}
+  for(const k of ['state','console','taps','lag'])if(j.length>55000){r[k]=k==='state'?bugCut(r.state,1500):r[k].slice(-8);j=JSON.stringify(r)}
   return j}
 /* the open album, by name (UI.alb holds ids only) */
 function bugAlbum(){try{if(!UI.alb)return null;const a=current();if(!a||a.id!==UI.alb.aid)return null;const g=(a.groups||[]).find(x=>String(x.id)===UI.alb.g);if(!g)return null;
@@ -4966,7 +4990,7 @@ function bugOpen(kind){try{
   el.innerHTML=`<div class="pbbug-c"><div class="pbbug-k" role="group" aria-label="Kind"><button type="button" data-bg="kind" data-v="idea" aria-pressed="${idea}">Suggest a change</button><button type="button" data-bg="kind" data-v="bug" aria-pressed="${!idea}">Report a bug</button></div>
     <h3 id="pbbug-h">${idea?'Suggest a change':'Report a bug'}</h3>
     <p class="pbbug-p">${idea?`Write it down while it’s in front of you. It saves where you are${where?' (<b>'+esc(where)+'</b>)':''}, and you can point at the exact thing you mean.`
-      :`What went wrong, and what did you expect? The report also carries what Playback was doing (recent taps, errors, your device and the page${where?': <b>'+esc(where)+'</b>':''}), never your ratings or keys.`}</p>
+      :`What went wrong, and what did you expect? The report also carries what Playback was doing (recent taps, how long the screen took to respond to them, errors, your device and the page${where?': <b>'+esc(where)+'</b>':''}), never your ratings or keys.`}</p>
     <textarea id="pbbug-t" maxlength="1000" rows="4" placeholder="${idea?'e.g. Make this button match the album color, or move it up next to the title':'e.g. Tapped Deluxe on Discovery and the record vanished'}">${esc(BUGS.text||'')}</textarea>
     ${idea?(pk?`<div class="pbbug-pk"><span>Pointing at: <b>${esc(pk.label||pk.text||pk.inside||pk.tag)}</b>${pk.section?' · '+esc(pk.section):''}</span><button type="button" class="btn" data-bg="pick">Change</button><button type="button" class="btn" data-bg="unpick">Clear</button></div>`
       :`<button type="button" class="btn pbbug-pkb" data-bg="pick">◎ Point at it</button>`):''}
