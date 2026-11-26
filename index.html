@@ -3468,6 +3468,8 @@ html.lite .hx .hxfp{-webkit-backdrop-filter:none;backdrop-filter:none;background
 @keyframes mbShine{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
 /* 2026.11.23-l: off-screen sleeves skip the library's entrance */
 #lx.libin .llist .noin,.side.libin .llist .noin{animation:none!important}
+/* 2026.11.26-b: the sleeves wait (paused, still hidden) until their pictures are decoded, then rise in; see lxHold */
+#lx.lxhold .llist .lgrid>*,#lx.lxhold .lxrc{animation-play-state:paused!important}
 /* 2026.11.23-l: the turntable a record is flying to stays put (it used to slide up while the record aimed at it) */
 .sheet.swin .hero.flyin .hxrel>.hxprog,.sheet.swin .hero.flyin .hxprog .hrec{animation:none!important}
 /* 2026.11.23-l: Play one song, in its rating bar */
@@ -4653,6 +4655,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.26-b', note:'NO MORE POP-IN IN THE LIBRARY (from your screen recording): opening All artists on a phone showed the headers with empty space under them for about half a second, then every sleeve popped in at once. The sleeves\u2019 rise-in was starting while the phone was still decoding their pictures, so it was already over by the time anything could be shown. Now the sleeves on screen wait, hidden, until their pictures are ready (never more than about half a second), then rise in one after another from the start. Also: the splatter-record painting added in -a now only happens when the phone is truly idle (it could land in the middle of the rise-in), and a background date lookup no longer saves your whole log during the animation.'},
   {v:'2026.11.26-a', note:'SMOOTHER ARTIST \u2194 LIBRARY ON A PHONE: switching between an artist and All artists does a lot less work now. The biggest fix: one style rule (the one that dims the other eras when an album is open) made the phone restyle the entire page 4 or 5 times on every switch, including twice while the record was flying back into its sleeve. That is gone. Also: comparing names (for the Listen list number in the top bar) no longer builds a throwaway page element thousands of times per redraw; the library and the artist header each measure the page once instead of two or three times; the artist page under the library is cleared in one step after the record lands, not in two steps mid-flight; opening an artist no longer builds the artist menu twice; and splatter records are painted ahead of time while the library is idle (or the moment your finger touches a sleeve). On a phone-speed test the longest freeze per switch dropped by about a quarter and the stutter during the animations by about a third. Nothing looks different.'},
   {v:'2026.11.24-g', note:'FROM YOUR LAG REPORT: on your iPhone, going to the library had one long freeze about half a second in, when the artist page underneath was being put to sleep. That step is gone (the page is simply cleared a little later, once the library has settled). Opening an artist also skips two of its extra full-page redraws: Fans also spin fills in its own box instead of redrawing everything.'},
   {v:'2026.11.24-f', note:'LAG TRACE: every tap now quietly times itself for 3 seconds (how long the screen froze, and which of Playback\u2019s drawing steps ran and for how long). The last 12 ride along with Report a bug, so right after something feels laggy, Settings \u2192 Help & feedback \u2192 Report a bug sends the numbers behind it. Nothing is kept once the app closes.'},
@@ -6538,6 +6541,7 @@ async function dtMB(a,g,k,y){
     if(!d||(fd.length>d.length)||(fd.length===d.length&&fd<d))d=fd}
   return d}
 async function dtLoad(){
+  if(UI.libOpen&&lxEl())return;   /* 2026.11.26-b: not for the artist hidden under the library (its save landed mid-entrance) */
   const h=document.querySelector('.head.hero.hx');if(!h||DTF.busy||!READY||!window.fetch||!navigator.onLine)return;
   const a=(S.music||[]).find(x=>x.id===h.dataset.aid);if(!a||a.example||!(a.groups.some(g=>!g.dt||g.dt.length<10)||origLost(a)))return;
   const wk2=Date.now()-14*864e5,main=!(a.dtTry&&a.dtTry>wk2),rest=!(a.dtS2&&a.dtS2>wk2);
@@ -6549,7 +6553,9 @@ async function dtLoad(){
       if(!rec.id){rec.id=await nrFindId(a);nrSave(loc)}
       if(rec.id)n+=dtFill(a,await nrGet('lookup',{id:rec.id,entity:'album',limit:200}))}
     if(rest){a.dtS2=Date.now();n+=await dtSearchRest(a)}
-    save();if(n&&document.querySelector('.head.hero.hx[data-aid="'+a.id+'"]'))renderSoon()}
+    /* 2026.11.26-b: the whole log is written out in a quiet moment, not on top of whatever animation is playing */
+    if('requestIdleCallback' in window)requestIdleCallback(()=>save(),{timeout:4000});else save();
+    if(n&&document.querySelector('.head.hero.hx[data-aid="'+a.id+'"]'))renderSoon()}
   catch(e){a.dtTry=Date.now()-13*864e5}   /* Apple busy or offline: try again tomorrow */
   finally{DTF.busy=false}}
 /* ORIGINAL RELEASE DATES (2026.11.22-m). Spotify and Apple only know the date a release came out on THEIR service, so a
@@ -9344,22 +9350,45 @@ function lxAfter(was,y,opened){const side=lxEl();
       const drop=()=>{if(!lxEl()||!sh.isConnected)return;if(performance.now()<FLYBK){LXU=setTimeout(go,120);return}sh.outerHTML='<section class="sheet lxunder" aria-hidden="true"></section>';heroStart()};
       if('requestIdleCallback' in window)requestIdleCallback(drop,{timeout:800});else drop()};
     LXU=setTimeout(go,1000)}
-  lxGeo();if(off)off.forEach(e=>e.classList.add('noin'));if(!FONTS_IN&&document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{FONTS_IN=true;if(lxEl())lxGeo()})}
+  lxGeo();if(off)off.forEach(e=>e.classList.add('noin'));
+  if(opened){LXW.gen++;LXW.q=[];LXW.on=false}
+  if(opened&&off)lxHold(side,off);if(!FONTS_IN&&document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{FONTS_IN=true;if(lxEl())lxGeo()})}
 /* 2026.11.26-a: once the fonts have loaded, asking for document.fonts.ready again cost a full style pass of the whole page (~20ms on a phone, on every library open) */
-let FONTS_IN=false;
+let FONTS_IN=false;try{document.fonts&&document.fonts.ready&&document.fonts.ready.then(()=>{FONTS_IN=true})}catch(e){}
+/* 2026.11.26-b: FROM YOUR SCREEN RECORDING: the library opened with its headers but no sleeves for about half a second, then every
+   sleeve popped in at once. Their rise-in had already started while the phone was still decoding their pictures, so it was over
+   before the first frame of it could be shown. Now the on-screen sleeves wait, paused and hidden, until their pictures are decoded
+   (never more than ~0.45s), and only then play their rise-in, from the start, one after another. */
+function lxHold(side,off){
+  if(noMotion()||!side)return;const skip=new Set(off),t0=performance.now();
+  const els=[...side.querySelectorAll('.llist .lgrid>*,.lxrc')].filter(e=>!skip.has(e));if(!els.length)return;
+  side.classList.add('lxhold');
+  const imgs=[];els.forEach(e=>e.querySelectorAll('img').forEach(i=>imgs.push(i)));
+  const dec=Promise.all(imgs.map(i=>{try{return i.decode?i.decode().catch(()=>{}):null}catch(e){return null}}));
+  let done=false;const go=()=>{if(done)return;done=true;
+    /* the time already spent waiting comes off the start of the stagger (up to a quarter second), so it never feels slower */
+    const held=Math.min(250,performance.now()-t0);
+    requestAnimationFrame(()=>{if(!side.isConnected)return;
+      if(held>20)els.forEach(e=>{try{e.getAnimations().forEach(a=>{a.currentTime=(a.currentTime||0)+held})}catch(x){}});
+      side.classList.remove('lxhold')})};
+  dec.then(go);setTimeout(go,450)}
 /* 2026.11.26-a: while the library sits still, the splatter records of the artists on screen are painted ahead of time, one per
    idle moment (and only when the phone has a free moment for it), so opening one of them skips the slowest step. */
-let LXW={q:[],on:false,t:0};
-function lxWarm(){const side=lxEl();if(!side||side.classList.contains('libin')||!('requestIdleCallback' in window))return;   /* never during the library's entrance */
-  requestIdleCallback(()=>lxWarm0(),{timeout:3000})}
-function lxWarm0(){const side=lxEl();if(!side||side.classList.contains('libin'))return;const H=innerHeight;
+let LXW={q:[],on:false,t:0,gen:0};
+/* 2026.11.26-b: only in real idle time (a frame with 40ms+ to spare, which never happens while anything is animating), never
+   during the library's entrance or a record's flight, and a queue left from an earlier visit is dropped (it used to carry on into
+   the next opening and paint records right in the middle of the sleeves rising in) */
+const lxBusy=s=>!s||s.classList.contains('libin')||s.classList.contains('lxhold')||performance.now()<FLYBK||!!document.querySelector('.libghost');
+function lxWarm(){const side=lxEl();if(lxBusy(side)||!('requestIdleCallback' in window))return;const g=LXW.gen;
+  requestIdleCallback(()=>{if(g===LXW.gen)lxWarm0()})}
+function lxWarm0(){const side=lxEl();if(lxBusy(side))return;const H=innerHeight;
   const ids=[...side.querySelectorAll('[data-act="sel"][data-id]')].filter(t=>{const r=t.getBoundingClientRect();return r.bottom>-H*.5&&r.top<H*1.5}).map(t=>t.dataset.id);
-  LXW.q=[...new Set(ids)];if(LXW.on||!('requestIdleCallback' in window))return;LXW.on=true;
-  const step=d=>{if(!lxEl()||!LXW.q.length){LXW.on=false;return}
-    if(d.timeRemaining()>25){const id=LXW.q.shift();try{const a=S.music.find(x=>String(x.id)===id),n=a&&hLook(a.id);
+  LXW.q=[...new Set(ids)];if(LXW.on)return;LXW.on=true;const g=LXW.gen;
+  const step=d=>{const s=lxEl();if(g!==LXW.gen||!s||!LXW.q.length){LXW.on=false;return}
+    if(!lxBusy(s)&&d.timeRemaining()>40){const id=LXW.q.shift();try{const a=S.music.find(x=>String(x.id)===id),n=a&&hLook(a.id);
       if(a&&hSplatty(n)){const songs=heroSongs(a);if(songs&&songs.length)hDisc(heroPalette(a),n,a.id,songs)}}catch(e){}}
-    requestIdleCallback(step,{timeout:4000})};
-  requestIdleCallback(step,{timeout:4000})}
+    requestIdleCallback(step)};
+  requestIdleCallback(step)}
 document.addEventListener('scroll',ev=>{const t=ev.target;if(!t||!t.closest||!lxEl())return;if(!(t===lxScroller()))return;clearTimeout(LXW.t);LXW.t=setTimeout(lxWarm,500)},{capture:true,passive:true});
 
 /* the record slides out of its sleeve as the sleeve scrolls into view. Which sleeves are on screen is
