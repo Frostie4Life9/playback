@@ -1641,8 +1641,10 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .hxrel{position:relative}
 .hxrel>.group.sleeve.gf.ov{position:absolute;z-index:6;margin:0;box-sizing:border-box}
 .hxrel .hxera,.hxrel .hxrow>*,.hx .hxmore,.hxrel .hxhint{transition:opacity .45s ease}
-.hxrel.gfov .hxera:not(:has(.hxsl.on)),.hxrel.gfov .hxrow:not(.eras)>:not(.on),.hx:has(.hxrel.gfov) .hxmore{opacity:.18}
-.hxrel.gfov .hxera:has(.hxsl.on) .hxer>:not(.on):not(.hxdiv){opacity:.45}
+/* 2026.11.26-a: the era holding the open album is marked .hxon by hxOnMark (it used to be found with :has(.hxsl.on), and that
+   one rule made the browser restyle the WHOLE page whenever an .on class changed anywhere, 4 or 5 times per artist/library switch) */
+.hxrel.gfov .hxera:not(.hxon),.hxrel.gfov .hxrow:not(.eras)>:not(.on),.hx:has(.hxrel.gfov) .hxmore{opacity:.18}
+.hxrel.gfov .hxera.hxon .hxer>:not(.on):not(.hxdiv){opacity:.45}
 /* a stack of loose 7-inch singles: tap to fan them out */
 .hxstk,.hxbox,.hxfold{flex:none;position:relative;background:none;border:0;padding:0;text-align:left;color:#fff;cursor:pointer}
 .hxstk{width:104px;padding-top:40px}
@@ -4651,6 +4653,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.26-a', note:'SMOOTHER ARTIST \u2194 LIBRARY ON A PHONE: switching between an artist and All artists does a lot less work now. The biggest fix: one style rule (the one that dims the other eras when an album is open) made the phone restyle the entire page 4 or 5 times on every switch, including twice while the record was flying back into its sleeve. That is gone. Also: comparing names (for the Listen list number in the top bar) no longer builds a throwaway page element thousands of times per redraw; the library and the artist header each measure the page once instead of two or three times; the artist page under the library is cleared in one step after the record lands, not in two steps mid-flight; opening an artist no longer builds the artist menu twice; and splatter records are painted ahead of time while the library is idle (or the moment your finger touches a sleeve). On a phone-speed test the longest freeze per switch dropped by about a quarter and the stutter during the animations by about a third. Nothing looks different.'},
   {v:'2026.11.24-g', note:'FROM YOUR LAG REPORT: on your iPhone, going to the library had one long freeze about half a second in, when the artist page underneath was being put to sleep. That step is gone (the page is simply cleared a little later, once the library has settled). Opening an artist also skips two of its extra full-page redraws: Fans also spin fills in its own box instead of redrawing everything.'},
   {v:'2026.11.24-f', note:'LAG TRACE: every tap now quietly times itself for 3 seconds (how long the screen froze, and which of Playback\u2019s drawing steps ran and for how long). The last 12 ride along with Report a bug, so right after something feels laggy, Settings \u2192 Help & feedback \u2192 Report a bug sends the numbers behind it. Nothing is kept once the app closes.'},
   {v:'2026.11.24-e', note:'COVERS AND PHOTOS WORK OFFLINE: album covers and artist photos you have already seen are now saved on the device (up to about 1,200 of them, the oldest dropped first), so with no connection, say on a plane, the library, artist pages and open albums still show their art instead of blank sleeves. Rating, reviews and listens already worked offline and sync when you are back online. Art you have not looked at yet is not saved, so open the albums you want before you go.'},
@@ -4902,6 +4905,12 @@ function perfEnd(c){if(PERF.cur===c)PERF.cur=null;if(c.done)return;c.done=1;
   const fn={};for(const k in c.fn)fn[k]=Math.round(c.fn[k][0])+'ms x'+c.fn[k][1];
   bugPush(PERF.taps,{t:bugT(),what:c.what,page:c.page,stallMs:Math.round(c.worst),slowFrames:c.slow.slice(0,25),frames:c.frames,fn,heapMB:c.heap||undefined},12)}
 document.addEventListener('pointerdown',perfStart,true);
+/* 2026.11.26-a: a splatter record is painted the first time its artist opens (a big canvas, the slowest part of opening one).
+   The moment a finger or the mouse goes down on an artist's sleeve in the library, that painting starts, so by the time the
+   tap lands it is usually already done and the artist page opens without that stall. Same picture, same cache, just earlier. */
+document.addEventListener('pointerdown',ev=>{try{const t=ev.target&&ev.target.closest&&ev.target.closest('#lx [data-act="sel"][data-id]');if(!t)return;
+  const id=t.dataset.id;setTimeout(()=>{try{const a=S.music.find(x=>String(x.id)===id);if(!a)return;const n=hLook(a.id);if(!hSplatty(n))return;
+    const songs=heroSongs(a);if(songs&&songs.length)hDisc(heroPalette(a),n,a.id,songs)}catch(e){}},0)}catch(e){}},true);
 function bugPage(){const o={};try{o.view=UI.view||'main';o.tab=UI.tab;try{const a=current();if(a)o.artist=bugCut(a.name,60)}catch(e){}
   for(const k of ['rOpen','fid','pTab','setSec','libOpen','addOpen'])if(UI[k]!=null&&UI[k]!==false&&UI[k]!=='')o[k]=typeof UI[k]==='object'?'[obj]':bugCut(UI[k],60)}catch(e){o.view='boot'}
   o.scroll=Math.round(window.scrollY||0);return o}
@@ -7127,8 +7136,13 @@ function relSearchHtml(a){
    artist and title, never by year: RYM often carries a reissue date. */
 const RATEABLE=['Studio album','EP','Live','Compilation','Other'];
 const RYX={err:'',report:null};
-const decodeEnt=x=>{const t=document.createElement('textarea');t.innerHTML=x;return t.value};
-const nrm=x=>decodeEnt(String(x)).normalize('NFKD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\$/g,'s').replace(/&/g,' and ').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+/* 2026.11.26-a: decoding made a brand-new page element for every name compared, thousands of times per redraw (the Listen
+   list badge alone re-matched every entry against all your artists). Text with no & has nothing to decode, and each name's
+   normalized form is remembered, so a redraw no longer spends most of its time here. */
+let DEC_T=null;const NRM=new Map();
+const decodeEnt=x=>{x=String(x);if(x.indexOf('&')<0)return x;const t=DEC_T||(DEC_T=document.createElement('textarea'));t.innerHTML=x;const v=t.value;t.textContent='';return v};
+const nrm=x=>{x=String(x);let v=NRM.get(x);if(v===undefined){v=nrm0(x);if(NRM.size>40000)NRM.clear();NRM.set(x,v)}return v};
+const nrm0=x=>decodeEnt(x).normalize('NFKD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\$/g,'s').replace(/&/g,' and ').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
 /* one artist who goes by two names: the left name is read as the right one (Ye is Kanye West) everywhere
    artists are matched (RYM imports, Spotify plays, imports), so they never split in two */
 const ARTIST_SAME={'ye':'kanye west'};
@@ -9110,14 +9124,21 @@ const lxEl=()=>document.querySelector('#lx:not(.libghost)');
 const lxScroller=()=>{const s=lxEl();return s?s.querySelector(':scope>.libbody'):null};
 /* where the photo layer sits: from the left edge of the preview column to the window's right edge, from the window's top to the bottom of the hero */
 function lxGeo(){const side=lxEl(),box=lxScroller(),sp=side&&side.querySelector('.lxspot'),w=side&&side.querySelector('.lxphw');if(!sp||!w||!box)return;
-  const r=sp.getBoundingClientRect(),st=box.scrollTop;side.style.setProperty('--lxl',Math.round(r.left)+'px');side.style.setProperty('--lxh',Math.round(r.bottom+st)+'px');
-  w.style.transform='translateY('+(-st)+'px)';
+  /* 2026.11.26-a: every measurement is taken first and only then written, and a value that has not changed is not written again.
+     Writing --lxl/--lxh restyles every sleeve in the library, and measuring straight after forced that restyle on the spot,
+     two or three times per library open. */
+  const r=sp.getBoundingClientRect(),st=box.scrollTop;
+  const put=(k,v)=>{if(side.style.getPropertyValue(k)!==v)side.style.setProperty(k,v)};
   /* 2026.11.21-w: the slim preview only comes in once the search and chips have scrolled away (it used to land on top of them),
      and the hero fades out as it scrolls up, so its buttons never float on their own under the top bar */
-  const past=()=>{const h=side.querySelector('.lxhero'),c=side.querySelector('.lxctl'),bt=box.getBoundingClientRect().top;
-    if(c)side.classList.toggle('lxpast',c.getBoundingClientRect().bottom<bt+6);
-    if(h){const r=h.getBoundingClientRect(),f=Math.max(0,Math.min(1,(bt-r.top)/Math.max(1,r.height*.7)));side.style.setProperty('--lxf',f.toFixed(3))}};past();
-  if(!box._lxs){box._lxs=1;box.addEventListener('scroll',()=>{const ww=side.querySelector('.lxphw');if(ww)ww.style.transform='translateY('+(-box.scrollTop)+'px)';past()},{passive:true})}}
+  const read=()=>{const h=side.querySelector('.lxhero'),c=side.querySelector('.lxctl'),bt=box.getBoundingClientRect().top;
+    const o={past:c?c.getBoundingClientRect().bottom<bt+6:null,f:null};
+    if(h){const hr=h.getBoundingClientRect();o.f=Math.max(0,Math.min(1,(bt-hr.top)/Math.max(1,hr.height*.7))).toFixed(3)}return o};
+  const write=o=>{if(o.past!=null&&side.classList.contains('lxpast')!==o.past)side.classList.toggle('lxpast',o.past);if(o.f!=null)put('--lxf',o.f)};
+  const o=read();
+  put('--lxl',Math.round(r.left)+'px');put('--lxh',Math.round(r.bottom+st)+'px');
+  w.style.transform='translateY('+(-st)+'px)';write(o);
+  if(!box._lxs){box._lxs=1;box.addEventListener('scroll',()=>{const ww=side.querySelector('.lxphw'),o=read();if(ww)ww.style.transform='translateY('+(-box.scrollTop)+'px)';write(o)},{passive:true})}}
 addEventListener('resize',()=>{if(lxEl())lxGeo()},{passive:true});
 function lxCols(a){const P=heroPalette(a,true).map(x=>x.col),f=acolFallback({title:a.name,id:a.id});
   return [P[0]||f,P[1]||P[0]||f,P[2]||P[1]||P[0]||f]}
@@ -9306,19 +9327,40 @@ function lxAfter(was,y,opened){const side=lxEl();
   if(box&&opened&&UI.lxY){box.scrollTop=UI.lxY}
   /* 2026.11.23-l: only the sleeves on screen play their entrance; the rest just sit there (dozens of off-screen sleeves
      animating at once is what made opening the library stutter on a phone) */
-  if(opened&&!noMotion()){const H=innerHeight,ts=[...side.querySelectorAll('.llist .lgrid>*,.llist .entry')],off=ts.filter(e=>{const r=e.getBoundingClientRect();return r.bottom<-20||r.top>H+20});off.forEach(e=>e.classList.add('noin'))}   /* 2026.11.24-d: all measured first, then marked (marking between measures re-laid-out the page once per tile) */
+  let off=null;if(opened&&!noMotion()){const H=innerHeight,ts=[...side.querySelectorAll('.llist .lgrid>*,.llist .entry')];off=ts.filter(e=>{const r=e.getBoundingClientRect();return r.bottom<-20||r.top>H+20})}   /* marked at the very end, after lxGeo has measured too (2026.11.26-a) */   /* 2026.11.24-d: all measured first, then marked (marking between measures re-laid-out the page once per tile) */
   /* once the library has faded in over it, the artist page underneath is dropped (nothing redraws or animates behind the library) */
-  if(opened)setTimeout(()=>{const s=lxEl();if(s){s.classList.remove('libin');s.querySelectorAll('.noin').forEach(e=>e.classList.remove('noin'))}},2200);
+  if(opened)setTimeout(()=>{const s=lxEl();if(s){s.classList.remove('libin');s.querySelectorAll('.noin').forEach(e=>e.classList.remove('noin'))}lxWarm()},2200);
   /* 2026.11.23-l: the artist page under the library stops being drawn as soon as the library has covered it (cheap), and is
      only taken apart once the library's own entrance is over, when the phone is idle (tearing it down mid-entrance was a hitch) */
   /* 2026.11.24-g: an iPhone's lag trace showed one ~280ms frozen frame about half a second in, right when the page under
      the library was switched to content-visibility:hidden (Safari re-lays-out and re-layers the whole page for that).
      Now nothing happens to it during the entrance; it is just dropped once, a little later, when the phone is idle. */
-  if(opened){clearTimeout(LXU);LXU=setTimeout(()=>{if(!lxEl())return;const sh=document.querySelector('#app>.shell>section.sheet:not(.lxunder)');if(!sh)return;
-    sh.querySelectorAll('.hero').forEach(h=>h.classList.add('hoff'));
-    const drop=()=>{if(!lxEl()||!sh.isConnected)return;sh.outerHTML='<section class="sheet lxunder" aria-hidden="true"></section>';heroStart()};
-    LXU=setTimeout(()=>{if('requestIdleCallback' in window)requestIdleCallback(drop,{timeout:800});else drop()},500)},700)}
-  lxGeo();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{if(lxEl())lxGeo()})}
+  /* 2026.11.26-a: pausing the hidden page (at 0.7s) and then dropping it (at ~1.3s) each restyled the whole page, because of
+     the body:has(...) rules, and both landed while the record was still flying back into its sleeve: two hitches in mid-air.
+     Now it is one step, taken only after the record has landed and the phone is idle. */
+  if(opened){clearTimeout(LXU);const t0=performance.now();
+    const go=()=>{if(!lxEl())return;if(performance.now()<FLYBK&&performance.now()-t0<3000){LXU=setTimeout(go,120);return}
+      const sh=document.querySelector('#app>.shell>section.sheet:not(.lxunder)');if(!sh)return;
+      const drop=()=>{if(!lxEl()||!sh.isConnected)return;if(performance.now()<FLYBK){LXU=setTimeout(go,120);return}sh.outerHTML='<section class="sheet lxunder" aria-hidden="true"></section>';heroStart()};
+      if('requestIdleCallback' in window)requestIdleCallback(drop,{timeout:800});else drop()};
+    LXU=setTimeout(go,1000)}
+  lxGeo();if(off)off.forEach(e=>e.classList.add('noin'));if(!FONTS_IN&&document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{FONTS_IN=true;if(lxEl())lxGeo()})}
+/* 2026.11.26-a: once the fonts have loaded, asking for document.fonts.ready again cost a full style pass of the whole page (~20ms on a phone, on every library open) */
+let FONTS_IN=false;
+/* 2026.11.26-a: while the library sits still, the splatter records of the artists on screen are painted ahead of time, one per
+   idle moment (and only when the phone has a free moment for it), so opening one of them skips the slowest step. */
+let LXW={q:[],on:false,t:0};
+function lxWarm(){const side=lxEl();if(!side||side.classList.contains('libin')||!('requestIdleCallback' in window))return;   /* never during the library's entrance */
+  requestIdleCallback(()=>lxWarm0(),{timeout:3000})}
+function lxWarm0(){const side=lxEl();if(!side||side.classList.contains('libin'))return;const H=innerHeight;
+  const ids=[...side.querySelectorAll('[data-act="sel"][data-id]')].filter(t=>{const r=t.getBoundingClientRect();return r.bottom>-H*.5&&r.top<H*1.5}).map(t=>t.dataset.id);
+  LXW.q=[...new Set(ids)];if(LXW.on||!('requestIdleCallback' in window))return;LXW.on=true;
+  const step=d=>{if(!lxEl()||!LXW.q.length){LXW.on=false;return}
+    if(d.timeRemaining()>25){const id=LXW.q.shift();try{const a=S.music.find(x=>String(x.id)===id),n=a&&hLook(a.id);
+      if(a&&hSplatty(n)){const songs=heroSongs(a);if(songs&&songs.length)hDisc(heroPalette(a),n,a.id,songs)}}catch(e){}}
+    requestIdleCallback(step,{timeout:4000})};
+  requestIdleCallback(step,{timeout:4000})}
+document.addEventListener('scroll',ev=>{const t=ev.target;if(!t||!t.closest||!lxEl())return;if(!(t===lxScroller()))return;clearTimeout(LXW.t);LXW.t=setTimeout(lxWarm,500)},{capture:true,passive:true});
 
 /* the record slides out of its sleeve as the sleeve scrolls into view. Which sleeves are on screen is
    remembered across redraws, so a tap never replays or resets the motion. */
@@ -9421,7 +9463,8 @@ function gfKeep(old){
 const PLACE_K='pb_place';
 function placeSave(){try{if(UI.tab!=='music'||UI.view)return;sessionStorage.setItem(PLACE_K,JSON.stringify({sel:UI.sel.music||'',y:Math.round(scrollY),alb:UI.alb&&UI.alb.g||'',t:Date.now()}))}catch(e){}}
 addEventListener('scroll',()=>{clearTimeout(placeSave.t);placeSave.t=setTimeout(placeSave,250)},{passive:true});
-function hxDrift(){hxDrift.q=0;const b=document.querySelector('.hx .hxbg');if(b)b.style.setProperty('--hdrift',(-Math.min(scrollY*.15,innerHeight*.25)).toFixed(1)+'px')}
+function hxDrift(){hxDrift.q=0;if(UI.libOpen&&lxEl())return;   /* 2026.11.26-a: not while the library covers the page (it restyled the hidden hero every frame) */
+  const b=document.querySelector('.hx .hxbg'),v=(-Math.min(scrollY*.15,innerHeight*.25)).toFixed(1)+'px';if(b&&b.style.getPropertyValue('--hdrift')!==v)b.style.setProperty('--hdrift',v)}
 addEventListener('scroll',()=>{if(!hxDrift.q){hxDrift.q=1;requestAnimationFrame(hxDrift)}},{passive:true});
 function placeRestore(){
   if(placeRestore.done||!S.music.length||!document.querySelector('.hero[data-aid]'))return;placeRestore.done=true;
@@ -9471,7 +9514,7 @@ function render(){
   /* a filter or sort change: tiles and release cards that stay glide to their new spots, new ones rise in one after another */
   const flipOn=UI.flip&&!noMotion()&&window.SX&&typeof SX.flip==='function';UI.flip=false;
   if(flipOn)SX.flip(document.body,'#llist .tile,.sheet .group.sleeve,.hxrow .hxsl',()=>keepImgs(()=>{const top=topHTML();if(!lxPatch(top))renderMain(top)}),{dur:420,key:el=>el.dataset.sxk?'k'+el.dataset.sxk:el.dataset.acol?'g'+el.dataset.acol:el.dataset.g?'a'+el.dataset.g:el.dataset.id?'t'+el.dataset.id:null});
-  else keepImgs(()=>{const top=topHTML();if(!lxPatch(top)&&!paneSwap(top))renderMain(top)});
+  else keepImgs(()=>{AM={};try{const top=topHTML();if(!lxPatch(top)&&!paneSwap(top))renderMain(top)}finally{AM=null}});
   SHEET_PRE=null;
   gfKeep(gfOld);
   if(swK)UI.swKey=UI.tab+':'+(UI.sel[UI.tab]||'');   /* the draw itself may have picked the artist (first launch): remember that one, or the next redraw (a sort change, opening an album) thinks the artist changed and jumps to the top */
@@ -9525,7 +9568,13 @@ function render(){
   if(GFX)gfFxRun();
 }
 let LIBIN=false;   /* set by renderMain for the one draw that opens the artist menu */
-function mainAside(e,list){const emp=!e&&lxEmpty(),full=!!(UI.libOpen&&e)||emp;   /* in the full artist menu the Add an artist box sits inside it (on a phone the menu covers the page, so a box outside it could never be seen) */
+/* 2026.11.26-a: within one redraw the side menu is built once. Opening an artist tried the quick page swap first (which built the
+   menu to compare it), gave up because the library had just closed, and then the full draw built the whole menu again. */
+let AM=null;
+function mainAside(e,list){if(!AM)return mainAside0(e,list);
+  const k=(e&&e.id)+'|'+(list===S.music?'m':list===S.screen?'s':'?')+'|'+UI.tab+'|'+!!UI.libOpen+'|'+!!UI.addOpen+'|'+LIBIN+'|'+LXS;
+  const h=AM[k];if(h!=null)return h;return AM[k]=mainAside0(e,list)}
+function mainAside0(e,list){const emp=!e&&lxEmpty(),full=!!(UI.libOpen&&e)||emp;   /* in the full artist menu the Add an artist box sits inside it (on a phone the menu covers the page, so a box outside it could never be seen) */
   const lx=full&&UI.tab==='music';if(lx&&LIBIN)LXS=null;
   const la=lx?(S.music.find(x=>x.id===LXS)||e):null,lc=la?lxCols(la):LX_EMPTY_COLS,fresh=emp&&!document.querySelector('#lx.lxe');
   return `<aside class="side ${UI.libOpen||!e?'libopen':''}${full?' libfull':''}${(LIBIN&&UI.libOpen&&e)||fresh?' libin':''}${lx?' lx':''}${emp?' lxe':''}"${lx?` id="lx" style="--x1:${esc(lc[0])};--x2:${esc(lc[1])};--x3:${esc(lc[2])}"`:''}>
@@ -11710,7 +11759,9 @@ function hxEras(a,rl,sleeve,og,NEW){
 /* THE OPEN ALBUM FLOATS OVER THE SHELF: the jacket lies on top of the records right under the row (or era) its record is on,
    instead of pushing everything below it down the page. It is moved into the Releases block and pinned there in pixels; the
    rest of the shelf steps back behind it (class gfov), and the page only grows if the jacket reaches past the end of it. */
-function hxPlaceGf(){const rel=document.querySelector('.hx .hxrel'),gf=document.querySelector('.hx .group.sleeve.gf');
+function hxOnMark(rel){if(!rel)return;const on=rel.querySelector('.hxsl.on'),era=on&&on.closest('.hxera');
+  rel.querySelectorAll('.hxera.hxon').forEach(e=>{if(e!==era)e.classList.remove('hxon')});if(era&&!era.classList.contains('hxon'))era.classList.add('hxon')}
+function hxPlaceGf(){const rel=document.querySelector('.hx .hxrel'),gf=document.querySelector('.hx .group.sleeve.gf');hxOnMark(rel);
   if(!gf){document.documentElement.classList.remove('gfsh');document.querySelectorAll('.gfscrim').forEach(s=>s.remove())}
   if(rel&&!gf){rel.classList.remove('gfov');rel.style.paddingBottom='';return}
   if(!rel||!gf)return;
@@ -12338,13 +12389,24 @@ async function phHiLoad(){
 }
 function phPull(){const h=document.querySelector('.head.hero.hx'),app=document.getElementById('app');if(!h||!app)return;
   if(lxEl()&&UI.libOpen)return;   /* 2026.11.24-d: the artist page is under the library and already placed */
-  h.style.marginTop='';h.style.setProperty('--pull','0px');
-  const d=Math.max(0,Math.round(h.getBoundingClientRect().top-app.getBoundingClientRect().top));
-  h.style.marginTop=(-d)+'px';h.style.setProperty('--pull',d+'px');
+  /* 2026.11.26-a: one measurement instead of two. It used to clear its own pull, measure, set it, clear the tail, measure again
+     and set that: two forced layouts of the whole artist page (with the hero restyled in between) on every draw. The pull and
+     the tail already applied are simply added back to what is measured, and nothing is written when nothing changed. */
+  const pull0=parseFloat(h.style.getPropertyValue('--pull'))||0,tail0=parseFloat(h.style.getPropertyValue('--tail'))||0;
+  if(pull0||tail0||h.style.marginTop||h.style.marginBottom){   /* a page already pulled: the old, careful way (margins can collapse into the page around it) */
+    h.style.marginTop='';h.style.setProperty('--pull','0px');
+    const d=Math.max(0,Math.round(h.getBoundingClientRect().top-app.getBoundingClientRect().top));
+    h.style.marginTop=(-d)+'px';h.style.setProperty('--pull',d+'px');
+    h.style.marginBottom='';h.style.setProperty('--tail','0px');
+    const below=Math.max(0,Math.round(document.documentElement.scrollHeight-(h.getBoundingClientRect().bottom+scrollY)));
+    if(below&&below<400){h.style.marginBottom=(-below)+'px';h.style.setProperty('--tail',below+'px')}return}
+  const hr=h.getBoundingClientRect(),ar=app.getBoundingClientRect(),sh=document.documentElement.scrollHeight;
+  const d=Math.max(0,Math.round(hr.top-ar.top+pull0));
   /* whatever page padding sits under the artist page (room for the phone dock) gets the artist's colors too */
-  h.style.marginBottom='';h.style.setProperty('--tail','0px');
-  const below=Math.max(0,Math.round(document.documentElement.scrollHeight-(h.getBoundingClientRect().bottom+scrollY)));
-  if(below&&below<400){h.style.marginBottom=(-below)+'px';h.style.setProperty('--tail',below+'px')}}
+  const below=Math.max(0,Math.round(sh+tail0-(hr.bottom+scrollY))),tail=below&&below<400?below:0;
+  const set=(k,v)=>{if(h.style.getPropertyValue(k)!==v)h.style.setProperty(k,v)};
+  set('margin-top',d?(-d)+'px':'0px');set('--pull',d+'px');
+  if(tail){set('margin-bottom',(-tail)+'px');set('--tail',tail+'px')}else{if(h.style.marginBottom)h.style.marginBottom='';set('--tail','0px')}}
 window.addEventListener('resize',()=>{clearTimeout(window.__phT);window.__phT=setTimeout(phPull,60)});
 function heroStyle(a){const v=heroVars(a);return Object.keys(v).filter(k=>v[k]).map(k=>k+':'+v[k]).join(';')}
 function heroPaint(){const el=document.querySelector('.hero[data-aid]');if(!el)return;
@@ -12498,7 +12560,8 @@ function flyOut(F){
     else{w.remove();FLY.active=false;h.classList.remove('drop');HERO.begin=performance.now()+650;h.classList.add('play');return}
     requestAnimationFrame(step)};
   requestAnimationFrame(step);return true}
-function flyBack(O){
+let FLYBK=0;   /* when the record flying back into its sleeve lands (2026.11.26-a) */
+function flyBack(O){FLYBK=performance.now()+1100;
   const w=discEl(O.sn,O.ang),r=O.rect;document.body.appendChild(w);flyPut(w,r.left,r.top,r.width,null);
   const tile=()=>document.querySelector('.tile[data-act="sel"][data-id="'+String(O.aid).replace(/["\\]/g,'\\$&')+'"]');
   const mid=!!O.mid,t0=performance.now(),A=mid?1:170,B=560,C=240,sd=mid?r.width:r.width*1.07,sx=mid?r.left:r.left-(sd-r.width)/2,sy=mid?r.top:r.top-(sd-r.width)/2-10;let ok=null;
@@ -12589,7 +12652,7 @@ function heroTick(t){
   const dt=HERO.last?Math.min(64,t-HERO.last):0;HERO.last=t;
   const q=Math.max(0,Math.min(1,(t-HERO.begin)/1600));HERO.spd=200*q*q*(3-2*q);
   HERO.ang=(HERO.ang+HERO.spd*dt/1000)%360;
-  const liq=!!(LIQ.svg&&LIQ.svg.isConnected),off=document.hidden||!!(HERO.hero&&HERO.hero.classList.contains('hoff'));
+  const liq=!!(LIQ.svg&&LIQ.svg.isConnected),off=document.hidden||!!(HERO.hero&&HERO.hero.classList.contains('hoff'))||!!(UI.libOpen&&lxEl());   /* 2026.11.26-a: no record painting under the library (it used to be paused with a class, which restyled the page mid-flight) */
   /* 2026.11.20-n: once a plain record is up to speed, the browser's compositor takes over the spin (same speed, full
      refresh rate, no script every frame). Only the liquid record keeps the script, for its paint physics. */
   if(q>=1&&!liq&&el.animate){const a=HERO.ang;el.style.transform='rotate('+a.toFixed(2)+'deg)';
