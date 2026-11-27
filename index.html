@@ -3442,7 +3442,25 @@ html.lite .hx .hxfp{-webkit-backdrop-filter:none;backdrop-filter:none;background
   .gf.jk2 .gf-rs .rater{--ink:#2b1a20;position:fixed;z-index:30;left:20px;right:20px;bottom:calc(8px + env(safe-area-inset-bottom,0px));margin:0;border-radius:6px;color:#2b1a20;
     background:linear-gradient(170deg,color-mix(in srgb,var(--acsw) 10%,#fbf1ea),color-mix(in srgb,var(--acsw) 18%,#efe0d6));border:0;box-shadow:0 -14px 40px rgb(0 0 0 / .42),inset 0 1px 0 #fff}
   @media (prefers-reduced-motion:no-preference){.gf.jk2 .gf-rs .rater{animation:jkIns .42s cubic-bezier(.2,.85,.25,1) both}@keyframes jkIns{from{translate:0 110%}}}
+  /* 2026.11.27-j: the inside panels are solid printed card (the cover no longer shows through like frosted glass) */
+  .gf.jk2 .gf-lf,.gf.jk2 .gf-r{background:linear-gradient(165deg,color-mix(in srgb,#fff 7%,var(--jk)),color-mix(in srgb,#000 7%,var(--jk)) 70%),var(--jk)}
+  /* the sleeved records are whole discs, big enough that the edge sticking out reads as a record, not a hairline */
+  .gf.jk2 .gf-r>.gfph-rec{--rv:min(calc(100vw - 40px),400px);top:30px;right:-26px;clip-path:inset(-40px -40px -40px calc(var(--rv) - 26px))}
+  .gf.jk2 .gf-lf>.gfph-lrec{--lv:min(calc(100vw - 40px),400px);width:var(--lv);height:var(--lv);top:30px;left:-26px;clip-path:inset(-40px calc(var(--lv) - 26px) -40px -40px)}
+  .gf.jk2 .gf-r>.gfph-rec>.gf-vr,.gf.jk2 .gf-lf>.gfph-lrec>*{box-shadow:none;background:conic-gradient(from 210deg,transparent,rgb(255 255 255 / .14) 7%,transparent 15%,transparent 50%,rgb(255 255 255 / .1) 57%,transparent 65%),repeating-radial-gradient(circle,#1d1919 0 1px,#0b0909 1px 3px)}
+  /* everything inside is already printed under the cover: the title no longer fades in after the jacket opens */
+  .gf.phs.pg.jk2.gfopen .gfph-t{animation:none}
+  /* the insert card: no fade mask over it, and the list can scroll its last songs up above it */
+  .gf.jk2 .gf-rs:has(.rater){-webkit-mask-image:none;mask-image:none}
+  .gf.jk2 .gf-rs:has(.rater) .tlist{padding-bottom:280px}
+  .gf.jk2 .gfr-songs em.gfr-nil{display:inline-flex;visibility:hidden}
 }
+.gfr-songs em.gfr-nil{display:none}
+/* 2026.11.27-j: the back of the swinging cover is printed card with the album's title, drawn in plain text */
+.gfh-b .gfh-bt{position:absolute;left:0;right:0;top:0;padding:18px 20px;color:inherit}
+.gfh-bt span{display:block;font:500 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;opacity:.75}
+.gfh-bt b{display:block;margin-top:4px;font:800 clamp(22px,7vw,30px)/1.08 var(--display);letter-spacing:-.01em}
+.gfh-bt i{display:block;margin-top:6px;font:500 12px var(--body);font-style:normal;opacity:.7}
 .gfhinge .gfh-l{position:absolute;inset:0;transform-style:preserve-3d;transform-origin:0 50%}
 .gfh-f,.gfh-b{position:absolute;inset:0;border-radius:5px;overflow:hidden;-webkit-backface-visibility:hidden;backface-visibility:hidden}
 .gfh-f{background:var(--hb,#333);box-shadow:0 18px 38px rgb(0 0 0 / .42),inset 0 0 0 1px rgb(255 255 255 / .08)}
@@ -4782,6 +4800,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.27-j', note:'THE PHONE JACKET, FIRST PASS OF FIXES FROM YOUR RECORDING. The cover is real art the whole way: lifting, swinging open, closing and flying home (on an iPhone it was a flat tan or brown square). Its back is printed card with the title, and it swings with more depth. The black blade over the songs is gone: the records slide straight out of the jacket edges, and they are whole discs now, so the edge that sticks out reads as a record. The title is already printed when the cover opens. The panels are solid card, so the cover no longer shows through like frosted glass. Closing brightens the page while the cover is still on its way home. Rating: opening the card, Done, Clear and Leave out redraw just the album instead of the whole page (about 6x less work each time), the song you are rating rides up above the card, the card is no longer faded at its bottom, and the "album vs songs" line keeps its spot so the list no longer jumps.'},
   {v:'2026.11.27-i', note:'THE JACKET IS LIGHTER ON AN IPHONE. Opening Imaginal Disk on 27-h made the iPhone drop the page mid-swing while the screen was zoomed in (it read 269 px wide, about 1.6x). Double-tap no longer zooms the app (pinch still does), a zoomed-in screen opens albums the plain way, and the back of the swinging cover only prints the square you can see instead of a full copy of the details panel and its record. The crash note now records the zoom too.'},
   {v:'2026.11.27-h', note:'ON A PHONE AN ALBUM IS A RECORD JACKET NOW (board 4 of the album mockups, from your Magdalena Bay recording). Tapping a record lifts its cover on the very frame you tap and warms the page to the album\u2019s own color, instead of snapping to grey and sitting still while the page was rebuilt underneath. The cover flies straight to its final size and swings open on its spine, and its back is the details panel itself, so there is no black slab, no second zoom into a full-screen card and nothing fading in late. It opens on your songs: the open jacket\u2019s two panels sit side by side with the records sleeved in them, peeking out of the outer edges, and you swipe across the spine to the details panel (no more Details / Ratings tabs; where you are is printed at the top). The songs are printed on the panel with a groove line under each one drawn to its rating, the stats are printed liner-note lines instead of grey tiles, and your album score is a hype sticker on the corner of the jacket (tap it to rate the album). Rating a song or the album pulls a printed insert card out of the bottom of the jacket. Closing plays it all backwards (sliding back to your songs first if you were on details) and leaves the page exactly where it was. Singles and the computer layout are unchanged.'},
   {v:'2026.11.27-g', note:'THE UPDATE BANNER IS BACK: builds 27-d to 27-f were pushed without moving the offline copy\'s build number along, so the app\'s quick check thought nothing was new and your phone could keep serving 27-c. Both now say 27-g, so this build (with the record-mask fix from 27-f) actually reaches your phone.'},
@@ -9729,7 +9748,28 @@ function hxerEdges(keep){
   es.forEach((e,i)=>{const[w,l]=m[i];e.classList.toggle('ovr',w>4);e.classList.toggle('sl',l>4);e.classList.toggle('end',w>4&&l>=w-4);
     if(!e._edg){e._edg=1;e.addEventListener('scroll',()=>hxerEdge(e),{passive:true})}})}
 addEventListener('resize',()=>hxerEdges(),{passive:true});
+/* 2026.11.27-j: RATING ON A PHONE REDRAWS THE JACKET, NOT THE PAGE. Opening the insert card, Done, Clear and Leave out used to rebuild
+   the whole artist page under the open album (150-370 ms at a time on a phone). They now rebuild just this album's panels. */
+function gfQuick(){
+  if(!gfPh()||!UI.alb||GFP)return false;const gf=gfOpenEl(UI.alb.g);if(!gf||!gf.classList.contains('jk2'))return false;
+  const a=S.music.find(x=>x.id===UI.alb.aid),g=a&&a.groups.find(x=>String(x.id)===UI.alb.g);if(!a||!g||g.kind==='Single')return false;
+  const t=document.createElement('template');t.innerHTML=gfHtml(a,g).trim();const n=t.content.firstElementChild;if(!n)return false;
+  const rs=gf.querySelector('.gf-rs'),nrs=n.querySelector('.gf-rs'),ls=gf.querySelector('.gf-ls'),nls=n.querySelector('.gf-ls');if(!rs||!nrs||!ls||!nls)return false;
+  const st=rs.scrollTop,lst=ls.scrollTop,h=rs.querySelector(':scope>.gfph-h');
+  rs.replaceChildren(...nrs.childNodes);if(h)rs.insertBefore(h,rs.firstChild);
+  /* the details side keeps its cover and record; its words and stats are swapped */
+  {const om=ls.querySelector('.sl-hero>.sl-meta'),nm=nls.querySelector('.sl-hero>.sl-meta');if(om&&nm)om.replaceWith(nm);
+    [...ls.children].forEach(c=>{if(!c.classList.contains('sl-hero'))c.remove()});[...nls.children].forEach(c=>{if(!c.classList.contains('sl-hero'))ls.appendChild(c)})}
+  {const od=gf.querySelector('.gf-pk.l .sl-disc'),nd=n.querySelector('.gf-pk.l .sl-disc');if(od&&nd)od.replaceWith(nd)}
+  {const pk=gf.querySelector('.gf-pk.r'),vr=n.querySelector('.gf-pk.r .gf-vr');if(pk&&vr)pk.replaceChildren(vr)}
+  gfPgPlace(gf);rs.scrollTop=st;ls.scrollTop=lst;
+  slObserve();slPulseNow();UI.rAnim=null;
+  /* the song being rated rides up above the insert card */
+  const row=rs.querySelector('.track.sl-t.ropen'),card=rs.querySelector('.rater');
+  if(row&&card)requestAnimationFrame(()=>{const rb=row.getBoundingClientRect().bottom,ct=card.getBoundingClientRect().top;if(rb>ct-12)rs.scrollBy({top:rb-ct+24,behavior:noMotion()?'auto':'smooth'})});
+  return true}
 function render(){
+  if(UI.gfQ){UI.gfQ=false;try{if(gfQuick())return}catch(e){}}
   if(!isOwnerUI()){if(UI.tab==='screen')UI.tab='music';if(UI.view==='collection')UI.view=null}   /* a saved tab or a stale link can never land a friend on a hidden page */
   const bg=BGR;BGR=false;
   if(bg&&renderQuiet())return;
@@ -12389,6 +12429,14 @@ function gfRunPg(el,back){
    The record slides out of the jacket's outer edge last. Closing plays it backwards from the songs side (sliding back to it
    first if you were on details), and the cover flies home. A drag-down close keeps its drop. */
 let GFPRE=null;
+/* 2026.11.27-j: a flying cover is drawn into a canvas from the already-loaded tile image. On an iPhone a fresh <img> in a
+   moving layer stays blank (a flat tan square) until the page finishes rebuilding; a canvas is painted on the spot. */
+function gfArtCanvas(img,w,h,bg){const c=document.createElement('canvas'),d=Math.min(2,devicePixelRatio||1);
+  c.width=Math.max(1,Math.round(w*d));c.height=Math.max(1,Math.round(h*d));c.setAttribute('aria-hidden','true');
+  c.style.cssText='position:absolute;inset:0;width:100%;height:100%;display:block';
+  const x=c.getContext('2d');x.fillStyle=bg||'#333';x.fillRect(0,0,c.width,c.height);
+  if(img&&img.complete&&img.naturalWidth){try{const iw=img.naturalWidth,ih=img.naturalHeight,q=Math.min(iw,ih);x.imageSmoothingQuality='high';x.drawImage(img,(iw-q)/2,(ih-q)/2,q,q,0,0,c.width,c.height)}catch(e){}}
+  return c}
 function gfPreLift(b){
   if(GFPRE){try{GFPRE.fly.remove();GFPRE.wash.remove()}catch(e){}GFPRE=null}
   const tile=b.querySelector('.hxc');if(!tile)return;const T=tile.getBoundingClientRect();if(!T.width)return;
@@ -12396,7 +12444,7 @@ function gfPreLift(b){
   const wash=document.createElement('div');wash.className='gfscrim jkw';wash.setAttribute('aria-hidden','true');wash.style.cssText=`z-index:1100;pointer-events:none;--wc:${col}`;
   const fly=document.createElement('div');fly.setAttribute('aria-hidden','true');
   fly.style.cssText=`position:fixed;left:0;top:0;width:${T.width}px;height:${T.height}px;z-index:1200;pointer-events:none;border-radius:5px;overflow:hidden;transform-origin:0 0;background:${col};will-change:transform`;
-  if(im&&im.complete&&im.naturalWidth)fly.innerHTML=`<img src="${esc(im.currentSrc||im.src)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">`;
+  fly.appendChild(gfArtCanvas(im,T.width*1.25,T.height*1.25,col));
   document.body.append(wash,fly);
   const at=(x,y,k)=>`translate(${x.toFixed(1)}px,${y.toFixed(1)}px) scale(${k})`;
   /* it rises toward the middle and grows a little, slowing as it goes, so a slow rebuild only ever looks like a longer lift */
@@ -12413,7 +12461,7 @@ function gfRunJk(el,back){
   const sp=el.querySelector('.gf-sp'),gl=el.querySelector('.gf-l'),gr=el.querySelector('.gf-r'),lf=el.querySelector('.gf-lf'),tile=document.querySelector('.hxsl.on .hxc');
   if(drag||gfSafe(el.dataset.acol)||gfZoomed()||!sp||!gl||!gr||!lf||!tile){drop();return gfRunPg(el,back)}
   const go=()=>{
-  const sc=el.parentElement&&el.parentElement.querySelector(':scope>.gfscrim'),gb=el.querySelector(':scope>.gfgrab'),rec=el.querySelector('.gf-r>.gfph-rec'),lrec=el.querySelector('.gf-lf>.gfph-lrec'),stk=el.querySelector('.gfph-stk');
+  const sc=el.parentElement&&el.parentElement.querySelector(':scope>.gfscrim'),gb=el.querySelector(':scope>.gfgrab'),rec=el.querySelector('.gf-r>.gfph-rec>*'),lrec=el.querySelector('.gf-lf>.gfph-lrec>*'),stk=el.querySelector('.gfph-stk');
   let T=null;{const ps=tile.style.cssText;tile.style.animation='none';tile.style.transition='none';tile.style.transform='none';const r=tile.getBoundingClientRect();tile.style.cssText=ps;if(r.width)T=r}
   const R=gr.getBoundingClientRect();if(!T||!R.width){drop();return gfRunPg(el,back)}
   const W=R.width,C={left:R.left,top:R.top,width:W};
@@ -12421,13 +12469,16 @@ function gfRunJk(el,back){
   const ti=tile.querySelector('img'),ci=el.querySelector('.sl-pack .sl-cover img'),im=ti&&ti.complete&&ti.naturalWidth?ti:ci&&ci.complete&&ci.naturalWidth?ci:null;
   const pc=el.querySelector('.sl-pack .sl-cover'),hb=pc?getComputedStyle(pc).backgroundColor:'#333',lt=(pc&&pc.querySelector('.sl-ph'))?pc.querySelector('.sl-ph').textContent:'';
   const fly=document.createElement('div');fly.className='gfhinge';fly.setAttribute('aria-hidden','true');
-  fly.style.cssText=`position:fixed;left:0;top:0;width:${W}px;height:${W}px;z-index:1200;pointer-events:none;transform-origin:0 0;perspective:${(W*3).toFixed(0)}px;--hb:${hb};--hw:${W}px`;
-  fly.innerHTML=`<div class="gfh-l"><div class="gfh-f">${im?`<img src="${esc(im.currentSrc||im.src)}" alt="">`:`<span>${esc(lt)}</span>`}<i class="gfh-sh"></i></div><div class="gfh-b"><i class="gfh-sh"></i></div></div>`;
+  fly.style.cssText=`position:fixed;left:0;top:0;width:${W}px;height:${W}px;z-index:1200;pointer-events:none;transform-origin:0 0;perspective:${(W*1.7).toFixed(0)}px;--hb:${hb};--hw:${W}px`;
+  fly.innerHTML=`<div class="gfh-l"><div class="gfh-f">${im?'':`<span>${esc(lt)}</span>`}<i class="gfh-sh"></i></div><div class="gfh-b"><i class="gfh-sh"></i></div></div>`;
   const face=fly.firstChild,ff=face.querySelector('.gfh-f'),fb=face.querySelector('.gfh-b'),shF=ff.querySelector('.gfh-sh'),shB=fb.querySelector('.gfh-sh');
-  {const L=lf.getBoundingClientRect(),cp=gfSnap(lf);cp.style.cssText+=`;position:absolute;left:0;top:0;width:${L.width.toFixed(1)}px;height:${Math.min(L.height,W+2).toFixed(1)}px;overflow:hidden;margin:0;box-shadow:none;border-radius:0`;
-    /* 2026.11.27-i: only the square that shows on the cover's back is printed; the rest of the details copy (and its record) is dropped */
-    cp.querySelectorAll('.gfph-lrec,.gfph-stk,img[loading="lazy"]').forEach(n=>n.remove());
-    fb.style.background='none';fb.insertBefore(cp,shB);document.body.appendChild(fly);gfSnapScroll(cp)}
+  if(im)ff.insertBefore(gfArtCanvas(im,W,W,hb),shF);
+  /* 2026.11.27-j: the cover's back is the inside panel's own card with the title printed on it (it used to carry a full copy of
+     the details page, which an iPhone often never painted, so it swung as a blank brown slab) */
+  {const lcs=getComputedStyle(lf),mt=el.querySelector('.gf-ls .sl-meta'),q=s=>{const n=mt&&mt.querySelector(s);return n?n.textContent.trim():''};
+    fb.style.background=(lcs.backgroundImage&&lcs.backgroundImage!=='none'?lcs.backgroundImage+',':'')+lcs.backgroundColor;fb.style.color=lcs.color;
+    const bt=document.createElement('div');bt.className='gfh-bt';bt.innerHTML=`<span>${esc(q('.sl-kind'))}</span><b>${esc(q('h3'))}</b><i>${esc(q('.sl-sub'))}</i>`;
+    fb.insertBefore(bt,shB);document.body.appendChild(fly)}
   const at=q=>`translate(${q.left.toFixed(1)}px,${q.top.toFixed(1)}px) scale(${(q.width/W).toFixed(4)})`;
   const sw='cubic-bezier(.45,0,.2,1)',a=[],P=x=>a.push(x);
   if(!back){
@@ -12439,23 +12490,23 @@ function gfRunJk(el,back){
     P(fly.animate([{transform:at(B),offset:0},{transform:at(M),offset:.45,easing:'cubic-bezier(.3,0,.2,1)'},{transform:at(C),offset:1}],{duration:pre?380:440,easing:'cubic-bezier(.35,0,.2,1)',fill:'both'}));
     P(ff.animate([{boxShadow:'0 26px 44px rgb(0 0 0 / .45)'},{boxShadow:'0 18px 38px rgb(0 0 0 / .42)'}],{duration:420,fill:'both'}));
     P(gr.animate([{opacity:0},{opacity:0,offset:.9},{opacity:1}],{duration:420,fill:'both'}));
-    P(face.animate([{transform:'rotateY(0deg)'},{transform:'translateZ(18px) rotateY(-96deg)',offset:.5},{transform:'rotateY(-180deg)'}],{duration:620,delay:380,easing:sw,fill:'both'}));
+    P(face.animate([{transform:'rotateY(0deg)'},{transform:'translateZ(46px) rotateY(-96deg)',offset:.5},{transform:'rotateY(-180deg)'}],{duration:640,delay:380,easing:sw,fill:'both'}));
     P(shF.animate([{opacity:0},{opacity:.6}],{duration:310,delay:380,easing:'ease-in',fill:'both'}));
     P(shB.animate([{opacity:.5},{opacity:0}],{duration:310,delay:690,easing:'ease-out',fill:'both'}));
     P(gl.animate([{opacity:0},{opacity:0,offset:.5},{opacity:1}],{duration:760,fill:'both'}));
     P(fly.animate([{opacity:1},{opacity:0}],{duration:120,delay:1000,fill:'forwards'}));
     if(gb)P(gb.animate([{opacity:0},{opacity:1}],{duration:260,delay:760,fill:'both'}));
     if(stk)P(stk.animate([{scale:'1.9',rotate:'-10deg',opacity:0},{scale:'1',rotate:'8deg',opacity:1}],{duration:460,delay:1000,easing:'cubic-bezier(.3,1.5,.5,1)',fill:'both'}));
-    if(rec)P(rec.animate([{translate:'-30px 0',rotate:'-70deg'},{translate:'0 0',rotate:'0deg'}],{duration:520,delay:900,easing:'cubic-bezier(.2,.8,.2,1)',fill:'both'}));
-    if(lrec)P(lrec.animate([{translate:'30px 0'},{translate:'0 0'}],{duration:520,delay:1000,easing:'cubic-bezier(.2,.8,.2,1)',fill:'both'}));
+    if(rec)P(rec.animate([{translate:'-46px 0'},{translate:'0 0'}],{duration:520,delay:860,easing:'cubic-bezier(.2,.8,.2,1)',fill:'both'}));
+    if(lrec)P(lrec.animate([{translate:'46px 0'},{translate:'0 0'}],{duration:520,delay:960,easing:'cubic-bezier(.2,.8,.2,1)',fill:'both'}));
   }else{
     /* 0-240 the records tuck in · 120-740 the cover swings shut · 740-1160 it flies home */
     face.style.transform='rotateY(-180deg)';fly.style.transform=at(C);
     if(gb)P(gb.animate([{opacity:1},{opacity:0}],{duration:160,fill:'forwards'}));
     if(stk)P(stk.animate([{opacity:1},{opacity:0}],{duration:160,fill:'forwards'}));
-    if(rec)P(rec.animate([{translate:'0 0'},{translate:'-30px 0'}],{duration:240,easing:'ease-in',fill:'forwards'}));
-    if(lrec)P(lrec.animate([{translate:'0 0'},{translate:'30px 0'}],{duration:240,easing:'ease-in',fill:'forwards'}));
-    P(face.animate([{transform:'rotateY(-180deg)'},{transform:'translateZ(18px) rotateY(-84deg)',offset:.5},{transform:'rotateY(0deg)'}],{duration:620,delay:120,easing:sw,fill:'both'}));
+    if(rec)P(rec.animate([{translate:'0 0'},{translate:'-46px 0'}],{duration:240,easing:'ease-in',fill:'forwards'}));
+    if(lrec)P(lrec.animate([{translate:'0 0'},{translate:'46px 0'}],{duration:240,easing:'ease-in',fill:'forwards'}));
+    P(face.animate([{transform:'rotateY(-180deg)'},{transform:'translateZ(46px) rotateY(-84deg)',offset:.5},{transform:'rotateY(0deg)'}],{duration:620,delay:120,easing:sw,fill:'both'}));
     P(shB.animate([{opacity:0},{opacity:.5}],{duration:310,delay:120,easing:'ease-in',fill:'both'}));
     P(shF.animate([{opacity:.6},{opacity:0}],{duration:310,delay:430,easing:'ease-out',fill:'both'}));
     P(gl.animate([{opacity:1},{opacity:1,offset:.97},{opacity:0}],{duration:430,fill:'forwards'}));
@@ -12463,7 +12514,7 @@ function gfRunJk(el,back){
     const M={left:(T.left+C.left)/2,top:Math.min(T.top,C.top)-24,width:(T.width+W)/2*1.04};
     P(fly.animate([{transform:at(C),offset:0},{transform:at(M),offset:.5,easing:'cubic-bezier(.3,0,.2,1)'},{transform:at(T),offset:1}],{duration:420,delay:740,easing:'cubic-bezier(.45,0,.2,1)',fill:'both'}));
     P(ff.animate([{boxShadow:'0 18px 38px rgb(0 0 0 / .42)'},{boxShadow:'0 0 0 rgb(0 0 0 / 0)'}],{duration:420,delay:740,easing:'ease-in',fill:'both'}));
-    if(sc)P(sc.animate([{opacity:sc.style.opacity||1},{opacity:0}],{duration:400,delay:760,easing:'ease-in',fill:'forwards'}));
+    if(sc)P(sc.animate([{opacity:sc.style.opacity||1},{opacity:0}],{duration:420,delay:520,easing:'ease-out',fill:'forwards'}));
     const hs=tile.closest('.hxsl');if(hs)setTimeout(()=>hs.classList.add('up'),900)}
   const done=Promise.all(a.map(x=>x.finished)).then(()=>{},()=>{});
   const mine=GFP=done.then(()=>new Promise(r=>setTimeout(r,30)));mine.then(()=>{if(GFP===mine)GFP=null});
@@ -14151,7 +14202,7 @@ function gfRateBar(g,a,full,n,v){const {dx,its,rid,rn,r,avg,d,what}=v,f1=x=>x.to
   </div>
   ${/* 2026.11.21-m: the song average moved out of the album pill (where it read like the album's own score) to its own line
        heading the song list, with how many are rated and how the album compares */''}
-  <div class="gfr-songs" aria-label="Songs: ${rn?'average '+f1(avg):'none rated yet'}"><span class="gfr-sl">Songs</span>${rn?`<b>${f1(avg)}</b><span class="gfr-sa">avg</span>`:''}<span class="gfr-sn">${(()=>{const om=its.filter(i=>isOmit(i.id)).length;return (rn?rn+' of '+(its.length-om)+' rated':'None rated yet')+(om?' \u00b7 '+om+' left out':'')})()}</span>${dl?`<em class="${dir}">${arr}album ${dl}</em>`:''}</div>
+  <div class="gfr-songs" aria-label="Songs: ${rn?'average '+f1(avg):'none rated yet'}"><span class="gfr-sl">Songs</span>${rn?`<b>${f1(avg)}</b><span class="gfr-sa">avg</span>`:''}<span class="gfr-sn">${(()=>{const om=its.filter(i=>isOmit(i.id)).length;return (rn?rn+' of '+(its.length-om)+' rated':'None rated yet')+(om?' \u00b7 '+om+' left out':'')})()}</span>${dl?`<em class="${dir}">${arr}album ${dl}</em>`:'<em class="gfr-nil" aria-hidden="true">album +0.0 vs songs</em>'}</div>
   ${UI.rOpen===rid?rateMeter(rid,(dx?dxName(g):g.title)):''}`}
 /* THE INSIDE LEFT OF THE OPEN ALBUM: what the album has been to you. Plays, where it ranks among this artist's records,
    its best and weakest songs, every listen, your review, friends' scores, and the links (share, RYM, listen list). */
@@ -14798,7 +14849,7 @@ document.addEventListener('click',ev=>{
   if((act==='rclose'||(act==='ropen'&&UI.rOpen===id))&&!UI.rClosing){
     const rt=document.querySelector('.rater');
     if(rt&&!matchMedia('(prefers-reduced-motion:reduce)').matches){UI.rClosing=true;const cid=UI.rOpen,fly=rtFlyPrep(cid);rt.classList.remove('rt-in');rt.classList.add('rt-out');
-      setTimeout(()=>{UI.rClosing=false;UI.rOpen=null;if(fly)UI.rLand=cid;render()},230);rtFlyGo(fly);return}}
+      setTimeout(()=>{UI.rClosing=false;UI.rOpen=null;if(fly)UI.rLand=cid;UI.gfQ=true;render()},230);rtFlyGo(fly);return}}
   if(act==='hsrc'){phSetSrc(b.dataset.v);return}
   if(act==='view'){UI.view=b.dataset.v;UI.rOpen=null;if(UI.view==='account'){pReset();if(b.dataset.tab==='c')UI.pTab='c';UI.pAnim=true}if(UI.view==='friends'){UI.pAnim=true;ACX.anim=true}if(UI.view==='history'){UI.hAnim=true;UI.hEdit=null}window.scrollTo({top:0})}
   else if(act==='lib'){UI.libOpen=!UI.libOpen;liveNote(UI.libOpen?'library':'artist');UI.libAnim=UI.libOpen;if(UI.libOpen){UI.addOpen=false;lxFlyHome()}else lxGhostClose()}
@@ -14919,8 +14970,8 @@ document.addEventListener('click',ev=>{
     S.collection=colAll().filter(x=>x.id!==id);UI.colDel=null;if(UI.colEdit===id)UI.colEdit=null;if(UI.colOpen===id)UI.colOpen=null;touch()}else UI.colDel=id}
   else if(act==='colgot'){const x=colAll().find(c=>c.id===id);if(x){x.wish=false;if(!x.bought)x.bought=colToday();touch()}}
   else if(act==='colexport'){dlCSV('playback-collection.csv',csvCollection());return}
-  else if(act==='ropen'){const prev=UI.rOpen,fly=prev&&prev!==id?rtFlyPrep(prev):null;UI.rOpen=UI.rOpen===id?null:id;UI.rAnim=UI.rOpen;if(fly){UI.rLand=prev;UI.rFly=fly}}
-  else if(act==='rclose'){UI.rOpen=null}
+  else if(act==='ropen'){const prev=UI.rOpen,fly=prev&&prev!==id?rtFlyPrep(prev):null;UI.rOpen=UI.rOpen===id?null:id;UI.rAnim=UI.rOpen;if(fly){UI.rLand=prev;UI.rFly=fly}UI.gfQ=true}
+  else if(act==='rclose'){UI.rOpen=null;UI.gfQ=true}
   else if(act==='tab'){
     if(b.dataset.v==='music'&&UI.tab==='music'&&(!UI.view||UI.view==='history'||UI.view==='stats')){UI.mm=!mmWas;UI.mmAnim=UI.mm}   /* already on Music: tapping it again opens the menu with History */
     else{UI.view=null;UI.rOpen=null;UI.tab=b.dataset.v;try{localStorage.setItem(KEY+'_tab',UI.tab)}catch(e){}}}
@@ -14996,8 +15047,8 @@ document.addEventListener('click',ev=>{
     UI.view=null;UI.rel=null;UI.tab='music';UI.sel.music=b.dataset.a;UI.libOpen=false;UI.rOpen=null;UI.filter='all';UI.toAlb=b.dataset.g;
     if(g){if(b.dataset.dx)UI.dxOpen[g.id]=true;else delete UI.dxOpen[g.id]}}
   else if(act==='rymadd'){const r=rymAddWaiting();RYX.report={total:r.albums,zero:0,filled:0,same:0,kept:[],waiting:[],notFound:[],dups:[],added:r};touch()}
-  else if(act==='romit'){const m={...(S.marks[id]||{})};if(m.x)delete m.x;else m.x=1;S.marks[id]=m;touch();heroPaint()}
-  else if(act==='rclear'){const cl=clrBegin(id);lsOwn(id);if(lsRevert(id)){}else if(lsRaw(id).length>1){S.marks[id]={...S.marks[id],r:0};lsFromMark(id)}else{const m0={...(S.marks[id]||{}),r:0};delete m0.rd;delete m0.ls;S.marks[id]=m0}clrEnd(cl);touch();heroPaint()}
+  else if(act==='romit'){UI.gfQ=true;const m={...(S.marks[id]||{})};if(m.x)delete m.x;else m.x=1;S.marks[id]=m;touch();heroPaint()}
+  else if(act==='rclear'){UI.gfQ=true;const cl=clrBegin(id);lsOwn(id);if(lsRevert(id)){}else if(lsRaw(id).length>1){S.marks[id]={...S.marks[id],r:0};lsFromMark(id)}else{const m0={...(S.marks[id]||{}),r:0};delete m0.rd;delete m0.ls;S.marks[id]=m0}clrEnd(cl);touch();heroPaint()}
   else if(act==='grpall'){const a=S.music.find(x=>x.id===b.dataset.a),g=a.groups.find(x=>x.id===b.dataset.g),its=viewItems(g),full=its.every(i=>isDone(i.id))&&!its.some(i=>lsCar(g,i.id));
     its.forEach(i=>lsOwn(i.id));its.forEach(i=>S.marks[i.id]={...(S.marks[i.id]||{}),done:!full});if(!full){slLitAsk(g);slPulseAsk(g.id,0)}touch()}
   else if(act==='wedit'){UI.wEdit=UI.wEdit===b.dataset.g?null:b.dataset.g;formUp()}
