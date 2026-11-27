@@ -3409,6 +3409,17 @@ html.lite .hx .hxfp{-webkit-backdrop-filter:none;backdrop-filter:none;background
   .gfph-stk b{font:800 30px/.9 Archivo,var(--display);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
   .gfph-stk.no b{font:600 15px/1.2 var(--body);letter-spacing:0;opacity:.75}
   .gfph-stk:active{opacity:.6}
+  .gfph-stk.landing b{opacity:0}
+  @media (prefers-reduced-motion:no-preference){.gfph-stk.landed b{animation:stkLand .5s cubic-bezier(.2,.8,.2,1)}@keyframes stkLand{0%{scale:1}35%{scale:1.18}100%{scale:1}}
+    .gfph-stk.landed{animation:stkRule .6s ease-out}@keyframes stkRule{0%{border-bottom-color:currentColor}100%{border-bottom-color:color-mix(in srgb,var(--ink,#1b1511) 28%,transparent)}}}
+  /* 2026.11.27-p: a first rating lands on the little record as one calm move: the label settles in, the ring draws, the number
+     bumps (the label used to balloon past the record, reading as a white flash, while the record spun and a halo pulsed) */
+  @media (prefers-reduced-motion:no-preference){
+    html.gfsh .track.sl-t.landed .check.check::after{animation:rgLab2 .42s cubic-bezier(.2,.8,.2,1)}
+    html.gfsh .track.sl-t.landed .check.check::before{animation:none}
+    html.gfsh .track.sl-t.landed .check{animation:none}
+    html.gfsh .track.sl-t.landed .check svg{animation:rgBump .45s cubic-bezier(.2,.8,.2,1) .05s}
+    @keyframes rgLab2{0%{opacity:0;transform:scale(.55)}70%{opacity:1;transform:scale(1.04)}100%{transform:scale(1)}}}
   .gf.jk2 .gfra{top:84px;right:18px;padding:0;align-items:flex-start;height:auto}
   .gf.jk2 .gfra .sl-ic{flex:0 0 30px;width:30px;height:30px!important;min-height:0;min-width:0;padding:0;border-radius:50%;background:none;color:var(--ink,#1b1511);box-shadow:none;border:1px solid color-mix(in srgb,var(--ink,#1b1511) 35%,transparent)}
   .gf.jk2 .gfra .sl-ic svg{width:15px;height:15px}
@@ -4840,6 +4851,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.27-p', note:'RATING POLISH FROM YOUR RECORDING. Tapping Done no longer drops the card out from under the number (it was left floating in dark ink over the dark page): the card holds while the number lifts off it, then tucks away as the number flies. The song list no longer slides as the number flies, so it lands on the right song (it was landing a row low). The little record’s landing is one calm move now: the label settles in, the ring draws round and the number bumps, instead of the label ballooning into a white flash while the record spun and a halo pulsed. And the album rating finally animates: its number flies up into the score printed on the jacket, which bumps as it lands with its line darkening for a moment.'},
   {v:'2026.11.27-o', note:'SMOOTHER RATING ON A PHONE, AND NO MORE STICKER. When you tap Done on a first rating, the jacket now redraws right away while the card tucks back up, so the number flies into the song’s little record with nothing else running, instead of waiting for the redraw and stalling partway. The flight only moves and shrinks the number, which the phone can do smoothly even when it is busy. The big records sleeved in the jacket’s edges no longer run their glint and ripple effects while it is open (you could barely see them, and they stuttered the landing); their grooves still light up. The gold album sticker is gone: your album score is printed on the jacket’s top corner like a catalog line, a small Your album label over the number in the card’s own ink (tap it to rate), with the Mark all heard button as a small inked circle under it.'},
   {v:'2026.11.27-n', note:'THE RATING CARD SITS UNDER THE JACKET NOW. On an iPhone the card that comes out when you rate a song was stuck inside the songs panel: it sat over your songs, got cut off by the record peeking out of the jacket, and jumped and replayed its slide every time you changed a rating. It now lives in the open space under the jacket. It slides out once when you open it, stays still while you drag, rate or tap Leave out of avg, swaps in place when you tap another song, and tucks back up when you tap Done. The song you are rating stays in view on the jacket.'},
   {v:'2026.11.27-m', note:'FIXES FROM YOUR SECOND RECORDING. The open album is a square record jacket now, like a real one, instead of a long card running down the screen: the cover swings open onto a panel its own size, and the record peeking out of each edge is the jacket\u2019s size too. The cover art is printed into the inside of the jacket again, stronger than before. Rating a song pulls the card out of the jacket\u2019s bottom edge into the space below, so it no longer covers your songs. Rating is much quicker: the artist header behind the album no longer redraws on every rating, and your log is saved half a second after you stop instead of on the tap (it is still saved right away if you leave the app). Closing an album you did not change no longer rebuilds the artist page. You can now give a song the same score you gave it on your last listen (a 9 again on listen 2 would not stick). The listen-to-listen changes under Listen 2 of 2 are readable on the card. And the swinging cover can no longer show its back see-through and backwards while the page is busy.'},
@@ -9819,12 +9831,12 @@ function gfQuick(){
   {const od=gf.querySelector('.gf-pk.l .sl-disc'),nd=n.querySelector('.gf-pk.l .sl-disc');if(od&&nd)od.replaceWith(nd)}
   {const pk=gf.querySelector('.gf-pk.r'),vr=n.querySelector('.gf-pk.r .gf-vr');if(pk&&vr)pk.replaceChildren(vr)}
   gfPgPlace(gf);rs.scrollTop=st;ls.scrollTop=lst;
+  const opening=UI.rAnim&&UI.rAnim===UI.rOpen;
   slObserve();slPulseNow();UI.rAnim=null;
-  /* the song being rated rides up above the insert card */
   /* the song being rated stays in view on the jacket (the insert card is below the jacket now, so nothing covers it) */
   const row=rs.querySelector('.track.sl-t.ropen');
-  if(row)requestAnimationFrame(()=>{const rr=row.getBoundingClientRect(),br=rs.getBoundingClientRect(),hd=(rs.querySelector(':scope>.gfph-h')||{offsetHeight:0}).offsetHeight;
-    const d=rr.bottom>br.bottom-8?rr.bottom-br.bottom+16:rr.top<br.top+hd?rr.top-br.top-hd-8:0;if(d)rs.scrollBy({top:d,behavior:noMotion()?'auto':'smooth'})});
+  if(row&&opening)requestAnimationFrame(()=>{const rr=row.getBoundingClientRect(),br=rs.getBoundingClientRect();
+    const d=rr.bottom>br.bottom-4?rr.bottom-br.bottom+16:rr.top<br.top?rr.top-br.top-8:0;if(d)rs.scrollBy({top:d,behavior:noMotion()?'auto':'smooth'})});
   return true}
 /* 2026.11.27-k: OPENING AN ALBUM ON A PHONE BUILDS ONLY THE ALBUM. The tap used to rebuild the whole artist page (hero, every
    sleeve, Fans also spin) just to add the jacket, ~0.3-0.7 s behind the lifting cover. Now the jacket is built on its own and
@@ -12308,9 +12320,10 @@ function gfPgPlace(gf){
     else{if(!sk){sk=document.createElement('button');sk.type='button';sk.className='gfph-stk';gr.appendChild(sk)}
       const v=(rb.querySelector('.v')||{}).textContent||'+',set=rb.classList.contains('set'),key=v+'|'+set;
       sk.dataset.act='ropen';sk.dataset.id=rb.dataset.id||'';sk.setAttribute('aria-label',rb.getAttribute('aria-label')||'Rate the album');
-      if(sk.dataset.k!==key){const was=sk.dataset.k;sk.dataset.k=key;sk.classList.toggle('no',!set);
+      sk.classList.toggle('landing',UI.rLand===sk.dataset.id);
+      if(sk.dataset.k!==key){const was=sk.dataset.k;sk.dataset.k=key;sk.classList.toggle('no',!set);sk.classList.toggle('set',set);
         sk.innerHTML=set?`<b>${esc(v)}</b><span>Your album</span>`:`<b>Rate it</b><span>Your album</span>`;
-        if(was&&set&&!noMotion()){sk.classList.remove('pop');void sk.offsetWidth;sk.classList.add('pop')}}}}
+        if(was&&set&&!noMotion()&&UI.rLand!==sk.dataset.id){sk.classList.remove('pop');void sk.offsetWidth;sk.classList.add('pop')}}}}
   /* 2026.11.20-p: the title stays on the inside left like the desktop; the inside right gets a header with a copy of it */
   const meta=hero&&hero.querySelector(':scope>.sl-meta');
   let t=h.querySelector(':scope>.gfph-t');if(!t){t=document.createElement('div');t.className='gfph-t';h.appendChild(t)}
@@ -12336,7 +12349,7 @@ function gfInsLift(gf){
   const old=gf.querySelector(':scope>.rater.jkins'),nw=gf.querySelector('.gf-rs .rater');
   if(nw){nw.classList.add('jkins');
     if(old){nw.classList.remove('rt-in');nw.classList.add('jkst');old.replaceWith(nw)}else gf.appendChild(nw);return}
-  if(old&&!UI.rOpen){if(old.classList.contains('rt-out')&&!noMotion()){if(!old._bye){old._bye=1;setTimeout(()=>old.remove(),240)}}else old.remove()}}
+  if(old&&!UI.rOpen){if((old.classList.contains('rt-out')||old.classList.contains('jkhold'))&&!noMotion()){if(!old._bye){old._bye=1;setTimeout(()=>old.remove(),old.classList.contains('jkhold')?900:240)}}else old.remove()}}
 /* 2026.11.21-a: NEXT RECORD. On a phone each page of an open album ends with the records either side of it on the shelf
    (in the shelf's own order, filters and sort included). Tapping one closes this album the usual way and opens that one from its
    sleeve, so you can go through a discography without closing and finding the next one yourself. (A swipe would fight the swipe
@@ -13563,7 +13576,7 @@ function rateMeter(id,label,extra,song){const r=rating(id),om=song&&isOmit(id);
    number is copied, lifted a little, then flown into the song's circle (or the album's rating pill) while the page
    redraws with the real number and ring held back (class landing); when the copy arrives they appear (class landed). */
 const rtQ=s=>window.CSS&&CSS.escape?CSS.escape(s):s;
-const rtHost=id=>document.querySelector('.track.sl-t[data-id="'+rtQ(id)+'"]')||document.querySelector('.sl-rate[data-id="'+rtQ(id)+'"]');
+const rtHost=id=>document.querySelector('.track.sl-t[data-id="'+rtQ(id)+'"]')||document.querySelector('.gf.jk2 .gfph-stk[data-id="'+rtQ(id)+'"]')||document.querySelector('.sl-rate[data-id="'+rtQ(id)+'"]');
 function rtFlyPrep(id){
   if(!id||!rating(id)||!Element.prototype.animate||matchMedia('(prefers-reduced-motion:reduce)').matches)return null;
   const h=rtHost(id),src=document.querySelector('.rater .rt-v');if(!h||!src)return null;
@@ -13577,9 +13590,9 @@ function rtFlyPrep(id){
 function rtFlyGo(p){
   if(!p)return;
   const done=()=>{UI.rLand=null;p.el.remove();slLitNow();const h=rtHost(p.id);if(!h)return;h.classList.remove('landing');h.classList.add('landed');setTimeout(()=>h.classList.remove('landed'),800)};
-  const find=()=>(h=>h&&(h.querySelector('.rg-n')||h.querySelector('.v')||h.querySelector('.check')))(rtHost(p.id));
+  const find=()=>(h=>h&&(h.classList.contains('gfph-stk')?(h.classList.contains('set')?h.querySelector('b'):null):(h.querySelector('.rg-n')||h.querySelector('.v')||h.querySelector('.check'))))(rtHost(p.id));
   const wait=n=>new Promise(ok=>{const t=()=>find()||n--<=0?ok(find()):requestAnimationFrame(t);t()});   /* an album pill only exists after the redraw, so wait for it (about a second at most) */
-  p.wind.finished.then(()=>wait(60)).then(d=>{
+  p.wind.finished.then(()=>{const c=p.card;if(c&&c.isConnected){c.classList.remove('jkhold');c.classList.add('rt-out');setTimeout(()=>c.remove(),240)}return wait(60)}).then(d=>{
     if(!d){done();return}
     const b=d.getBoundingClientRect(),dc=getComputedStyle(d),
       dx=b.left+b.width/2-(p.r.left+p.r.width/2),dy=b.top+b.height/2-(p.r.top+p.r.height/2),sc=(d.classList.contains('check')?13:parseFloat(dc.fontSize)||13)/p.fs;
@@ -14962,7 +14975,8 @@ document.addEventListener('click',ev=>{
   if((act==='rclose'||(act==='ropen'&&UI.rOpen===id))&&!UI.rClosing){
     const rt=document.querySelector('.rater');
     if(rt&&rt.classList.contains('jkins')&&gfPh()){   /* 2026.11.27-o: the jacket's card tucks away while the panel is redrawn at once, then the number flies with nothing else running */
-      const cid=UI.rOpen,fly=rtFlyPrep(cid);rt.classList.remove('rt-in');rt.classList.add('rt-out');
+      const cid=UI.rOpen,fly=rtFlyPrep(cid);rt.classList.remove('rt-in');rt.classList.add(fly?'jkhold':'rt-out');
+      if(fly)fly.card=rt;   /* 2026.11.27-p: the card holds still under the number as it lifts, then tucks away while it flies */
       UI.rOpen=null;if(fly)UI.rLand=cid;UI.gfQ=true;render();if(fly)requestAnimationFrame(()=>rtFlyGo(fly));return}
     if(rt&&!matchMedia('(prefers-reduced-motion:reduce)').matches){UI.rClosing=true;const cid=UI.rOpen,fly=rtFlyPrep(cid);rt.classList.remove('rt-in');rt.classList.add('rt-out');
       setTimeout(()=>{UI.rClosing=false;UI.rOpen=null;if(fly)UI.rLand=cid;UI.gfQ=true;render()},230);rtFlyGo(fly);return}}
