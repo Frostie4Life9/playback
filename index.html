@@ -3401,14 +3401,19 @@ html.lite .hx .hxfp{-webkit-backdrop-filter:none;backdrop-filter:none;background
   .gf.jk2 .sl-hero.haslrec{padding-left:22px}
   .gf.jk2 .gfph-h{min-height:0;padding:6px 86px 8px 22px}
   .gf.jk2 .gfph-t{max-width:none;padding-top:4px}
-  /* the hype sticker: your album score, stuck on the corner of the jacket; tap it to rate */
-  .gfph-stk{position:absolute;z-index:4;top:-12px;right:12px;width:70px;height:70px;padding:0;border:0;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;rotate:8deg;
-    background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--acsw) 18%,#fff6d2),color-mix(in srgb,var(--acsw) 30%,#ffd96b));color:#2a1a12;box-shadow:0 6px 14px rgb(0 0 0 / .32),inset 0 0 0 2px rgb(255 255 255 / .35);cursor:pointer;-webkit-tap-highlight-color:transparent}
-  .gfph-stk b{font:800 26px/1 Archivo,var(--display);font-variant-numeric:tabular-nums}
-  .gfph-stk span{font:700 7.5px/1.1 var(--mono);letter-spacing:.1em;text-transform:uppercase;max-width:54px;text-align:center}
-  .gfph-stk.no b{font-size:28px;font-weight:600}
-  .gfph-stk:active{scale:.94}
-  @media (prefers-reduced-motion:no-preference){.gfph-stk.pop{animation:stkPop .55s cubic-bezier(.3,1.6,.5,1) both}@keyframes stkPop{from{scale:1.9;rotate:-10deg;opacity:0}}}
+  /* 2026.11.27-o: your album score is printed on the jacket like a catalog line (it was a gold hype sticker, which looked
+     cheesy next to the rest of the app): a small typewriter label over the number, in the card's own ink. Tap it to rate. */
+  .gfph-stk{position:absolute;z-index:4;top:14px;right:18px;min-width:58px;padding:2px 0 6px;border:0;border-radius:0;background:none;box-shadow:none;rotate:none;
+    display:flex;flex-direction:column;align-items:flex-end;gap:3px;color:var(--ink,#1b1511);cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid color-mix(in srgb,var(--ink,#1b1511) 28%,transparent)}
+  .gfph-stk span{order:-1;font:600 8.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;opacity:.6;max-width:none;text-align:right;white-space:nowrap}
+  .gfph-stk b{font:800 30px/.9 Archivo,var(--display);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .gfph-stk.no b{font:600 15px/1.2 var(--body);letter-spacing:0;opacity:.75}
+  .gfph-stk:active{opacity:.6}
+  .gf.jk2 .gfra{top:84px;right:18px;padding:0;align-items:flex-start;height:auto}
+  .gf.jk2 .gfra .sl-ic{flex:0 0 30px;width:30px;height:30px!important;min-height:0;min-width:0;padding:0;border-radius:50%;background:none;color:var(--ink,#1b1511);box-shadow:none;border:1px solid color-mix(in srgb,var(--ink,#1b1511) 35%,transparent)}
+  .gf.jk2 .gfra .sl-ic svg{width:15px;height:15px}
+  .gf.jk2 .gfra .sl-ic[aria-pressed="true"]{background:color-mix(in srgb,var(--ink,#1b1511) 12%,transparent)}
+  @media (prefers-reduced-motion:no-preference){.gfph-stk{transition:opacity .15s}.gfph-stk.pop b{animation:stkPop .5s cubic-bezier(.2,.8,.2,1) both}@keyframes stkPop{from{opacity:0;translate:0 6px}}}
   .gf.jk2 .gf-rs .sl-rate.gfr{display:none}
   .gf.jk2 .gf-rs .gfra{justify-content:flex-end;min-height:0}
   /* top: close on the right, where you are printed in the middle (no tabs) */
@@ -3472,10 +3477,14 @@ html.lite .hx .hxfp{-webkit-backdrop-filter:none;backdrop-filter:none;background
   .gf.jk2 .gfph-h{padding:2px 86px 4px 20px}
   .gf.jk2 .gfph-t h3{font-size:clamp(22px,6.6vw,28px);line-height:1.05}
   .gf.jk2 .gfph-t .gf-lbl{display:none}
-  .gf.jk2 .gfra{top:52px}
   .gf.jk2 .track.sl-t,.gf.jk2 .track.sl-t.ep{min-height:38px}
   /* the insert card comes out of the jacket's bottom edge */
   .gf.jk2 .gf-rs:has(.rater) .tlist{padding-bottom:0}
+  /* 2026.11.27-o: while the jacket is open, the big records (sleeved in its edges, or under it on the shelf) only change state:
+     their glint, wave and ripple animated colors on every groove of a screen-sized disc each frame, which stalled the
+     number flying into the song's little record. The little record's own landing still plays. */
+  html.gfsh .group.sleeve .sl-disc::before,html.gfsh .group.sleeve .sl-disc::after,html.gfsh .group.sleeve .sl-lab,html.gfsh .group.sleeve .sl-disc i,html.gfsh .vgr i{animation:none!important}
+  html.gfsh .track.sl-t.landed .check .rg-v{filter:none}
   /* 2026.11.27-n: the insert card sits in the open space under the jacket (lifted out of the songs panel by gfInsLift) */
   .gf.jk2>.rater.jkins{--ink:#2b1a20;position:absolute;z-index:5;left:28px;right:28px;top:calc(100% + 14px);bottom:auto;margin:0;padding:16px 18px 12px;border:0;border-radius:6px;color:#2b1a20;
     max-height:calc(100dvh - max(calc(env(safe-area-inset-top,0px) + 60px),calc((100dvh - var(--jw)) / 2 - 80px)) - var(--jw) - 40px - env(safe-area-inset-bottom,0px));overflow:auto;overscroll-behavior:contain;
@@ -4831,6 +4840,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.27-o', note:'SMOOTHER RATING ON A PHONE, AND NO MORE STICKER. When you tap Done on a first rating, the jacket now redraws right away while the card tucks back up, so the number flies into the song’s little record with nothing else running, instead of waiting for the redraw and stalling partway. The flight only moves and shrinks the number, which the phone can do smoothly even when it is busy. The big records sleeved in the jacket’s edges no longer run their glint and ripple effects while it is open (you could barely see them, and they stuttered the landing); their grooves still light up. The gold album sticker is gone: your album score is printed on the jacket’s top corner like a catalog line, a small Your album label over the number in the card’s own ink (tap it to rate), with the Mark all heard button as a small inked circle under it.'},
   {v:'2026.11.27-n', note:'THE RATING CARD SITS UNDER THE JACKET NOW. On an iPhone the card that comes out when you rate a song was stuck inside the songs panel: it sat over your songs, got cut off by the record peeking out of the jacket, and jumped and replayed its slide every time you changed a rating. It now lives in the open space under the jacket. It slides out once when you open it, stays still while you drag, rate or tap Leave out of avg, swaps in place when you tap another song, and tucks back up when you tap Done. The song you are rating stays in view on the jacket.'},
   {v:'2026.11.27-m', note:'FIXES FROM YOUR SECOND RECORDING. The open album is a square record jacket now, like a real one, instead of a long card running down the screen: the cover swings open onto a panel its own size, and the record peeking out of each edge is the jacket\u2019s size too. The cover art is printed into the inside of the jacket again, stronger than before. Rating a song pulls the card out of the jacket\u2019s bottom edge into the space below, so it no longer covers your songs. Rating is much quicker: the artist header behind the album no longer redraws on every rating, and your log is saved half a second after you stop instead of on the tap (it is still saved right away if you leave the app). Closing an album you did not change no longer rebuilds the artist page. You can now give a song the same score you gave it on your last listen (a 9 again on listen 2 would not stick). The listen-to-listen changes under Listen 2 of 2 are readable on the card. And the swinging cover can no longer show its back see-through and backwards while the page is busy.'},
   {v:'2026.11.27-l', note:'THE COVER SWINGS OPEN SHOWING ITS ART ON AN IPHONE. When the cover swung open (and closed), iPhones showed its plain back with the album title printed backwards instead of the cover art, which is why the swing was hard to see. The cover now shows one side at a time, switching exactly when it is edge-on. Builds are now also checked in WebKit, the engine every iPhone browser uses, before they ship.'},
@@ -9678,6 +9688,7 @@ const SLIN=new Set();let slIO=null;
 function slRipple(sl,base,minJ,el){
   el=el||0;if(!el&&sl&&sl.dataset.acol)UI.fxr={g:sl.dataset.acol,base,minJ,t0:Date.now()};
   if(!sl||!sl.querySelector('.sl-disc i.on'))return;
+  if(document.documentElement.classList.contains('gfsh'))return;   /* 2026.11.27-o: no ripple under the phone jacket (see slLitApply) */
   const is=sl.querySelectorAll('.sl-disc i');is.forEach((e,j)=>e.classList.toggle('nr',minJ!=null&&j<minJ));   /* grooves outside the rated song's band sit the ripple out */
   sl.style.setProperty('--rb',(base-el)+'ms');sl.classList.remove('rip');void sl.offsetWidth;sl.classList.add('rip');
   clearTimeout(sl._rt);sl._rt=setTimeout(()=>{sl.classList.remove('rip');sl.querySelectorAll('.sl-disc i.nr').forEach(e=>e.classList.remove('nr'))},Math.max(0,base+2600-el))}
@@ -9702,6 +9713,7 @@ function slLitApply(sl,L,el){
   const disc=sl.querySelector('.sl-disc');if(!disc)return;
   const is=disc.querySelectorAll('i');L.idx.forEach(j=>{if(is[j]){is[j].classList.remove('fade');is[j].classList.add('on','new')}});
   if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  if(document.documentElement.classList.contains('gfsh')){if(!el)setTimeout(()=>is.forEach(e=>e.classList.remove('new')),0);return}   /* 2026.11.27-o: under the phone jacket the big record's effects are off, so skip their forced re-layouts (they landed on the same frame as the number) */
   const nR=is.length,bj=L.band;   /* the glint and ripple go out only as far as the rated song's band */
   if(bj!=null&&nR){const ld=96-bj*(52/nR)+2;sl.style.setProperty('--ld',ld.toFixed(1)+'%');sl.style.setProperty('--ls',(ld/100).toFixed(3))}else{sl.style.removeProperty('--ld');sl.style.removeProperty('--ls')}
   if(el)sl.style.setProperty('--fxo',(-el)+'ms');else sl.style.removeProperty('--fxo');   /* a redraw mid-effect picks it up where it was */
@@ -12297,7 +12309,7 @@ function gfPgPlace(gf){
       const v=(rb.querySelector('.v')||{}).textContent||'+',set=rb.classList.contains('set'),key=v+'|'+set;
       sk.dataset.act='ropen';sk.dataset.id=rb.dataset.id||'';sk.setAttribute('aria-label',rb.getAttribute('aria-label')||'Rate the album');
       if(sk.dataset.k!==key){const was=sk.dataset.k;sk.dataset.k=key;sk.classList.toggle('no',!set);
-        sk.innerHTML=set?`<b>${esc(v)}</b><span>Your album</span>`:`<b>+</b><span>Rate the album</span>`;
+        sk.innerHTML=set?`<b>${esc(v)}</b><span>Your album</span>`:`<b>Rate it</b><span>Your album</span>`;
         if(was&&set&&!noMotion()){sk.classList.remove('pop');void sk.offsetWidth;sk.classList.add('pop')}}}}
   /* 2026.11.20-p: the title stays on the inside left like the desktop; the inside right gets a header with a copy of it */
   const meta=hero&&hero.querySelector(':scope>.sl-meta');
@@ -12324,7 +12336,7 @@ function gfInsLift(gf){
   const old=gf.querySelector(':scope>.rater.jkins'),nw=gf.querySelector('.gf-rs .rater');
   if(nw){nw.classList.add('jkins');
     if(old){nw.classList.remove('rt-in');nw.classList.add('jkst');old.replaceWith(nw)}else gf.appendChild(nw);return}
-  if(old&&!UI.rOpen)old.remove()}
+  if(old&&!UI.rOpen){if(old.classList.contains('rt-out')&&!noMotion()){if(!old._bye){old._bye=1;setTimeout(()=>old.remove(),240)}}else old.remove()}}
 /* 2026.11.21-a: NEXT RECORD. On a phone each page of an open album ends with the records either side of it on the shelf
    (in the shelf's own order, filters and sort included). Tapping one closes this album the usual way and opens that one from its
    sleeve, so you can go through a discography without closing and finding the next one yourself. (A swipe would fight the swipe
@@ -13571,7 +13583,8 @@ function rtFlyGo(p){
     if(!d){done();return}
     const b=d.getBoundingClientRect(),dc=getComputedStyle(d),
       dx=b.left+b.width/2-(p.r.left+p.r.width/2),dy=b.top+b.height/2-(p.r.top+p.r.height/2),sc=(d.classList.contains('check')?13:parseFloat(dc.fontSize)||13)/p.fs;
-    p.el.animate([{transform:'translate(0,-6px) scale(1.14)',color:p.col},{transform:'translate('+dx+'px,'+dy+'px) scale('+sc+')',color:d.classList.contains('check')?p.col:dc.color}],{duration:380,easing:'cubic-bezier(.6,0,.2,1)',fill:'forwards'}).finished.then(done,done)
+    if(!d.classList.contains('check'))p.el.style.color=dc.color;   /* 2026.11.27-o: transform only, so the flight runs off the main thread */
+    p.el.animate([{transform:'translate(0,-6px) scale(1.14)'},{transform:'translate('+dx+'px,'+dy+'px) scale('+sc+')'}],{duration:380,easing:'cubic-bezier(.6,0,.2,1)',fill:'forwards'}).finished.then(done,done)
   },done)}
 function rateCommit(el){const id=el.dataset.rate,v=+el.value;if(!id||!v)return;
   const wasC=lsOwn(id),isGroup=S.music.some(a=>a.groups.some(g=>g.id===id||dxId(g)===id));
@@ -14948,6 +14961,9 @@ document.addEventListener('click',ev=>{
   /* closing a rater: let it fold away first, then redraw */
   if((act==='rclose'||(act==='ropen'&&UI.rOpen===id))&&!UI.rClosing){
     const rt=document.querySelector('.rater');
+    if(rt&&rt.classList.contains('jkins')&&gfPh()){   /* 2026.11.27-o: the jacket's card tucks away while the panel is redrawn at once, then the number flies with nothing else running */
+      const cid=UI.rOpen,fly=rtFlyPrep(cid);rt.classList.remove('rt-in');rt.classList.add('rt-out');
+      UI.rOpen=null;if(fly)UI.rLand=cid;UI.gfQ=true;render();if(fly)requestAnimationFrame(()=>rtFlyGo(fly));return}
     if(rt&&!matchMedia('(prefers-reduced-motion:reduce)').matches){UI.rClosing=true;const cid=UI.rOpen,fly=rtFlyPrep(cid);rt.classList.remove('rt-in');rt.classList.add('rt-out');
       setTimeout(()=>{UI.rClosing=false;UI.rOpen=null;if(fly)UI.rLand=cid;UI.gfQ=true;render()},230);rtFlyGo(fly);return}}
   if(act==='hsrc'){phSetSrc(b.dataset.v);return}
