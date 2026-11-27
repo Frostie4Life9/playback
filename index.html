@@ -3454,6 +3454,30 @@ html.lite .hx .hxfp{-webkit-backdrop-filter:none;backdrop-filter:none;background
   .gf.jk2 .gf-rs:has(.rater){-webkit-mask-image:none;mask-image:none}
   .gf.jk2 .gf-rs:has(.rater) .tlist{padding-bottom:280px}
   .gf.jk2 .gfr-songs em.gfr-nil{display:inline-flex;visibility:hidden}
+  /* ===== 2026.11.27-m: THE JACKET IS SQUARE, LIKE A REAL RECORD JACKET (board 4) =====
+     The open album used to run the full height of the screen, so a square cover swung off a long card and the sleeved record
+     showed as a thin arc. Each inside panel is now exactly as tall as it is wide (the cover's size), the record in each outer
+     edge is the jacket's own size, and the insert card pulls out of the jacket's bottom edge into the space below it instead of
+     covering the songs. The cover art is printed into the inside card again, a little stronger than before. */
+  .hxrel>.group.sleeve.gf.ov.phs.pg.jk2{--jw:calc(100vw - 56px);top:max(calc(env(safe-area-inset-top,0px) + 60px),calc((100dvh - var(--jw)) / 2 - 80px));bottom:auto;height:calc(var(--jw) + 16px)}
+  .gf.phs.pg.jk2 .gf-sp{padding:16px 0 0}
+  /* the listen-to-listen changes are printed in ink on the card (the pale green and orange made for dark pages vanished on it) */
+  .gf.jk2 .ls-df b.up{color:color-mix(in srgb,var(--done) 62%,var(--ink))}.gf.jk2 .ls-df b.down{color:color-mix(in srgb,var(--warn) 66%,var(--ink))}.gf.jk2 .ls-df b.even{color:inherit}
+  .gf.jk2 .gf-r>.gfph-rec{--rv:var(--jw);top:0;right:-24px;clip-path:inset(-40px -40px -40px calc(var(--rv) - 24px))}
+  .gf.jk2 .gf-lf>.gfph-lrec{--lv:var(--jw);top:0;left:-24px;clip-path:inset(-40px calc(var(--lv) - 24px) -40px -40px)}
+  .gf.jk2 .gf-lf{background:linear-gradient(165deg,color-mix(in srgb,var(--jk) 70%,transparent),color-mix(in srgb,var(--jk) 82%,transparent) 75%),var(--art,none) left center/200% auto no-repeat,var(--jk)}
+  .gf.jk2 .gf-r{background:linear-gradient(165deg,color-mix(in srgb,var(--jk) 70%,transparent),color-mix(in srgb,var(--jk) 82%,transparent) 75%),var(--art,none) right center/200% auto no-repeat,var(--jk)}
+  /* fitting a square: a tighter header and rows */
+  .gf.phs.pg.jk2 .gf-ls,.gf.phs.pg.jk2 .gf-rs{padding-top:12px}
+  .gf.jk2 .gfph-h{padding:2px 86px 4px 20px}
+  .gf.jk2 .gfph-t h3{font-size:clamp(22px,6.6vw,28px);line-height:1.05}
+  .gf.jk2 .gfph-t .gf-lbl{display:none}
+  .gf.jk2 .gfra{top:52px}
+  .gf.jk2 .track.sl-t,.gf.jk2 .track.sl-t.ep{min-height:38px}
+  /* the insert card comes out of the jacket's bottom edge */
+  .gf.jk2 .gf-rs .rater{top:calc(var(--jw) + 16px - 6px);bottom:auto;max-height:calc(100dvh - var(--jw) - 90px);overflow:auto}
+  .gf.jk2 .gf-rs:has(.rater) .tlist{padding-bottom:0}
+  @media (prefers-reduced-motion:no-preference){.gf.jk2 .gf-rs .rater{animation:jkOut .4s cubic-bezier(.2,.85,.25,1) both}@keyframes jkOut{from{translate:0 -100%;clip-path:inset(100% 0 0 0)}to{translate:0 0;clip-path:inset(0)}}}
 }
 .gfr-songs em.gfr-nil{display:none}
 /* 2026.11.27-j: the back of the swinging cover is printed card with the album's title, drawn in plain text */
@@ -3462,7 +3486,7 @@ html.lite .hx .hxfp{-webkit-backdrop-filter:none;backdrop-filter:none;background
 .gfh-bt b{display:block;margin-top:4px;font:800 clamp(22px,7vw,30px)/1.08 var(--display);letter-spacing:-.01em}
 .gfh-bt i{display:block;margin-top:6px;font:500 12px var(--body);font-style:normal;opacity:.7}
 .gfhinge .gfh-l{position:absolute;inset:0;transform-style:preserve-3d;transform-origin:0 50%}
-.gfh-f,.gfh-b{position:absolute;inset:0;border-radius:5px;overflow:hidden;-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.gfh-f,.gfh-b{position:absolute;inset:0;border-radius:5px;overflow:hidden;-webkit-backface-visibility:hidden;backface-visibility:hidden;will-change:opacity}   /* 2026.11.27-m: each face its own layer, so the face switch (gfFlip) runs off the main thread in step with the swing even while the page redraws */
 .gfh-f{background:var(--hb,#333);box-shadow:0 18px 38px rgb(0 0 0 / .42),inset 0 0 0 1px rgb(255 255 255 / .08)}
 .gfh-f img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 .gfh-f>span{position:absolute;inset:0;display:grid;place-items:center;font:800 calc(var(--hw,200px) * .4)/1 var(--body);color:rgb(255 255 255 / .45)}
@@ -4800,6 +4824,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.27-m', note:'FIXES FROM YOUR SECOND RECORDING. The open album is a square record jacket now, like a real one, instead of a long card running down the screen: the cover swings open onto a panel its own size, and the record peeking out of each edge is the jacket\u2019s size too. The cover art is printed into the inside of the jacket again, stronger than before. Rating a song pulls the card out of the jacket\u2019s bottom edge into the space below, so it no longer covers your songs. Rating is much quicker: the artist header behind the album no longer redraws on every rating, and your log is saved half a second after you stop instead of on the tap (it is still saved right away if you leave the app). Closing an album you did not change no longer rebuilds the artist page. You can now give a song the same score you gave it on your last listen (a 9 again on listen 2 would not stick). The listen-to-listen changes under Listen 2 of 2 are readable on the card. And the swinging cover can no longer show its back see-through and backwards while the page is busy.'},
   {v:'2026.11.27-l', note:'THE COVER SWINGS OPEN SHOWING ITS ART ON AN IPHONE. When the cover swung open (and closed), iPhones showed its plain back with the album title printed backwards instead of the cover art, which is why the swing was hard to see. The cover now shows one side at a time, switching exactly when it is edge-on. Builds are now also checked in WebKit, the engine every iPhone browser uses, before they ship.'},
   {v:'2026.11.27-k', note:'OPENING AN ALBUM ON A PHONE IS QUICKER. Tapping a record used to rebuild the whole artist page behind the lifting cover just to add the album. Now only the album is built and laid over the page that is already there, so the cover swings open sooner and with less stutter (about 35 to 50 percent less work on the tap). Everything looks the same.'},
   {v:'2026.11.27-j', note:'THE PHONE JACKET, FIRST PASS OF FIXES FROM YOUR RECORDING. The cover is real art the whole way: lifting, swinging open, closing and flying home (on an iPhone it was a flat tan or brown square). Its back is printed card with the title, and it swings with more depth. The black blade over the songs is gone: the records slide straight out of the jacket edges, and they are whole discs now, so the edge that sticks out reads as a record. The title is already printed when the cover opens. The panels are solid card, so the cover no longer shows through like frosted glass. Closing brightens the page while the cover is still on its way home. Rating: opening the card, Done, Clear and Leave out redraw just the album instead of the whole page (about 6x less work each time), the song you are rating rides up above the card, the card is no longer faded at its bottom, and the "album vs songs" line keeps its spot so the list no longer jumps.'},
@@ -8878,7 +8903,16 @@ function syncLabel(){
   if(SY.at)return 'Synced '+new Date(SY.at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
   return 'Sync ready';
 }
-function touch(){S.mtime=Date.now();save();try{accSoon()}catch(e){}try{plSoon()}catch(e){}if(syncOn()&&SYS.status!=='conflict'){clearTimeout(pushTimer);pushTimer=setTimeout(()=>push(false),ownSync()?1500:20000)}   /* account sync waits longer so a burst of ratings is one save */}
+/* 2026.11.27-m: A CHANGE IS SAVED A MOMENT LATER, NOT ON THE TAP. Saving writes the whole log out (text, then IndexedDB and the
+   quick-start copy), which on a phone with a big log took a good part of a second, right as you let go of a rating. touch() now
+   saves half a second after the last change, so a run of ratings is one save; anything still waiting is saved at once when the
+   page is hidden or left, and before an album opens (the one moment a phone has been known to drop the page). */
+let SAVE_T=0;
+function saveFlush(){if(SAVE_T){clearTimeout(SAVE_T);SAVE_T=0;save()}}
+function saveSoon(){clearTimeout(SAVE_T);SAVE_T=setTimeout(()=>{SAVE_T=0;save()},500)}
+addEventListener('pagehide',saveFlush);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')saveFlush()});
+let CHG=0;   /* counts changes to the log this session (gfCloseQuick checks it) */
+function touch(){CHG++;S.mtime=Date.now();if(READY)saveSoon();else save();try{accSoon()}catch(e){}try{plSoon()}catch(e){}if(syncOn()&&SYS.status!=='conflict'){clearTimeout(pushTimer);pushTimer=setTimeout(()=>push(false),ownSync()?1500:20000)}   /* account sync waits longer so a burst of ratings is one save */}
 /* Compressed sync: a Worker from 2026.11.03 on answers with x-pb-worker: 2 and
    takes the log gzipped (about 5x smaller, up to 20 MB after compression).
    Until the Worker is updated, plain JSON still works under its old 1 MB cap. */
@@ -9774,6 +9808,16 @@ function gfQuick(){
    sleeve, Fans also spin) just to add the jacket, ~0.3-0.7 s behind the lifting cover. Now the jacket is built on its own and
    put over the page that is already there; the sleeve you tapped is marked open and the hint fades. Anything unusual (library
    open, another album open, a single) still takes the full draw. */
+/* 2026.11.27-m: CLOSING WITHOUT A REDRAW. When nothing was rated or changed while the album was open, the page under it is
+   already right, so closing just takes the jacket away and puts the sleeve back (the whole artist page used to be rebuilt the
+   moment the cover landed). Any change while it was open still redraws the page, so the shelf and totals are current. */
+function gfCloseQuick(el){
+  if(!el||!el.isConnected||!el.classList.contains('jk2')||!gfPh()||UI.dxSw||UI.gfM0==null||CHG!==UI.gfM0||UI.view||UI.tab!=='music')return false;
+  const rel=el.closest('.hxrel');if(!rel)return false;
+  el.remove();UI.gfM0=null;HXSINK=null;
+  rel.querySelectorAll('.hxsl.on').forEach(x=>{x.classList.remove('on','sink');x.setAttribute('aria-pressed','false');const l=x.getAttribute('aria-label');if(l)x.setAttribute('aria-label',l.replace(/^Close /,'Open '))});
+  {const h=rel.querySelector('.hxhint');if(h){h.classList.remove('off');h.removeAttribute('aria-hidden')}HXHINT.off=false}
+  hxPlaceGf();heroPaint();return true}
 function gfOpenQuick(gid){
   if(!gfPh()||UI.view||UI.tab!=='music'||(UI.libOpen&&lxEl())||document.querySelector('.group.sleeve.gf'))return false;
   const hero=document.querySelector('.hero.hx[data-aid]'),rel=document.querySelector('.hx .hxrel'),tile=rel&&rel.querySelector('.hxsl[data-g="'+(window.CSS&&CSS.escape?CSS.escape(gid):gid)+'"]');if(!hero||!tile)return false;
@@ -9782,7 +9826,7 @@ function gfOpenQuick(gid){
   UI.toAlb=null;UI.alb={aid:a.id,g:String(gid)};UI.gfAnim=String(gid);gfGuard(a,g);
   let el;try{const t=document.createElement('template');t.innerHTML=gfHtml(a,g).trim();el=t.content.firstElementChild}finally{UI.gfAnim=null;UI.dxAnim=null}
   if(!el){UI.alb=null;return false}
-  HXSINK=String(gid);gfStep('html');
+  HXSINK=String(gid);UI.gfM0=CHG;gfStep('html');
   rel.querySelectorAll('.hxsl.on').forEach(x=>{x.classList.remove('on','sink');x.setAttribute('aria-pressed','false')});
   tile.classList.add('on','sink');tile.setAttribute('aria-pressed','true');{const l=tile.getAttribute('aria-label');if(l)tile.setAttribute('aria-label',l.replace(/^Open /,'Close '))}
   {const h=rel.querySelector('.hxhint');if(h){h.classList.add('off');h.setAttribute('aria-hidden','true')}HXHINT.off=true}
@@ -12509,7 +12553,7 @@ function gfRunJk(el,back){
   /* 2026.11.27-j: the cover's back is the inside panel's own card with the title printed on it (it used to carry a full copy of
      the details page, which an iPhone often never painted, so it swung as a blank brown slab) */
   {const lcs=getComputedStyle(lf),mt=el.querySelector('.gf-ls .sl-meta'),q=s=>{const n=mt&&mt.querySelector(s);return n?n.textContent.trim():''};
-    fb.style.background=(lcs.backgroundImage&&lcs.backgroundImage!=='none'?lcs.backgroundImage+',':'')+lcs.backgroundColor;fb.style.color=lcs.color;
+    fb.style.backgroundImage=lcs.backgroundImage;fb.style.backgroundColor=lcs.backgroundColor;fb.style.backgroundSize=lcs.backgroundSize;fb.style.backgroundPosition=lcs.backgroundPosition;fb.style.backgroundRepeat=lcs.backgroundRepeat;fb.style.color=lcs.color;
     const bt=document.createElement('div');bt.className='gfh-bt';bt.innerHTML=`<span>${esc(q('.sl-kind'))}</span><b>${esc(q('h3'))}</b><i>${esc(q('.sl-sub'))}</i>`;
     fb.insertBefore(bt,shB);document.body.appendChild(fly)}
   const at=q=>`translate(${q.left.toFixed(1)}px,${q.top.toFixed(1)}px) scale(${(q.width/W).toFixed(4)})`;
@@ -12884,7 +12928,9 @@ function phPull(){const h=document.querySelector('.head.hero.hx'),app=document.g
   if(tail){set('margin-bottom',(-tail)+'px');set('--tail',tail+'px')}else{if(h.style.marginBottom)h.style.marginBottom='';set('--tail','0px')}}
 window.addEventListener('resize',()=>{clearTimeout(window.__phT);window.__phT=setTimeout(phPull,60)});
 function heroStyle(a){const v=heroVars(a);return Object.keys(v).filter(k=>v[k]).map(k=>k+':'+v[k]).join(';')}
-function heroPaint(){const el=document.querySelector('.hero[data-aid]');if(!el)return;
+/* 2026.11.27-m: while an album is open on a phone the artist's header is hidden behind it, and repainting its record took
+   ~250 ms on every rating. It is repainted once the album closes (closing redraws the page). */
+function heroPaint(){if(document.querySelector('.group.sleeve.gf.phs')&&matchMedia('(max-width:760px)').matches)return;const el=document.querySelector('.hero[data-aid]');if(!el)return;
   const a=S.music.find(x=>x.id===el.dataset.aid);if(!a)return;
   const v=heroVars(a);for(const k in v){if(v[k])el.style.setProperty(k,v[k]);else el.style.removeProperty(k)}
   el.classList.toggle('hclear',hClear());liqMount(el,a)}
@@ -13509,7 +13555,7 @@ function rtFlyGo(p){
   },done)}
 function rateCommit(el){const id=el.dataset.rate,v=+el.value;if(!id||!v)return;
   const wasC=lsOwn(id),isGroup=S.music.some(a=>a.groups.some(g=>g.id===id||dxId(g)===id));
-  if(v===rating(id)){if(wasC){if(isGroup)S.marks[id]={...S.marks[id],rd:todayISO()};else{const g0=grpOfItem(id);if(g0)slLitAsk(g0,id)}lsFromMark(id);touch();heroPaint()}return}
+  if(v===rating(id)){if(wasC){if(isGroup)S.marks[id]={...S.marks[id],rd:todayISO()};else{const g0=grpOfItem(id);if(g0)slLitAsk(g0,id)}lsFromMark(id);touch();heroPaint();{const h=rtHost(id);if(h)h.classList.remove('carry')}}return}
   const first=!rating(id);
   S.marks[id]={...lsBase(id),r:v,...(isGroup&&(!lsRaw(id).length||first||wasC)?{rd:todayISO()}:{}),...(isGroup||isDone(id)?{}:{done:true})};lsFromMark(id);if(!isGroup)sgStamp(id);touch();heroPaint();tdSoon();
   if((first||wasC)&&!isGroup){const g=grpOfItem(id);if(g)slLitAsk(g,id)}
@@ -14367,6 +14413,7 @@ let GF_CRASHED=null;
 let GFSAFE=(()=>{try{return JSON.parse(localStorage.getItem(GFS_K)||'[]')||[]}catch(e){return[]}})();
 const gfSafe=id=>GFSAFE.includes(String(id));
 function gfGuard(a,g){if(!g)return;
+  saveFlush();
   try{const L=lsList(g.id),info={g:String(g.id),t:Date.now(),album:g.title,artist:a.name,kind:g.kind,songs:g.items.length,dx:g.items.filter(i=>i.dx).length,
     feat:g.items.filter(i=>i.f&&i.f.length).length,listens:L.length,review:((S.marks[g.id]||{}).rv||'').length,art:String(g.img||'').slice(0,160),dxArt:String(g.dxImg||'').slice(0,160),
     w:innerWidth,h:innerHeight,lw:document.documentElement.clientWidth,z:window.visualViewport?+visualViewport.scale.toFixed(2):1,lite:document.documentElement.classList.contains('lite'),safe:gfSafe(g.id),v:(CHANGELOG[0]||{}).v};
@@ -14601,7 +14648,7 @@ function gfRun(el,back){
 function gfClose(keep){const el=document.querySelector('.group.sleeve.gf');
   const done=()=>{const rw=document.querySelector('.hx .hxrow'),sl=rw?rw.scrollLeft:0;   /* the row is redrawn: keep it scrolled to where it was, not back at the start */
     if(!UI.dxSw&&UI.alb&&UI.dxOpen[UI.alb.g])UI.dxSw={gid:String(UI.alb.g),to:false,stay:1};   /* closing an album on its deluxe plays the edition swap back to Standard (the sleeves trade places) and leaves the album shut */
-    UI.alb=null;UI.gfClosing=false;render();placeSave();
+    UI.alb=null;UI.gfClosing=false;if(!gfCloseQuick(el))render();placeSave();
     if(sl){const n=document.querySelector('.hx .hxrow');if(n)n.scrollLeft=sl}
     if(UI.dxSw){const x=UI.dxSw;UI.dxSw=null;requestAnimationFrame(()=>gfDxReopen(x))}};
   if(!el||noMotion()){done();return}
@@ -15198,7 +15245,11 @@ document.addEventListener('input',ev=>{
   if(ev.target.id==='hq'){UI.hq=ev.target.value;hRedraw()}
   if(ev.target.id==='col-q'){UI.colQ=ev.target.value;const l=document.getElementById('col-list');if(l)l.innerHTML=colListHTML()}
 });
-document.addEventListener('pointerup',ev=>{const el=ev.target;if(el&&el.classList&&el.classList.contains('rt-s')&&!rating(el.dataset.rate))setTimeout(()=>{if(+el.value)rateCommit(el)},0)});
+/* letting go of the slider saves when nothing would otherwise: a first rating, or (2026.11.27-m) a number only carried over from
+   the last listen. Picking that same number again (a 9 on listen 1, a 9 again now) changes nothing as far as the slider is
+   concerned, so no change event comes, and the song stayed dimmed as carried however often you set it. */
+const rtCarried=id=>{try{if(LSV!==null)return false;const g=lsOwner(id);return !!(g&&lsCar(g,id))}catch(e){return false}};
+document.addEventListener('pointerup',ev=>{const el=ev.target;if(el&&el.classList&&el.classList.contains('rt-s')&&(!rating(el.dataset.rate)||rtCarried(el.dataset.rate)))setTimeout(()=>{if(+el.value&&(!rating(el.dataset.rate)||rtCarried(el.dataset.rate)))rateCommit(el)},0)});
 document.addEventListener('keydown',ev=>{
   if(ev.target.id==='lq'&&ev.key==='Escape'&&ev.target.value){ev.preventDefault();UI.lq[UI.tab]='';ev.target.value='';lRedraw()}
   /* Enter opens the top match */
