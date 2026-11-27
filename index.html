@@ -4800,6 +4800,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.27-l', note:'THE COVER SWINGS OPEN SHOWING ITS ART ON AN IPHONE. When the cover swung open (and closed), iPhones showed its plain back with the album title printed backwards instead of the cover art, which is why the swing was hard to see. The cover now shows one side at a time, switching exactly when it is edge-on. Builds are now also checked in WebKit, the engine every iPhone browser uses, before they ship.'},
   {v:'2026.11.27-k', note:'OPENING AN ALBUM ON A PHONE IS QUICKER. Tapping a record used to rebuild the whole artist page behind the lifting cover just to add the album. Now only the album is built and laid over the page that is already there, so the cover swings open sooner and with less stutter (about 35 to 50 percent less work on the tap). Everything looks the same.'},
   {v:'2026.11.27-j', note:'THE PHONE JACKET, FIRST PASS OF FIXES FROM YOUR RECORDING. The cover is real art the whole way: lifting, swinging open, closing and flying home (on an iPhone it was a flat tan or brown square). Its back is printed card with the title, and it swings with more depth. The black blade over the songs is gone: the records slide straight out of the jacket edges, and they are whole discs now, so the edge that sticks out reads as a record. The title is already printed when the cover opens. The panels are solid card, so the cover no longer shows through like frosted glass. Closing brightens the page while the cover is still on its way home. Rating: opening the card, Done, Clear and Leave out redraw just the album instead of the whole page (about 6x less work each time), the song you are rating rides up above the card, the card is no longer faded at its bottom, and the "album vs songs" line keeps its spot so the list no longer jumps.'},
   {v:'2026.11.27-i', note:'THE JACKET IS LIGHTER ON AN IPHONE. Opening Imaginal Disk on 27-h made the iPhone drop the page mid-swing while the screen was zoomed in (it read 269 px wide, about 1.6x). Double-tap no longer zooms the app (pinch still does), a zoomed-in screen opens albums the plain way, and the back of the swinging cover only prints the square you can see instead of a full copy of the details panel and its record. The crash note now records the zoom too.'},
@@ -12345,7 +12346,7 @@ function gfZoomPg(el,back){
     if(gb)a.push(gb.animate([{opacity:0},{opacity:0,offset:.82},{opacity:1}],{duration:TT,fill:'both'}));
     a.push(fly.animate([{transform:at(T),offset:0},{transform:at(M),offset:.45,easing:'cubic-bezier(.3,0,.2,1)'},{transform:at(C),offset:1}],{duration:560,easing:'cubic-bezier(.4,0,.2,1)',fill:'both'}));
     a.push(ff.animate([{boxShadow:'0 0 0 rgb(0 0 0 / 0)'},{boxShadow:'0 26px 44px rgb(0 0 0 / .45)',offset:.45},{boxShadow:'0 18px 38px rgb(0 0 0 / .42)'}],{duration:560,fill:'both'}));
-    a.push(face.animate([{transform:'rotateY(0deg)'},{transform:'translateZ(16px) rotateY(-96deg)',offset:.5},{transform:'rotateY(-180deg)'}],{duration:680,delay:620,easing:sw,fill:'both'}));
+    a.push(...gfFlip(face,[{transform:'rotateY(0deg)'},{transform:'translateZ(16px) rotateY(-96deg)',offset:.5},{transform:'rotateY(-180deg)'}],{duration:680,delay:620,easing:sw,fill:'both'}));
     if(shF)a.push(shF.animate([{opacity:0},{opacity:.6}],{duration:340,delay:620,easing:'ease-in',fill:'both'}));
     if(shB)a.push(shB.animate([{opacity:.55},{opacity:.08}],{duration:340,delay:960,easing:'ease-out',fill:'both'}));
     a.push(fly.animate([{opacity:1},{opacity:0}],{duration:200,delay:1300,easing:'ease-out',fill:'forwards'}));
@@ -12363,7 +12364,7 @@ function gfZoomPg(el,back){
     a.push(el.animate([{transform:F,clipPath:cF,offset:0,easing:zm},{transform:S,clipPath:cA,offset:O(600,TT)},{transform:S,clipPath:cA,offset:O(680,TT)},{transform:S,clipPath:cR,offset:O(690,TT)},{transform:S,clipPath:cR,offset:1}],{duration:TT,fill:'forwards'}));
     a.push(el.animate([{opacity:1},{opacity:0}],{duration:1,delay:TT,fill:'forwards'}));
     a.push(fly.animate([{opacity:0},{opacity:1}],{duration:90,delay:600,fill:'both'}));
-    a.push(face.animate([{transform:'rotateY(-180deg)'},{transform:'translateZ(16px) rotateY(-84deg)',offset:.5},{transform:'rotateY(0deg)'}],{duration:620,delay:680,easing:sw,fill:'both'}));
+    a.push(...gfFlip(face,[{transform:'rotateY(-180deg)'},{transform:'translateZ(16px) rotateY(-84deg)',offset:.5},{transform:'rotateY(0deg)'}],{duration:620,delay:680,easing:sw,fill:'both'}));
     if(shB)a.push(shB.animate([{opacity:.08},{opacity:.55}],{duration:300,delay:680,easing:'ease-in',fill:'both'}));
     if(shF)a.push(shF.animate([{opacity:.6},{opacity:0}],{duration:320,delay:980,easing:'ease-out',fill:'both'}));
     a.push(fly.animate([{transform:at(C),offset:0},{transform:at(M),offset:.5,easing:'cubic-bezier(.3,0,.2,1)'},{transform:at(T),offset:1}],{duration:600,delay:TT,easing:'cubic-bezier(.45,0,.2,1)',fill:'forwards'}));
@@ -12416,7 +12417,7 @@ function gfRunPg(el,back){
       {const ff=face.querySelector('.gfh-f');if(ff)a.push(ff.animate([{boxShadow:'0 0 0 rgb(0 0 0 / 0)'},{boxShadow:'0 26px 44px rgb(0 0 0 / .45)',offset:.45},{boxShadow:'0 18px 38px rgb(0 0 0 / .42)'}],{duration:660,fill:'both'}))}
       a.push(fly.animate([{transform:at(T),offset:0},{transform:at(M),offset:.45,easing:'cubic-bezier(.3,0,.2,1)'},{transform:at(C),offset:1}],{duration:660,easing:'cubic-bezier(.4,0,.2,1)',fill:'both'}));
       /* landed: it swings open on its spine, toward you and away to the left, then is gone into the inside left */
-      a.push(face.animate([{transform:'rotateY(0deg)'},{transform:'translateZ(14px) rotateY(-96deg)',offset:.5},{transform:'rotateY(-180deg)'}],{duration:820,delay:720,easing:sw,fill:'both'}));
+      a.push(...gfFlip(face,[{transform:'rotateY(0deg)'},{transform:'translateZ(14px) rotateY(-96deg)',offset:.5},{transform:'rotateY(-180deg)'}],{duration:820,delay:720,easing:sw,fill:'both'}));
       if(shF)a.push(shF.animate([{opacity:0},{opacity:.6}],{duration:420,delay:720,easing:'ease-in',fill:'both'}));
       if(shB)a.push(shB.animate([{opacity:.55},{opacity:.08}],{duration:420,delay:1120,easing:'ease-out',fill:'both'}));
       a.push(fly.animate([{translate:'0 0',opacity:1},{translate:`${(-C.left-8).toFixed(0)}px 0`,opacity:0}],{duration:360,delay:1540,easing:'cubic-bezier(.5,0,.6,1)',fill:'both'}))}
@@ -12427,7 +12428,7 @@ function gfRunPg(el,back){
     if(fly&&swing){
       face.style.transform='rotateY(-180deg)';fly.style.transform=at(C);
       a.push(fly.animate([{translate:`${(-C.left-8).toFixed(0)}px 0`,opacity:0},{translate:'0 0',opacity:1}],{duration:220,easing:'cubic-bezier(.3,0,.4,1)',fill:'both'}));
-      a.push(face.animate([{transform:'rotateY(-180deg)'},{transform:'translateZ(14px) rotateY(-84deg)',offset:.5},{transform:'rotateY(0deg)'}],{duration:560,delay:160,easing:sw,fill:'both'}));
+      a.push(...gfFlip(face,[{transform:'rotateY(-180deg)'},{transform:'translateZ(14px) rotateY(-84deg)',offset:.5},{transform:'rotateY(0deg)'}],{duration:560,delay:160,easing:sw,fill:'both'}));
       if(shB)a.push(shB.animate([{opacity:.08},{opacity:.55}],{duration:280,delay:160,easing:'ease-in',fill:'both'}));
       if(shF)a.push(shF.animate([{opacity:.6},{opacity:0}],{duration:300,delay:420,easing:'ease-out',fill:'both'}));
       t0=700}
@@ -12478,6 +12479,14 @@ function gfPreLift(b){
   GFPRE={g:String(b.dataset.g),fly,wash,a};
   setTimeout(()=>{if(GFPRE&&GFPRE.fly===fly){fly.remove();wash.remove();GFPRE=null}},4000)}
 const gfZoomed=()=>!!(window.visualViewport&&visualViewport.scale>1.05);
+/* 2026.11.27-l: THE SWINGING COVER SHOWS ONE FACE AT A TIME ON IPHONE. backface-visibility does not reliably hide the back of the hinged
+   cover in WebKit (every iPhone browser), so the back (printed card, its title mirrored) painted over the cover art from the start.
+   gfFlip runs the swing and switches the faces itself, exactly when the cover passes edge-on (90 degrees). */
+function gfFlip(face,kf,opt){const a=[face.animate(kf,opt)],f=face.querySelector(':scope>.gfh-f'),b=face.querySelector(':scope>.gfh-b');
+  const deg=k=>{const m=/rotateY\((-?[\d.]+)deg\)/.exec(k.transform||'');return m?+m[1]:0},r0=deg(kf[0]),r1=deg(kf[1]),o1=kf[1].offset??.5;
+  const e=Math.max(.001,Math.min(.999,o1*Math.abs((-90-r0)/(r1-r0)))),fr=r0>-90;
+  const vis=on=>[{opacity:on?1:0},{opacity:on?1:0,offset:e-.001},{opacity:on?0:1,offset:e},{opacity:on?0:1}];
+  if(f)a.push(f.animate(vis(fr),{...opt,composite:'replace'}));if(b)a.push(b.animate(vis(!fr),opt));return a}
 function gfRunJk(el,back){
   const drag=back?(new DOMMatrixReadOnly(getComputedStyle(el).transform).m42||0):0;
   const pre=!back&&GFPRE&&GFPRE.g===String(el.dataset.acol)?GFPRE:null;if(!back&&GFPRE){GFPRE=null}
@@ -12514,7 +12523,7 @@ function gfRunJk(el,back){
     P(fly.animate([{transform:at(B),offset:0},{transform:at(M),offset:.45,easing:'cubic-bezier(.3,0,.2,1)'},{transform:at(C),offset:1}],{duration:pre?380:440,easing:'cubic-bezier(.35,0,.2,1)',fill:'both'}));
     P(ff.animate([{boxShadow:'0 26px 44px rgb(0 0 0 / .45)'},{boxShadow:'0 18px 38px rgb(0 0 0 / .42)'}],{duration:420,fill:'both'}));
     P(gr.animate([{opacity:0},{opacity:0,offset:.9},{opacity:1}],{duration:420,fill:'both'}));
-    P(face.animate([{transform:'rotateY(0deg)'},{transform:'translateZ(46px) rotateY(-96deg)',offset:.5},{transform:'rotateY(-180deg)'}],{duration:640,delay:380,easing:sw,fill:'both'}));
+    gfFlip(face,[{transform:'rotateY(0deg)'},{transform:'translateZ(46px) rotateY(-96deg)',offset:.5},{transform:'rotateY(-180deg)'}],{duration:640,delay:380,easing:sw,fill:'both'}).forEach(P);
     P(shF.animate([{opacity:0},{opacity:.6}],{duration:310,delay:380,easing:'ease-in',fill:'both'}));
     P(shB.animate([{opacity:.5},{opacity:0}],{duration:310,delay:690,easing:'ease-out',fill:'both'}));
     P(gl.animate([{opacity:0},{opacity:0,offset:.5},{opacity:1}],{duration:760,fill:'both'}));
@@ -12530,7 +12539,7 @@ function gfRunJk(el,back){
     if(stk)P(stk.animate([{opacity:1},{opacity:0}],{duration:160,fill:'forwards'}));
     if(rec)P(rec.animate([{translate:'0 0'},{translate:'-46px 0'}],{duration:240,easing:'ease-in',fill:'forwards'}));
     if(lrec)P(lrec.animate([{translate:'0 0'},{translate:'46px 0'}],{duration:240,easing:'ease-in',fill:'forwards'}));
-    P(face.animate([{transform:'rotateY(-180deg)'},{transform:'translateZ(46px) rotateY(-84deg)',offset:.5},{transform:'rotateY(0deg)'}],{duration:620,delay:120,easing:sw,fill:'both'}));
+    gfFlip(face,[{transform:'rotateY(-180deg)'},{transform:'translateZ(46px) rotateY(-84deg)',offset:.5},{transform:'rotateY(0deg)'}],{duration:620,delay:120,easing:sw,fill:'both'}).forEach(P);
     P(shB.animate([{opacity:0},{opacity:.5}],{duration:310,delay:120,easing:'ease-in',fill:'both'}));
     P(shF.animate([{opacity:.6},{opacity:0}],{duration:310,delay:430,easing:'ease-out',fill:'both'}));
     P(gl.animate([{opacity:1},{opacity:1,offset:.97},{opacity:0}],{duration:430,fill:'forwards'}));
