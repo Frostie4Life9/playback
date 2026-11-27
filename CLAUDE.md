@@ -15,7 +15,7 @@ Playback is Skyler's music + movie/TV app, live at https://frostie4life9.github.
 - Keep usage lean. For performance or animation work, **measure once before and once after**, not repeatedly.
 - Measure in headless Chrome at iPhone size: 430×932, touch, 3× pixels, 4× CPU slowdown. Use a synthetic library seeded into localStorage (`playback_v1`, plus `_tab=music` and `_sel_music`). Report main-thread time (`render()` and long tasks) and the worst frame. Also check in Playwright WebKit when iPhone rendering matters (setup notes are in the Project doc `claude/phone-jacket-built-2026-11-27.md`, under Testing setup). Use real bitmap covers.
 - Headless Chrome isn't his iPhone. Say so when a fix can only be confirmed on the phone.
-- He tests on an iPhone (Safari and Brave). Crash and reload notes land in the Suggest box: Cloudflare KV namespace `123626e20f3e4780ba3064ff22077e7e`, key `suggestions` (newest first). Look for `[crash]` and `[dropped]` there after phone releases.
+- He tests on an iPhone (Safari and Brave). Crash and reload notes land in the Suggest box: Cloudflare KV namespace `123626e20f3e4780ba3064ff22077e7e`, key `suggestions` (newest first). Look for `[crash]` and `[dropped]` there after phone releases. Once a crash is fixed, remove the notes relating to it from that key (leave his friends' real suggestions alone).
 
 ## Design rules
 - Match the approved mockups exactly (album mockups canvas: https://claude.ai/artifact/J5MTCXBMo4nz1Mi4vUBMH5).
