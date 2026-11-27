@@ -4715,6 +4715,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.27-c', note:'QUICKER INTO AN ARTIST, AND MUCH LIGHTER ON YOUR PHONE (from your screen recording and two refresh notes): On a phone, every artist page was quietly building a hidden copy of the whole All artists wall (about 1,300 pieces and 175 covers you never saw), and tapping a sleeve copied the library again just to animate it leaving. Now the artist page is only the artist page, and the library you tapped is the one that dips away; afterwards it is set aside for next time as before. Tapping a sleeve now shows the artist page in about half the time, the longest stall is about a third shorter, and after twenty quick switches the app holds about a tenth of the page pieces it used to (the build-up iPhone answers by refreshing the page). The splatter records are also stored compactly now, and only the last dozen are kept.'},
   {v:'2026.11.27-b', note:'SMOOTHER INTO AN ARTIST, AND YOUR APP BAR TUCKED AWAY: The record flying out of its sleeve to the turntable, and back into its sleeve when you return to All artists, now runs on the phone\u2019s graphics chip as one planned path, so it keeps moving at full speed while the page is being built (it used to be moved frame by frame by the page itself, which is the lag you saw in the air). Going home, it now aims for where its sleeve ends up once it has finished rising in, and tucks in there. Tapping an artist in the library no longer measures the fading copy of the library piece by piece (that alone was about a sixth of a second on a slowed phone). The artist photo starts loading the moment your finger touches a sleeve, and its fade waits until the picture is ready instead of playing over nothing. Your app bar (links to your other apps) is now hidden on every page; a small arrow at the top, only on your devices, pulls it down, and the arrow, a tap elsewhere or Esc puts it away. New: if the phone throws the page away and reloads it (iPhone does this when it runs short of memory), the next start sends a note to your Suggest box with what you were doing, so the cause of the occasional refresh can be found.'},
   {v:'2026.11.27-a', note:'ALL ARTISTS NO LONGER STALLS ON AN EMPTY PAGE (from your screen recording): leaving an artist on a phone showed a plain wash of color for 0.7 to 1.6 seconds before any sleeve appeared, and switching back and forth quickly got worse. Four fixes. The library is now kept between visits: opening an artist sets the wall of sleeves aside, and All artists puts it back with its pictures already decoded, redrawing only the sections that changed (a new rating, a new artist). Only the sections on screen are drawn; the rest are boxes of the right height until you scroll to them. The little records peeking out of each sleeve were kept in the page\u2019s styles as about 3 MB of text, which the phone re-read on every open; they are now handed over once as in-memory pictures. And the color stand-in now fades the moment the library is ready, with the sleeves on screen rising straight away one after another, instead of the library playing its entrance hidden under the stand-in for another half second. In testing (a slowed-down phone, 88 artists) the time until sleeves show dropped by about 40% and the longest freeze by about half.'},
   {v:'2026.11.26-c', note:'NO MORE FROZEN TAP ON A PHONE: tapping All artists now answers in the very next frame. The library\u2019s colors fade in over the artist page straight away, and the library is built underneath while that fade keeps moving, instead of the artist page sitting frozen for half a second first. The other way round, tapping an artist in the library starts the other sleeves dipping away the instant you tap, and the artist page is built under them. Also fixed: the still copy of the library used for that hand-over showed blank sleeves for a few frames on iPhone while its pictures were decoded again.'},
@@ -9243,7 +9244,7 @@ const lxEmpty=()=>UI.tab==='music'&&!UI.view&&!(S.music&&S.music.length);
 const LX_EMPTY_COLS=['#5a3f86','#2c6c74','#9a4f74'];   /* the dusk and orchid of the app icon */
 const lxOn=()=>UI.tab==='music'&&((!!UI.libOpen&&!UI.view)||lxEmpty());
 let LXS=null,LXT=0,LXC={k:null,v:null},LXY=null,LXU=0;
-const lxEl=()=>document.querySelector('#lx:not(.libghost)');
+const lxEl=()=>{const L=LGL&&LGL.g;for(const e of document.querySelectorAll('#lx:not(.libghost)'))if(e!==L)return e;return null};   /* 2026.11.27-c: never the library that is on its way out (LGL) */
 const lxScroller=()=>{const s=lxEl();return s?s.querySelector(':scope>.libbody'):null};
 /* where the photo layer sits: from the left edge of the preview column to the window's right edge, from the window's top to the bottom of the hero */
 function lxGeo(){const side=lxEl(),box=lxScroller(),sp=side&&side.querySelector('.lxspot'),w=side&&side.querySelector('.lxphw');if(!sp||!w||!box)return;
@@ -9522,7 +9523,7 @@ let LXW={q:[],on:false,t:0,gen:0};
 /* 2026.11.26-b: only in real idle time (a frame with 40ms+ to spare, which never happens while anything is animating), never
    during the library's entrance or a record's flight, and a queue left from an earlier visit is dropped (it used to carry on into
    the next opening and paint records right in the middle of the sleeves rising in) */
-const lxBusy=s=>!s||s.classList.contains('libin')||s.classList.contains('lxhold')||performance.now()<FLYBK||!!document.querySelector('.libghost');
+const lxBusy=s=>!s||s.classList.contains('libin')||s.classList.contains('lxhold')||performance.now()<FLYBK||!!document.querySelector('.libghost')||!!LGL;
 function lxWarm(){const side=lxEl();if(lxBusy(side)||!('requestIdleCallback' in window))return;const g=LXW.gen;
   requestIdleCallback(()=>{if(g===LXW.gen)lxWarm0()})}
 function lxWarm0(){const side=lxEl();if(lxBusy(side))return;const H=innerHeight;
@@ -9748,7 +9749,15 @@ let AM=null;
 function mainAside(e,list){if(!AM)return mainAside0(e,list);
   const k=(e&&e.id)+'|'+(list===S.music?'m':list===S.screen?'s':'?')+'|'+UI.tab+'|'+!!UI.libOpen+'|'+!!UI.addOpen+'|'+LIBIN+'|'+LXS;
   const h=AM[k];if(h!=null)return h;return AM[k]=mainAside0(e,list)}
-function mainAside0(e,list){const emp=!e&&lxEmpty(),full=!!(UI.libOpen&&e)||emp;   /* in the full artist menu the Add an artist box sits inside it (on a phone the menu covers the page, so a box outside it could never be seen) */
+/* 2026.11.27-c: ON A PHONE, NO HIDDEN LIBRARY UNDER THE ARTIST PAGE. With the library closed, a phone never shows the side list (all of
+   it is display:none), yet every artist page still built a full copy of it: ~1,300 elements and ~175 covers, parsed, matched picture by
+   picture and kept in memory, on top of the library set aside for next time. That copy was most of the cost of going into an artist,
+   and a big share of the memory behind the page refreshes. On a phone it is now an empty box; the library is built (or the kept one
+   revived) when you tap All artists, as it already was. Turning a tablet or widening a window past phone size redraws with the full list. */
+const PHQ=matchMedia('(max-width:760px)');
+try{PHQ.addEventListener('change',()=>{if(READY&&document.querySelector('#app>.shell>aside.side.thin'))render()})}catch(e){}
+function mainAside0(e,list){const emp=!e&&lxEmpty(),full=!!(UI.libOpen&&e)||emp;
+  if(e&&!full&&!UI.libOpen&&UI.tab==='music'&&PHQ.matches)return '<aside class="side thin"></aside>';   /* in the full artist menu the Add an artist box sits inside it (on a phone the menu covers the page, so a box outside it could never be seen) */
   const lx=full&&UI.tab==='music';if(lx&&LIBIN)LXS=null;
   const la=lx?(S.music.find(x=>x.id===LXS)||e):null,lc=la?lxCols(la):LX_EMPTY_COLS,fresh=emp&&!document.querySelector('#lx.lxe');
   return `<aside class="side ${UI.libOpen||!e?'libopen':''}${full?' libfull':''}${(LIBIN&&UI.libOpen&&e)||fresh?' libin':''}${lx?' lx':''}${emp?' lxe':''}"${lx?` id="lx" style="--x1:${esc(lc[0])};--x2:${esc(lc[1])};--x3:${esc(lc[2])}"`:''}>
@@ -11492,10 +11501,11 @@ function renderMain(topIn){
   const list=S[UI.tab];
   const top=topIn!=null?topIn:topHTML(),mo={};
   PVIN=UI.view!==PVLV;PVLV=UI.view;if(PVIN)UI.setAnim=true;
-  document.getElementById('app').innerHTML=top+`${UI.view==='settings'?settingsView():UI.view==='account'?accountView():UI.view==='friends'?friendsView():UI.view==='friend'?friendView():UI.view==='collection'?collectionView():UI.view==='history'?historyView():UI.view==='stats'?statsView():UI.tab==='screen'?screenRoot():mainView(e,list,mo)}
+  {const app=document.getElementById('app'),html=top+`${UI.view==='settings'?settingsView():UI.view==='account'?accountView():UI.view==='friends'?friendsView():UI.view==='friend'?friendView():UI.view==='collection'?collectionView():UI.view==='history'?historyView():UI.view==='stats'?statsView():UI.tab==='screen'?screenRoot():mainView(e,list,mo)}
   <footer>
     <p class="buildid">Build ${esc(BUILD)}</p>
   </footer>`;
+  if(!lglSplice(app,html))app.innerHTML=html}
   if(KEEPSH){const ph=document.querySelector('#app section.sheet[data-keepsh]');if(ph)ph.replaceWith(KEEPSH);KEEPSH=null}
   if(mo.aside&&lxEl()){if(!(LIBIN&&lxRevive(mo.aside))){const l=document.getElementById('llist');if(l)l._src=lxLLsrc(mo.aside)}}
   if(!UI.view&&UI.tab==='music'&&mo.aside)PAINT={top,side:asideKey(mo.aside),sheet:SHEET_LAST};
@@ -11700,9 +11710,20 @@ const hSplatty=n=>n===7||n===8;
    tint = a color for opaque vinyl under the paint (the second look: a dark tint of the highest-rated album's color); empty = clear vinyl. cap = a small record (the tiles): fewer, coarser streaks.
    The result is a picture (data URL), kept per artist. */
 const HSP={};
+/* 2026.11.27-c: A BIG SPLATTER RECORD IS A BLOB, AND ONLY THE LAST FEW ARE KEPT. Each one is a 440px picture that used to be kept as a
+   ~400 KB data: address, forever, for every artist you opened and every one painted ahead in the library; it was also pasted into
+   the artist page's style on every draw. On a phone switching quickly between artists that piled up to tens of MB, which is the
+   kind of memory iPhone Safari takes back by dropping the page. Now each is a small blob: address, and only the 12 used most
+   recently are kept (never the artist on screen). An evicted one is simply painted again if you go back to that artist. */
+const HSPO=[],HSP_MAX=12;
+function hspBlob(url){const m=/^url\("data:([^;,]+);base64,([\s\S]*)"\)$/.exec(url);if(!m)return null;
+  try{const bin=atob(m[2]),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return URL.createObjectURL(new Blob([u],{type:m[1]}))}catch(e){return null}}
+function hspUse(key){const i=HSPO.indexOf(key);if(i>=0)HSPO.splice(i,1);HSPO.push(key);
+  for(let j=0;HSPO.length>HSP_MAX&&j<HSPO.length;){const k=HSPO[j];let live=false;try{live=(HERO.aid&&k.startsWith(HERO.aid+'|'))||(HSTY.aid&&k.startsWith(HSTY.aid+'|'))}catch(e){}
+    if(live||k===key){j++;continue}HSPO.splice(j,1);const o=HSP[k];delete HSP[k];if(o&&o.u)setTimeout(()=>URL.revokeObjectURL(o.u),4000)}}
 function hSplat(songs,aid,tint,cap){
   let L=songs.slice().sort((x,y)=>y.r-x.r||(x.id<y.id?-1:1));if(cap&&L.length>cap)L=L.slice(0,cap);
-  const key=aid+'|'+(tint||'')+'|'+(cap?1:0),sig=L.map(x=>x.id+':'+x.r+x.col).join(','),hit=HSP[key];if(hit&&hit.sig===sig)return hit.svg;
+  const key=aid+'|'+(tint||'')+'|'+(cap?1:0),sig=L.map(x=>x.id+':'+x.r+x.col).join(','),hit=HSP[key];if(hit&&hit.sig===sig){if(!cap)hspUse(key);return hit.svg}
   const N=L.length;if(!N)return '';
   const OUT=cap?128:440,W=cap?640:1800,H=cap?56:170,M=cap?80:190,rnd=hrng(hseed(aid+':s')),sz=r=>.35+.65*Math.pow(r/10,1.4);
   let tot=0;for(const x of L)tot+=sz(x.r);
@@ -11731,7 +11752,8 @@ function hSplat(songs,aid,tint,cap){
     else{o[k4]=R;o[k4+1]=G;o[k4+2]=B;o[k4+3]=A*255*e}}
   og.putImageData(od,0,0);
   const url='url("'+oc.toDataURL('image/png')+'")';pc.width=pc.height=oc.width=oc.height=0;   /* 2026.11.24-b: give the canvas memory back now (iPhone Safari caps it and only frees it late) */
-  HSP[key]={sig,svg:url};return url}
+  if(!cap){const u=hspBlob(url),old=HSP[key];if(u){if(old&&old.u)setTimeout(()=>URL.revokeObjectURL(old.u),4000);HSP[key]={sig,svg:'url("'+u+'")',u};hspUse(key);return HSP[key].svg}}
+  HSP[key]={sig,svg:url};if(!cap)hspUse(key);return url}
 /* Liquid record. One layout (liqParts) is used everywhere the record shows: the small record in the sleeve, the
    record in the air and the one on the turntable, so it is the same record all the way. The paint is two rings
    of overlapping pools, so the record is always full; what shows between pools is a darker blend of the same
@@ -12825,32 +12847,75 @@ function libGhostTake(b){
     for(let n=b.parentElement;n;n=n===side?null:n.parentElement){const st=getComputedStyle(n);cs.push([cl[ix.get(n)],st.backgroundColor,st.borderTopWidth,st.borderTopColor,st.boxShadow])}}
   return{g,sc:scN,pk,rc,cs,shell:!!(side.parentElement&&side.parentElement.classList.contains('shell'))&&matchMedia('(min-width:761px)').matches}   /* on a PC the menu's column rules hang off .shell, so the copy goes back in there; on a phone it sits on the page itself */}
 function libGhostRun(){const L=UI.libGhost;UI.libGhost=null;if(!L)return;libGhostPlay(L,false)}
+/* 2026.11.27-c: ON A PHONE THE REAL LIBRARY LEAVES, NOT A COPY OF IT. Tapping a sleeve used to copy the whole library (~1,300 elements),
+   measure it, and add the copy to the page so it could dip away while the artist page was built under it. Copying and restyling that
+   copy was most of the pause before anything moved (~0.1–0.25 s on a slowed phone). Now the library on screen is the one that dips
+   away: the artist page is drawn around it (it is never taken out of the page, so nothing in it is restyled), and once its dip is
+   over its wall of sleeves is set aside for next time, exactly as before. */
+var LGL=null;   /* var: read by lxEl, which can run before this line on the first draw */
+function libGhostLive(b){
+  if(noMotion()||UI.tab!=='music'||UI.view)return null;const side=b.closest('#lx.side.libfull');
+  if(!side||!side.parentElement||!side.parentElement.classList.contains('shell'))return null;
+  /* measured now, while the page is still settled (before the record's layer is added): the picked sleeve, everything around it up to the
+     library, and the colors of what holds it, so the dip never has to lay the page out again */
+  const rc=new Map(),cs=[];rc.set(b,b.getBoundingClientRect());
+  for(let n=b;n&&n!==side;n=n.parentElement){const par=n.parentElement;if(!par)break;
+    for(const x of par.children){if(x===n||rc.has(x))continue;if(x.matches('.lsect')&&par.matches('.llist')&&x.style.contentVisibility!=='visible'){const r=x.getBoundingClientRect();rc.set(x,r);continue}rc.set(x,x.getBoundingClientRect())}}
+  for(let n=b.parentElement;n;n=n===side?null:n.parentElement){const st=getComputedStyle(n);cs.push([n,st.backgroundColor,st.borderTopWidth,st.borderTopColor,st.boxShadow])}
+  return{g:side,sc:[],pk:b,rc,cs,shell:false,live:true}}
+/* the artist page drawn around the library that is still leaving: the new page goes in before it, everything else of the old page goes */
+function lglSplice(app,html){const L=LGL&&LGL.g;if(!L||!L.isConnected||!app.contains(L)||L.parentElement.parentElement!==app)return false;
+  const t=document.createElement('template');t.innerHTML=html;const nsh=[...t.content.children].find(n=>n.classList.contains('shell'));if(!nsh)return false;
+  const sh=L.parentElement;
+  [...app.childNodes].forEach(n=>{if(n!==sh)n.remove()});[...sh.childNodes].forEach(n=>{if(n!==L)n.remove()});
+  for(const a of [...sh.attributes])if(!nsh.hasAttribute(a.name))sh.removeAttribute(a.name);for(const a of [...nsh.attributes])sh.setAttribute(a.name,a.value);
+  const before=[],after=[];let past=false;for(const n of [...t.content.childNodes]){if(n===nsh){past=true;continue}(past?after:before).push(n)}
+  before.forEach(n=>app.insertBefore(n,sh));after.forEach(n=>app.appendChild(n));
+  [...nsh.childNodes].forEach(n=>sh.insertBefore(n,L));return true}
 /* early (2026.11.26-c): the other sleeves dip away at once; the copy's backing, the picked sleeve's hand-over and its record
    hiding wait for the artist page (the returned function, run right after the page is drawn) */
 function libGhostPlay(L,early){
+  if(LGL)LGL.fin();
   document.querySelectorAll('.libghost').forEach(e=>e.remove());
-  const g=L.g,pick=L.pk||null;
-  g.classList.remove('libin');g.classList.add('libghost');g.setAttribute('aria-hidden','true');g.inert=true;
+  const g=L.g,pick=L.pk||null,live=!!L.live,zero=[],mine=[],A=(el,k,o)=>{const x=el.animate(k,o);if(live)mine.push(x);return x};
+  if(live){g.style.zIndex='69'}   /* only its stacking changes: a class or attribute on it restyled all ~1,300 elements inside (~110ms); taps on it are ignored in the tap handler */
+  else{g.classList.remove('libin');g.classList.add('libghost');g.setAttribute('aria-hidden','true');g.inert=true;
   g.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));g.querySelectorAll('[data-act]').forEach(e=>e.removeAttribute('data-act'));
   /* 2026.11.26-c: the copy's pictures are drawn straight away (your recording showed its sleeves blank for a few frames while Safari decoded them again) */
   g.querySelectorAll('img').forEach(i=>{i.decoding='sync';i.loading='eager'});
   const sh=document.querySelector('.shell');(L.shell&&sh?sh:document.body).appendChild(g);
-  L.sc.forEach(([e,t,l])=>{if(e){e.scrollTop=t;e.scrollLeft=l}});
-  const done=()=>{if(g.isConnected)g.remove()};setTimeout(done,1600);
+  L.sc.forEach(([e,t,l])=>{if(e){e.scrollTop=t;e.scrollLeft=l}})}
+  /* the real library, once its dip is over (2026.11.27-c): it is slid off the screen at once (one cheap change, so the artist page
+     under it takes taps straight away), and taken apart only when the phone is idle: the motion it was given is undone (only that,
+     asking the library for all its motion restyled every sleeve: a ~0.2–0.4s freeze just as the record landed) and its wall of
+     sleeves is set aside for next time */
+  let gone=false,fin=false;
+  const finish=()=>{if(fin)return;fin=true;if(LGL&&LGL.g===g)LGL=null;if(!g.isConnected)return;
+    if(live){g.style.visibility='hidden';mine.forEach(x=>{try{x.cancel()}catch(e){}});
+      zero.forEach(e=>e.style.opacity='');const td=pick&&pick.querySelector('.tdisc');if(td)td.style.visibility='';
+      const ll=g.querySelector('#llist');
+      if(ll&&ll._src!=null&&![...document.querySelectorAll('#lx')].some(e=>e!==g)&&UI.tab==='music'&&!UI.libOpen){ll.remove();LXKEEP={ll,src:ll._src,w:innerWidth}}}
+    g.remove()};
+  const done=()=>{if(gone)return;gone=true;
+    if(!live||!g.isConnected){finish();return}
+    g.style.transform='translateX(-300vw)';
+    if('requestIdleCallback' in window)requestIdleCallback(finish,{timeout:1200});else setTimeout(finish,400)};
+  if(live)LGL={g,fin:finish};
+  setTimeout(done,1600);
   const g2=g;let pr=null,cx=0,cy=0;
   const RC=L.rc||new Map(),rect=e=>RC.get(e)||e.getBoundingClientRect();
   if(pick){pr=rect(pick);cx=pr.left+pr.width/2;cy=pr.top+pr.height/2;
     for(let n=pick;n&&n!==g;n=n.parentElement){const par=n.parentElement;if(!par)break;
       for(const s of par.children){if(s===n)continue;const r=rect(s);if(!r.width&&!r.height)continue;
-        if(r.bottom<0||r.top>innerHeight){s.style.opacity='0';continue}
+        if(r.bottom<0||r.top>innerHeight){if(!live){s.style.opacity='0';zero.push(s)}continue}   /* the real library is never scrolled again, so what is off screen is left alone (writing to ~90 off-screen boxes cost ~0.1s) */
         const t=s.matches('.tile,.entry'),dl=t?Math.min(90,Math.hypot(r.left+r.width/2-cx,r.top+r.height/2-cy)*.08):0;
-        s.animate(t?[{opacity:1,transform:'none'},{opacity:0,transform:'translateY(12px) scale(.93)'}]:[{opacity:1},{opacity:0}],
+        A(s,t?[{opacity:1,transform:'none'},{opacity:0,transform:'translateY(12px) scale(.93)'}]:[{opacity:1},{opacity:0}],
           {duration:t?190:150,delay:dl,easing:t?'cubic-bezier(.4,0,.7,.4)':'ease',fill:'forwards'})}}}
   const rest=()=>{if(!g2.isConnected)return;
     /* 2026.11.21-w: the artist library's own backing (its colors and photo) goes at once, so the artist page shows straight away
        while the picked sleeve hands its record over. It used to hold the whole library on screen for most of a second. */
-    if(g2.classList.contains('lx'))g2.querySelectorAll('.lxbg,.lxphw').forEach(n=>n.animate([{opacity:1},{opacity:0}],{duration:260,easing:'ease',fill:'forwards'}));
-    if(!pick){g2.animate([{opacity:1},{opacity:0}],{duration:320,easing:'ease',fill:'forwards'}).onfinish=done;return}
+    if(g2.classList.contains('lx'))g2.querySelectorAll('.lxbg,.lxphw').forEach(n=>A(n,[{opacity:1},{opacity:0}],{duration:260,easing:'ease',fill:'forwards'}));
+    if(!pick){A(g2,[{opacity:1},{opacity:0}],{duration:320,easing:'ease',fill:'forwards'}).onfinish=done;return}
     const td=pick.querySelector('.tdisc');if(td)td.style.visibility='hidden';   /* its record is the one in the air */
     /* the menu's own backing (page color, list borders) fades away under the picked sleeve */
     const CS=L.cs&&L.cs.length?L.cs:[];if(!CS.length)for(let n=pick.parentElement;n;n=n===g2?null:n.parentElement){const st=getComputedStyle(n);CS.push([n,st.backgroundColor,st.borderTopWidth,st.borderTopColor,st.boxShadow])}
@@ -12858,8 +12923,8 @@ function libGhostPlay(L,early){
       if(!/rgba\(0, 0, 0, 0\)|transparent/.test(bg)){a.backgroundColor=bg;z.backgroundColor='rgba(0,0,0,0)'}
       if(parseFloat(bw)>0){a.borderColor=bc;z.borderColor='rgba(0,0,0,0)'}
       if(bs!=='none'){a.boxShadow=bs;z.boxShadow='none'}
-      if(Object.keys(a).length)n.animate([a,z],{duration:300,delay:early?0:170,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'})}
-    pick.animate([{opacity:1,transform:'none',filter:'none'},{opacity:1,transform:'none',filter:'none',offset:.42},{opacity:0,transform:'translateY(10px) scale(.88)',filter:'blur(2px)'}],
+      if(Object.keys(a).length)A(n,[a,z],{duration:300,delay:early?0:170,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'})}
+    A(pick,[{opacity:1,transform:'none',filter:'none'},{opacity:1,transform:'none',filter:'none',offset:.42},{opacity:0,transform:'translateY(10px) scale(.88)',filter:'blur(2px)'}],
       {duration:g2.classList.contains('lx')?460:720,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'}).onfinish=done};
   if(early)return rest;rest()}
 let heroIO=null,heroWatched=null;
@@ -14517,6 +14582,7 @@ function sheetOut(kind){const o=document.querySelector('.llover:not(.albover)');
   o.classList.add('out');clearTimeout(UI.outT);
   UI.outT=setTimeout(()=>{if(kind==='fr')UI.frOpen=false;else UI.llOpen=false;render()},250);return true}
 document.addEventListener('click',ev=>{
+  if(LGL&&LGL.g.contains(ev.target))return;   /* 2026.11.27-c: the library that is on its way out takes no taps */
   const b=ev.target.closest('[data-act]');
   if(!b){if(UI.mm&&!ev.target.closest('.mmenu')){UI.mm=false;UI.mmAnim=false;render()}return}
   const act=b.dataset.act,id=b.dataset.id;
@@ -14674,7 +14740,7 @@ document.addEventListener('click',ev=>{
   else if(act==='mmgo'){UI.tab='music';UI.rOpen=null;
     if(b.dataset.v==='history'){UI.view='history';UI.hAnim=true;UI.hEdit=null}else if(b.dataset.v==='stats'){UI.view='stats';UI.stAnim=true;UI.stR=null;UI.stN=25}else UI.view=null;
     try{localStorage.setItem(KEY+'_tab','music')}catch(e){}window.scrollTo({top:0})}
-  else if(act==='sel'){liveNote('artist');{const bx=lxScroller();if(bx)UI.lxY=bx.scrollTop}UI.addOpen=false;const lg=libGhostTake(b);if(UI.tab==='music'&&!UI.view)flyAsk(b,id,!!lg);UI.libGhost=lg;UI.sel[UI.tab]=id;UI.libOpen=false;UI.rOpen=null;
+  else if(act==='sel'){liveNote('artist');{const bx=lxScroller();if(bx)UI.lxY=bx.scrollTop}UI.addOpen=false;const lg=(PHQ.matches&&libGhostLive(b))||libGhostTake(b);if(UI.tab==='music'&&!UI.view)flyAsk(b,id,!!lg);UI.libGhost=lg;UI.sel[UI.tab]=id;UI.libOpen=false;UI.rOpen=null;
     /* 2026.11.22-a: from the full-window library the new page starts at the very top, straight away (the library still covers it). It used to
        scroll down to the page after it was drawn, so the record aimed for the turntable while the page slid up under it */
     if(lg||lxEl()){if(scrollY)window.scrollTo(0,0)}
