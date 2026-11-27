@@ -4800,6 +4800,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.27-k', note:'OPENING AN ALBUM ON A PHONE IS QUICKER. Tapping a record used to rebuild the whole artist page behind the lifting cover just to add the album. Now only the album is built and laid over the page that is already there, so the cover swings open sooner and with less stutter (about 35 to 50 percent less work on the tap). Everything looks the same.'},
   {v:'2026.11.27-j', note:'THE PHONE JACKET, FIRST PASS OF FIXES FROM YOUR RECORDING. The cover is real art the whole way: lifting, swinging open, closing and flying home (on an iPhone it was a flat tan or brown square). Its back is printed card with the title, and it swings with more depth. The black blade over the songs is gone: the records slide straight out of the jacket edges, and they are whole discs now, so the edge that sticks out reads as a record. The title is already printed when the cover opens. The panels are solid card, so the cover no longer shows through like frosted glass. Closing brightens the page while the cover is still on its way home. Rating: opening the card, Done, Clear and Leave out redraw just the album instead of the whole page (about 6x less work each time), the song you are rating rides up above the card, the card is no longer faded at its bottom, and the "album vs songs" line keeps its spot so the list no longer jumps.'},
   {v:'2026.11.27-i', note:'THE JACKET IS LIGHTER ON AN IPHONE. Opening Imaginal Disk on 27-h made the iPhone drop the page mid-swing while the screen was zoomed in (it read 269 px wide, about 1.6x). Double-tap no longer zooms the app (pinch still does), a zoomed-in screen opens albums the plain way, and the back of the swinging cover only prints the square you can see instead of a full copy of the details panel and its record. The crash note now records the zoom too.'},
   {v:'2026.11.27-h', note:'ON A PHONE AN ALBUM IS A RECORD JACKET NOW (board 4 of the album mockups, from your Magdalena Bay recording). Tapping a record lifts its cover on the very frame you tap and warms the page to the album\u2019s own color, instead of snapping to grey and sitting still while the page was rebuilt underneath. The cover flies straight to its final size and swings open on its spine, and its back is the details panel itself, so there is no black slab, no second zoom into a full-screen card and nothing fading in late. It opens on your songs: the open jacket\u2019s two panels sit side by side with the records sleeved in them, peeking out of the outer edges, and you swipe across the spine to the details panel (no more Details / Ratings tabs; where you are is printed at the top). The songs are printed on the panel with a groove line under each one drawn to its rating, the stats are printed liner-note lines instead of grey tiles, and your album score is a hype sticker on the corner of the jacket (tap it to rate the album). Rating a song or the album pulls a printed insert card out of the bottom of the jacket. Closing plays it all backwards (sliding back to your songs first if you were on details) and leaves the page exactly where it was. Singles and the computer layout are unchanged.'},
@@ -9767,6 +9768,29 @@ function gfQuick(){
   /* the song being rated rides up above the insert card */
   const row=rs.querySelector('.track.sl-t.ropen'),card=rs.querySelector('.rater');
   if(row&&card)requestAnimationFrame(()=>{const rb=row.getBoundingClientRect().bottom,ct=card.getBoundingClientRect().top;if(rb>ct-12)rs.scrollBy({top:rb-ct+24,behavior:noMotion()?'auto':'smooth'})});
+  return true}
+/* 2026.11.27-k: OPENING AN ALBUM ON A PHONE BUILDS ONLY THE ALBUM. The tap used to rebuild the whole artist page (hero, every
+   sleeve, Fans also spin) just to add the jacket, ~0.3-0.7 s behind the lifting cover. Now the jacket is built on its own and
+   put over the page that is already there; the sleeve you tapped is marked open and the hint fades. Anything unusual (library
+   open, another album open, a single) still takes the full draw. */
+function gfOpenQuick(gid){
+  if(!gfPh()||UI.view||UI.tab!=='music'||(UI.libOpen&&lxEl())||document.querySelector('.group.sleeve.gf'))return false;
+  const hero=document.querySelector('.hero.hx[data-aid]'),rel=document.querySelector('.hx .hxrel'),tile=rel&&rel.querySelector('.hxsl[data-g="'+(window.CSS&&CSS.escape?CSS.escape(gid):gid)+'"]');if(!hero||!tile)return false;
+  const a=S.music.find(x=>String(x.id)===hero.dataset.aid),g=a&&a.groups.find(x=>String(x.id)===String(gid));if(!a||!g||g.kind==='Single'||a.id!==UI.sel.music)return false;
+  for(const k of Object.keys(UI.dxOpen))if(String(k)!==String(gid))delete UI.dxOpen[k];
+  UI.toAlb=null;UI.alb={aid:a.id,g:String(gid)};UI.gfAnim=String(gid);gfGuard(a,g);
+  let el;try{const t=document.createElement('template');t.innerHTML=gfHtml(a,g).trim();el=t.content.firstElementChild}finally{UI.gfAnim=null;UI.dxAnim=null}
+  if(!el){UI.alb=null;return false}
+  HXSINK=String(gid);gfStep('html');
+  rel.querySelectorAll('.hxsl.on').forEach(x=>{x.classList.remove('on','sink');x.setAttribute('aria-pressed','false')});
+  tile.classList.add('on','sink');tile.setAttribute('aria-pressed','true');{const l=tile.getAttribute('aria-label');if(l)tile.setAttribute('aria-label',l.replace(/^Open /,'Close '))}
+  {const h=rel.querySelector('.hxhint');if(h){h.classList.add('off');h.setAttribute('aria-hidden','true')}HXHINT.off=true}
+  rel.appendChild(el);hxPlaceGf();
+  slObserve();slPulseNow();UI.rAnim=null;
+  gfStep('dom');gfShow(el);gfStep('shown');if(el.classList.contains('gfopen')&&!noMotion()){try{gfRun(el,false)}catch(e){gfStep('err:'+String(e&&e.message||e).slice(0,40))}}gfStep('run');slRipple(el,1900);
+  requestAnimationFrame(()=>{gfStep('f1');requestAnimationFrame(()=>gfStep('f2'))});[250,700,1300,2000,3000].forEach(t=>setTimeout(()=>gfStep('t'+t),t));
+  if(READY&&navigator.onLine)try{msLoad(a,g)}catch(e){}
+  placeSave();
   return true}
 function render(){
   if(UI.gfQ){UI.gfQ=false;try{if(gfQuick())return}catch(e){}}
@@ -14875,7 +14899,7 @@ document.addEventListener('click',ev=>{
   else if(act==='hinfo'){if(UI.hinfo){hinfoClose();return}UI.hinfo=true;UI.hinfoIn=true;UI.hinfoOut=false;UI.hcPop='hinfo'}
   else if(act==='hjump'){if(UI.alb&&UI.alb.g===String(b.dataset.g)&&document.querySelector('.group.sleeve.gf')){gfClose();return}UI.rOpen=null;UI.toAlb=b.dataset.g;
     /* 2026.11.27-h: on a phone the cover starts lifting this frame; the page is rebuilt on the next one, so the rebuild can't freeze it */
-    if(gfPh()&&!b.classList.contains('sg')&&!noMotion()&&!gfSafe(b.dataset.g)&&!gfZoomed()&&!document.querySelector('.group.sleeve.gf')){gfPreLift(b);requestAnimationFrame(()=>setTimeout(()=>{render();setTimeout(()=>{if(GFPRE&&!document.querySelector('.group.sleeve.gf')){GFPRE.fly.remove();GFPRE.wash.remove();GFPRE=null}},700)},0));return}}
+    if(gfPh()&&!b.classList.contains('sg')&&!noMotion()&&!gfSafe(b.dataset.g)&&!gfZoomed()&&!document.querySelector('.group.sleeve.gf')){gfPreLift(b);const gid=String(b.dataset.g);requestAnimationFrame(()=>setTimeout(()=>{let q=false;try{q=gfOpenQuick(gid)}catch(e){}if(!q){UI.toAlb=gid;render()}setTimeout(()=>{if(GFPRE&&!document.querySelector('.group.sleeve.gf')){GFPRE.fly.remove();GFPRE.wash.remove();GFPRE=null}},700)},0));return}}
   else if(act==='gfclose'){gfClose();return}
   else if(act==='hxfold'){const aid=(document.querySelector('.hero[data-aid]')||{}).dataset?.aid,k=b.dataset.k;if(!aid||!k)return;
     const cur=UI.hxOpen&&UI.hxOpen.aid===aid?UI.hxOpen.k:[],o=cur.includes(k);
