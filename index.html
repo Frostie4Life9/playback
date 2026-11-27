@@ -1430,6 +1430,7 @@ body:has(.head.hero.hx) .backlib{display:none}
   -webkit-mask-image:linear-gradient(to right,transparent 0,rgb(0 0 0 / .45) 22%,#000 50%),linear-gradient(to bottom,#000 58%,transparent 97%);-webkit-mask-composite:source-in;
   mask-image:linear-gradient(to right,transparent 0,rgb(0 0 0 / .45) 22%,#000 50%),linear-gradient(to bottom,#000 58%,transparent 97%);mask-composite:intersect}
 .hx .hphoto img{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 20%;animation:hPh .8s ease both}
+.hx .hphoto img.phw{animation-play-state:paused}   /* 2026.11.27-b: the fade waits for the picture to be decoded */
 @keyframes hPh{from{opacity:0;transform:scale(1.04)}}
 @media (prefers-reduced-motion:reduce){.hx .hphoto img{animation:none}}
 /* Apple's artist photo is a tight square crop: filling the wide header with it cuts off his lower half, so on a wide screen it is shown whole, as tall as the header and pinned to the right, its left edge fading into the colors */
@@ -2346,6 +2347,7 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .head.hero.drop .hspin,.head.hero.drop .hlab,.head.hero.drop .hdisc::after{opacity:0}
 .head.hero.drop:not(.hclear) .hdisc{background:#161b19}
 .flyw{position:fixed;left:0;top:0;z-index:70;pointer-events:none;transform-origin:0 0}
+.flyc{position:fixed;inset:0;z-index:70;pointer-events:none;overflow:visible}.flyc>.flyw{position:absolute;will-change:transform}
 .fly{position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden;box-shadow:0 10px 14px rgb(0 0 0 / .45)}
 /* the glassy sheen of the landed record, so nothing is gained or lost when it is set down */
 .fly::after{content:"";position:absolute;inset:0;border-radius:50%;z-index:1;pointer-events:none;box-shadow:inset 0 0 0 1.5px rgb(255 255 255 / .2);background:conic-gradient(from 20deg,rgb(255 255 255 / 0),rgb(255 255 255 / .18) 12%,rgb(255 255 255 / 0) 26%,rgb(255 255 255 / 0) 50%,rgb(255 255 255 / .13) 62%,rgb(255 255 255 / 0) 76%)}
@@ -2818,7 +2820,7 @@ html.lite #lx .lxbg i{animation:none;filter:blur(70px)}
 }   /* the still copy is never clipped while its sleeves dip away */
 /* ===== 2026.11.21-w: artist library polish ===== */
 .sheet.lxunder{display:none}
-body:has(#lx) .flyw{z-index:88}   /* a record flying home into its sleeve shows over the library */
+body:has(#lx) :is(.flyw,.flyc){z-index:88}   /* a record flying home into its sleeve shows over the library */
 /* the hero fades as it scrolls away */
 #lx .lxspot,#lx .lxlib{opacity:calc(1 - var(--lxf,0))}
 /* Back to the last artist: a glass chip, on phones only (on a PC the preview's Open artist does it) */
@@ -4304,10 +4306,50 @@ html.pbstill *,html.pbstill *::before,html.pbstill *::after{animation-duration:.
     if(!owner){var sy=JSON.parse(localStorage.getItem('playback_v1_sync')||'{}');owner=/skyfro04/.test(sy.url||'')}
   }catch(e){}
   window.PB_OWNER=owner;
-  if(owner)return;
+  if(owner){sxTuck();return;}
   var st=document.createElement('style');st.textContent='.sx-bar{display:none!important}';document.head.appendChild(st);
   var f=window.fetch;
   if(f)window.fetch=function(u){var s=typeof u==='string'?u:(u&&u.url)||'';if(s.indexOf('ideas-sync.skyfro04.workers.dev')>-1)return Promise.reject(new Error('ideas off'));return f.apply(this,arguments)};
+  /* 2026.11.27-b: YOUR APP BAR, TUCKED AWAY. The bar linking to your other apps doesn't fit Playback's look, so it starts hidden on every
+     page (it used to show at the top of artist pages but not the library). A small arrow at the top of every page, only on your own
+     devices, pulls it down over the page; the arrow, a tap anywhere else or Esc puts it back. */
+  function sxTuck(){
+    var de=document.documentElement;de.classList.add('sxtk');
+    var st=document.createElement('style');st.id='sxtk-css';
+    st.textContent='html.sxtk .sx-bar{position:fixed!important;top:0;left:0;right:0;z-index:400!important;transform:translateY(-102%);visibility:hidden;'+
+      'transition:transform .36s cubic-bezier(.2,.8,.2,1),box-shadow .36s ease,visibility 0s linear .36s}'+
+      'html.sxtk.sxopen .sx-bar{transform:none;visibility:visible;box-shadow:0 16px 40px -18px rgba(0,0,0,.55);transition:transform .42s cubic-bezier(.2,.9,.25,1.08),box-shadow .42s ease,visibility 0s}'+
+      'html.sxtk .pvnav,html.sxtk .hmo-s{top:22px}'+
+      '.sxpull{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 3px);z-index:401;width:40px;height:20px;margin-left:-20px;padding:0;border:0;border-radius:0 0 12px 12px;'+
+      'background:rgb(18 20 20 / .34);color:rgb(255 255 255 / .9);display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent;'+
+      '-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:0 0 0 .5px rgb(255 255 255 / .16);'+
+      'transform:translateY(var(--sxy,0px));transition:transform .42s cubic-bezier(.2,.9,.25,1.08),background .2s,opacity .2s;opacity:.72}'+
+      '.sxpull:hover,.sxpull:focus-visible{opacity:1}.sxpull:focus-visible{outline:2px solid #fff;outline-offset:2px}'+
+      '.sxpull::before{content:"";position:absolute;inset:-12px -16px}'+   /* a bigger target than it looks */
+      '.sxpull svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;transition:transform .36s cubic-bezier(.2,.8,.2,1)}'+
+      'html.sxopen .sxpull{opacity:1;background:rgb(18 20 20 / .5)}html.sxopen .sxpull svg{transform:rotate(180deg)}'+
+      'html.sxtk .sxpull{animation:sxpin .5s cubic-bezier(.2,.9,.25,1.1) .6s backwards}@keyframes sxpin{from{transform:translateY(-24px);opacity:0}}'+
+      '@media (prefers-reduced-motion:reduce){html.sxtk .sx-bar,.sxpull,.sxpull svg{transition:none!important;animation:none!important}}'+
+      '@media print{.sxpull{display:none}}';
+    document.head.appendChild(st);
+    function go(){
+      var bar=document.querySelector('.sx-bar');if(!bar||document.querySelector('.sxpull'))return;
+      bar.setAttribute('aria-hidden','true');bar.inert=true;
+      var b=document.createElement('button');b.type='button';b.className='sxpull';b.setAttribute('aria-label','Show your apps');b.setAttribute('aria-expanded','false');
+      b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9.5l6 6 6-6"/></svg>';
+      document.body.appendChild(b);
+      function set(o){if(o===de.classList.contains('sxopen'))return;
+        if(o)b.style.setProperty('--sxy',(bar.offsetHeight-3)+'px');else b.style.removeProperty('--sxy');
+        de.classList.toggle('sxopen',o);bar.inert=!o;if(o)bar.removeAttribute('aria-hidden');else bar.setAttribute('aria-hidden','true');
+        b.setAttribute('aria-expanded',o?'true':'false');b.setAttribute('aria-label',o?'Hide your apps':'Show your apps');
+        if(!o){var m=document.getElementById('sx-menu');if(m&&!m.hidden){var g=document.getElementById('sx-gbtn');if(g)g.click()}}}
+      b.addEventListener('click',function(e){e.stopPropagation();set(!de.classList.contains('sxopen'))});
+      document.addEventListener('pointerdown',function(e){if(!de.classList.contains('sxopen'))return;var t=e.target;
+        if(t.closest&&(t.closest('.sx-bar')||t.closest('.sxpull')||t.closest('#sx-menu')||t.closest('#sx-ideas')))return;set(false)},true);
+      document.addEventListener('keydown',function(e){if(e.key==='Escape'&&de.classList.contains('sxopen')){var m=document.getElementById('sx-menu'),i=document.getElementById('sx-ideas');
+        if((m&&!m.hidden)||(i&&!i.hidden))return;set(false);b.focus()}});
+      window.addEventListener('pageshow',function(){set(false)});}
+    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();}
 })();
 </script>
 <!-- suite:bar -->
@@ -4673,6 +4715,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.27-b', note:'SMOOTHER INTO AN ARTIST, AND YOUR APP BAR TUCKED AWAY: The record flying out of its sleeve to the turntable, and back into its sleeve when you return to All artists, now runs on the phone\u2019s graphics chip as one planned path, so it keeps moving at full speed while the page is being built (it used to be moved frame by frame by the page itself, which is the lag you saw in the air). Going home, it now aims for where its sleeve ends up once it has finished rising in, and tucks in there. Tapping an artist in the library no longer measures the fading copy of the library piece by piece (that alone was about a sixth of a second on a slowed phone). The artist photo starts loading the moment your finger touches a sleeve, and its fade waits until the picture is ready instead of playing over nothing. Your app bar (links to your other apps) is now hidden on every page; a small arrow at the top, only on your devices, pulls it down, and the arrow, a tap elsewhere or Esc puts it away. New: if the phone throws the page away and reloads it (iPhone does this when it runs short of memory), the next start sends a note to your Suggest box with what you were doing, so the cause of the occasional refresh can be found.'},
   {v:'2026.11.27-a', note:'ALL ARTISTS NO LONGER STALLS ON AN EMPTY PAGE (from your screen recording): leaving an artist on a phone showed a plain wash of color for 0.7 to 1.6 seconds before any sleeve appeared, and switching back and forth quickly got worse. Four fixes. The library is now kept between visits: opening an artist sets the wall of sleeves aside, and All artists puts it back with its pictures already decoded, redrawing only the sections that changed (a new rating, a new artist). Only the sections on screen are drawn; the rest are boxes of the right height until you scroll to them. The little records peeking out of each sleeve were kept in the page\u2019s styles as about 3 MB of text, which the phone re-read on every open; they are now handed over once as in-memory pictures. And the color stand-in now fades the moment the library is ready, with the sleeves on screen rising straight away one after another, instead of the library playing its entrance hidden under the stand-in for another half second. In testing (a slowed-down phone, 88 artists) the time until sleeves show dropped by about 40% and the longest freeze by about half.'},
   {v:'2026.11.26-c', note:'NO MORE FROZEN TAP ON A PHONE: tapping All artists now answers in the very next frame. The library\u2019s colors fade in over the artist page straight away, and the library is built underneath while that fade keeps moving, instead of the artist page sitting frozen for half a second first. The other way round, tapping an artist in the library starts the other sleeves dipping away the instant you tap, and the artist page is built under them. Also fixed: the still copy of the library used for that hand-over showed blank sleeves for a few frames on iPhone while its pictures were decoded again.'},
   {v:'2026.11.26-b', note:'NO MORE POP-IN IN THE LIBRARY (from your screen recording): opening All artists on a phone showed the headers with empty space under them for about half a second, then every sleeve popped in at once. The sleeves\u2019 rise-in was starting while the phone was still decoding their pictures, so it was already over by the time anything could be shown. Now the sleeves on screen wait, hidden, until their pictures are ready (never more than about half a second), then rise in one after another from the start. Also: the splatter-record painting added in -a now only happens when the phone is truly idle (it could land in the middle of the rise-in), and a background date lookup no longer saves your whole log during the animation.'},
@@ -4933,7 +4976,16 @@ document.addEventListener('pointerdown',perfStart,true);
    tap lands it is usually already done and the artist page opens without that stall. Same picture, same cache, just earlier. */
 document.addEventListener('pointerdown',ev=>{try{const t=ev.target&&ev.target.closest&&ev.target.closest('#lx [data-act="sel"][data-id]');if(!t)return;
   const id=t.dataset.id;setTimeout(()=>{try{const a=S.music.find(x=>String(x.id)===id);if(!a)return;const n=hLook(a.id);if(!hSplatty(n))return;
-    const songs=heroSongs(a);if(songs&&songs.length)hDisc(heroPalette(a),n,a.id,songs)}catch(e){}},0)}catch(e){}},true);
+    const songs=heroSongs(a);if(songs&&songs.length)hDisc(heroPalette(a),n,a.id,songs)}catch(e){}},0);
+  phWarm(id)}catch(e){}},true);
+/* 2026.11.27-b: THE ARTIST PHOTO IS READY WHEN THE PAGE IS. Your recording showed artist pages opening on their colors with the photo
+   arriving late, or its fade-in playing over a picture that wasn't there yet. The photo now starts loading and decoding the moment a
+   finger goes down on a sleeve (only that one photo is held, so memory doesn't build up), and the page's photo waits to fade in until
+   its picture is actually decoded. */
+let PHW=null;
+function phWarm(id){try{if(!phOn())return;const a=S.music.find(x=>String(x.id)===id);const u=a&&phPick(a);if(!u||(PHW&&PHW.u===u))return;
+  const im=new Image();im.decoding='async';im.src=u;PHW={u,im,ok:false};const me=PHW;
+  (im.decode?im.decode():new Promise((r,j)=>{im.onload=r;im.onerror=j})).then(()=>{me.ok=true},()=>{if(PHW===me)PHW=null})}catch(e){}}
 function bugPage(){const o={};try{o.view=UI.view||'main';o.tab=UI.tab;try{const a=current();if(a)o.artist=bugCut(a.name,60)}catch(e){}
   for(const k of ['rOpen','fid','pTab','setSec','libOpen','addOpen'])if(UI[k]!=null&&UI[k]!==false&&UI[k]!=='')o[k]=typeof UI[k]==='object'?'[obj]':bugCut(UI[k],60)}catch(e){o.view='boot'}
   o.scroll=Math.round(window.scrollY||0);return o}
@@ -12315,7 +12367,7 @@ function heroX(a,all,done,rated,p,phUrl,more,addP){
   const panel=UI.hinfo?`<div class="hxpanel${UI.hinfoOut?' out':pin?' in':''}" role="dialog" aria-label="Artist details">${hxSrcHtml(a)}<div class="hstats"><div><b>${done}<small> /${all.length}</small></b><span>tracks heard</span></div><div><b>${rated}</b><span>rated</span></div><div><b>${a.groups.length}</b><span>releases</span></div></div>${mbArtistBar(a)}<div class="hxpdel">${delBtn(a.id,'Delete artist')}</div></div>`:'';
   return `<div class="head hero hx${hClear()?' hclear':''}${phUrl?'':' nophoto'}" data-aid="${esc(a.id)}" style="${esc(heroStyle(a))}"><div class="hxbg" aria-hidden="true"><div class="hmesh"><i class="hbase"></i><i class="fl fl0"><i class="fb b0"></i><i class="fb b3"></i></i><i class="fl fl1"><i class="fb b1"></i><i class="fb b4"></i></i><i class="fl fl2"><i class="fb b2"></i><i class="fb b5"></i></i></div></div>
     <div class="hxtop">
-    ${phUrl?`<div class="hphoto${a.aimg&&phUrl===amPhoto(a)?' am':''} aria-hidden="true"><img src="${esc(phUrl)}" alt="" decoding="async"${PHSEEN===a.id+'|'+phUrl?' style="animation:none"':''} onload="phSeen(this)" onerror="this.parentNode.remove()"></div>`:''}<i class="hscrim" aria-hidden="true"></i>
+    ${phUrl?`<div class="hphoto${a.aimg&&phUrl===amPhoto(a)?' am':''} aria-hidden="true"><img src="${esc(phUrl)}" alt="" decoding="async"${PHSEEN===a.id+'|'+phUrl?' style="animation:none"':PHW&&PHW.ok&&PHW.u===phUrl?'':' class="phw"'} onload="phSeen(this)" onerror="this.parentNode.remove()"></div>`:''}<i class="hscrim" aria-hidden="true"></i>
     <div class="hxin">
       <button class="hxback" data-act="hback">${ico.back}All artists</button>
       <div class="meta"><h2>${esc(a.name)}</h2>${a.aka&&a.aka.length?`<span class="note">also ${esc(a.aka.slice(0,3).join(' · '))}</span>`:''}</div>
@@ -12349,7 +12401,8 @@ function hxSrcHtml(a){
   return `<div class="hsrc" role="group" aria-label="Artist photo and album cover source"><span class="hsl">${a.aimg&&spPhoto(a)?'Photo &amp; covers':'Covers'}</span><button type="button" data-act="hsrc" data-v="sp" aria-pressed="${!am}">Spotify</button><button type="button" data-act="hsrc" data-v="am" aria-pressed="${am}">Apple Music</button></div>`;
 }
 let PHSEEN='';   /* which artist's photo (id|url) has already faded in, so a redraw of the same page never replays the fade */
-function phSeen(im){const h=im.closest('.hero[data-aid]');PHSEEN=(h?h.dataset.aid:'')+'|'+im.getAttribute('src')}
+function phSeen(im){const h=im.closest('.hero[data-aid]');PHSEEN=(h?h.dataset.aid:'')+'|'+im.getAttribute('src');
+  if(im.classList.contains('phw')){const go=()=>im.classList.remove('phw');(im.decode?im.decode():Promise.resolve()).then(go,go);setTimeout(go,1500)}}
 /* swap a header photo for a sharper copy of the same picture: wait out any fade-in still running, then lay the new one over the old and fade it in, so nothing pops */
 function phXfade(im,want){
   const t=new Image();
@@ -12661,56 +12714,86 @@ function flyAsk(b,id,fromLib){UI.fly=null;if(noMotion())return;
   if(cur&&!fromLib&&!cur.classList.contains('drop')){const d=cur.querySelector('.hdisc'),sn=discSnap(cur);   /* from the full artist menu the old record is hidden under it, so it doesn't float out over the menu */
     if(d&&sn){old=true;flyBack({sn,rect:d.getBoundingClientRect(),ang:heroAngNow(),aid:cur.dataset.aid})}}
   UI.fly={to:id,src:g,old}}
+/* 2026.11.27-b: THE RECORD FLIES ON THE GRAPHICS CHIP. Both flights (sleeve to turntable, turntable back into its sleeve) used to be
+   moved by script one frame at a time, re-measuring the page as they went. While the phone was busy building the page they were
+   landing on, those frames simply didn't come, which is the lag you saw on the record in the air. Now the whole path is worked out
+   once, up front (where it starts, where it lands, the arc between), and handed to the graphics chip as one animation, which keeps
+   moving at full speed however busy the page is. The record flies inside a still layer that hides the part of it over its own
+   sleeve, which is what makes it look like it slides out of (and back into) the sleeve. */
+const flyTf=(W,p)=>'translate('+p.x.toFixed(1)+'px,'+p.y.toFixed(1)+'px) scale('+(p.d/W).toFixed(4)+')';
+function flyLayer(R){const c=document.createElement('div');c.className='flyc';
+  if(R){const B=1e4;c.style.clipPath="path(evenodd,'M"+(-B)+' '+(-B)+'H'+B+'V'+B+'H'+(-B)+'ZM'+R.l.toFixed(1)+' '+R.t.toFixed(1)+'H'+R.r.toFixed(1)+'V'+R.b.toFixed(1)+'H'+R.l.toFixed(1)+"Z')"}
+  document.body.appendChild(c);return c}
+/* the path as keyframes, one every ~16ms (the chip draws straight lines between them). cut = [time, dx]: from that moment on the record
+   is drawn dx further right, to cancel out its layer being moved dx left (that is how the sleeve's mask is taken away mid-flight
+   without any script having to run at that moment) */
+function flyKeys(W,P,T,cut){const ts=[];for(let t=0;t<T;t+=16)ts.push(t);ts.push(T);if(cut){ts.push(cut[0],cut[0]+.5)}
+  return [...new Set(ts)].sort((a,b)=>a-b).map(t=>{const p=P(t);if(cut&&t>cut[0])p.x+=cut[1];return{offset:t/T,transform:flyTf(W,p)}})}
+/* where a sleeve will be once it has finished rising in (the library's sleeves are still mid-entrance when the record heads home) */
+function tileGeoEnd(T){const side=T&&T.closest('#lx,.side')||null,st=[];
+  /* every entrance on the way up (the sleeve's, its section's) is jumped to its end for the one measurement, then put straight back */
+  for(let e=T;e&&e!==side;e=e.parentElement){let an=[];try{an=e.getAnimations()}catch(x){}
+    for(const a of an){try{const ct=a.currentTime,tm=a.effect&&a.effect.getComputedTiming();if(ct==null||!tm||!isFinite(tm.endTime)||ct>=tm.endTime)continue;st.push([a,ct]);a.currentTime=tm.endTime}catch(x){}}}
+  const g=tileGeo(T);if(g)g.seen=tileSeen(T,g);   /* whether it is on screen and uncovered, judged where it will be, too */
+  for(const [a,ct] of st){try{a.currentTime=ct}catch(x){}}
+  return g}
 function flyOut(F){
   const heroNow=()=>{const h=document.querySelector('.hero[data-aid]');return h&&h.dataset.aid===F.to?h:null};
   const h0=heroNow(),g=F.src,sn=h0&&discSnap(h0);if(!sn||!g)return false;
+  const dc0=h0.querySelector('.hdisc');if(!dc0)return false;
   h0.classList.add('drop');FLY.active=true;FLY.aid=F.to;
-  /* 2026.11.23-l: the turntable the record is flying to used to still be easing up into place (the page's slide-in) while the
-     record aimed at it, so the record went past its spot and came back. It is put in place right away now. */
+  /* 2026.11.23-l: the turntable is put in place right away (it used to still be sliding up while the record aimed at it) */
   h0.classList.add('flyin');
-  const w=discEl(sn,0);document.body.appendChild(w);flyPut(w,g.x,g.top,g.d,g.xc);
-  const t0=performance.now()+(F.old?140:0),A=230,B=540,C=200;
-  /* 2026.11.22-a: the turntable's spot and the sleeve's edge are measured a few times a second, not every frame: on a phone each
-     measurement forced the page that was still being built to lay itself out, which is what made the record stutter in the air */
-  let RR=null,RT=-1e9,CR=null,CT=-1e9;
-  let SM=null;   /* the aim point glides toward each new measurement instead of jumping to it */
-  const tR=(dc,now)=>{if(!RR||now-RT>180){RR=dc.getBoundingClientRect();RT=now}
-    if(!SM)SM={left:RR.left,top:RR.top,width:RR.width};else{SM.left+=(RR.left-SM.left)*.3;SM.top+=(RR.top-SM.top)*.3;SM.width+=(RR.width-SM.width)*.3}return SM},cR=now=>{if(now-CT>180){CR=coverR(F.to);CT=now}return CR};
-  const step=now=>{const t=now-t0,h=heroNow(),dc=h&&h.querySelector('.hdisc');
-    if(!dc||FLY.aid!==F.to){
-      /* another artist was picked (or this one closed) while its record was in the air: it goes home from wherever it is */
-      const P=w._p;
-      if(P&&t>0&&t<A+B&&coverR(F.to)){
-        if(t<=A){const x0=P.x,s0=performance.now(),back=n=>{const q=Math.min(1,(n-s0)/170),e=1-Math.pow(1-q,3);flyPut(w,x0+(g.x-x0)*e,g.top,g.d,g.xc);if(q<1)requestAnimationFrame(back);else w.remove()};requestAnimationFrame(back)}   /* still sliding out: slide back in */
-        else{w.remove();flyBack({sn,rect:{left:P.x,top:P.y,width:P.d},ang:0,aid:F.to,mid:true})}}
-      else w.remove();
-      if(FLY.aid===F.to)FLY.active=false;return}
-    const r=t>A+B-60?dc.getBoundingClientRect():tR(dc,now),hd=r.width*1.07,hx=r.left-(hd-r.width)/2,hy=r.top-(hd-r.width)/2-10;
-    if(t<=A){const q=fOut(Math.max(0,t)/A);flyPut(w,g.x+(g.xc-g.x)*q,g.top,g.d,g.xc)}
-    else if(t<=A+B){const q=fEase((t-A)/B),fx=g.xc+(hx-g.xc)*q,fy=g.top+(hy-g.top)*q-26*Math.sin(Math.PI*q),fd=g.d+(hd-g.d)*q;flyPut(w,fx,fy,fd,null);flyClip(w,fx,fy,fd,cR(now))}
-    else if(t<A+B+C){const u=(t-A-B)/C,q=fIn(u),dd=r.width*(1.07-.07*q);w.firstChild.style.clipPath='';flyPut(w,r.left-(dd-r.width)/2,r.top-(dd-r.width)/2-10*(1-q),dd,null);
-      /* set down without a pop: the shadow shrinks as the record touches, the real record appears underneath, and the flying copy fades out over it */
-      const f=w.firstChild,k=1-q;f.style.boxShadow=(f.classList.contains('clear')?'inset 0 0 0 1.5px rgb(255 255 255 / .45),':'')+'0 '+(10*k).toFixed(1)+'px '+(14*k).toFixed(1)+'px rgb(0 0 0 / '+(.45*k).toFixed(3)+')';
-      if(u>.4&&h.classList.contains('drop'))h.classList.remove('drop');
-      const z=Math.max(0,Math.min(1,(u-.45)/.55));w.style.opacity=String(1-z*z*(3-2*z))}
-    else{w.remove();FLY.active=false;h.classList.remove('drop');HERO.begin=performance.now()+650;h.classList.add('play');return}
-    requestAnimationFrame(step)};
-  requestAnimationFrame(step);return true}
+  let r=dc0.getBoundingClientRect();
+  const del=F.old?140:0,A=230,B=540,C=200,T=A+B+C,W=sn.w;
+  /* on a phone the library is gone once the artist page is drawn, so the sleeve's mask is only needed while the record slides out of it;
+     on a computer the sleeve is still on screen beside the page and keeps hiding the record wherever it crosses it */
+  const lift=!coverR(F.to),DX=-4000;
+  const P=(t,r)=>{t=Math.max(0,t);const hd=r.width*1.07,hx=r.left-(hd-r.width)/2,hy=r.top-(hd-r.width)/2-10;
+    if(t<=A){const q=fOut(t/A);return{x:g.x+(g.xc-g.x)*q,y:g.top,d:g.d}}
+    if(t<=A+B){const q=fEase((t-A)/B);return{x:g.xc+(hx-g.xc)*q,y:g.top+(hy-g.top)*q-26*Math.sin(Math.PI*q),d:g.d+(hd-g.d)*q}}
+    const q=fIn(Math.min(1,(t-A-B)/C)),dd=r.width*(1.07-.07*q);return{x:r.left-(dd-r.width)/2,y:r.top-(dd-r.width)/2-10*(1-q),d:dd}};
+  const c=flyLayer(g.R),w=discEl(sn,0),f=w.firstChild;c.appendChild(w);w.style.transform=flyTf(W,P(0,r));
+  const opt={duration:T,delay:del,fill:'both'};
+  const cl=lift?c.animate([{offset:0,transform:'none'},{offset:A/T,transform:'none'},{offset:(A+.5)/T,transform:'translateX('+DX+'px)'},{offset:1,transform:'translateX('+DX+'px)'}],opt):null;
+  const mk=()=>w.animate(flyKeys(W,t=>P(t,r),T,lift?[A,-DX]:null),opt);
+  let an=mk(),over=false;
+  /* set down without a pop: the shadow shrinks as it touches, the real record appears underneath, and the copy fades out over it */
+  const sh0=(sn.clear?'inset 0 0 0 1.5px rgb(255 255 255 / .45),':'')+'0 10px 14px rgb(0 0 0 / .45)',sh1=(sn.clear?'inset 0 0 0 1.5px rgb(255 255 255 / .45),':'')+'0 0px 0px rgb(0 0 0 / 0)';
+  f.animate([{boxShadow:sh0},{boxShadow:sh1}],{duration:C,delay:del+A+B,easing:'ease-in',fill:'both'});
+  w.animate([{opacity:1},{opacity:1,offset:(A+B+.45*C)/T},{opacity:0,easing:'ease-in-out'}],{...opt,easing:'linear'});
+  const tm=[];const end=()=>{over=true;tm.forEach(clearTimeout);c.remove()};
+  tm.push(setTimeout(()=>{const h=heroNow();if(!over&&h&&FLY.aid===F.to)h.classList.remove('drop')},del+A+B+.4*C));
+  /* one look at the turntable halfway through the flight (the page has settled by then): if it moved, the rest of the path bends to it */
+  tm.push(setTimeout(()=>{if(over)return;const h=heroNow(),dc=h&&h.querySelector('.hdisc');if(!dc)return;const r2=dc.getBoundingClientRect();
+    if(r2.width&&(Math.abs(r2.left-r.left)>2||Math.abs(r2.top-r.top)>2||Math.abs(r2.width-r.width)>2)){const ct=an.currentTime;r=r2;an.cancel();an=mk();an.currentTime=ct;an.onfinish=land}},del+A+B*.55));
+  const land=()=>{if(over)return;end();const h=heroNow();FLY.active=false;if(!h)return;h.classList.remove('drop');HERO.begin=performance.now()+650;h.classList.add('play')};
+  an.onfinish=land;
+  /* another artist was picked (or this one closed) while its record was in the air: it goes home from wherever it is */
+  const watch=()=>{if(over)return;if(heroNow()&&FLY.aid===F.to){requestAnimationFrame(watch);return}
+    const t=(an.currentTime||0)-del,p=P(t,r);end();if(FLY.aid===F.to)FLY.active=false;
+    if(!(t>0&&t<A+B&&coverR(F.to)))return;
+    if(t<=A){const c2=flyLayer(g.R),w2=discEl(sn,0);c2.appendChild(w2);
+      w2.animate([{transform:flyTf(W,p)},{transform:flyTf(W,{x:g.x,y:g.top,d:g.d})}],{duration:170,easing:'cubic-bezier(.2,.7,.3,1)',fill:'both'}).onfinish=()=>c2.remove()}   /* still sliding out: slide back in */
+    else flyBack({sn,rect:{left:p.x,top:p.y,width:p.d},ang:0,aid:F.to,mid:true})};
+  requestAnimationFrame(watch);
+  return true}
 let FLYBK=0;   /* when the record flying back into its sleeve lands (2026.11.26-a) */
 function flyBack(O){FLYBK=performance.now()+1100;
-  const w=discEl(O.sn,O.ang),r=O.rect;document.body.appendChild(w);flyPut(w,r.left,r.top,r.width,null);
-  const tile=()=>document.querySelector('.tile[data-act="sel"][data-id="'+String(O.aid).replace(/["\\]/g,'\\$&')+'"]');
-  const mid=!!O.mid,t0=performance.now(),A=mid?1:170,B=560,C=240,sd=mid?r.width:r.width*1.07,sx=mid?r.left:r.left-(sd-r.width)/2,sy=mid?r.top:r.top-(sd-r.width)/2-10;let ok=null;
-  const step=now=>{const t=now-t0,T=tile(),g=T&&tileGeo(T);
-    if(ok===null){ok=!!(g&&tileSeen(T,g));if(ok)T.querySelector('.tdisc').classList.add('tuck')}   /* its sleeve waits empty; the new pressing is already inside */
-    if(t<=A){const q=fOut(Math.max(0,t)/A),d=r.width*(1+.07*q);flyPut(w,r.left-(d-r.width)/2,r.top-(d-r.width)/2-10*q,d,null)}
-    else if(!ok){const q=Math.min(1,(t-A)/360),d=sd*(1-.28*q);flyPut(w,r.left-(d-r.width)/2,sy-34*q,d,null);w.style.opacity=String(1-q);if(q>=1){w.remove();return}}
-    else if(!g){w.remove();return}
-    else if(t<=A+B){const q=fEase((t-A)/B),fx=sx+(g.xc-sx)*q,fy=sy+(g.top-sy)*q-26*Math.sin(Math.PI*q),fd=sd+(g.d-sd)*q;flyPut(w,fx,fy,fd,null);flyClip(w,fx,fy,fd,g.R)}
-    else if(t<A+B+C){const q=fEase((t-A-B)/C);flyPut(w,g.xc-g.d*q,g.top,g.d,g.xc)}
-    else{w.remove();const dc=T.querySelector('.tdisc');void dc.offsetWidth;dc.classList.remove('tuck');return}
-    requestAnimationFrame(step)};
-  requestAnimationFrame(step)}
+  const T=document.querySelector('.tile[data-act="sel"][data-id="'+String(O.aid).replace(/["\\]/g,'\\$&')+'"]'),g=T&&tileGeoEnd(T),ok=!!(g&&g.seen);
+  const r=O.rect,mid=!!O.mid,A=mid?1:170,B=560,C=240,sd=mid?r.width:r.width*1.07,sx=mid?r.left:r.left-(sd-r.width)/2,sy=mid?r.top:r.top-(sd-r.width)/2-10;
+  const W=O.sn.w,TT=ok?A+B+C:A+360;
+  const P=t=>{if(t<=A){const q=fOut(Math.max(0,t)/A),d=r.width*(1+(mid?0:.07)*q);return{x:r.left-(d-r.width)/2,y:r.top-(d-r.width)/2-(mid?0:10)*q,d}}
+    if(!ok){const q=Math.min(1,(t-A)/360),d=sd*(1-.28*q);return{x:r.left-(d-r.width)/2,y:sy-34*q,d}}
+    if(t<=A+B){const q=fEase((t-A)/B);return{x:sx+(g.xc-sx)*q,y:sy+(g.top-sy)*q-26*Math.sin(Math.PI*q),d:sd+(g.d-sd)*q}}
+    const q=fEase(Math.min(1,(t-A-B)/C));return{x:g.xc-g.d*q,y:g.top,d:g.d}};
+  /* the sleeve's mask: its cover, stretched to the record's height so the part of the record that has gone in is always hidden */
+  const c=flyLayer(ok?{l:g.R.l,t:Math.min(g.R.t,g.top-2),r:g.xc,b:Math.max(g.R.b,g.top+g.d+2)}:null),w=discEl(O.sn,O.ang);c.appendChild(w);
+  const dc=ok&&T.querySelector('.tdisc');if(dc)dc.classList.add('tuck');   /* its sleeve waits empty; the new pressing is already inside */
+  const opt={duration:TT,fill:'both'};
+  const an=w.animate(flyKeys(W,P,TT,null),opt);
+  if(!ok)w.animate([{opacity:1},{opacity:1,offset:A/TT},{opacity:0}],opt);
+  an.onfinish=()=>{if(dc)dc.classList.remove('tuck');requestAnimationFrame(()=>c.remove())}}   /* the real record is back in the sleeve before the copy goes */
 
 /* ===== FROM THE ARTIST MENU TO THE ARTIST PAGE (2026.11.19-ag) =====
    The full-window artist menu used to vanish in one frame. Now a still copy of it stays on top for a moment: every other
@@ -12727,13 +12810,20 @@ function libGhostTake(b){
   const g=side.cloneNode(true),cl=[g,...g.querySelectorAll('*')],H=innerHeight,pi=src.indexOf(b),pk=pi>0?cl[pi]:null,scN=sc.map(([i,t,l])=>[cl[i],t,l]);
   /* 2026.11.27-a: worked out section by section; a whole section off screen becomes one empty box of its height */
   const ix=new Map();src.forEach((e,i)=>ix.set(e,i));
-  side.querySelectorAll('.llist .lsect').forEach(sc=>{const r=sc.getBoundingClientRect();
+  /* 2026.11.27-b: every rect read here is kept for the copy, along with the picked sleeve's surroundings and their colors, so playing the
+     copy never has to measure it (it used to lay the freshly added copy out once per element it asked about: ~160ms on a slowed phone) */
+  const rc=new Map(),put=(e,r)=>{const c=cl[ix.get(e)];if(c)rc.set(c,r)};
+  side.querySelectorAll('.llist .lsect').forEach(sc=>{const r=sc.getBoundingClientRect();put(sc,r);
     if(r.bottom<-40||r.top>H+40){const c=cl[ix.get(sc)];if(c){c.style.height=r.height+'px';c.style.contentVisibility='visible';c.style.visibility='hidden';c.replaceChildren()}return}
-    sc.querySelectorAll('.lgrid>*').forEach(e=>{const r=e.getBoundingClientRect();
+    sc.querySelectorAll('.lgrid>*').forEach(e=>{const r=e.getBoundingClientRect();put(e,r);
       if(r.bottom<-40||r.top>H+40){const c=cl[ix.get(e)];if(c){c.style.height=r.height+'px';c.style.visibility='hidden';c.replaceChildren()}}})});
-  side.querySelectorAll('.llist .entry').forEach(e=>{const r=e.getBoundingClientRect();
+  side.querySelectorAll('.llist .entry').forEach(e=>{const r=e.getBoundingClientRect();put(e,r);
     if(r.bottom<-40||r.top>H+40){const c=cl[ix.get(e)];if(c){c.style.height=r.height+'px';c.style.visibility='hidden';c.replaceChildren()}}});
-  return{g,sc:scN,pk,shell:!!(side.parentElement&&side.parentElement.classList.contains('shell'))&&matchMedia('(min-width:761px)').matches}   /* on a PC the menu's column rules hang off .shell, so the copy goes back in there; on a phone it sits on the page itself */}
+  const cs=[];
+  if(pi>0){put(b,b.getBoundingClientRect());
+    for(let n=b;n&&n!==side;n=n.parentElement){const par=n.parentElement;if(!par)break;for(const x of par.children)if(x!==n&&!rc.has(cl[ix.get(x)]))put(x,x.getBoundingClientRect())}
+    for(let n=b.parentElement;n;n=n===side?null:n.parentElement){const st=getComputedStyle(n);cs.push([cl[ix.get(n)],st.backgroundColor,st.borderTopWidth,st.borderTopColor,st.boxShadow])}}
+  return{g,sc:scN,pk,rc,cs,shell:!!(side.parentElement&&side.parentElement.classList.contains('shell'))&&matchMedia('(min-width:761px)').matches}   /* on a PC the menu's column rules hang off .shell, so the copy goes back in there; on a phone it sits on the page itself */}
 function libGhostRun(){const L=UI.libGhost;UI.libGhost=null;if(!L)return;libGhostPlay(L,false)}
 /* early (2026.11.26-c): the other sleeves dip away at once; the copy's backing, the picked sleeve's hand-over and its record
    hiding wait for the artist page (the returned function, run right after the page is drawn) */
@@ -12748,9 +12838,10 @@ function libGhostPlay(L,early){
   L.sc.forEach(([e,t,l])=>{if(e){e.scrollTop=t;e.scrollLeft=l}});
   const done=()=>{if(g.isConnected)g.remove()};setTimeout(done,1600);
   const g2=g;let pr=null,cx=0,cy=0;
-  if(pick){pr=pick.getBoundingClientRect();cx=pr.left+pr.width/2;cy=pr.top+pr.height/2;
+  const RC=L.rc||new Map(),rect=e=>RC.get(e)||e.getBoundingClientRect();
+  if(pick){pr=rect(pick);cx=pr.left+pr.width/2;cy=pr.top+pr.height/2;
     for(let n=pick;n&&n!==g;n=n.parentElement){const par=n.parentElement;if(!par)break;
-      for(const s of par.children){if(s===n)continue;const r=s.getBoundingClientRect();if(!r.width&&!r.height)continue;
+      for(const s of par.children){if(s===n)continue;const r=rect(s);if(!r.width&&!r.height)continue;
         if(r.bottom<0||r.top>innerHeight){s.style.opacity='0';continue}
         const t=s.matches('.tile,.entry'),dl=t?Math.min(90,Math.hypot(r.left+r.width/2-cx,r.top+r.height/2-cy)*.08):0;
         s.animate(t?[{opacity:1,transform:'none'},{opacity:0,transform:'translateY(12px) scale(.93)'}]:[{opacity:1},{opacity:0}],
@@ -12762,10 +12853,11 @@ function libGhostPlay(L,early){
     if(!pick){g2.animate([{opacity:1},{opacity:0}],{duration:320,easing:'ease',fill:'forwards'}).onfinish=done;return}
     const td=pick.querySelector('.tdisc');if(td)td.style.visibility='hidden';   /* its record is the one in the air */
     /* the menu's own backing (page color, list borders) fades away under the picked sleeve */
-    for(let n=pick.parentElement;n;n=n===g2?null:n.parentElement){const cs=getComputedStyle(n),a={},z={};
-      if(!/rgba\(0, 0, 0, 0\)|transparent/.test(cs.backgroundColor)){a.backgroundColor=cs.backgroundColor;z.backgroundColor='rgba(0,0,0,0)'}
-      if(parseFloat(cs.borderTopWidth)>0){a.borderColor=cs.borderTopColor;z.borderColor='rgba(0,0,0,0)'}
-      if(cs.boxShadow!=='none'){a.boxShadow=cs.boxShadow;z.boxShadow='none'}
+    const CS=L.cs&&L.cs.length?L.cs:[];if(!CS.length)for(let n=pick.parentElement;n;n=n===g2?null:n.parentElement){const st=getComputedStyle(n);CS.push([n,st.backgroundColor,st.borderTopWidth,st.borderTopColor,st.boxShadow])}
+    for(const [n,bg,bw,bc,bs] of CS){if(!n)continue;const a={},z={};
+      if(!/rgba\(0, 0, 0, 0\)|transparent/.test(bg)){a.backgroundColor=bg;z.backgroundColor='rgba(0,0,0,0)'}
+      if(parseFloat(bw)>0){a.borderColor=bc;z.borderColor='rgba(0,0,0,0)'}
+      if(bs!=='none'){a.boxShadow=bs;z.boxShadow='none'}
       if(Object.keys(a).length)n.animate([a,z],{duration:300,delay:early?0:170,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'})}
     pick.animate([{opacity:1,transform:'none',filter:'none'},{opacity:1,transform:'none',filter:'none',offset:.42},{opacity:0,transform:'translateY(10px) scale(.88)',filter:'blur(2px)'}],
       {duration:g2.classList.contains('lx')?460:720,easing:'cubic-bezier(.4,0,.2,1)',fill:'forwards'}).onfinish=done};
@@ -13959,6 +14051,25 @@ function gfGuard(a,g){if(!g)return;
     /* the owner's own phone files the details in his Suggest box (friends' phones never send anything on their own) */
     if(window.PB_OWNER)fetch(SUG_URL+'/suggest',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:'Crash guard',text:('[crash] '+JSON.stringify({...o,art:o.art?o.art.replace(/^https?:\/\/([^/]+).*$/,'$1'):'',dxArt:o.dxArt?(o.dxArt===o.art?'same':o.dxArt.replace(/^https?:\/\/([^/]+).*$/,'$1')):''})+' · '+((navigator.userAgent.match(/(iPhone|iPad|Android|Macintosh|Windows|Linux)[^;)]*/)||[''])[0])).slice(0,600)})}).catch(()=>{});
   }catch(e){}},1400)})();
+/* 2026.11.27-b: WHY DID IT REFRESH? When iPhone Safari (or Brave, which is Safari underneath) runs short of memory it throws the page
+   away and loads it again, with no error the app can see. This keeps a small running note in this tab (what you last did, how big the
+   page was, whether the library was being kept), cleared whenever the page is closed or refreshed normally. If the app starts and the
+   note is still there from a page that was on screen, the phone dropped it: on your own devices the note goes to your Suggest box,
+   so the next refresh tells us what led up to it. A page dropped while it was in the background (normal on iPhone) isn't counted. */
+const LIVE_K='pb_live',LIVE={t0:Date.now(),sw:0,last:'start',lt:Date.now()};
+function liveNote(step){if(step){LIVE.last=step;LIVE.lt=Date.now();LIVE.sw++}
+  try{sessionStorage.setItem(LIVE_K,JSON.stringify({v:(CHANGELOG[0]||{}).v,up:Math.round((Date.now()-LIVE.t0)/1000),sw:LIVE.sw,last:LIVE.last,ago:Math.round((Date.now()-LIVE.lt)/100)/10,
+    hid:document.hidden,nodes:document.getElementsByTagName('*').length,imgs:document.images.length,keep:!!(typeof LXKEEP!=='undefined'&&LXKEEP),lib:!!UI.libOpen,
+    alb:!!UI.alb,w:innerWidth,t:Date.now()}))}catch(e){}}
+(function liveCheck(){let o=null;try{o=JSON.parse(sessionStorage.getItem(LIVE_K)||'null');sessionStorage.removeItem(LIVE_K)}catch(e){}
+  addEventListener('pagehide',()=>{try{sessionStorage.removeItem(LIVE_K)}catch(e){}});
+  addEventListener('pageshow',ev=>{if(ev.persisted)liveNote()});
+  document.addEventListener('visibilitychange',()=>liveNote());
+  setInterval(()=>{if(!document.hidden)liveNote()},8000);setTimeout(()=>liveNote(),3000);
+  if(!o||o.hid||Date.now()-o.t>15*60e3)return;
+  try{const l=JSON.parse(localStorage.getItem('pb_drops')||'[]');l.unshift(o);localStorage.setItem('pb_drops',JSON.stringify(l.slice(0,10)))}catch(e){}
+  if(window.PB_OWNER)setTimeout(()=>{try{fetch(SUG_URL+'/suggest',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({name:'Refresh watch',text:('[dropped] '+JSON.stringify(o)+' ua:'+navigator.userAgent.replace(/^.*?\(([^)]*)\).*$/,'$1')).slice(0,1900)})}).catch(()=>{})}catch(e){}},2500)})();
 /* 2026.11.21-f: WHERE IT DIED. Each step of opening an album is noted on the same note, with the time since the tap, so the
    next crash report says how far it got (built the page, placed the sheet, cover in the air, zooming, timed marks) instead of
    only which album it was. */
@@ -14439,7 +14550,7 @@ document.addEventListener('click',ev=>{
       setTimeout(()=>{UI.rClosing=false;UI.rOpen=null;if(fly)UI.rLand=cid;render()},230);rtFlyGo(fly);return}}
   if(act==='hsrc'){phSetSrc(b.dataset.v);return}
   if(act==='view'){UI.view=b.dataset.v;UI.rOpen=null;if(UI.view==='account'){pReset();if(b.dataset.tab==='c')UI.pTab='c';UI.pAnim=true}if(UI.view==='friends'){UI.pAnim=true;ACX.anim=true}if(UI.view==='history'){UI.hAnim=true;UI.hEdit=null}window.scrollTo({top:0})}
-  else if(act==='lib'){UI.libOpen=!UI.libOpen;UI.libAnim=UI.libOpen;if(UI.libOpen){UI.addOpen=false;lxFlyHome()}else lxGhostClose()}
+  else if(act==='lib'){UI.libOpen=!UI.libOpen;liveNote(UI.libOpen?'library':'artist');UI.libAnim=UI.libOpen;if(UI.libOpen){UI.addOpen=false;lxFlyHome()}else lxGhostClose()}
   else if(act==='addclose'){lxAddClose();return}
   else if(act==='lxsortm'){lxSortMenu(b);return}
   else if(act==='fropen'){UI.frOpen=true;UI.frAnim=true;UI.llOpen=false;ACX.anim=!!ACX.fr;FEED.anim=true;if(accOn()){accFriends(true);accFeed(false)}}
@@ -14469,7 +14580,7 @@ document.addEventListener('click',ev=>{
     UI.hxOpen={aid,k:o?cur.filter(x=>x!==k):[...cur,k]};UI.hxNew=o?'x'+k:k;render();if(fx)hxFoldAfter(fx);return}
   else if(act==='hxrail'){const row=document.querySelector('.hxrow.eras'),e=row&&row.querySelector('.hxera[data-era="'+b.dataset.i+'"]');
     if(e)row.scrollTo({left:e.getBoundingClientRect().left-row.getBoundingClientRect().left+row.scrollLeft-(parseFloat(getComputedStyle(row).paddingLeft)||0),behavior:noMotion()?'auto':'smooth'});return}
-  else if(act==='hback'){UI.libOpen=true;UI.libAnim=true;UI.addOpen=false;if(lxPreGo())return;lxFlyHome()}
+  else if(act==='hback'){UI.libOpen=true;liveNote('library');UI.libAnim=true;UI.addOpen=false;if(lxPreGo())return;lxFlyHome()}
   else if(act==='litepick'){liteSet(b.dataset.v);heroPaint()}
   else if(act==='alplay'){albPlay(b.dataset.a,b.dataset.g,b);return}
   else if(act==='songplay'){songPlay(b.dataset.a,b.dataset.g,b.dataset.id,b);return}
@@ -14563,7 +14674,7 @@ document.addEventListener('click',ev=>{
   else if(act==='mmgo'){UI.tab='music';UI.rOpen=null;
     if(b.dataset.v==='history'){UI.view='history';UI.hAnim=true;UI.hEdit=null}else if(b.dataset.v==='stats'){UI.view='stats';UI.stAnim=true;UI.stR=null;UI.stN=25}else UI.view=null;
     try{localStorage.setItem(KEY+'_tab','music')}catch(e){}window.scrollTo({top:0})}
-  else if(act==='sel'){{const bx=lxScroller();if(bx)UI.lxY=bx.scrollTop}UI.addOpen=false;const lg=libGhostTake(b);if(UI.tab==='music'&&!UI.view)flyAsk(b,id,!!lg);UI.libGhost=lg;UI.sel[UI.tab]=id;UI.libOpen=false;UI.rOpen=null;
+  else if(act==='sel'){liveNote('artist');{const bx=lxScroller();if(bx)UI.lxY=bx.scrollTop}UI.addOpen=false;const lg=libGhostTake(b);if(UI.tab==='music'&&!UI.view)flyAsk(b,id,!!lg);UI.libGhost=lg;UI.sel[UI.tab]=id;UI.libOpen=false;UI.rOpen=null;
     /* 2026.11.22-a: from the full-window library the new page starts at the very top, straight away (the library still covers it). It used to
        scroll down to the page after it was drawn, so the record aimed for the turntable while the page slid up under it */
     if(lg||lxEl()){if(scrollY)window.scrollTo(0,0)}
