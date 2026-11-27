@@ -3475,9 +3475,16 @@ html.lite .hx .hxfp{-webkit-backdrop-filter:none;backdrop-filter:none;background
   .gf.jk2 .gfra{top:52px}
   .gf.jk2 .track.sl-t,.gf.jk2 .track.sl-t.ep{min-height:38px}
   /* the insert card comes out of the jacket's bottom edge */
-  .gf.jk2 .gf-rs .rater{top:calc(var(--jw) + 16px - 6px);bottom:auto;max-height:calc(100dvh - var(--jw) - 90px);overflow:auto}
   .gf.jk2 .gf-rs:has(.rater) .tlist{padding-bottom:0}
-  @media (prefers-reduced-motion:no-preference){.gf.jk2 .gf-rs .rater{animation:jkOut .4s cubic-bezier(.2,.85,.25,1) both}@keyframes jkOut{from{translate:0 -100%;clip-path:inset(100% 0 0 0)}to{translate:0 0;clip-path:inset(0)}}}
+  /* 2026.11.27-n: the insert card sits in the open space under the jacket (lifted out of the songs panel by gfInsLift) */
+  .gf.jk2>.rater.jkins{--ink:#2b1a20;position:absolute;z-index:5;left:28px;right:28px;top:calc(100% + 14px);bottom:auto;margin:0;padding:16px 18px 12px;border:0;border-radius:6px;color:#2b1a20;
+    max-height:calc(100dvh - max(calc(env(safe-area-inset-top,0px) + 60px),calc((100dvh - var(--jw)) / 2 - 80px)) - var(--jw) - 40px - env(safe-area-inset-bottom,0px));overflow:auto;overscroll-behavior:contain;
+    background:linear-gradient(170deg,color-mix(in srgb,var(--acsw) 10%,#fbf1ea),color-mix(in srgb,var(--acsw) 18%,#efe0d6));box-shadow:0 14px 34px rgb(0 0 0 / .38),inset 0 1px 0 #fff;animation:none}
+  @media (prefers-reduced-motion:no-preference){
+    .gf.jk2>.rater.jkins:not(.jkst){animation:jkOut .4s cubic-bezier(.2,.85,.25,1) both}
+    .gf.jk2>.rater.jkins.rt-out{animation:jkBack .22s cubic-bezier(.4,0,.8,.4) both}
+    @keyframes jkOut{from{translate:0 -40px;opacity:0;clip-path:inset(0 0 100% 0)}to{translate:0 0;opacity:1;clip-path:inset(0 0 -40px 0)}}
+    @keyframes jkBack{to{translate:0 -40px;opacity:0;clip-path:inset(0 0 100% 0)}}}
 }
 .gfr-songs em.gfr-nil{display:none}
 /* 2026.11.27-j: the back of the swinging cover is printed card with the album's title, drawn in plain text */
@@ -4824,6 +4831,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.27-n', note:'THE RATING CARD SITS UNDER THE JACKET NOW. On an iPhone the card that comes out when you rate a song was stuck inside the songs panel: it sat over your songs, got cut off by the record peeking out of the jacket, and jumped and replayed its slide every time you changed a rating. It now lives in the open space under the jacket. It slides out once when you open it, stays still while you drag, rate or tap Leave out of avg, swaps in place when you tap another song, and tucks back up when you tap Done. The song you are rating stays in view on the jacket.'},
   {v:'2026.11.27-m', note:'FIXES FROM YOUR SECOND RECORDING. The open album is a square record jacket now, like a real one, instead of a long card running down the screen: the cover swings open onto a panel its own size, and the record peeking out of each edge is the jacket\u2019s size too. The cover art is printed into the inside of the jacket again, stronger than before. Rating a song pulls the card out of the jacket\u2019s bottom edge into the space below, so it no longer covers your songs. Rating is much quicker: the artist header behind the album no longer redraws on every rating, and your log is saved half a second after you stop instead of on the tap (it is still saved right away if you leave the app). Closing an album you did not change no longer rebuilds the artist page. You can now give a song the same score you gave it on your last listen (a 9 again on listen 2 would not stick). The listen-to-listen changes under Listen 2 of 2 are readable on the card. And the swinging cover can no longer show its back see-through and backwards while the page is busy.'},
   {v:'2026.11.27-l', note:'THE COVER SWINGS OPEN SHOWING ITS ART ON AN IPHONE. When the cover swung open (and closed), iPhones showed its plain back with the album title printed backwards instead of the cover art, which is why the swing was hard to see. The cover now shows one side at a time, switching exactly when it is edge-on. Builds are now also checked in WebKit, the engine every iPhone browser uses, before they ship.'},
   {v:'2026.11.27-k', note:'OPENING AN ALBUM ON A PHONE IS QUICKER. Tapping a record used to rebuild the whole artist page behind the lifting cover just to add the album. Now only the album is built and laid over the page that is already there, so the cover swings open sooner and with less stutter (about 35 to 50 percent less work on the tap). Everything looks the same.'},
@@ -9801,8 +9809,10 @@ function gfQuick(){
   gfPgPlace(gf);rs.scrollTop=st;ls.scrollTop=lst;
   slObserve();slPulseNow();UI.rAnim=null;
   /* the song being rated rides up above the insert card */
-  const row=rs.querySelector('.track.sl-t.ropen'),card=rs.querySelector('.rater');
-  if(row&&card)requestAnimationFrame(()=>{const rb=row.getBoundingClientRect().bottom,ct=card.getBoundingClientRect().top;if(rb>ct-12)rs.scrollBy({top:rb-ct+24,behavior:noMotion()?'auto':'smooth'})});
+  /* the song being rated stays in view on the jacket (the insert card is below the jacket now, so nothing covers it) */
+  const row=rs.querySelector('.track.sl-t.ropen');
+  if(row)requestAnimationFrame(()=>{const rr=row.getBoundingClientRect(),br=rs.getBoundingClientRect(),hd=(rs.querySelector(':scope>.gfph-h')||{offsetHeight:0}).offsetHeight;
+    const d=rr.bottom>br.bottom-8?rr.bottom-br.bottom+16:rr.top<br.top+hd?rr.top-br.top-hd-8:0;if(d)rs.scrollBy({top:d,behavior:noMotion()?'auto':'smooth'})});
   return true}
 /* 2026.11.27-k: OPENING AN ALBUM ON A PHONE BUILDS ONLY THE ALBUM. The tap used to rebuild the whole artist page (hero, every
    sleeve, Fans also spin) just to add the jacket, ~0.3-0.7 s behind the lifting cover. Now the jacket is built on its own and
@@ -12304,7 +12314,17 @@ function gfPgPlace(gf){
   const pg=UI.gfPg==null?1:UI.gfPg;
   sp.style.scrollSnapType='none';sp.scrollLeft=pg?sp.scrollWidth:0;sp.style.scrollSnapType='';
   if(!sp._pg){sp._pg=1;sp.addEventListener('scroll',()=>gfPgSync(gf),{passive:true})}
-  gfPgSync(gf)}
+  gfPgSync(gf);gfInsLift(gf)}
+/* 2026.11.27-n: THE INSERT CARD LIVES UNDER THE JACKET. It used to be drawn inside the scrolling songs panel and pinned with
+   position:fixed, which on an iPhone pinned it to the panel instead of the screen: it sat over the songs, got clipped by the
+   sleeved record, and replayed its slide-out on every rating (each rating rebuilds the panel). It is now lifted out of the
+   panel into the open space below the square jacket, and only slides out when it first opens; changing a rating or switching
+   to another song swaps it in place. */
+function gfInsLift(gf){
+  const old=gf.querySelector(':scope>.rater.jkins'),nw=gf.querySelector('.gf-rs .rater');
+  if(nw){nw.classList.add('jkins');
+    if(old){nw.classList.remove('rt-in');nw.classList.add('jkst');old.replaceWith(nw)}else gf.appendChild(nw);return}
+  if(old&&!UI.rOpen)old.remove()}
 /* 2026.11.21-a: NEXT RECORD. On a phone each page of an open album ends with the records either side of it on the shelf
    (in the shelf's own order, filters and sort included). Tapping one closes this album the usual way and opens that one from its
    sleeve, so you can go through a discography without closing and finding the next one yourself. (A swipe would fight the swipe
