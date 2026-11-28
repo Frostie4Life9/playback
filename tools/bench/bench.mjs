@@ -275,9 +275,16 @@ async function pages(browser, base) {
   }
   // a second start of the same log (what every app open and every reload after a crash is)
   await page.waitForTimeout(4600);
-  await page.goto(base + '/index.html', { waitUntil: 'commit' }); await page.waitForSelector('.hxsl[data-g]', { timeout: 30000 });
-  const again = await page.evaluate(() => new Promise(r => requestAnimationFrame(() => setTimeout(() => r(Math.round(performance.now())), 0))));
+  let again;
+  await prof(cdp, 'restart', async () => { await page.goto(base + '/index.html', { waitUntil: 'commit' }); await page.waitForSelector('.hxsl[data-g]', { timeout: 30000 });
+    again = await page.evaluate(() => new Promise(r => requestAnimationFrame(() => setTimeout(() => r(Math.round(performance.now())), 0)))); return {}; });
   out.steps.restart = { tap: again, block: again, renders: 0, renderMs: 0, worstFrame: 0 };
+  // Skyler's own pages (owner mode): Movies & TV and the vinyl Collection. Network is blocked, so nothing is sent anywhere.
+  await page.goto(base + '/index.html?owner=1', { waitUntil: 'load' }); await page.waitForSelector('.hxsl[data-g]', { timeout: 30000 }); await page.waitForTimeout(1200);
+  for (const [name, sel] of [['movies & tv', '[data-act="tab"][data-v="screen"]'], ['collection', '[data-act="view"][data-v="collection"]'], ['music', '[data-act="tab"][data-v="music"], [data-act="mmgo"][data-v="artists"]']]) {
+    const r = await prof(cdp, name, () => step(page, sel));
+    out.steps[name] = r.err ? { tap: 0, block: 0, renders: 0, renderMs: 0, worstFrame: 0, err: r.err } : r;
+  }
   out.errors = errors; await ctx.close(); return out;
 }
 
