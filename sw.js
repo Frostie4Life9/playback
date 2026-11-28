@@ -3,7 +3,7 @@
    icons and the manifest are cache-first, and covers and artist photos are
    kept in their own capped cache so art shows offline. Sync requests to the Worker
    are cross-origin and pass straight through. */
-const CACHE = 'playback-2026.11.27-r';   // keep in step with BUILD in index.html
+const CACHE = 'playback-2026.11.27-s';   // keep in step with BUILD in index.html
 const IMG = 'playback-img';   // album covers and artist photos: kept across builds, capped
 const IMG_MAX = 1200;
 const IMG_HOST = /(^|\.)(scdn\.co|mzstatic\.com|tmdb\.org|coverartarchive\.org|archive\.org|discogs\.com)$/;
