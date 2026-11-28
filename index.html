@@ -4940,6 +4940,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.27-aa', note:'SWITCHING ARTISTS IS QUICKER ON YOUR PHONE. Going to another artist used to stop and paint the whole splatter record before the page could show, then work out every cover\'s colors at once (about half a second of freeze at phone speed). Now the page comes up first, the record\'s paint flows in a moment later, and cover colors are worked out in the quiet moments in between, one at a time and with less work each.'},
   {v:'2026.11.27-z', note:'ALBUMS OPEN FASTER, AND THE 7-INCH IS EASIER TO READ. Opening an album on your phone no longer works out its colors and its next and previous records the slow way, so the tap is about twice as quick. Albums that open the long way (light mode, a Deluxe, coming back after a reload) now close the quick way too, without redrawing the artist page. When a single is open, the page behind it is dimmed a little more and the singles\' Collapse pill no longer shows through, so "Tap the song to rate it" and the buttons under the record are clear. The app is also about 100 KB lighter to load (older build notes moved out of the page).'},
   {v:'2026.11.27-y', note:'FASTER AND STEADIER UNDER THE HOOD, AND THE 7-INCH LABEL SPINS PROPERLY. Changing a score on a single now turns its label a full circle like a record starting up: the old score rides round out of sight behind the sleeve and comes back as the new one (it used to drop into a little box and vanish), and the record\'s shadow no longer turns with it. Every kind of record, including albums in light mode, now updates in place when you rate, so nothing redraws the whole artist page behind it. Rating is lighter too: the spinning record on the artist page stops repainting while it\'s covered, opening an album lets go of the page\'s big moving colors at once (less graphics memory, which is what makes the phone reload), and the splatter record is repainted in small pieces after you close instead of one freeze. Albums that crashed before get one full try again on each new update, so you can tell whether a fix worked (if one crashes again it goes back to light mode until the next update). If a tap or an animation is slow on your phone, the details now go to your Suggest box on their own, like crashes do.'},
   {v:'2026.11.27-x', note:'SMOOTHER RATING ON YOUR PHONE. Tapping a song to rate it, and tapping Done, no longer rebuilds the whole artist page behind the record, so the card comes and goes without the freeze (singles were the worst, about five times faster now). Closing a record after rating no longer stalls at the end either: the artist\'s splatter record at the top repaints a moment later, once you\'ve stopped. On a single, the record stays hidden inside the sleeve while it flips over, and a new score really rolls onto the label now: the record spins round once, the old number rolls out and the new one rolls in. With an album open, the drifting colors behind it fade away, which frees a lot of the phone\'s graphics memory (the cause of the crashes on Mercurial World and LONG.LIVE.A$AP).'},
@@ -11941,12 +11942,14 @@ function hSplat(songs,aid,tint,cap){
   if(HSKIP){const h=HSP[aid+'|'+(tint||'')+'|'+(cap?1:0)];return h?h.svg:''}
   let L=songs.slice().sort((x,y)=>y.r-x.r||(x.id<y.id?-1:1));if(cap&&L.length>cap)L=L.slice(0,cap);
   const key=aid+'|'+(tint||'')+'|'+(cap?1:0),sig=L.map(x=>x.id+':'+x.r+x.col).join(','),hit=HSP[key];if(hit&&hit.sig===sig){if(!cap)hspUse(key);return hit.svg}
-  if(HSLOW&&hit&&!cap){
+  /* 2026.11.27-z: on a phone the big disc is never drawn inside a tap: a new artist shows its record unpainted for a moment and the
+     paint arrives a slice at a time (switching artist spent ~0.3 s at phone speed drawing it before the page could show) */
+  if((HSLOW||(gfPh()&&READY))&&!cap){
     if(!HSJOB[key]||HSJOB[key].sig!==sig){const it=hSplatGen(songs,aid,tint,cap,L,key,sig),job=HSJOB[key]={sig};
       const step=()=>{if(HSJOB[key]!==job)return;const t=performance.now();let r;do{r=it.next()}while(!r.done&&performance.now()-t<8);
         if(!r.done)return setTimeout(()=>requestAnimationFrame(step),0);delete HSJOB[key];heroPaint()};
       requestAnimationFrame(step)}
-    return hit.svg}
+    return hit?hit.svg:''}
   const it=hSplatGen(songs,aid,tint,cap,L,key,sig);let r;do{r=it.next()}while(!r.done);return r.value}
 function* hSplatGen(songs,aid,tint,cap,L,key,sig){
   const N=L.length;if(!N)return '';
@@ -13625,14 +13628,22 @@ function acolFromPixels(d,dark){
 let ACOLV=0;const AQ=[],AQS={};let AQN=0;
 function acolLazy(key,url){if(AQS[key]||ACOL_TRY[key]||!url)return;AQS[key]=1;AQ.push([key,url]);aqPump()}
 function aqPump(){while(AQN<3&&AQ.length){const[k,u]=AQ.shift();if(ACOL_TRY[k])continue;AQN++;acolRead(k,u,()=>{AQN--;aqPump()})}}
+/* 2026.11.27-z: reading a cover's colors (a small k-means, ~15-40 ms each at phone speed) waits for a quiet moment, one cover at a
+   time, instead of running the moment each cover loads: a new artist's covers all arrive together, right after the tap, and their
+   color reads used to stack up into a ~0.3 s freeze while the page was coming in. */
+const ACQ=[];let ACQB=0;
+function acolIdle(f){ACQ.push(f);if(!ACQB){ACQB=1;acolNext()}}
+function acolNext(){if(!ACQ.length){ACQB=0;return}
+  const go=()=>{const t=performance.now();do{const f=ACQ.shift();try{f()}catch(e){}}while(ACQ.length&&performance.now()-t<6);acolNext()};
+  if(window.requestIdleCallback)requestIdleCallback(go,{timeout:600});else setTimeout(()=>requestAnimationFrame(()=>setTimeout(go,0)),24)}
 function acolRead(key,url,done){
   if(ACOL_TRY[key]||!url)return;ACOL_TRY[key]=1;
   const im=new Image();im.crossOrigin='anonymous';im.decoding='async';
-  im.onload=()=>{try{const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingQuality='high';
-      const iw=im.naturalWidth||64,ih=im.naturalHeight||64,sq=Math.min(iw,ih);x.drawImage(im,(iw-sq)/2,(ih-sq)/2,sq,sq,0,0,64,64);   /* the same square the cover is shown in */
-      const col=acolFromPixels(x.getImageData(0,0,64,64).data,/^c_/.test(key));if(!col)return;ACOL[key]=col;acolSave();ACOLV++;tdSoon();
+  im.onload=()=>acolIdle(()=>{try{const c=document.createElement('canvas');c.width=c.height=40;const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingQuality='high';   /* 2026.11.27-z: 40x40 is plenty for the main colors and 2.5x less work than 64x64 */
+      const iw=im.naturalWidth||64,ih=im.naturalHeight||64,sq=Math.min(iw,ih);x.drawImage(im,(iw-sq)/2,(ih-sq)/2,sq,sq,0,0,40,40);   /* the same square the cover is shown in */
+      const col=acolFromPixels(x.getImageData(0,0,40,40).data,/^c_/.test(key));if(!col)return;ACOL[key]=col;acolSave();ACOLV++;tdSoon();
       const dxk=/~dx$/.test(key),base=dxk?key.slice(0,-3):key;heroPaint();
-      document.querySelectorAll('[data-acol="'+base+'"]').forEach(el=>{if(el.classList.contains('sleeve'))el.style.setProperty(dxk?'--acd':'--acs',col);else el.style.setProperty('--ac',col)})}catch(e){ACOL[key]='';acolSave()}finally{if(done)done()}};
+      document.querySelectorAll('[data-acol="'+base+'"]').forEach(el=>{if(el.classList.contains('sleeve'))el.style.setProperty(dxk?'--acd':'--acs',col);else el.style.setProperty('--ac',col)})}catch(e){ACOL[key]='';acolSave()}finally{if(done)done()}});
   im.onerror=()=>{if(done)done()};
   im.src=url}
 function acolFor(key,url,g){const c=ACOL[key];if(c)return c;if(c!==''&&url)acolRead(key,url);return acolFallback(g)}
