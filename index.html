@@ -3565,7 +3565,7 @@ html.lite .hx .hxfp{-webkit-backdrop-filter:none;backdrop-filter:none;background
   .gf.s7>.s7-act>.fr-strip,.gf.s7>.s7-act>.lsp{flex-basis:100%;display:flex;justify-content:center}
   .gf.s7:has(>.rater) :is(.s7-hint,.s7-act){opacity:0;pointer-events:none}
   .gf.s7>.rater.jkins{top:calc(var(--t) + var(--S) + 14px);left:20px;right:20px;max-height:calc(100dvh - env(safe-area-inset-top,0px) - 60px - var(--t) - var(--S) - 36px - env(safe-area-inset-bottom,0px))}
-  @media (prefers-reduced-motion:reduce){.gf.s7 .s7-rec,.gf.s7 .s7-lab b{animation:none}}
+  @media (prefers-reduced-motion:reduce){.gf.s7 .s7-rec,.gf.s7 .s7-lab,.gf.s7 .s7-lab b{animation:none}}
 }
 /* ===== 2026.11.27-w: DESKTOP GATEFOLD, BOARDS 1 AND 2B. The left record is tucked behind the inside left and peeks half out of its
    outer edge; the right one is pulled about two thirds out so its grooves and label read while it is still in the jacket. A yellow
@@ -4338,7 +4338,7 @@ html.pbstill *,html.pbstill *::before,html.pbstill *::after{animation-duration:.
   /* 2026.11.27-x: under an open album the hero's three drifting color layers (each bigger than the screen, ~35 MB of graphics memory
      apiece at 3x) fade out and are let go, leaving the artist's calm color field under the wash. Both -w crashes were album opens. */
   .hero .fl,.hero .hscrim{transition:opacity .35s ease-out}
-  html.gfsh .hero .fl,html.gfsh .hero .hscrim{opacity:0;visibility:hidden;transition:opacity .3s ease-out,visibility 0s .3s}
+  html.gfsh .hero .fl,html.gfsh .hero .hscrim{opacity:0;visibility:hidden;transition:none}   /* 2026.11.27-y: let go in the same frame the album appears (the wash fading in covers it), not faded: a fade kept all four big layers alive through the opening's first frames, its memory peak (~500 MB est.) */
 }
 @keyframes flWobP{0%{scale:.94 1.05}50%{scale:1.04 .97}100%{scale:1.1 .92}}
 </style>
@@ -4936,6 +4936,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.27-y', note:'FASTER AND STEADIER UNDER THE HOOD, AND THE 7-INCH LABEL SPINS PROPERLY. Changing a score on a single now turns its label a full circle like a record starting up: the old score rides round out of sight behind the sleeve and comes back as the new one (it used to drop into a little box and vanish), and the record\'s shadow no longer turns with it. Every kind of record, including albums in light mode, now updates in place when you rate, so nothing redraws the whole artist page behind it. Rating is lighter too: the spinning record on the artist page stops repainting while it\'s covered, opening an album lets go of the page\'s big moving colors at once (less graphics memory, which is what makes the phone reload), and the splatter record is repainted in small pieces after you close instead of one freeze. Albums that crashed before get one full try again on each new update, so you can tell whether a fix worked (if one crashes again it goes back to light mode until the next update). If a tap or an animation is slow on your phone, the details now go to your Suggest box on their own, like crashes do.'},
   {v:'2026.11.27-x', note:'SMOOTHER RATING ON YOUR PHONE. Tapping a song to rate it, and tapping Done, no longer rebuilds the whole artist page behind the record, so the card comes and goes without the freeze (singles were the worst, about five times faster now). Closing a record after rating no longer stalls at the end either: the artist\'s splatter record at the top repaints a moment later, once you\'ve stopped. On a single, the record stays hidden inside the sleeve while it flips over, and a new score really rolls onto the label now: the record spins round once, the old number rolls out and the new one rolls in. With an album open, the drifting colors behind it fade away, which frees a lot of the phone\'s graphics memory (the cause of the crashes on Mercurial World and LONG.LIVE.A$AP).'},
   {v:'2026.11.27-w', note:'SINGLES ARE 7-INCHES, AND THE DESKTOP ALBUM MATCHES THE MOCKUPS. On your phone a single now opens as a 7-inch in its picture sleeve: the sleeve flies out of the row, flips over to its printed back (year, 45 RPM, the A-side and B-sides), and the record slides out of the edge with your score on its label. Tapping a song pulls the same rating card out of the bottom as an album, and the new score rolls onto the label. On a computer, the right-hand record now sits about two thirds out of the jacket so its label shows, the label shows the song you are rating with its groove lit, and the score is on a yellow sticker on the inside left that stamps on when it changes.'},
   {v:'2026.11.27-v', note:'DELUXE CRASH FIX (TRY). Reopening an album you had closed on its Deluxe edition could crash the page on iPhone. Closing on the Deluxe now does the full page refresh it used to, so the phone frees memory before you open it again. The Deluxe sleeve still stays in front.'},
@@ -9872,7 +9873,7 @@ function gfMorph(a,b){
   if(a.tagName==='DETAILS')a.open=b.open;
   if((a.tagName==='INPUT'||a.tagName==='TEXTAREA'||a.tagName==='SELECT')&&a!==document.activeElement&&a.value!==b.value)a.value=b.value;
   /* 2026.11.20-p: the phone's page header and Details/Ratings switch are added after the build, so a redraw keeps them (the rating record in them is patched by gfPgPlace) */
-  const ac=[...a.childNodes].filter(n=>!(n.nodeType===1&&n.classList&&(n.classList.contains('gfph-h')||n.classList.contains('gfpg')||n.classList.contains('gfnx')||n.classList.contains('gfgrab')||n.classList.contains('jkins')))),bc=[...b.childNodes];   /* 2026.11.27-q: the Next record links too */
+  const ac=[...a.childNodes].filter(n=>!(n.nodeType===1&&n.classList&&(n.classList.contains('gfph-h')||n.classList.contains('gfpg')||n.classList.contains('gfnx')||n.classList.contains('gfgrab')||n.classList.contains('jkins')||n.classList.contains('s7-gh')))),bc=[...b.childNodes];   /* 2026.11.27-q: the Next record links too */
   let j=0;   /* walk both lists; an old child with no match in the new list is dropped, a new one with no match is put in */
   for(const n of bc){let k=j;while(k<ac.length&&!gfSame(ac[k],n))k++;
     if(k<ac.length){while(j<k)ac[j++].remove();gfMorph(ac[j++],n)}else a.insertBefore(n,ac[j]||null)}
@@ -9909,23 +9910,40 @@ function hxerEdges(keep){
   es.forEach((e,i)=>{const[w,l]=m[i];e.classList.toggle('ovr',w>4);e.classList.toggle('sl',l>4);e.classList.toggle('end',w>4&&l>=w-4);
     if(!e._edg){e._edg=1;e.addEventListener('scroll',()=>hxerEdge(e),{passive:true})}})}
 addEventListener('resize',()=>hxerEdges(),{passive:true});
-/* 2026.11.27-j: RATING ON A PHONE REDRAWS THE JACKET, NOT THE PAGE. Opening the insert card, Done, Clear and Leave out used to rebuild
-   the whole artist page under the open album (150-370 ms at a time on a phone). They now rebuild just this album's panels. */
-function gfQuick(){
-  if(!gfPh()||!UI.alb||GFP)return false;const gf=gfOpenEl(UI.alb.g);if(!gf||!gf.classList.contains('jk2'))return false;
-  const a=S.music.find(x=>x.id===UI.alb.aid),g=a&&a.groups.find(x=>String(x.id)===UI.alb.g);if(!a||!g||g.kind==='Single')return false;
-  const t=document.createElement('template');t.innerHTML=gfHtml(a,g).trim();const n=t.content.firstElementChild;if(!n)return false;
-  return gfQuickJk(gf,n)}
-/* 2026.11.27-x: THE 7-INCH IS PATCHED TOO. Opening or closing a rating on a single used to redraw the whole artist page
-   (0.1-0.2 s at phone speed, the freeze on every tap). Now only the sleeve's back, the record's label and the bar under it are patched. */
-function gfQuickS7(){
-  if(!gfPh()||!UI.alb||GFP)return false;const gf=gfOpenEl(UI.alb.g);if(!gf||!gf.classList.contains('s7'))return false;
-  const a=S.music.find(x=>x.id===UI.alb.aid),g=a&&a.groups.find(x=>String(x.id)===UI.alb.g);if(!a||!g||g.kind!=='Single'||!gfS7(g))return false;
-  const t=document.createElement('template');t.innerHTML=gfHtml(a,g).trim();const n=t.content.firstElementChild;if(!n||!n.classList.contains('s7'))return false;
-  const ob=gf.querySelector('.s7-b'),nb=n.querySelector('.s7-b'),ol=gf.querySelector('.s7-lab'),nl=n.querySelector('.s7-lab');if(!ob||!nb||!ol||!nl)return false;
-  const st=ob.scrollTop;gfMorph(ob,nb);gfMorph(ol,nl);
-  for(const k of ['.s7-hint','.s7-act']){const o=gf.querySelector(':scope>'+k),w=n.querySelector(':scope>'+k);if(o&&w){if(gfSame(o,w))gfMorph(o,w);else o.replaceWith(w)}}
-  ob.scrollTop=st;gfInsLift(gf);gfS7Lab(gf);UI.rAnim=null;return true}
+/* 2026.11.27-y: ONE FAST PATH FOR EVERY SLEEVE. Anything that changes inside an open album on a phone (opening or closing a rating,
+   a score, Clear, Leave out, heard) patches just that album through jkPatch(); the artist page under it is never rebuilt. Each sleeve
+   type can bring its own patcher (SLEEVE below: the album jacket and the 7-inch do); any other sleeve, including a new one or a
+   crash-safe light sheet, gets gfPatchAny, which patches the whole sleeve in place and keeps every panel's scroll. So a new sleeve
+   is fast by default, and only needs its own entry here if it has parts that must not be touched (a record mid-spin, say).
+   Before: gfQuick (album) and gfQuickS7 (7-inch) were separate copies with their own checks, and anything else fell to a full redraw. */
+const SLEEVE={
+  jk2:{patch:(gf,n)=>gfQuickJk(gf,n)},
+  s7:{patch(gf,n){
+      const ob=gf.querySelector('.s7-b'),nb=n.querySelector('.s7-b'),ol=gf.querySelector('.s7-lab'),nl=n.querySelector('.s7-lab');if(!ob||!nb||!ol||!nl)return false;
+      gfMorph(ob,nb);gfMorph(ol,nl);   /* patched in place, so the card keeps its scroll (reading and setting it forced a layout) */
+      for(const k of ['.s7-hint','.s7-act']){const o=gf.querySelector(':scope>'+k),w=n.querySelector(':scope>'+k);if(o&&w){if(gfSame(o,w))gfMorph(o,w);else o.replaceWith(w)}}
+      return true},
+    after(gf){gfInsLift(gf);gfS7Lab(gf)}},
+};
+const sleeveKind=el=>{for(const k in SLEEVE)if(el.classList.contains(k))return k;return ''};
+/* the sleeve families a build can come out as (its class from gfHtml); anything else is an LP-style sheet. A new sleeve type
+   that the build marks with its own class goes in this list, so a change of type while open is never patched across. */
+const SLEEVE_FAM=['s7'];
+const gfFam=el=>SLEEVE_FAM.find(c=>el.classList.contains(c))||'lp';
+function gfPatchAny(gf,n){
+  const sc=[gf,...gf.querySelectorAll('*')].filter(e=>e.scrollTop>0).map(e=>[e,e.scrollTop]);
+  for(const at of [...gf.attributes])n.setAttribute(at.name,at.value);   /* the sleeve keeps the classes it was given when it opened; only what is inside changes */
+  gfMorph(gf,n);for(const[e,y]of sc)if(e.isConnected)e.scrollTop=y;
+  slObserve();slPulseNow();return true}
+function jkPatch(){
+  if(!gfPh()||!UI.alb||GFP)return false;const gf=gfOpenEl(UI.alb.g);if(!gf||!gf.classList.contains('phs'))return false;
+  const a=S.music.find(x=>x.id===UI.alb.aid),g=a&&a.groups.find(x=>String(x.id)===UI.alb.g);if(!a||!g)return false;
+  const k=sleeveKind(gf),t=document.createElement('template');t.innerHTML=gfHtml(a,g).trim();const n=t.content.firstElementChild;
+  if(!n||gfFam(n)!==gfFam(gf)||(k==='jk2'&&g.kind==='Single'))return false;   /* it would now draw as a different kind of sleeve: full redraw */
+  const sv=SLEEVE[k];if(!(sv?sv.patch(gf,n):gfPatchAny(gf,n)))return false;
+  if(sv&&sv.after)sv.after(gf);UI.rAnim=null;return true}
+/* Any open phone sleeve (album jacket, 7-inch, light sheet) */
+const gfPhOpen=()=>gfPh()&&!!document.querySelector('.group.sleeve.gf.phs');
 function gfQuickJk(gf,n){
   const rs=gf.querySelector('.gf-rs'),nrs=n.querySelector('.gf-rs'),ls=gf.querySelector('.gf-ls'),nls=n.querySelector('.gf-ls');if(!rs||!nrs||!ls||!nls)return false;
   const st=rs.scrollTop,lst=ls.scrollTop,h=rs.querySelector(':scope>.gfph-h');
@@ -9941,7 +9959,7 @@ function gfQuickJk(gf,n){
     else{oc.forEach(c=>c.remove());const nx=ls.querySelector(':scope>.gfnx');nc.forEach(c=>ls.insertBefore(c,nx))}}
   {const od=gf.querySelector('.gf-pk.l .sl-disc'),nd=n.querySelector('.gf-pk.l .sl-disc');if(od&&nd)od.replaceWith(nd)}
   {const pk=gf.querySelector('.gf-pk.r'),vr=n.querySelector('.gf-pk.r .gf-vr');if(pk&&vr)pk.replaceChildren(vr)}
-  gfPgPlace(gf,true);rs.scrollTop=st;ls.scrollTop=lst;
+  gfPgPlace(gf,true);   /* 2026.11.27-y: both panels are patched in place, so they keep their scroll; setting it back forced a layout */
   const opening=UI.rAnim&&UI.rAnim===UI.rOpen;
   slObserve();slPulseNow();UI.rAnim=null;
   /* the song being rated stays in view on the jacket (the insert card is below the jacket now, so nothing covers it) */
@@ -9957,21 +9975,21 @@ function gfQuickJk(gf,n){
    already right, so closing just takes the jacket away and puts the sleeve back (the whole artist page used to be rebuilt the
    moment the cover landed). Any change while it was open still redraws the page, so the shelf and totals are current. */
 function gfCloseQuick(el){
-  if(!el||!el.isConnected||!(el.classList.contains('jk2')||el.classList.contains('s7'))||!gfPh()||UI.dxSw||UI.gfM0==null||CHG!==UI.gfM0||UI.view||UI.tab!=='music')return false;
+  if(!el||!el.isConnected||!el.classList.contains('phs')||!gfPh()||UI.dxSw||UI.gfM0==null||CHG!==UI.gfM0||UI.view||UI.tab!=='music')return false;
   const rel=el.closest('.hxrel');if(!rel)return false;
   el.remove();UI.gfM0=null;HXSINK=null;
   rel.querySelectorAll('.hxsl.on').forEach(x=>{x.classList.remove('on','sink');x.setAttribute('aria-pressed','false');const l=x.getAttribute('aria-label');if(l)x.setAttribute('aria-label',l.replace(/^Close /,'Open '))});
   {const h=rel.querySelector('.hxhint');if(h){h.classList.remove('off');h.removeAttribute('aria-hidden')}HXHINT.off=false}
   hxPlaceGf();
   /* 2026.11.27-x: the hero's splatter record is repainted after a rating (~0.3 s at phone speed), so it waits until the close has landed and the phone is idle */
-  if(gfPh()){clearTimeout(HPT);HPT=setTimeout(()=>{HPT=0;(window.requestIdleCallback||(f=>f()))(()=>heroPaint(),{timeout:1500})},700)}else heroPaint();return true}
+  if(gfPh()){clearTimeout(HPT);HPT=setTimeout(()=>{HPT=0;(window.requestIdleCallback||(f=>f()))(()=>{HSLOW=true;try{heroPaint()}finally{HSLOW=false}},{timeout:1500})},700)}else heroPaint();return true}
 let HPT=0;
 /* 2026.11.27-u: CLOSING AFTER RATING PATCHES THE PAGE. Rating, heard and listens inside the album only move a few numbers on the
    artist page (the progress ring and its lines, the subtitle, the grooves on the sleeves), so instead of rebuilding the page (~60-90 ms
    on a slowed phone) the page is built off to the side, those few things are copied over, and the album is put away like a quick close.
    Anything that can reorder or hide releases (rating or heard sorts, Still to hear, the details panel) still gets the full redraw. */
 function gfClosePatch(el){
-  if(!el||!el.isConnected||!(el.classList.contains('jk2')||el.classList.contains('s7'))||!gfPh()||UI.dxSw||UI.gfM0==null||UI.view||UI.tab!=='music'||UI.filter==='open'||UI.hinfo||UI.libOpen||!['old','new'].includes(relSort()))return false;
+  if(!el||!el.isConnected||!el.classList.contains('phs')||!gfPh()||UI.dxSw||UI.gfM0==null||UI.view||UI.tab!=='music'||UI.filter==='open'||UI.hinfo||UI.libOpen||!['old','new'].includes(relSort()))return false;
   const rel=el.closest('.hxrel'),hero=document.querySelector('.hero.hx[data-aid]');if(!rel||!hero)return false;
   let T;HSKIP=true;try{const e=current();if(!e)return false;const t=document.createElement('template');t.innerHTML=mainSheet0(e);T=t.content}catch(e){return false}finally{HSKIP=false}
   const th=T.querySelector('.hero.hx[data-aid]');if(!th||th.dataset.aid!==hero.dataset.aid)return false;
@@ -10002,8 +10020,11 @@ function gfOpenQuick(gid){
   if(READY&&navigator.onLine)try{msLoad(a,g)}catch(e){}
   placeSave();
   return true}
+/* render() is the one entry point. A change inside an open phone album (UI.gfQ) is patched by jkPatch and never reaches renderFull. */
 function render(){
-  if(UI.gfQ){UI.gfQ=false;try{if(gfQuick()||gfQuickS7()){clrPlay();jkFxPlay();return}}catch(e){}}
+  if(UI.gfQ){UI.gfQ=false;let ok=false;try{ok=jkPatch()}catch(e){ok=false}if(ok){try{clrPlay();jkFxPlay()}catch(e){}return}}
+  return renderFull()}
+function renderFull(){
   if(!isOwnerUI()){if(UI.tab==='screen')UI.tab='music';if(UI.view==='collection')UI.view=null}   /* a saved tab or a stale link can never land a friend on a hidden page */
   const bg=BGR;BGR=false;
   if(bg&&renderQuiet())return;
@@ -12068,10 +12089,22 @@ function hspUse(key){const i=HSPO.indexOf(key);if(i>=0)HSPO.splice(i,1);HSPO.pus
   for(let j=0;HSPO.length>HSP_MAX&&j<HSPO.length;){const k=HSPO[j];let live=false;try{live=(HERO.aid&&k.startsWith(HERO.aid+'|'))||(HSTY.aid&&k.startsWith(HSTY.aid+'|'))}catch(e){}
     if(live||k===key){j++;continue}HSPO.splice(j,1);const o=HSP[k];delete HSP[k];if(o&&o.u)setTimeout(()=>URL.revokeObjectURL(o.u),4000)}}
 let HSKIP=false;   /* 2026.11.27-x: set while the page is built off to the side and thrown away (gfClosePatch), so the splat isn't repainted for nothing */
+/* 2026.11.27-y: the splatter disc is drawn by a generator, so it can be drawn all at once (hSplat) or a slice at a time between
+   frames (HSLOW, set by the repaint after closing an album on a phone: a ~70 ms freeze on the iPhone once the record had landed).
+   While a slow repaint is in progress the old disc stays up; when it's done the hero is repainted from the cache. */
+let HSLOW=false;const HSJOB={};
 function hSplat(songs,aid,tint,cap){
   if(HSKIP){const h=HSP[aid+'|'+(tint||'')+'|'+(cap?1:0)];return h?h.svg:''}
   let L=songs.slice().sort((x,y)=>y.r-x.r||(x.id<y.id?-1:1));if(cap&&L.length>cap)L=L.slice(0,cap);
   const key=aid+'|'+(tint||'')+'|'+(cap?1:0),sig=L.map(x=>x.id+':'+x.r+x.col).join(','),hit=HSP[key];if(hit&&hit.sig===sig){if(!cap)hspUse(key);return hit.svg}
+  if(HSLOW&&hit&&!cap){
+    if(!HSJOB[key]||HSJOB[key].sig!==sig){const it=hSplatGen(songs,aid,tint,cap,L,key,sig),job=HSJOB[key]={sig};
+      const step=()=>{if(HSJOB[key]!==job)return;const t=performance.now();let r;do{r=it.next()}while(!r.done&&performance.now()-t<8);
+        if(!r.done)return setTimeout(()=>requestAnimationFrame(step),0);delete HSJOB[key];heroPaint()};
+      requestAnimationFrame(step)}
+    return hit.svg}
+  const it=hSplatGen(songs,aid,tint,cap,L,key,sig);let r;do{r=it.next()}while(!r.done);return r.value}
+function* hSplatGen(songs,aid,tint,cap,L,key,sig){
   const N=L.length;if(!N)return '';
   const OUT=cap?128:440,W=cap?640:1800,H=cap?56:170,M=cap?80:190,rnd=hrng(hseed(aid+':s')),sz=r=>.35+.65*Math.pow(r/10,1.4);
   let tot=0;for(const x of L)tot+=sz(x.r);
@@ -12080,16 +12113,17 @@ function hSplat(songs,aid,tint,cap){
   const pc=document.createElement('canvas');pc.width=W;pc.height=H;const g=pc.getContext('2d'),sl=cap?2:2,K=S.length;
   const rect=(x,y,w,h,col,a)=>{g.fillStyle='rgba('+col[0]+','+col[1]+','+col[2]+','+a.toFixed(3)+')';
     g.fillRect(x-w/2,y,w,h);if(x-w/2<0)g.fillRect(x-w/2+W,y,w,h);if(x+w/2>W)g.fillRect(x-w/2-W,y,w,h)};
-  S.forEach((q,i)=>{
+  for(let i=0;i<S.length;i++){const q=S[i];
     const x=((i+.5+(rnd()-.5)*1.7)/K)*W,wd=Math.max(cap?3:5,W/K*(1.3+rnd()*2.8)*(.6+.8*q.f)),
       s0=rnd()<.6?rnd()*.12:rnd()*.6,s1=Math.min(1,s0+.3+rnd()*.7),y0=s0*H,y1=s1*H,base=.62+rnd()*.38,
       f1=.018+rnd()*.04,f2=.045+rnd()*.07,p1=rnd()*6.3,p2=rnd()*6.3,dk=rnd()<.35?hDark(q.col,80):null,col=dk?hRgb(dk):q.rgb,ln=Math.max(1,y1-y0);
     for(let y=y0;y<y1;y+=sl){
       const t=(y-y0)/ln,env=Math.min(1,t/.14,(1-t)/.2),nz=.5+.28*Math.sin(y*f1+p1)+.22*Math.sin(y*f2+p2),a=base*Math.max(0,env)*(.2+.8*nz);
-      if(a<.03)continue;rect(x,y,wd,sl+.6,col,a*.5);rect(x,y,wd*.62,sl+.6,col,a*.55)}});
+      if(a<.03)continue;rect(x,y,wd,sl+.6,col,a*.5);rect(x,y,wd*.62,sl+.6,col,a*.55)}
+    if(i%48===47)yield 0}
   const pd=g.getImageData(0,0,W,H).data,oc=document.createElement('canvas');oc.width=oc.height=OUT;const og=oc.getContext('2d'),od=og.createImageData(OUT,OUT),o=od.data;
   const c=OUT/2,rIn=(cap?43:60)/140*c,rOut=c*.99,bw=tint?hRgb(tint):null;
-  for(let yy=0;yy<OUT;yy++)for(let xx=0;xx<OUT;xx++){
+  for(let yy=0;yy<OUT;yy++){if(yy&&yy%64===0)yield 0;for(let xx=0;xx<OUT;xx++){
     const dx=xx+.5-c,dy=yy+.5-c,r=Math.sqrt(dx*dx+dy*dy),e=Math.max(0,Math.min(1,c-r)),k4=(yy*OUT+xx)*4;if(e<=0)continue;
     let R=0,G=0,B=0,A=0;
     if(r>=rIn&&r<=rOut){
@@ -12097,7 +12131,7 @@ function hSplat(songs,aid,tint,cap){
       for(let a=0;a<2;a++)for(let b=0;b<2;b++){const uu=((u0+a)%W+W)%W,ii=((v0+b)*W+uu)*4,w=(a?fu:1-fu)*(b?fv:1-fv),al=pd[ii+3]/255*w;R+=pd[ii]*al;G+=pd[ii+1]*al;B+=pd[ii+2]*al;A+=al}
       if(A>0){R/=A;G/=A;B/=A}}
     if(bw){const pa=A;o[k4]=R*pa+bw[0]*(1-pa);o[k4+1]=G*pa+bw[1]*(1-pa);o[k4+2]=B*pa+bw[2]*(1-pa);o[k4+3]=255*e}
-    else{o[k4]=R;o[k4+1]=G;o[k4+2]=B;o[k4+3]=A*255*e}}
+    else{o[k4]=R;o[k4+1]=G;o[k4+2]=B;o[k4+3]=A*255*e}}}
   og.putImageData(od,0,0);
   const url='url("'+oc.toDataURL('image/png')+'")';pc.width=pc.height=oc.width=oc.height=0;   /* 2026.11.24-b: give the canvas memory back now (iPhone Safari caps it and only frees it late) */
   if(!cap){const u=hspBlob(url),old=HSP[key];if(u){if(old&&old.u)setTimeout(()=>URL.revokeObjectURL(old.u),4000);HSP[key]={sig,svg:'url("'+u+'")',u};hspUse(key);return HSP[key].svg}}
@@ -12466,16 +12500,21 @@ function gfRunS7(el,back){
   const mine=GFP=done.then(()=>new Promise(r=>setTimeout(r,30)));mine.then(()=>{if(GFP===mine)GFP=null});
   if(!back)done.then(()=>a.forEach(x=>{try{x.cancel()}catch(e){}}));
   return done}
-/* a new score rolls onto the 7-inch's label. 2026.11.27-x: the record spins in and settles (the label carries the number round with it),
-   (a full turn), while the old score rolls up out of the label's window and the new one rolls up into it. It used to be a 4 px nudge. */
-function gfS7Lab(gf){const b=gf.querySelector('.s7-lab b'),n=b&&b.parentElement;if(!b)return;const v=b.textContent,o=gf._lab;gf._lab=v;
+/* a new score on the 7-inch's label. 2026.11.27-y: the label turns a full circle like a record starting up. The old score rides
+   round with it and goes out of sight behind the sleeve; while it is hidden it becomes the new score, which comes back round into
+   view and settles. (2026.11.27-x rolled the numbers through a little window on the label, so the old one looked clipped into a box.)
+   Only the label turns, not the whole record, so the record's shadow stays put. Both numbers share the turn's clock, so the swap
+   can't drift out of the hidden stretch even if the phone is busy. */
+function gfS7Lab(gf){const lab=gf.querySelector('.s7-lab'),b=lab&&lab.querySelector('b'),n=b&&b.parentElement;if(!b)return;const v=b.textContent,o=gf._lab;gf._lab=v;
   if(o==null||o===v||!v||noMotion())return;
-  const sp=(e,k,t)=>{try{return e.animate(k,t)}catch(x){return null}},D=260;
-  const r=gf.querySelector('.s7-rec');if(r)sp(r,[{rotate:'0deg'},{rotate:'368deg',offset:.82},{rotate:'360deg'}],{duration:1150,delay:D+180,easing:'cubic-bezier(.3,.5,.3,1)'});
-  if(o&&o!=='\u2013'&&n){const g=document.createElement('b');g.textContent=o;g.setAttribute('aria-hidden','true');g.style.cssText='position:absolute;right:0;top:0';n.appendChild(g);
-    const an=sp(g,[{transform:'none',opacity:1},{transform:'translateY(-120%)',opacity:0}],{duration:300,delay:D,easing:'cubic-bezier(.5,0,.7,.4)',fill:'both'});
-    if(an)an.finished.then(()=>g.remove(),()=>g.remove());else g.remove()}
-  sp(b,[{transform:'translateY(120%) scale(.9)',opacity:0},{transform:'translateY(-14%) scale(1.12)',opacity:1,offset:.7},{transform:'none',opacity:1}],{duration:520,delay:D+340,easing:'cubic-bezier(.25,.8,.35,1)',fill:'backwards'})}
+  lab.getAnimations().forEach(x=>{try{x.cancel()}catch(e){}});n.querySelectorAll('.s7-gh').forEach(x=>x.remove());
+  const sp=(e,k,t)=>{try{return e.animate(k,t)}catch(x){return null}},H=.47,T={duration:1250,delay:240,easing:'linear'};
+  /* 0 -> 180 (number goes round the bottom and behind the sleeve) -> 368 -> 360 (back in view, a little overshoot) */
+  sp(lab,[{rotate:'0deg',easing:'cubic-bezier(.5,0,.75,.6)'},{rotate:'180deg',offset:H,easing:'cubic-bezier(.25,.55,.35,1)'},{rotate:'368deg',offset:.86,easing:'ease-in-out'},{rotate:'360deg'}],{...T,fill:'backwards'});
+  const sw=[{opacity:1},{opacity:1,offset:H-.002},{opacity:0,offset:H},{opacity:0}];
+  if(o&&o!=='–'){const g=document.createElement('b');g.className='s7-gh';g.textContent=o;g.setAttribute('aria-hidden','true');g.style.cssText='position:absolute;right:0;top:0';n.appendChild(g);
+    const an=sp(g,sw,{...T,fill:'both'});if(an)an.finished.then(()=>g.remove(),()=>g.remove());else g.remove()}
+  sp(b,sw.map(k=>({...k,opacity:1-k.opacity})),{...T,fill:'backwards'})}
 /* ON A PHONE THE ALBUM OPENS LIKE A GATEFOLD (2026.11.20-m). The sheet holds the two inside pages of the jacket side by
    side, swiped between like turning the cover: inside right (Ratings) is where it opens, inside left (Details) is the
    back of the cover. The page you are on is kept through a redraw. Singles keep their one-page 7-inch sheet. */
@@ -12521,9 +12560,12 @@ function gfPgPlace(gf,keep){
   gfNxPlace(gf,keep);   /* 2026.11.27-q: a rating can't change the shelf, so its redraw reuses the neighbors (finding them laid out the whole page) */
   if(gf.classList.contains('gfopen'))UI.gfPg=1;   /* 2026.11.27-h: a freshly opened album opens on its songs, like lifting the cover */
   const pg=UI.gfPg==null?1:UI.gfPg;
-  sp.style.scrollSnapType='none';sp.scrollLeft=pg?sp.scrollWidth:0;sp.style.scrollSnapType='';
-  if(!sp._pg){sp._pg=1;sp.addEventListener('scroll',()=>gfPgSync(gf),{passive:true})}
-  gfPgSync(gf);gfInsLift(gf)}
+  /* 2026.11.27-y: a patch (keep) on the page it is already showing doesn't set the scroll again: that forced a layout of the whole
+     jacket on every rating tap (~25 ms at phone speed) for nothing */
+  if(!keep||sp._pgAt!==pg){sp._pgAt=pg;sp.style.scrollSnapType='none';sp.scrollLeft=pg?sp.scrollWidth:0;sp.style.scrollSnapType='';
+    if(!sp._pg){sp._pg=1;sp.addEventListener('scroll',()=>{gfPgSync(gf);const m=sp.scrollWidth-sp.clientWidth;sp._pgAt=m>0&&sp.scrollLeft>m/2?1:0},{passive:true})}
+    gfPgSync(gf)}
+  gfInsLift(gf)}
 /* 2026.11.27-n: THE INSERT CARD LIVES UNDER THE JACKET. It used to be drawn inside the scrolling songs panel and pinned with
    position:fixed, which on an iPhone pinned it to the panel instead of the screen: it sat over the songs, got clipped by the
    sleeved record, and replayed its slide-out on every rating (each rating rebuilds the panel). It is now lifted out of the
@@ -13512,7 +13554,7 @@ function heroTick(t){
   const dt=HERO.last?Math.min(64,t-HERO.last):0;HERO.last=t;
   const q=Math.max(0,Math.min(1,(t-HERO.begin)/1600));HERO.spd=200*q*q*(3-2*q);
   HERO.ang=(HERO.ang+HERO.spd*dt/1000)%360;
-  const liq=!!(LIQ.svg&&LIQ.svg.isConnected),off=document.hidden||!!(HERO.hero&&HERO.hero.classList.contains('hoff'))||!!(UI.libOpen&&lxEl());   /* 2026.11.26-a: no record painting under the library (it used to be paused with a class, which restyled the page mid-flight) */
+  const liq=!!(LIQ.svg&&LIQ.svg.isConnected),off=document.hidden||!!(HERO.hero&&HERO.hero.classList.contains('hoff'))||!!(UI.libOpen&&lxEl())||document.documentElement.classList.contains('gfsh');   /* 2026.11.27-y: nor under an open album on a phone, where it is covered (it repainted the record's SVG every frame, ~45 ms a second of the phone's time while you rate). 2026.11.26-a: no record painting under the library (it used to be paused with a class, which restyled the page mid-flight) */
   /* 2026.11.20-n: once a plain record is up to speed, the browser's compositor takes over the spin (same speed, full
      refresh rate, no script every frame). Only the liquid record keeps the script, for its paint physics. */
   if(q>=1&&!liq&&el.animate){const a=HERO.ang;el.style.transform='rotate('+a.toFixed(2)+'deg)';
@@ -14721,7 +14763,11 @@ function gfS7Html(a,g,v){const {sArt,col,colD,dx,gd,shown,trackRows,anim}=v;
 const GFG_K='pb_gfopen',GFS_K='pb_gfsafe',GFC_K='pb_gfcrash';
 let GF_CRASHED=null;
 let GFSAFE=(()=>{try{return JSON.parse(localStorage.getItem(GFS_K)||'[]')||[]}catch(e){return[]}})();
-const gfSafe=id=>GFSAFE.includes(String(id));
+/* 2026.11.27-y: light mode lasts until the next update, not forever. Each album on the list notes the build it crashed on; a newer
+   build gets one try at the full album (if it crashes again, it goes back on the list for that build). Before, an album that
+   crashed once stayed in light mode for good, so a fix could never be seen on the phone. */
+const GFSV_K='pb_gfsafev';let GFSV=(()=>{try{return JSON.parse(localStorage.getItem(GFSV_K)||'{}')||{}}catch(e){return{}}})();
+const gfSafe=id=>GFSAFE.includes(String(id))&&GFSV[String(id)]===(CHANGELOG[0]||{}).v;
 function gfGuard(a,g){if(!g)return;
   saveFlush();
   try{const L=lsList(g.id),info={g:String(g.id),t:Date.now(),album:g.title,artist:a.name,kind:g.kind,songs:g.items.length,dx:g.items.filter(i=>i.dx).length,
@@ -14733,10 +14779,11 @@ function gfGuard(a,g){if(!g)return;
   if(!o||!o.g||Date.now()-o.t>180000)return;
   GF_CRASHED=o.g;
   if(!GFSAFE.includes(o.g)){GFSAFE.push(o.g);GFSAFE=GFSAFE.slice(-40)}
-  try{localStorage.setItem(GFS_K,JSON.stringify(GFSAFE));const l=JSON.parse(localStorage.getItem(GFC_K)||'[]');l.unshift(o);localStorage.setItem(GFC_K,JSON.stringify(l.slice(0,8)))}catch(e){}
+  GFSV[o.g]=(CHANGELOG[0]||{}).v;
+  try{localStorage.setItem(GFS_K,JSON.stringify(GFSAFE));localStorage.setItem(GFSV_K,JSON.stringify(GFSV));const l=JSON.parse(localStorage.getItem(GFC_K)||'[]');l.unshift(o);localStorage.setItem(GFC_K,JSON.stringify(l.slice(0,8)))}catch(e){}
   setTimeout(()=>{try{
     const el=document.createElement('div');el.className='pberr gfcr';el.setAttribute('role','status');
-    el.innerHTML=`<p>${o.safe?'Playback restarted again while opening':'Playback restarted while opening'} ${esc(o.album||'that album')}.<small>It opens in light mode on this device from now on${window.PB_OWNER?', and the details went to your Suggest box':''}.</small></p><div class="pbb"><button class="btn" type="button">OK</button></div>`;
+    el.innerHTML=`<p>${o.safe?'Playback restarted again while opening':'Playback restarted while opening'} ${esc(o.album||'that album')}.<small>It opens in light mode on this device until the next update${window.PB_OWNER?', and the details went to your Suggest box':''}.</small></p><div class="pbb"><button class="btn" type="button">OK</button></div>`;
     document.body.appendChild(el);el.querySelector('button').onclick=()=>{el.classList.remove('in');setTimeout(()=>el.remove(),350)};
     requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('in')));setTimeout(()=>{if(el.isConnected){el.classList.remove('in');setTimeout(()=>el.remove(),350)}},9000);
     /* the owner's own phone files the details in his Suggest box (friends' phones never send anything on their own) */
@@ -14761,6 +14808,33 @@ function liveNote(step){if(step){LIVE.last=step;LIVE.lt=Date.now();LIVE.sw++}
   try{const l=JSON.parse(localStorage.getItem('pb_drops')||'[]');l.unshift(o);localStorage.setItem('pb_drops',JSON.stringify(l.slice(0,10)))}catch(e){}
   if(window.PB_OWNER)setTimeout(()=>{try{fetch(SUG_URL+'/suggest',{method:'POST',headers:{'content-type':'application/json'},
     body:JSON.stringify({name:'Refresh watch',text:('[dropped] '+JSON.stringify(o)+' ua:'+navigator.userAgent.replace(/^.*?\(([^)]*)\).*$/,'$1')).slice(0,1900)})}).catch(()=>{})}catch(e){}},2500)})();
+/* 2026.11.27-y: SPEED WATCH. The crash guard catches crashes; this catches slowness. On the owner's phone, every tap is timed
+   to the next frame it paints, and the frames for 2.5 s after it are watched for freezes. A tap slower than 100 ms, or a frame
+   that took more than 100 ms (about six dropped frames), is noted with what was tapped and what was open, and a batch of them goes
+   to the Suggest box as a [slow] note (at most one every 10 minutes). Friends' phones never send anything. */
+const SPW={until:0,raf:0,last:0,cur:null,q:[],tm:0,sent:0},SP_TAP=100,SP_FRAME=100;
+function spCtx(){const gf=document.querySelector('.group.sleeve.gf');
+  return{v:(CHANGELOG[0]||{}).v,sl:gf?(sleeveKind(gf)||(gf.classList.contains('phs')?'sheet':'desk')):'',safe:!!(UI.alb&&gfSafe(UI.alb.g)),lite:document.documentElement.classList.contains('lite'),
+    view:UI.view||UI.tab,lib:!!UI.libOpen,nodes:document.getElementsByTagName('*').length}}
+function spFrame(t){const e=SPW.cur;if(SPW.last&&e){const d=t-SPW.last;if(d>e.worst)e.worst=Math.round(d);if(d>50)e.drops+=Math.round(d/16.7)-1}
+  SPW.last=t;if(performance.now()<SPW.until&&!document.hidden)SPW.raf=requestAnimationFrame(spFrame);else{SPW.raf=0;SPW.last=0}}
+function spDone(e){if(document.hidden||(e.tap<SP_TAP&&e.worst<SP_FRAME))return;
+  SPW.q.push(e);try{const l=JSON.parse(localStorage.getItem('pb_slow')||'[]');l.unshift(e);localStorage.setItem('pb_slow',JSON.stringify(l.slice(0,30)))}catch(x){}
+  clearTimeout(SPW.tm);SPW.tm=setTimeout(spSend,15000)}
+function spSend(){if(!SPW.q.length||!window.PB_OWNER||!navigator.onLine)return;
+  if(Date.now()-SPW.sent<600e3){clearTimeout(SPW.tm);SPW.tm=setTimeout(spSend,600e3-(Date.now()-SPW.sent)+500);return}
+  const q=SPW.q.splice(0).slice(-10);SPW.sent=Date.now();
+  const ctx=q[q.length-1].ctx,ev=q.map(e=>({act:e.act,tap:e.tap,worst:e.worst,drops:e.drops,sl:e.ctx.sl,safe:e.ctx.safe||undefined,at:Math.round((e.t-q[0].t)/1000)}));
+  try{fetch(SUG_URL+'/suggest',{method:'POST',keepalive:true,headers:{'content-type':'application/json'},
+    body:JSON.stringify({name:'Speed watch',text:('[slow] '+JSON.stringify({v:ctx.v,lite:ctx.lite,nodes:ctx.nodes,ev})+' ua:'+navigator.userAgent.replace(/^.*?\(([^)]*)\).*$/,'$1')).slice(0,1900)})}).catch(()=>{})}catch(x){}}
+document.addEventListener('click',ev=>{
+  if(!window.PB_OWNER||!matchMedia('(hover:none)').matches)return;
+  const b=ev.target&&ev.target.closest&&ev.target.closest('[data-act],[data-pg],button,a');if(!b)return;
+  const t0=ev.timeStamp&&ev.timeStamp<performance.now()+1?ev.timeStamp:performance.now();
+  const e={act:b.dataset.act||(b.dataset.pg!=null?'page':b.tagName.toLowerCase()),ctx:spCtx(),t:Date.now(),tap:0,worst:0,drops:0};
+  SPW.cur=e;SPW.until=performance.now()+2500;if(!SPW.raf){SPW.last=0;SPW.raf=requestAnimationFrame(spFrame)}
+  requestAnimationFrame(()=>setTimeout(()=>{e.tap=Math.round(performance.now()-t0)},0));setTimeout(()=>spDone(e),2700)},true);
+addEventListener('pagehide',()=>{if(SPW.q.length&&Date.now()-SPW.sent>=600e3)spSend()});
 /* 2026.11.21-f: WHERE IT DIED. Each step of opening an album is noted on the same note, with the time since the tap, so the
    next crash report says how far it got (built the page, placed the sheet, cover in the air, zooming, timed marks) instead of
    only which album it was. */
@@ -14962,7 +15036,7 @@ function gfClose(keep){const el=document.querySelector('.group.sleeve.gf');
     /* 2026.11.27-v: an album closed on its Deluxe gets the full redraw (as before -u, minus the trade back). -u skipped it, and the next
        Deluxe open (Mercurial World, 28 songs) crashed the iPhone at the swing: inferred graphics memory the redraw used to free. */
     const wasDx=!!(UI.alb&&UI.dxOpen&&UI.dxOpen[UI.alb.g]);
-    UI.alb=null;UI.gfClosing=false;if(wasDx||(!gfCloseQuick(el)&&!gfClosePatch(el)))render();placeSave();
+    UI.alb=null;UI.gfClosing=false;if(wasDx||(!gfCloseQuick(el)&&!gfClosePatch(el)))render();requestAnimationFrame(()=>setTimeout(placeSave,0));   /* 2026.11.27-y: noted after the next frame, when reading the scroll no longer forces a layout (~25 ms on the close) */
     if(sl){const n=document.querySelector('.hx .hxrow');if(n)n.scrollLeft=sl}
     if(UI.dxSw){const x=UI.dxSw;UI.dxSw=null;UI.gfNext=null;requestAnimationFrame(()=>gfDxReopen(x))}
     else if(UI.gfNext){const gid=UI.gfNext;UI.gfNext=null;requestAnimationFrame(()=>{const t=document.querySelector('.hx .hxsl[data-g="'+CSS.escape(gid)+'"]');if(t&&!document.querySelector('.group.sleeve.gf'))t.click()})}};
@@ -15408,7 +15482,7 @@ document.addEventListener('click',ev=>{
   else if(act==='relkind'){UI.flip=true;const h=document.querySelector('.hero[data-aid]');UI.rel=h?{aid:h.dataset.aid,kind:b.dataset.v}:null}
   else if(act==='epx'){UI.epOpen[id]=!UI.epOpen[id]}
   else if(act==='tog'){const wc=lsOwn(id),was=isDone(id)&&!wc;   /* tapping a carried-over song confirms it for this listen */
-    if(gfPh()&&document.querySelector('.gf.jk2')){UI.gfQ=true;UI.jkFx={kind:was?'unheard':'heard',id}}   /* 2026.11.27-r: on the phone jacket only the album is patched, and the little record animates */
+    if(gfPhOpen()){UI.gfQ=true;UI.jkFx={kind:was?'unheard':'heard',id}}   /* 2026.11.27-r: on the phone jacket only the album is patched, and the little record animates */
     S.marks[id]={...(S.marks[id]||{}),done:!was};if(!was){const g=grpOfItem(id);if(g)slLitAsk(g)}touch()}
   else if(act==='shareopen'){const a=S.music.find(x=>x.id===b.dataset.a),g=a&&a.groups.find(x=>x.id===b.dataset.g);if(g)shareOpen(a,g);return}
   else if(act==='lltog'){const a=S.music.find(x=>x.id===b.dataset.a),g=a&&a.groups.find(x=>x.id===b.dataset.g);if(!g)return;
@@ -15458,7 +15532,7 @@ document.addEventListener('click',ev=>{
   else if(act==='rclear'){UI.gfQ=true;const cl=clrBegin(id);
     {const ck=document.querySelector('.gf.jk2 .track.sl-t[data-id="'+rtQ(id)+'"] .check');if(ck&&ck.querySelector('.rg-n')){const lc=getComputedStyle(ck,'::after').backgroundColor;UI.jkFx={kind:'clear',id,lc,old:[...ck.children].filter(c=>c.tagName.toLowerCase()==='svg'||c.classList.contains('rg-n')).map(c=>c.outerHTML).join('')}}}lsOwn(id);if(lsRevert(id)){}else if(lsRaw(id).length>1){S.marks[id]={...S.marks[id],r:0};lsFromMark(id)}else{const m0={...(S.marks[id]||{}),r:0};delete m0.rd;delete m0.ls;S.marks[id]=m0}clrEnd(cl);touch();heroPaint()}
   else if(act==='grpall'){const a=S.music.find(x=>x.id===b.dataset.a),g=a.groups.find(x=>x.id===b.dataset.g),its=viewItems(g),full=its.every(i=>isDone(i.id))&&!its.some(i=>lsCar(g,i.id));
-    if(gfPh()&&document.querySelector('.gf.jk2')){UI.gfQ=true;UI.jkFx={kind:full?'unheard':'heard',ids:its.filter(i=>full||!isDone(i.id)||lsCar(g,i.id)).map(i=>i.id)}}   /* 2026.11.27-s: on the phone jacket the records drop on (or lift off) one after another, and only the album is patched */
+    if(gfPhOpen()){UI.gfQ=true;UI.jkFx={kind:full?'unheard':'heard',ids:its.filter(i=>full||!isDone(i.id)||lsCar(g,i.id)).map(i=>i.id)}}   /* 2026.11.27-s: on the phone jacket the records drop on (or lift off) one after another, and only the album is patched */
     its.forEach(i=>lsOwn(i.id));its.forEach(i=>S.marks[i.id]={...(S.marks[i.id]||{}),done:!full});if(!full){slLitAsk(g);slPulseAsk(g.id,0)}touch()}
   else if(act==='wedit'){UI.wEdit=UI.wEdit===b.dataset.g?null:b.dataset.g;formUp()}
   else if(act==='oedit'){UI.oEdit=UI.oEdit===b.dataset.g?null:b.dataset.g;formUp()}

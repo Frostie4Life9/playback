@@ -1,0 +1,8 @@
+{
+  "name": "playback-bench",
+  "private": true,
+  "type": "module",
+  "description": "Phone-speed budget check for Playback. Run: npm run bench (from tools/bench)",
+  "scripts": { "bench": "node bench.mjs" },
+  "dependencies": { "playwright-core": "1.63.0" }
+}
