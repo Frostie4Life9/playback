@@ -70,7 +70,12 @@ function library(base) {
   // some history so rings, grooves and averages have something to draw
   for (const g of music[0].groups.slice(0, 4)) g.items.slice(0, 9).forEach((i, k) => { marks[i.id] = { done: true, r: 5 + (k % 5) }; });
   if (process.env.BIG) music.slice(1).forEach((a, x) => a.groups.slice(0, 5).forEach(g => g.items.forEach((i, k) => { if ((k + x) % 3) marks[i.id] = { done: true, r: 4 + ((k * 7 + x) % 13) / 2 }; })));
-  return { v: 1, music, screen: [], marks, flags: { rhAlbums: true, exSeverance: true, r10: true } };
+  // Movies & TV: 4 shows (2 seasons of 8) and 6 films, some watched and rated
+  const screen = [];
+  for (let k = 0; k < 4; k++) { const id = sid('show', 'Bench Show ' + (k + 1)); screen.push({ id, type: 'show', title: 'Bench Show ' + (k + 1), year: String(2015 + k), seasons: [{ n: 1, eps: 8, total: 8 }, { n: 2, eps: 8, total: 8 }] });
+    for (let e = 1; e <= 8 - k * 2; e++) marks[sid(id, 's', 1, 'e', e)] = { done: true, ...(e % 3 ? {} : { r: 6 + e % 4 }) }; }
+  for (let k = 0; k < 6; k++) { const id = sid('film', 'Bench Film ' + (k + 1), String(2000 + k)); screen.push({ id, type: 'film', title: 'Bench Film ' + (k + 1), year: String(2000 + k) }); if (k % 2) marks[id] = { done: true, r: 5 + k }; }
+  return { v: 1, music, screen, marks, flags: { rhAlbums: true, exSeverance: true, r10: true } };
 }
 
 async function makeCovers(browser) {
@@ -281,7 +286,10 @@ async function pages(browser, base) {
   out.steps.restart = { tap: again, block: again, renders: 0, renderMs: 0, worstFrame: 0 };
   // Skyler's own pages (owner mode): Movies & TV and the vinyl Collection. Network is blocked, so nothing is sent anywhere.
   await page.goto(base + '/index.html?owner=1', { waitUntil: 'load' }); await page.waitForSelector('.hxsl[data-g]', { timeout: 30000 }); await page.waitForTimeout(1200);
-  for (const [name, sel] of [['movies & tv', '[data-act="tab"][data-v="screen"]'], ['collection', '[data-act="view"][data-v="collection"]'], ['music', '[data-act="tab"][data-v="music"], [data-act="mmgo"][data-v="artists"]']]) {
+  for (const [name, sel] of [['movies & tv', '[data-act="tab"][data-v="screen"]'], ['tv: films', '[data-sc="seg"][data-v="films"]'], ['tv: open film', '[data-sc="open"]'], ['tv: close', '[data-sc="close"]'],
+    ['tv: box sets', '[data-sc="seg"][data-v="boxes"]'], ['tv: open show', '[data-sc="box"], [data-sc="open"]'], ['tv: episode', '[data-sc="ep"]'], ['tv: close show', '[data-sc="closebox"], [data-sc="close"]'],
+    ['tv: diary', '[data-sc="seg"][data-v="diary"]'], ['tv: stats', '[data-sc="seg"][data-v="stats"]'], ['tv: people', '[data-sc="seg"][data-v="people"]'],
+    ['collection', '[data-act="view"][data-v="collection"]'], ['music', '[data-act="tab"][data-v="music"], [data-act="mmgo"][data-v="artists"]']]) {
     const r = await prof(cdp, name, () => step(page, sel));
     out.steps[name] = r.err ? { tap: 0, block: 0, renders: 0, renderMs: 0, worstFrame: 0, err: r.err } : r;
   }
