@@ -4343,7 +4343,12 @@ html.pbstill *,html.pbstill *::before,html.pbstill *::after{animation-duration:.
   /* 2026.11.27-x: under an open album the hero's three drifting color layers (each bigger than the screen, ~35 MB of graphics memory
      apiece at 3x) fade out and are let go, leaving the artist's calm color field under the wash. Both -w crashes were album opens. */
   .hero .fl,.hero .hscrim{transition:opacity .35s ease-out}
-  html.gfsh .hero .fl,html.gfsh .hero .hscrim{opacity:0;visibility:hidden;transition:none}   /* 2026.11.27-y: let go in the same frame the album appears (the wash fading in covers it), not faded: a fade kept all four big layers alive through the opening's first frames, its memory peak (~500 MB est.) */
+  html.gfsh .hero .fl,html.gfsh .hero .hscrim{opacity:0;visibility:hidden;transition:none}
+  /* 2026.11.28-b: more graphics memory given back while an album is open on a phone (nothing scrolls under it): the shelf rows'
+     scroll-linked rise-in keeps every row its own layer for as long as the page lives, and the jacket's record held a layer per groove
+     ring for effects that are off under the jacket (~15 rings, ~40 MB est. at 3x) */
+  html.gfsh .hxrow.eras>.hxera{animation:none}
+  html.gfsh .gf .sl-disc i{will-change:auto}   /* 2026.11.27-y: let go in the same frame the album appears (the wash fading in covers it), not faded: a fade kept all four big layers alive through the opening's first frames, its memory peak (~500 MB est.) */
 }
 @keyframes flWobP{0%{scale:.94 1.05}50%{scale:1.04 .97}100%{scale:1.1 .92}}
 </style>
@@ -4941,6 +4946,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.28-b', note:'LESS MEMORY WHILE AN ALBUM IS OPEN. With an album open on your phone, the shelf rows behind it stop their scroll-linked rise-in and the album\'s big record lets go of a layer per groove ring (its groove effects are off under the jacket anyway), about 40 MB less graphics memory at the moment the phone has been dropping the page. Nothing looks different.'},
   {v:'2026.11.28-a', note:'A CRASH FIX FOR SINGLES. Finishing the rating on a 7-inch made the "Rated (date)" line fade in with a soft blur, and that blur animation made Safari\'s engine drop the whole page about a second after you tapped Done (it happened every time in testing, so it\'s very likely the reload you\'ve been seeing after rating singles). The line now slides in without the blur. The artist name\'s entrance when you switch artists had the same kind of blur and lost it too. Behind the scenes, every update is now checked in Safari\'s engine and against a list of things the app must do (ratings stick, survive a reload, Clear, heard, Next record), and an animated blur can never ship again.'},
   {v:'2026.11.27-aa', note:'SWITCHING ARTISTS IS QUICKER ON YOUR PHONE. Going to another artist used to stop and paint the whole splatter record before the page could show, then work out every cover\'s colors at once (about half a second of freeze at phone speed). Now the page comes up first, the record\'s paint flows in a moment later, and cover colors are worked out in the quiet moments in between, one at a time and with less work each.'},
   {v:'2026.11.27-z', note:'ALBUMS OPEN FASTER, AND THE 7-INCH IS EASIER TO READ. Opening an album on your phone no longer works out its colors and its next and previous records the slow way, so the tap is about twice as quick. Albums that open the long way (light mode, a Deluxe, coming back after a reload) now close the quick way too, without redrawing the artist page. When a single is open, the page behind it is dimmed a little more and the singles\' Collapse pill no longer shows through, so "Tap the song to rate it" and the buttons under the record are clear. The app is also about 100 KB lighter to load (older build notes moved out of the page).'},
