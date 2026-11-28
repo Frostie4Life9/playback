@@ -28,6 +28,7 @@ Run the bench before every push that touches the album, rating, sleeves or the a
 - **Flows** (`ONLY=flows`): 15 end-to-end checks (rating sticks, shows, survives close/reopen and reload, Clear, heard, Next record, 7-inch label). Any miss fails.
 - **Lint**: no animated `filter: blur` / `backdrop-filter` in `@keyframes` or `.animate()` (an animated blur in the 7-inch's "Rated" line crashed WebKit's page every time; likely the iPhone reloads after rating singles).
 - **Safari engine**: also run `ENGINE=webkit PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers npm run bench` when the album, single or animations change (install once with `PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node node_modules/playwright-core/cli.js install webkit`). WebKit timings are meaningless headless, but a crash or a failed flow there is real. A page crash in WebKit is how the 7-inch crash was found.
+For anything that scales with the library (artist page, library, saving, colors), also run `BIG=1` (about Skyler's size: 90 artists, ~2,000 releases); the small default library hides those costs.
 If a step is over, fix it or say why before pushing. Tap times jitter ±15 ms on this machine: a tap just over 50 ms gets one re-run before it counts. Paste the bench table into the Project write-up. A quick fix that doesn't touch these paths can skip the bench.
 
 ## How the album code is put together (keep it this way)

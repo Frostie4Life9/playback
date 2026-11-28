@@ -4946,6 +4946,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.28-e', note:'SMOOTHER WITH A BIG LIBRARY, PART 2. Saving your log (about 15 ms on the phone with your ~2,000 releases) now waits for a quiet moment instead of landing in the middle of a score\'s flight or the 7-inch\'s label turn, and cover colors are no longer worked out right after a tap or written to storage after every single cover.'},
   {v:'2026.11.28-d', note:'FASTER WITH A BIG LIBRARY. The little splatter records on every artist\'s sleeve in the library used to be painted all at once the first time after you opened the app, which with your ~90 artists froze the artist page for about a second at phone speed (and made the first trip to the library lag). They\'re now painted a few at a time between frames, the artist you\'re on first. Opening the app is quicker too.'},
   {v:'2026.11.28-c', note:'Speed watch now also notes when the app takes more than 2.5 seconds to open on your phone, so slow starts show up in your Suggest box alongside slow taps.'},
   {v:'2026.11.28-b', note:'LESS MEMORY WHILE AN ALBUM IS OPEN. With an album open on your phone, the shelf rows behind it stop their scroll-linked rise-in and the album\'s big record lets go of a layer per groove ring (its groove effects are off under the jacket anyway), about 40 MB less graphics memory at the moment the phone has been dropping the page. Nothing looks different.'},
@@ -8885,7 +8886,13 @@ function syncLabel(){
    page is hidden or left, and before an album opens (the one moment a phone has been known to drop the page). */
 let SAVE_T=0;
 function saveFlush(){if(SAVE_T){clearTimeout(SAVE_T);SAVE_T=0;save()}}
-function saveSoon(){clearTimeout(SAVE_T);SAVE_T=setTimeout(()=>{SAVE_T=0;save()},500)}
+/* 2026.11.28-e: saving the whole log (~15 ms on the phone with ~2,000 releases) waits for a gap: not while an album is flying or a
+   number is landing, and not within 0.9 s of a tap (when the label turns and the number flies), for at most 1.2 s more. A dropped
+   page could lose at most that much; opening an album, hiding the app and closing it still save at once. */
+let LASTTAP=0;document.addEventListener('pointerdown',()=>{LASTTAP=performance.now()},{capture:true,passive:true});
+function saveSoon(){clearTimeout(SAVE_T);let n=0;
+  const go=()=>{if(n++<4&&(GFP||UI.rClosing||performance.now()-LASTTAP<900)){SAVE_T=setTimeout(go,300);return}SAVE_T=0;save()};
+  SAVE_T=setTimeout(go,500)}
 addEventListener('pagehide',saveFlush);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')saveFlush()});
 let CHG=0;   /* counts changes to the log this session (gfCloseQuick checks it) */
 function touch(){CHG++;S.mtime=Date.now();if(READY)saveSoon();else save();try{accSoon()}catch(e){}try{plSoon()}catch(e){}if(syncOn()&&SYS.status!=='conflict'){clearTimeout(pushTimer);pushTimer=setTimeout(()=>push(false),ownSync()?1500:20000)}   /* account sync waits longer so a burst of ratings is one save */}
@@ -13564,7 +13571,12 @@ function delBtn(id,label){const armed=UI.armed===id;return `<button class="btn d
 const ACOL_KEY=KEY+'_acol14';
 let ACOL=(()=>{try{return JSON.parse(localStorage.getItem(ACOL_KEY))||{}}catch(e){return{}}})();
 const ACOL_TRY={};
-function acolSave(){try{localStorage.setItem(ACOL_KEY,JSON.stringify(ACOL))}catch(e){ACOL={}}}
+/* 2026.11.28-e: the colour cache is written at most every 2 s (and when the app is hidden), not after every cover: with a big library each
+   write was the whole cache (~15 ms at phone speed) and they came one after another while covers loaded */
+let ACOL_T=0;
+function acolSaveNow(){clearTimeout(ACOL_T);ACOL_T=0;try{localStorage.setItem(ACOL_KEY,JSON.stringify(ACOL))}catch(e){ACOL={}}}
+function acolSave(){if(!ACOL_T)ACOL_T=setTimeout(acolSaveNow,2000)}
+addEventListener('pagehide',()=>{if(ACOL_T)acolSaveNow()});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&ACOL_T)acolSaveNow()});
 function hslHex(h,s,l){const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l),f=n=>l-a*Math.max(-1,Math.min(k(n)-3,9-k(n),1));
   return '#'+[f(0),f(8),f(4)].map(x=>Math.round(x*255).toString(16).padStart(2,'0')).join('')}
 function acolFallback(g){let x=5381;const t=String(g.title||g.id);for(let i=0;i<t.length;i++)x=((x<<5)+x+t.charCodeAt(i))>>>0;return hslHex(x%360,.42,.34)}
@@ -13652,7 +13664,8 @@ const ACQ=[];let ACQB=0;
 function acolIdle(f){ACQ.push(f);if(!ACQB){ACQB=1;acolNext()}}
 function acolNext(){if(!ACQ.length){ACQB=0;return}
   const go=()=>{const t=performance.now();do{const f=ACQ.shift();try{f()}catch(e){}}while(ACQ.length&&performance.now()-t<6);acolNext()};
-  if(window.requestIdleCallback)requestIdleCallback(go,{timeout:600});else setTimeout(()=>requestAnimationFrame(()=>setTimeout(go,0)),24)}
+  const wait=()=>{if(performance.now()-LASTTAP<700||(typeof GFP!=='undefined'&&GFP))return setTimeout(wait,250);   /* not right after a tap or while an album moves */
+    if(window.requestIdleCallback)requestIdleCallback(go,{timeout:600});else setTimeout(()=>requestAnimationFrame(()=>setTimeout(go,0)),24)};wait()}
 function acolRead(key,url,done){
   if(ACOL_TRY[key]||!url)return;ACOL_TRY[key]=1;
   const im=new Image();im.crossOrigin='anonymous';im.decoding='async';
