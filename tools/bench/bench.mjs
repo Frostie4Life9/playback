@@ -64,7 +64,7 @@ function library(base) {
   const marks = {};
   // some history so rings, grooves and averages have something to draw
   for (const g of music[0].groups.slice(0, 4)) g.items.slice(0, 9).forEach((i, k) => { marks[i.id] = { done: true, r: 5 + (k % 5) }; });
-  return { v: 1, music, screen: [], marks, flags: { rhAlbums: true, exSeverance: true } };
+  return { v: 1, music, screen: [], marks, flags: { rhAlbums: true, exSeverance: true, r10: true } };
 }
 
 async function makeCovers(browser) {
@@ -166,6 +166,7 @@ const BUILD = (fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').match(/CHA
 // kinds: album (phone jacket), single (7-inch), safe (an album on the crash-safe list: light sheet, the generic patch path)
 async function scenario(browser, base, kind) {
   if (kind === 'pages') return pages(browser, base);
+  if (kind === 'flows') return flows(browser, base);
   const ctx = await browser.newContext({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 3, isMobile: !IS_WK, hasTouch: true, serviceWorkers: 'block',
     userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.7 Mobile/15E148 Safari/604.1', reducedMotion: 'no-preference' });
   const lib = library(base);
@@ -263,10 +264,72 @@ async function pages(browser, base) {
   out.errors = errors; await ctx.close(); return out;
 }
 
+// What the app should DO, checked end to end (not timings): a rating sticks, shows, survives close/reopen and a reload,
+// Clear clears, heard toggles, Next record moves on, a 7-inch's label shows its score. Any miss is a fail.
+async function flows(browser, base) {
+  const ctx = await browser.newContext({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 3, isMobile: !IS_WK, hasTouch: true, serviceWorkers: 'block' });
+  const lib = library(base);
+  await ctx.addInitScript(([st, sel]) => { if (sessionStorage.getItem('__seeded')) return; sessionStorage.setItem('__seeded', '1'); localStorage.clear();
+    localStorage.setItem('playback_v1', st); localStorage.setItem('playback_v1_tab', 'music'); localStorage.setItem('playback_v1_sel_music', sel); localStorage.setItem('playback_v1_tour', '1'); }, [JSON.stringify(lib), lib.music[0].id]);
+  await ctx.route('**/*', r => { const u = r.request().url(); return u.startsWith(base) || u.startsWith('data:') || u.startsWith('blob:') ? r.continue() : r.abort(); });
+  const page = await ctx.newPage(); const errors = []; page.on('pageerror', e => errors.push(String(e.message).slice(0, 160)));
+  let crashed = ''; page.on('crash', () => { crashed = 'the page crashed (the browser dropped it)'; }); page.on('close', () => { crashed = crashed || 'the page closed'; });
+  const fails = [], ok = [];
+  const load = async () => { await page.goto(base + '/index.html', { waitUntil: 'load' }); await page.waitForSelector('.hxsl[data-g]', { timeout: 20000 }); await page.waitForTimeout(1200); };
+  const log = m => { if (process.env.STEPLOG) console.log('   .', m); };
+  const click = async (sel, wait = true) => { log('click ' + sel); const f = await page.evaluate(sel => { const e = document.querySelector(sel); if (!e) return false; e.click(); return true; }, sel); if (!f) return false; if (wait) await settle(page); else await page.waitForTimeout(400); return true; };
+  const need = (name, cond, info) => { if (crashed) throw new Error(crashed + ' before: ' + name); (cond ? ok : fails).push(name + (cond || info === undefined ? '' : ' (' + JSON.stringify(info) + ')')); };
+  const tile = g => `.hxsl[data-g="${g}"]`;
+  const open = async g => { if (!(await page.$(tile(g)))) { await page.evaluate(() => { const s = document.querySelector('.hxstk'); if (s) s.click(); }); await page.waitForTimeout(900); }
+    await page.evaluate(t => { const e = document.querySelector(t); if (e) e.scrollIntoView({ block: 'center' }); }, tile(g)); await page.waitForTimeout(200);
+    return (await click(tile(g))) && !!(await page.$('.group.sleeve.gf')); };
+  const rate = async (id, v) => { if (!(await click(`.group.sleeve.gf .track.sl-t[data-id="${id}"]`, false))) return false;
+    await page.waitForTimeout(250);
+    const set = await page.evaluate(v => { const el = document.querySelector('.rater .rt-s'); if (!el) return false; el.value = String(v); el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true })); return true; }, v);
+    await page.waitForTimeout(150); await click('.rater [data-act="rclose"]'); return set; };
+  const mark = id => page.evaluate(id => S.marks[id] || null, id);
+  const rowNum = id => page.evaluate(id => { const n = document.querySelector(`.group.sleeve.gf .track.sl-t[data-id="${id}"] .rg-n`); return n ? n.textContent.trim() : ''; }, id);
+  const close = async () => { await click('.group.sleeve.gf [data-act="gfclose"]'); await page.waitForTimeout(300); return !(await page.$('.group.sleeve.gf')); };
+  try {
+  await load();
+  if (!process.env.SKIPALB) {
+  const A = 'a0g2', t0 = A + 't0', t1 = A + 't11';
+  need('album opens', await open(A));
+  await rate(t0, 7); need('rating saved', ((await mark(t0)) || {}).r === 7, await mark(t0)); need('rating shows on the song', (await rowNum(t0)) === '7', await rowNum(t0));
+  await rate(t0, 8.5); need('re-rating saved', ((await mark(t0)) || {}).r === 8.5, await mark(t0)); need('re-rating shows', (await rowNum(t0)) === '8.5', await rowNum(t0));
+  await click(`.group.sleeve.gf .track.sl-t[data-id="${t0}"]`, false); await page.waitForTimeout(250); await click('.rater [data-act="rclear"]'); await page.waitForTimeout(300); await click('.rater [data-act="rclose"]');
+  need('Clear removes the rating', !((await mark(t0)) || {}).r, await mark(t0));
+  await rate(t0, 7);
+  const before = !!((await mark(t1)) || {}).done; const found = await click(`.group.sleeve.gf [data-act="tog"][data-id="${t1}"]`);
+  need('heard toggles', !!((await mark(t1)) || {}).done !== before, { found, before, after: await mark(t1), st: await page.evaluate(() => ({ rOpen: UI.rOpen, rClosing: UI.rClosing, gfp: !!GFP })) });
+  need('album closes', await close());
+  need('reopens with the rating', (await open(A)) && (await rowNum(t0)) === '7', await rowNum(t0));
+  await close(); await page.waitForTimeout(900);   // the save is debounced
+  await page.evaluate(() => sessionStorage.setItem('__seeded', '1')); await load();
+  need('rating survives a reload', ((await mark(t0)) || {}).r === 7, await mark(t0));
+  need('after reload it shows', (await open(A)) && (await rowNum(t0)) === '7', await rowNum(t0));
+  const nx = await page.evaluate(() => { const b = document.querySelector('.group.sleeve.gf .gfnx-b.n'); return b ? b.dataset.nx : null; });
+  if (nx) { await page.evaluate(() => document.querySelector('.group.sleeve.gf .gfnx-b.n').click()); await page.waitForTimeout(2500); await settle(page);
+    need('Next record opens the next album', await page.evaluate(nx => !!(UI.alb && UI.alb.g === nx && document.querySelector('.group.sleeve.gf')), nx), nx); }
+  else need('Next record link is there', false);
+  await close();
+  }
+  const SG = process.env.SG || 'a0s0';
+  need('7-inch opens', await open(SG));
+  await rate(SG + 't0', 6.5); await page.waitForTimeout(1600);
+  const lab = () => page.evaluate(() => { const b = document.querySelector('.gf.s7 .s7-lab b:not(.s7-gh)'); return b ? b.textContent.trim() : ''; });
+  need('7-inch label shows the score', (await lab()) === '6.5', await lab());
+  await close(); need('7-inch reopens with its score', (await open(SG)) && (await lab()) === '6.5', await lab()); await close();
+  } catch (e) { fails.push(crashed ? crashed + ' (last step after: ' + (ok[ok.length - 1] || 'start') + ')' : 'stopped: ' + String(e.message).split('\n')[0].slice(0, 160)); }
+  await ctx.close().catch(() => {});
+  return { kind: 'flows', sleeve: '-', steps: {}, errors, fails, ok };
+}
+
 function check(res) {
   const fails = [];
   for (const r of res) {
     if (r.err) fails.push(`${r.kind}: ${r.err}`);
+    if (r.kind === 'flows') { for (const f of r.fails) fails.push('flows: ' + f); if (r.errors.length) fails.push(`flows: page errors: ${r.errors.join(' | ')}`); continue; }
     if (r.kind === 'pages') { if (r.errors.length) fails.push(`pages: page errors: ${r.errors.join(' | ')}`); continue; }
     for (const k of ['rate:card', 'rate:set', 'rate:done']) { const s = r.steps[k]; if (!s) continue;
       if (s.err) fails.push(`${r.kind} ${k}: ${s.err}`);
@@ -279,20 +342,32 @@ function check(res) {
   return fails;
 }
 
+// Static checks on index.html, before any browser: things that have crashed the iPhone before.
+function lint() {
+  const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8'), out = [];
+  const css = html.replace(/\/\*[\s\S]*?\*\//g, '');
+  for (const m of css.matchAll(/@keyframes\s+([\w-]+)\s*\{((?:[^{}]*\{[^{}]*\})*)[^{}]*\}/g))
+    if (/(^|[;{\s])(-webkit-)?(backdrop-)?filter\s*:\s*[^;}]*blur\(/.test(m[2])) out.push(`@keyframes ${m[1]} animates a blur (crashed WebKit on the 7-inch, Nov 28)`);
+  for (const m of html.matchAll(/\.animate\(\s*\[[^\]]*filter\s*:\s*['"][^'"]*blur/g)) out.push('a script animation animates a blur: ' + m[0].slice(0, 80));
+  return out;
+}
+const LINT = lint();
+
 const srv = await serve();
 const base = 'http://127.0.0.1:' + srv.address().port;
 const browser = await ENGINE.launch(IS_WK ? {} : { executablePath: CHROME, args: ['--enable-gpu-benchmarking', '--disable-background-timer-throttling'] });
 try {
   await makeCovers(browser);
-  const kinds = ONLY ? [ONLY] : ['album', 'single', 'safe', 'pages'];
+  const kinds = ONLY ? [ONLY] : ['flows', 'album', 'single', 'safe', 'pages'];
   const res = [];
   for (const k of kinds) res.push(await scenario(browser, base, k));
-  const fails = check(res);
+  const fails = [...LINT.map(x => 'lint: ' + x), ...check(res)];
   const build = BUILD;
   if (process.env.JSON) console.log(JSON.stringify({ build, budget: BUDGET, res, fails }, null, 1));
   else {
     console.log(`Playback bench · build ${build} · ${IS_WK ? 'WebKit (no CPU throttle)' : 'Chrome 4x CPU'} · 430x932 @3x · best of ${RUNS}`);
     for (const r of res) {
+      if (r.kind === 'flows') { console.log(`\nFLOWS  ${r.ok.length} passed${r.fails.length ? ', ' + r.fails.length + ' FAILED' : ''}`); for (const f of r.fails) console.log('  x ' + f); continue; }
       console.log(`\n${r.kind.toUpperCase()}  (sleeve patchers: ${r.sleeve})`);
       for (const [k, s] of Object.entries(r.steps)) console.log(`  ${k.padEnd(10)}${process.env.TASKS && s.tasks ? " tasks " + JSON.stringify(s.tasks) : ""} tap ${String(s.tap).padStart(6)} ms  block ${String(s.block).padStart(6)} ms  renders ${s.renders} (${s.renderMs} ms)  worst frame ${s.worstFrame} ms${s.layersMB ? `  layers ~${s.layersMB} MB` : ''}${s.spin ? `  label ${s.spin.turning ? 'turning ' + s.spin.rot : 'still'}${s.spin.old ? ', old score riding out' : ''}` : ''}${s.err ? '  ERR ' + s.err : ''}`);
     }

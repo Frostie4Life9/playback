@@ -25,7 +25,10 @@ Run the bench before every push that touches the album, rating, sleeves or the a
 - **Rating tap < 50 ms** to the next painted frame, at 4× CPU.
 - **Close after rating < 150 ms** longest main-thread block, including the deferred hero repaint after it lands.
 - **Album opening < ~350 MB** estimated layer memory (full-size layer estimate; phone tiling is lower, but it tracks the reloads).
-If a step is over, fix it or say why before pushing. Paste the bench table into the Project write-up. A quick fix that doesn't touch these paths can skip the bench.
+- **Flows** (`ONLY=flows`): 15 end-to-end checks (rating sticks, shows, survives close/reopen and reload, Clear, heard, Next record, 7-inch label). Any miss fails.
+- **Lint**: no animated `filter: blur` / `backdrop-filter` in `@keyframes` or `.animate()` (an animated blur in the 7-inch's "Rated" line crashed WebKit's page every time; likely the iPhone reloads after rating singles).
+- **Safari engine**: also run `ENGINE=webkit PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers npm run bench` when the album, single or animations change (install once with `PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node node_modules/playwright-core/cli.js install webkit`). WebKit timings are meaningless headless, but a crash or a failed flow there is real. A page crash in WebKit is how the 7-inch crash was found.
+If a step is over, fix it or say why before pushing. Tap times jitter ±15 ms on this machine: a tap just over 50 ms gets one re-run before it counts. Paste the bench table into the Project write-up. A quick fix that doesn't touch these paths can skip the bench.
 
 ## How the album code is put together (keep it this way)
 - `render()` is the only redraw entry point. With `UI.gfQ` set it goes to `jkPatch()` (patch the open phone album in place) and never reaches `renderFull()`. Anything that changes inside an open phone album sets `UI.gfQ=true` instead of redrawing the page.
@@ -38,6 +41,7 @@ If a step is over, fix it or say why before pushing. Paste the bench table into 
 - Match the approved mockups exactly (album mockups canvas: https://claude.ai/artifact/J5MTCXBMo4nz1Mi4vUBMH5).
 - Give new features motion automatically. Respect reduced motion.
 - **The album must always look like a real vinyl:** records stay sleeved and only peek out of the outer edges, never lying on an inside panel, and the inside panels are printed card. The cover art printed faintly on the card is wanted; it shouldn't look see-through like frosted glass.
+- Never animate a blur (filter or backdrop-filter), in CSS keyframes or script. The bench lints for it.
 - The phone is the main target. Avoid big blurs, backdrop filters and large composited layers on phones: iPhone Safari silently reloads the page when it runs out of graphics memory.
 
 ## Notes
