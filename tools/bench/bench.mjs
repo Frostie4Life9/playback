@@ -48,14 +48,15 @@ const sid = (...p) => { const s = p.join('|').toLowerCase(); let x = 5381; for (
 function library(base) {
   const music = [];
   let n = 0;
-  for (let a = 0; a < 3; a++) {
+  const NA = process.env.BIG ? 90 : 3;   // BIG=1: about the size of Skyler's real log (~90 artists, ~2,000 releases)
+  for (let a = 0; a < NA; a++) {
     const aid = sid('artist', 'bench' + a), groups = [];
     for (let g = 0; g < 8; g++) {
       const gid = 'a' + a + 'g' + g, items = [];
       for (let t = 0; t < 14; t++) items.push({ id: gid + 't' + t, title: 'Song ' + (t + 1) + ' of album ' + (g + 1) });
       groups.push({ id: gid, title: 'Album ' + (g + 1), year: String(2010 + g), kind: 'Studio album', img: base + '/__art/c' + (n++ % 24) + '.jpg', items });
     }
-    for (let s = 0; s < 6; s++) {
+    for (let s = 0; s < (process.env.BIG ? 14 : 6); s++) {
       const gid = 'a' + a + 's' + s;
       groups.push({ id: gid, title: 'Single ' + (s + 1), year: String(2018 + s), kind: 'Single', img: base + '/__art/c' + (n++ % 24) + '.jpg', items: [{ id: gid + 't0', title: 'Single ' + (s + 1) }] });
     }
@@ -68,6 +69,7 @@ function library(base) {
   const marks = {};
   // some history so rings, grooves and averages have something to draw
   for (const g of music[0].groups.slice(0, 4)) g.items.slice(0, 9).forEach((i, k) => { marks[i.id] = { done: true, r: 5 + (k % 5) }; });
+  if (process.env.BIG) music.slice(1).forEach((a, x) => a.groups.slice(0, 5).forEach(g => g.items.forEach((i, k) => { if ((k + x) % 3) marks[i.id] = { done: true, r: 4 + ((k * 7 + x) % 13) / 2 }; })));
   return { v: 1, music, screen: [], marks, flags: { rhAlbums: true, exSeverance: true, r10: true } };
 }
 
@@ -267,6 +269,7 @@ async function pages(browser, base) {
     ['other artist', `#lx [data-id="${lib.music[1].id}"], #lx [data-sel="${lib.music[1].id}"], #lx .entry:nth-child(2), #lx .tile:not(.add):nth-of-type(2)`], ['library 2', '[data-act="lib"]'], ['back', '[data-act="lib"]']];
   for (const [name, sel] of seq) {
     const r = await prof(cdp, name, () => step(page, sel));
+    if (process.env.EVAL && process.env.EVALAT === name) console.log('  EVAL', JSON.stringify(await page.evaluate(process.env.EVAL)));
     out.steps[name] = r.err ? { tap: 0, block: 0, renders: 0, renderMs: 0, worstFrame: 0, err: r.err } : r;
     if (r.err) out.steps[name].skip = true;
   }

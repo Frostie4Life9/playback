@@ -4946,6 +4946,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.28-d', note:'FASTER WITH A BIG LIBRARY. The little splatter records on every artist\'s sleeve in the library used to be painted all at once the first time after you opened the app, which with your ~90 artists froze the artist page for about a second at phone speed (and made the first trip to the library lag). They\'re now painted a few at a time between frames, the artist you\'re on first. Opening the app is quicker too.'},
   {v:'2026.11.28-c', note:'Speed watch now also notes when the app takes more than 2.5 seconds to open on your phone, so slow starts show up in your Suggest box alongside slow taps.'},
   {v:'2026.11.28-b', note:'LESS MEMORY WHILE AN ALBUM IS OPEN. With an album open on your phone, the shelf rows behind it stop their scroll-linked rise-in and the album\'s big record lets go of a layer per groove ring (its groove effects are off under the jacket anyway), about 40 MB less graphics memory at the moment the phone has been dropping the page. Nothing looks different.'},
   {v:'2026.11.28-a', note:'A CRASH FIX FOR SINGLES. Finishing the rating on a 7-inch made the "Rated (date)" line fade in with a soft blur, and that blur animation made Safari\'s engine drop the whole page about a second after you tapped Done (it happened every time in testing, so it\'s very likely the reload you\'ve been seeing after rating singles). The line now slides in without the blur. The artist name\'s entrance when you switch artists had the same kind of blur and lost it too. Behind the scenes, every update is now checked in Safari\'s engine and against a list of things the app must do (ratings stick, survive a reload, Clear, heard, Next record), and an animated blur can never ship again.'},
@@ -12083,15 +12084,22 @@ function tdBlob(id,v){const m=/^url\("data:([^;,]+)(;base64)?,([\s\S]*)"\)$/.exe
     else b=new Blob([decodeURIComponent(m[3])],{type:m[1]})}catch(e){return v}
   if(o)setTimeout(()=>URL.revokeObjectURL(o.u),4000);   /* the old picture stays readable until its replacement has been drawn */
   const u=URL.createObjectURL(b);TDB[id]={src:v,u,css:'url("'+u+'")'};return TDB[id].css}
+/* 2026.11.28-d: the library sleeves' little records are painted a few per frame (about 8 ms of work each time), the artist on
+   screen first, instead of every artist at once inside the page draw: with ~90 artists that was ~1.4 s at phone speed the first
+   time after each start (the "artist page to library" lag) */
 function tdPaint(){
   if(!READY||UI.view||UI.tab!=='music')return;
   const ver=(S.mtime||0)+':'+ACOLV+':'+TD.lv+':'+S.music.length;if(ver===TD.ver)return;TD.ver=ver;
-  for(const a of S.music){
+  const cur=UI.sel.music,L=S.music.slice().sort((x,y)=>(y.id===cur)-(x.id===cur)),job=TD.job={L,i:0};tdStep(job)}
+function tdStep(job){if(TD.job!==job)return;const t=performance.now();
+  while(job.i<job.L.length&&(job.i===0||performance.now()-t<8))tdOne(job.L[job.i++]);
+  if(job.i<job.L.length)setTimeout(()=>requestAnimationFrame(()=>tdStep(job)),0);else TD.job=null}
+function tdOne(a){{
     const n=hLook(a.id),clear=n===7,P=heroPalette(a,true),songs=hSplatty(n)?heroSongs(a,true):null,has=songs?songs.length:P.length;
     const sig=n+'|'+(songs?songs.map(x=>x.id+':'+x.r+x.col).join(','):P.map(x=>x.col+x.w.toFixed(3)).join(','));
-    if(TD.sig[a.id]===sig)continue;TD.sig[a.id]=sig;
+    if(TD.sig[a.id]===sig)return;TD.sig[a.id]=sig;
     let el=TD.el[a.id];if(!el){el=document.createElement('style');el.dataset.td=a.id;document.head.appendChild(el);TD.el[a.id]=el}
-    if(!has){el.textContent='';continue}
+    if(!has){el.textContent='';return}
     const sel='.tdisc[data-td="'+String(a.id).replace(/["\\]/g,'\\$&')+'"]';
     el.textContent=sel+'{--tl:'+(P[0]||songs[0]).col+';background-image:'+tdBlob(a.id,hDisc(P,n,a.id,songs,70))
       +(clear?';--tg:color-mix(in srgb,var(--ink) 16%,transparent);background-color:color-mix(in srgb,var(--ink) 6%,transparent);box-shadow:inset 0 0 0 1.5px rgb(255 255 255 / .4),0 6px 14px rgb(0 0 0 / .25)':'')+'}'}}
