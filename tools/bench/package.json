@@ -3,6 +3,12 @@
   "private": true,
   "type": "module",
   "description": "Phone-speed budget check for Playback. Run: npm run bench (from tools/bench)",
-  "scripts": { "bench": "node bench.mjs" },
-  "dependencies": { "playwright-core": "1.63.0" }
+  "scripts": {
+    "bench": "node bench.mjs",
+    "quick": "ONLY=flows node bench.mjs",
+    "safari": "ENGINE=webkit PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node bench.mjs"
+  },
+  "dependencies": {
+    "playwright-core": "1.63.0"
+  }
 }
