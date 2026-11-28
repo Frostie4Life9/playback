@@ -12196,19 +12196,50 @@ function tdBlob(id,v){const m=/^url\("data:([^;,]+)(;base64)?,([\s\S]*)"\)$/.exe
 function tdPaint(){
   if(!READY||UI.view||UI.tab!=='music')return;
   const ver=(S.mtime||0)+':'+ACOLV+':'+TD.lv+':'+S.music.length;if(ver===TD.ver)return;TD.ver=ver;
-  const cur=UI.sel.music,L=S.music.slice().sort((x,y)=>(y.id===cur)-(x.id===cur)),job=TD.job={L,i:0};requestAnimationFrame(()=>tdStep(job))}   /* 2026.11.28-i: not inside the page draw at all (the first one could take ~30 ms on the phone) */
+  const cur=UI.sel.music,L=S.music.slice().sort((x,y)=>(y.id===cur)-(x.id===cur)),job=TD.job={L,i:0};
+  const go=()=>{if(TD.job===job)requestAnimationFrame(()=>tdStep(job))};   /* 2026.11.28-i: not inside the page draw at all (the first one could take ~30 ms on the phone) */
+  if(TDR.hit)go();else tdLoad().then(go,go)}
 function tdStep(job){if(TD.job!==job)return;const t=performance.now();
   do tdOne(job.L[job.i++]);while(job.i<job.L.length&&performance.now()-t<8);
-  if(job.i<job.L.length)setTimeout(()=>requestAnimationFrame(()=>tdStep(job)),0);else TD.job=null}
+  if(job.i<job.L.length)setTimeout(()=>requestAnimationFrame(()=>tdStep(job)),0);else{TD.job=null;tdPrune();tdRasterSoon()}}
+/* 2026.11.28-o: THE TILE RECORDS ARE FLAT PICTURES NOW, KEPT BETWEEN STARTS. A splatter record was a drawing of up to 70 splats that the
+   phone redrew from scratch for every sleeve, and every start worked all ~90 of them out again (~280 ms at phone speed, the first
+   library open after each start). Once a record is drawn, it is pressed into a small flat picture while the phone is idle and kept
+   on the phone; the next start puts the kept pictures straight back. A record is only drawn again when its ratings or look change,
+   and every new build of Playback draws them fresh once (the update clears the kept copies). */
+const TDR={c:undefined,hit:null,used:new Set(),q:new Set(),busy:false,p:{}};
+function tdKey(id,sig){let h=5381;for(let i=0;i<sig.length;i++)h=((h*33)^sig.charCodeAt(i))>>>0;return '/__tdisc/'+encodeURIComponent(id)+'/'+h.toString(36)+'-'+sig.length}
+async function tdCache(){if(TDR.c===undefined){try{TDR.c='caches' in window?await caches.open('playback-tdisc'):null}catch(e){TDR.c=null}}return TDR.c}
+async function tdLoad(){const m=new Map();TDR.hit=m;const c=await tdCache();if(!c)return;
+  const ks=await c.keys();await Promise.all(ks.map(async r=>{try{const res=await c.match(r);if(res)m.set(new URL(r.url).pathname,URL.createObjectURL(await res.blob()))}catch(e){}}))}
+function tdPrune(){if(!TDR.c||!TDR.hit)return;for(const [k,u] of TDR.hit)if(!TDR.used.has(k)){TDR.hit.delete(k);try{URL.revokeObjectURL(u)}catch(e){}TDR.c.delete(k).catch(()=>{})}}
+function tdCss(a,sel,P,songs,clear,img){return sel+'{--tl:'+(P[0]||songs[0]).col+';background-image:'+img
+  +(clear?';--tg:color-mix(in srgb,var(--ink) 16%,transparent);background-color:color-mix(in srgb,var(--ink) 6%,transparent);box-shadow:inset 0 0 0 1.5px rgb(255 255 255 / .4),0 6px 14px rgb(0 0 0 / .25)':'')+'}'}
 function tdOne(a){{
     const n=hLook(a.id),clear=n===7,P=heroPalette(a,true),songs=hSplatty(n)?heroSongs(a,true):null,has=songs?songs.length:P.length;
     const sig=n+'|'+(songs?songs.map(x=>x.id+':'+x.r+x.col).join(','):P.map(x=>x.col+x.w.toFixed(3)).join(','));
     if(TD.sig[a.id]===sig)return;TD.sig[a.id]=sig;
     let el=TD.el[a.id];if(!el){el=document.createElement('style');el.dataset.td=a.id;document.head.appendChild(el);TD.el[a.id]=el}
     if(!has){el.textContent='';return}
-    const sel='.tdisc[data-td="'+String(a.id).replace(/["\\]/g,'\\$&')+'"]';
-    el.textContent=sel+'{--tl:'+(P[0]||songs[0]).col+';background-image:'+tdBlob(a.id,hDisc(P,n,a.id,songs,70))
-      +(clear?';--tg:color-mix(in srgb,var(--ink) 16%,transparent);background-color:color-mix(in srgb,var(--ink) 6%,transparent);box-shadow:inset 0 0 0 1.5px rgb(255 255 255 / .4),0 6px 14px rgb(0 0 0 / .25)':'')+'}'}}
+    const sel='.tdisc[data-td="'+String(a.id).replace(/["\\]/g,'\\$&')+'"]',key=tdKey(a.id,sig),kept=TDR.hit&&TDR.hit.get(key);
+    if(kept){TDR.used.add(key);el.textContent=tdCss(a,sel,P,songs,clear,'url("'+kept+'")');return}
+    const v=hDisc(P,n,a.id,songs,70);
+    el.textContent=tdCss(a,sel,P,songs,clear,tdBlob(a.id,v));
+    /* the artist is queued, not this drawing: by its turn it may have been redrawn (cover colors still settling), and the latest one is pressed */
+    if(/^url\("data:image\/svg\+xml,/.test(v||'')){TDR.p[a.id]={sig,key,sel,clear,P,songs,a};TDR.q.add(a.id)}else{delete TDR.p[a.id];TDR.q.delete(a.id)}}}
+function tdRasterSoon(){if(TDR.busy||!TDR.q.size||TD.job)return;TDR.busy=true;   /* never while the records are still being drawn: the end of that pass starts it again */
+  (window.requestIdleCallback||(f=>setTimeout(f,600)))(()=>{if(TD.job){TDR.busy=false;return}const id=TDR.q.values().next().value;TDR.q.delete(id);tdRaster(id).catch(()=>{}).finally(()=>{TDR.busy=false;tdRasterSoon()})},{timeout:4000})}   /* iPhone has no idle callback: a slow, spaced-out timer instead */
+async function tdRaster(id){const j=TDR.p[id],o=TDB[id];if(!j||!o||TD.sig[id]!==j.sig)return;j.id=id;
+  const im=new Image();im.src=o.u;   /* the drawing as the page has it (an in-memory file) */
+  await im.decode();
+  const S=Math.min(480,Math.round(160*Math.min(3,window.devicePixelRatio||2))),cv=document.createElement('canvas');cv.width=cv.height=S;
+  const x=cv.getContext('2d');if(!j.clear){x.fillStyle='#10140f';x.fillRect(0,0,S,S)}x.drawImage(im,0,0,S,S);   /* the sleeve's own base color under it, as the page draws it */
+  const b=await new Promise(r=>{try{cv.toBlob(r,j.clear?'image/png':'image/jpeg',.9)}catch(e){r(null)}});cv.width=cv.height=0;
+  if(!b||TD.sig[j.id]!==j.sig)return;
+  const c=await tdCache();if(c){try{await c.put(j.key,new Response(b,{headers:{'Content-Type':b.type}}))}catch(e){}}
+  const u=URL.createObjectURL(b),el=TD.el[j.id];if(TDR.hit){TDR.hit.set(j.key,u);TDR.used.add(j.key)}
+  if(el&&TD.sig[j.id]===j.sig){el.textContent=tdCss(j.a,j.sel,j.P,j.songs,j.clear,'url("'+u+'")');
+    const o=TDB[j.id];if(o){delete TDB[j.id];setTimeout(()=>URL.revokeObjectURL(o.u),4000)}}}   /* the drawing's copy is let go once the flat picture is in */
 /* artist photo header: on by default, turned off per device in Settings > Artist page */
 function phOn(){try{return localStorage.getItem('pb_photohero')!=='0'}catch(e){return true}}
 /* PLAY OPENS THE SPOTIFY APP ON A PC: a spotify: link hands the artist straight to the desktop app. If the app never takes
