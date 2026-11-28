@@ -4369,6 +4369,11 @@ html.pbstill *,html.pbstill *::before,html.pbstill *::after{animation-duration:.
      them layers, and the whole hero and shelf above them became page-tall layers too just to paint over them */
   html.gfsh :is(.tact,.hxback,.hcirc,.rseg,.rsel-b,.hxaddb,.simtg){-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
   html.gfsh .hero .hspin{will-change:auto}
+  /* 2026.11.28-m: under an open album the artist's color field stops being sticky and is pinned where it already was (--gfy, set as
+     the album opens; nothing scrolls under it). Sticky made it, and the whole hero and shelf painted over it, page-tall layers:
+     about 60-90 MB less graphics memory with an album open, same picture */
+  html.gfsh .hx .hxbg>.hmesh{position:absolute;top:max(0px,min(var(--gfy,0px),calc(100% - 100lvh)))}
+  html.gfsh:not(.lite) .hx .hxbg>.hmesh{top:max(0px,min(var(--gfy,0px),calc(100% - 100lvh - 25vh)))}
   html.gfsh nav.tabs{visibility:hidden}   /* 2026.11.28-g: the tab bar is under the album; showing it made the z-1000 hero a page-sized layer to paint over it */
 }
 @keyframes flWobP{0%{scale:.94 1.05}50%{scale:1.04 .97}100%{scale:1.1 .92}}
@@ -4967,6 +4972,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.28-m', note:'LESS MEMORY WITH AN ALBUM OPEN, AGAIN. The artist\'s color field behind an open album used to follow the page as you scroll, even though nothing scrolls while an album is open, and that kept it and the whole page painted over it in graphics memory as two page-tall layers. It now stays put while the album is open and picks up again when you close it. It looks exactly the same, and opening an album on your phone needs about a quarter less graphics memory (about 240 down to 180 MB in the test), which is what the phone runs out of when it reloads.'},
   {v:'2026.11.28-l', note:'READY FOR A FLIGHT. Settings → Your data has a new Save art for offline button: it saves every album and EP cover (Deluxe ones too) and each artist\'s photos, so your whole library shows its art on a plane, not just the albums you happened to open lately. It shows its progress, can be stopped, and remembers when you last did it. Ratings already save on the phone offline and sync once you\'re back online.'},
   {v:'2026.11.28-k', note:'ON THIS DAY. History has a new card under Your rating year: the albums and singles you rated on today\'s date in earlier years ("a year ago", "2 years ago"), each as its sleeve with the record peeking out and your score. If nothing landed on the exact day, it shows the same week in other years. Tap one to open it. Also: the little records on the library\'s artist sleeves work out their colors ahead of time, so opening the library is a bit quicker with your whole collection.'},
   {v:'2026.11.28-j', note:'A CRASH FIX FOR OPENING ALBUMS. The first time you opened an album whose song lengths Playback didn\'t have yet, Apple\'s answer arrived a few seconds later and the whole artist page was rebuilt behind the open album, which is what made your phone drop the page 3 to 5 seconds after opening mini mix vol. 2, Mercurial World and LONG.LIVE.A$AP (and why each one opened fine the next time). Now only the album itself is updated, and the page behind catches up when you close it. Going back to All artists is smoother too: the record flying home no longer makes the phone re-measure the whole page on every frame.'},
@@ -12336,6 +12342,7 @@ function hxPlaceGf(){const rel=document.querySelector('.hx .hxrel'),gf=document.
 const gfPh=()=>matchMedia('(max-width:760px)').matches;
 function gfPhPlace(rel,gf){
   gf.classList.add('ov','phs');gf.classList.remove('inrow');gf.style.top='';gf.style.left='';gf.style.width='';rel.style.paddingBottom='';
+  {const hb=document.querySelector('.hx .hxbg');document.documentElement.style.setProperty('--gfy',(scrollY+(parseFloat(hb&&hb.style.getPropertyValue('--hdrift'))||0)).toFixed(1)+'px')}   /* where the sticky color field is right now (2026.11.28-m) */
   rel.classList.add('gfov');document.documentElement.classList.add('gfsh');heroHold(true);
   if(gf._ro){gf._ro.disconnect();gf._ro=null}
   let sc=rel.querySelector(':scope>.gfscrim');

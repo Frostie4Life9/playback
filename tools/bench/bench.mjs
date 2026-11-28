@@ -21,7 +21,7 @@ export const BUDGET = {
   tapMs: 50,        // rating taps (open the card, set a score, Done): tap to the next painted frame
   closeMs: 150,     // closing after a rating: longest main-thread block from the tap until it has landed
   rateRenders: 0,   // full render() calls allowed during rating taps
-  layersMB: 280,    // estimated composited-layer memory, worst moment of the album opening (was 350; ~240 after 2026.11.28-g)
+  layersMB: 220,    // estimated composited-layer memory, worst moment of the album opening (was 350; ~240 after 2026.11.28-g; ~180 after -m)
 };
 
 const ENGINE = process.env.ENGINE === 'webkit' ? webkit : chromium;
@@ -151,9 +151,10 @@ async function layersMB(cdp, dpr) {
   const { layers } = await new Promise(res => { const h = e => { cdp.off('LayerTree.layerTreeDidChange', h); res(e); }; cdp.on('LayerTree.layerTreeDidChange', h); setTimeout(() => res({ layers: null }), 400); });
   if (!layers) return null;
   let b = 0; const big = [];
-  for (const l of layers) if (l.drawsContent && !l.invisible) { const m = l.width * l.height * 4 * dpr * dpr; b += m; big.push([+(m / 1048576).toFixed(1), l.width + 'x' + l.height, l.backendNodeId]); }
-  if (process.env.LAYERS) { big.sort((x, y) => y[0] - x[0]); const top = big.slice(0, 8);
+  for (const l of layers) if (process.env.LAYERS === '2' && !l.drawsContent) big.push([0, 'nodraw ' + l.width + 'x' + l.height, l.backendNodeId, l.layerId]); else if (l.drawsContent && !l.invisible) { const m = l.width * l.height * 4 * dpr * dpr; b += m; big.push([+(m / 1048576).toFixed(1), l.width + 'x' + l.height, l.backendNodeId, l.layerId]); }
+  if (process.env.LAYERS) { if (process.env.LAYERS !== '2') big.sort((x, y) => y[0] - x[0]); const top = process.env.LAYERS === '2' ? big : big.slice(0, 8);
     for (const t of top) if (t[2]) try { const { object } = await cdp.send('DOM.resolveNode', { backendNodeId: t[2] }); const { result } = await cdp.send('Runtime.callFunctionOn', { objectId: object.objectId, functionDeclaration: 'function(){return this.nodeType===1?(this.tagName+"."+[...this.classList].join(".")).slice(0,70):"#"+this.nodeName}', returnByValue: true }); t[2] = result.value; } catch (e) {}
+    for (const t of top) { try { const r = await cdp.send('LayerTree.compositingReasons', { layerId: t[3] }); t[3] = '[' + (r.compositingReasonIds || r.compositingReasons || []).join(',') + ']'; } catch (e) { t[3] = ''; } }
     console.log('  layers', (b / 1048576).toFixed(0), 'MB:', top.map(t => t.join(' ')).join(' | ')); }
   return +(b / 1048576).toFixed(0);
 }

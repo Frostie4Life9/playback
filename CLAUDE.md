@@ -14,7 +14,7 @@ Playback is Skyler's music + movie/TV app, live at https://frostie4life9.github.
 
 ## Usage and testing
 - Keep usage lean. For performance or animation work, **measure once before and once after**, not repeatedly.
-- Measure with `tools/bench` (see Budgets): headless Chrome at iPhone size (430×932, touch, 3× pixels, 4× CPU), a synthetic library seeded into localStorage, real JPEG covers. `PROF=<step>` shows where a step's time goes, `LAYERS=1` what holds graphics memory, `SHOTS=1` settled screenshots. Don't write one-off harnesses; add an option to the bench instead.
+- Measure with `tools/bench` (see Budgets): headless Chrome at iPhone size (430×932, touch, 3× pixels, 4× CPU), a synthetic library seeded into localStorage, real JPEG covers. `PROF=<step>` shows where a step's time goes, `LAYERS=1` what holds graphics memory and why (`LAYERS=2`: every layer in paint order), `SHOTS=1` settled screenshots. Don't write one-off harnesses; add an option to the bench instead.
 - Headless Chrome isn't his iPhone. Say so when a fix can only be confirmed on the phone.
 - He tests on an iPhone (Safari and Brave). Crash and reload notes land in the Suggest box: Cloudflare KV namespace `123626e20f3e4780ba3064ff22077e7e`, key `suggestions` (newest first). Look for `[crash]`, `[dropped]` and `[slow]` (Speed watch: taps over 100 ms or frames over 100 ms on his phone, with what was tapped) there after phone releases. Crash-safe (light mode) lasts only until the next build, so each release gets one full try at albums that crashed before. Once a crash is fixed, remove the notes relating to it from that key (leave his friends' real suggestions alone).
 
@@ -24,7 +24,7 @@ Run the bench before every push that touches the album, rating, sleeves or the a
 - **No full redraw on rating taps** (opening the card, setting a score, Done): `renderFull()` calls = 0, for album, 7-inch and light-mode sheets.
 - **Rating tap < 50 ms** to the next painted frame, at 4× CPU.
 - **Close after rating < 150 ms** longest main-thread block, including the deferred hero repaint after it lands.
-- **Album opening < ~280 MB** estimated layer memory (was 350; ~240 since 2026.11.28-g) (full-size layer estimate; phone tiling is lower, but it tracks the reloads).
+- **Album opening < ~220 MB** estimated layer memory (was 350; ~240 since 2026.11.28-g; ~180 since -m), sampled through the first 5.5 s (full-size layer estimate; phone tiling is lower, but it tracks the reloads).
 - **Flows** (`ONLY=flows`, or `npm run quick`): end-to-end checks (rating sticks, shows, survives close/reopen and reload, Clear, heard, Next record, 7-inch label, hero spins again after close). Any miss fails. When you add a feature, add its check here.
 - **Lint**: no animated `filter: blur` / `backdrop-filter` in `@keyframes` or `.animate()` (an animated blur in the 7-inch's "Rated" line crashed WebKit's page every time; likely the iPhone reloads after rating singles).
 - **Safari engine**: also run `ENGINE=webkit PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers npm run bench` when the album, single or animations change (install once with `PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node node_modules/playwright-core/cli.js install webkit`). WebKit timings are meaningless headless, but a crash or a failed flow there is real. A page crash in WebKit is how the 7-inch crash was found.
