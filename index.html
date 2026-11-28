@@ -3415,11 +3415,14 @@ html.lite .hx .hxfp{-webkit-backdrop-filter:none;backdrop-filter:none;background
   /* 2026.11.27-p: a first rating lands on the little record as one calm move: the label settles in, the ring draws, the number
      bumps (the label used to balloon past the record, reading as a white flash, while the record spun and a halo pulsed) */
   @media (prefers-reduced-motion:no-preference){
-    html.gfsh .track.sl-t.landed .check.check::after{animation:rgLab2 .42s cubic-bezier(.2,.8,.2,1)}
+    html.gfsh .track.sl-t.landed .check.check::after{animation:none}
     html.gfsh .track.sl-t.landed .check.check::before{animation:none}
     html.gfsh .track.sl-t.landed .check{animation:none}
     html.gfsh .track.sl-t.landed .check svg{animation:rgBump .45s cubic-bezier(.2,.8,.2,1) .05s}
     @keyframes rgLab2{0%{opacity:0;transform:scale(.55)}70%{opacity:1;transform:scale(1.04)}100%{transform:scale(1)}}}
+  /* 2026.11.27-q: on the phone jacket the label is already on the little record when the number arrives (it used to blink out
+     and grow back after the landing, so the record went blank for a beat) */
+  html.gfsh .track.sl-t.landing .check.check::after{opacity:1;transform:none}
   .gf.jk2 .gfra{top:84px;right:18px;padding:0;align-items:flex-start;height:auto}
   .gf.jk2 .gfra .sl-ic{flex:0 0 30px;width:30px;height:30px!important;min-height:0;min-width:0;padding:0;border-radius:50%;background:none;color:var(--ink,#1b1511);box-shadow:none;border:1px solid color-mix(in srgb,var(--ink,#1b1511) 35%,transparent)}
   .gf.jk2 .gfra .sl-ic svg{width:15px;height:15px}
@@ -4851,6 +4854,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.27-q', note:'RATING LANDING, LESS LAG. Tapping Done used to redraw the whole album on the same frame, so the screen froze and the number seemed to jump straight onto the little record. Now the number lifts first, the album only updates the song you rated and the lines that changed, and then the number flies. The record keeps its label while the number lands, so it no longer goes blank for a beat before the ring draws.'},
   {v:'2026.11.27-p', note:'RATING POLISH FROM YOUR RECORDING. Tapping Done no longer drops the card out from under the number (it was left floating in dark ink over the dark page): the card holds while the number lifts off it, then tucks away as the number flies. The song list no longer slides as the number flies, so it lands on the right song (it was landing a row low). The little record’s landing is one calm move now: the label settles in, the ring draws round and the number bumps, instead of the label ballooning into a white flash while the record spun and a halo pulsed. And the album rating finally animates: its number flies up into the score printed on the jacket, which bumps as it lands with its line darkening for a moment.'},
   {v:'2026.11.27-o', note:'SMOOTHER RATING ON A PHONE, AND NO MORE STICKER. When you tap Done on a first rating, the jacket now redraws right away while the card tucks back up, so the number flies into the song’s little record with nothing else running, instead of waiting for the redraw and stalling partway. The flight only moves and shrinks the number, which the phone can do smoothly even when it is busy. The big records sleeved in the jacket’s edges no longer run their glint and ripple effects while it is open (you could barely see them, and they stuttered the landing); their grooves still light up. The gold album sticker is gone: your album score is printed on the jacket’s top corner like a catalog line, a small Your album label over the number in the card’s own ink (tap it to rate), with the Mark all heard button as a small inked circle under it.'},
   {v:'2026.11.27-n', note:'THE RATING CARD SITS UNDER THE JACKET NOW. On an iPhone the card that comes out when you rate a song was stuck inside the songs panel: it sat over your songs, got cut off by the record peeking out of the jacket, and jumped and replayed its slide every time you changed a rating. It now lives in the open space under the jacket. It slides out once when you open it, stays still while you drag, rate or tap Leave out of avg, swaps in place when you tap another song, and tucks back up when you tap Done. The song you are rating stays in view on the jacket.'},
@@ -9779,7 +9783,7 @@ function gfMorph(a,b){
   if(a.tagName==='DETAILS')a.open=b.open;
   if((a.tagName==='INPUT'||a.tagName==='TEXTAREA'||a.tagName==='SELECT')&&a!==document.activeElement&&a.value!==b.value)a.value=b.value;
   /* 2026.11.20-p: the phone's page header and Details/Ratings switch are added after the build, so a redraw keeps them (the rating record in them is patched by gfPgPlace) */
-  const ac=[...a.childNodes].filter(n=>!(n.nodeType===1&&n.classList&&(n.classList.contains('gfph-h')||n.classList.contains('gfpg')))),bc=[...b.childNodes];
+  const ac=[...a.childNodes].filter(n=>!(n.nodeType===1&&n.classList&&(n.classList.contains('gfph-h')||n.classList.contains('gfpg')||n.classList.contains('gfnx')))),bc=[...b.childNodes];   /* 2026.11.27-q: the Next record links too */
   let j=0;   /* walk both lists; an old child with no match in the new list is dropped, a new one with no match is put in */
   for(const n of bc){let k=j;while(k<ac.length&&!gfSame(ac[k],n))k++;
     if(k<ac.length){while(j<k)ac[j++].remove();gfMorph(ac[j++],n)}else a.insertBefore(n,ac[j]||null)}
@@ -9824,13 +9828,19 @@ function gfQuick(){
   const t=document.createElement('template');t.innerHTML=gfHtml(a,g).trim();const n=t.content.firstElementChild;if(!n)return false;
   const rs=gf.querySelector('.gf-rs'),nrs=n.querySelector('.gf-rs'),ls=gf.querySelector('.gf-ls'),nls=n.querySelector('.gf-ls');if(!rs||!nrs||!ls||!nls)return false;
   const st=rs.scrollTop,lst=ls.scrollTop,h=rs.querySelector(':scope>.gfph-h');
-  rs.replaceChildren(...nrs.childNodes);if(h)rs.insertBefore(h,rs.firstChild);
-  /* the details side keeps its cover and record; its words and stats are swapped */
-  {const om=ls.querySelector('.sl-hero>.sl-meta'),nm=nls.querySelector('.sl-hero>.sl-meta');if(om&&nm)om.replaceWith(nm);
-    [...ls.children].forEach(c=>{if(!c.classList.contains('sl-hero'))c.remove()});[...nls.children].forEach(c=>{if(!c.classList.contains('sl-hero'))ls.appendChild(c)})}
+  /* 2026.11.27-q: PATCH, DON'T SWAP. Closing a rating used to swap every row and line on both panels for new ones, so the phone
+     restyled and re-laid-out the whole jacket on the tap (about 0.4 s on the iPhone, during which the number's lift and flight
+     ran unseen). Now only what changed is touched: usually one row, the songs line and a stat or two. */
+  for(const at of [...rs.attributes])nrs.setAttribute(at.name,at.value);gfMorph(rs,nrs);
+  if(h&&h.parentElement!==rs)rs.insertBefore(h,rs.firstChild);
+  /* the details side keeps its cover and record; its words and stats are patched the same way */
+  {const om=ls.querySelector('.sl-hero>.sl-meta'),nm=nls.querySelector('.sl-hero>.sl-meta');if(om&&nm){if(gfSame(om,nm))gfMorph(om,nm);else om.replaceWith(nm)}
+    const oc=[...ls.children].filter(c=>!c.classList.contains('sl-hero')&&!c.classList.contains('gfnx')),nc=[...nls.children].filter(c=>!c.classList.contains('sl-hero'));
+    if(oc.length===nc.length&&oc.every((c,i)=>gfSame(c,nc[i])))oc.forEach((c,i)=>gfMorph(c,nc[i]));
+    else{oc.forEach(c=>c.remove());const nx=ls.querySelector(':scope>.gfnx');nc.forEach(c=>ls.insertBefore(c,nx))}}
   {const od=gf.querySelector('.gf-pk.l .sl-disc'),nd=n.querySelector('.gf-pk.l .sl-disc');if(od&&nd)od.replaceWith(nd)}
   {const pk=gf.querySelector('.gf-pk.r'),vr=n.querySelector('.gf-pk.r .gf-vr');if(pk&&vr)pk.replaceChildren(vr)}
-  gfPgPlace(gf);rs.scrollTop=st;ls.scrollTop=lst;
+  gfPgPlace(gf,true);rs.scrollTop=st;ls.scrollTop=lst;
   const opening=UI.rAnim&&UI.rAnim===UI.rOpen;
   slObserve();slPulseNow();UI.rAnim=null;
   /* the song being rated stays in view on the jacket (the insert card is below the jacket now, so nothing covers it) */
@@ -12295,7 +12305,7 @@ function gfRunPh(el,back){
 /* ON A PHONE THE ALBUM OPENS LIKE A GATEFOLD (2026.11.20-m). The sheet holds the two inside pages of the jacket side by
    side, swiped between like turning the cover: inside right (Ratings) is where it opens, inside left (Details) is the
    back of the cover. The page you are on is kept through a redraw. Singles keep their one-page 7-inch sheet. */
-function gfPgPlace(gf){
+function gfPgPlace(gf,keep){
   const rs=gf.querySelector('.gf-rs'),ls=gf.querySelector('.gf-ls'),hero=ls&&ls.querySelector(':scope>.sl-hero'),sp=gf.querySelector('.gf-sp');if(!rs||!sp)return;
   gf.classList.add('pg','jk2');
   let h=rs.querySelector(':scope>.gfph-h');
@@ -12334,7 +12344,7 @@ function gfPgPlace(gf){
     p.innerHTML='<i aria-hidden="true"></i><button type="button" data-pg="0" aria-pressed="false">Details</button><button type="button" data-pg="1" aria-pressed="true">Songs</button>';
     p.addEventListener('click',e=>{const b=e.target.closest('[data-pg]');if(!b)return;gfPgGo(gf,+b.dataset.pg)});
     gb.insertBefore(p,gb.querySelector('.gf-x'))}
-  gfNxPlace(gf);
+  gfNxPlace(gf,keep);   /* 2026.11.27-q: a rating can't change the shelf, so its redraw reuses the neighbors (finding them laid out the whole page) */
   if(gf.classList.contains('gfopen'))UI.gfPg=1;   /* 2026.11.27-h: a freshly opened album opens on its songs, like lifting the cover */
   const pg=UI.gfPg==null?1:UI.gfPg;
   sp.style.scrollSnapType='none';sp.scrollLeft=pg?sp.scrollWidth:0;sp.style.scrollSnapType='';
@@ -12356,7 +12366,7 @@ function gfInsLift(gf){
    between Details and Ratings, so these are cards at the bottom.) */
 function gfNx(id){const L=[...document.querySelectorAll('.hx .hxsl[data-act="hjump"][data-g]')].filter(b=>b.offsetParent!==null),k=L.findIndex(b=>b.dataset.g===String(id));
   const nm=b=>b?((b.querySelector('.hxt')||{}).textContent||''):'';return k<0?{}:{p:L[k-1],n:L[k+1],pn:nm(L[k-1]),nn:nm(L[k+1])}}
-function gfNxPlace(gf){const x=gfNx(gf.dataset.acol),key=(x.pn||'')+'|'+(x.nn||'');
+function gfNxPlace(gf,keep){const x=keep&&gf._nx&&gf._nx.p!==undefined&&(!gf._nx.p||gf._nx.p.isConnected)&&(!gf._nx.n||gf._nx.n.isConnected)?gf._nx:(gf._nx=gfNx(gf.dataset.acol)),key=(x.pn||'')+'|'+(x.nn||'');
   for(const pg of gf.querySelectorAll('.gf-ls,.gf-rs')){let n=pg.querySelector(':scope>.gfnx');
     if(!x.p&&!x.n){if(n)n.remove();continue}
     if(!n){n=document.createElement('nav');n.className='gfnx';n.setAttribute('aria-label','Other records');pg.appendChild(n)}else if(n!==pg.lastElementChild)pg.appendChild(n);
@@ -14977,7 +14987,10 @@ document.addEventListener('click',ev=>{
     if(rt&&rt.classList.contains('jkins')&&gfPh()){   /* 2026.11.27-o: the jacket's card tucks away while the panel is redrawn at once, then the number flies with nothing else running */
       const cid=UI.rOpen,fly=rtFlyPrep(cid);rt.classList.remove('rt-in');rt.classList.add(fly?'jkhold':'rt-out');
       if(fly)fly.card=rt;   /* 2026.11.27-p: the card holds still under the number as it lifts, then tucks away while it flies */
-      UI.rOpen=null;if(fly)UI.rLand=cid;UI.gfQ=true;render();if(fly)requestAnimationFrame(()=>rtFlyGo(fly));return}
+      UI.rOpen=null;if(fly)UI.rLand=cid;UI.gfQ=true;
+      if(!fly){render();return}
+      /* 2026.11.27-q: the number lifts on screen first; the (now small) redraw runs once it is up, then it flies */
+      UI.rClosing=true;const go=()=>{UI.rClosing=false;render();requestAnimationFrame(()=>rtFlyGo(fly))};fly.wind.finished.then(go,go);return}
     if(rt&&!matchMedia('(prefers-reduced-motion:reduce)').matches){UI.rClosing=true;const cid=UI.rOpen,fly=rtFlyPrep(cid);rt.classList.remove('rt-in');rt.classList.add('rt-out');
       setTimeout(()=>{UI.rClosing=false;UI.rOpen=null;if(fly)UI.rLand=cid;UI.gfQ=true;render()},230);rtFlyGo(fly);return}}
   if(act==='hsrc'){phSetSrc(b.dataset.v);return}
