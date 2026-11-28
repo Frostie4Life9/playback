@@ -4343,7 +4343,7 @@ html.pbstill *,html.pbstill *::before,html.pbstill *::after{animation-duration:.
   /* 2026.11.27-x: under an open album the hero's three drifting color layers (each bigger than the screen, ~35 MB of graphics memory
      apiece at 3x) fade out and are let go, leaving the artist's calm color field under the wash. Both -w crashes were album opens. */
   .hero .fl,.hero .hscrim{transition:opacity .35s ease-out}
-  html.gfsh .hero .fl,html.gfsh .hero .hscrim{opacity:0;visibility:hidden;transition:none}
+  html.gfsh .hero .fl,html.gfsh .hero .hscrim{opacity:0;visibility:hidden;transition:none}   /* 2026.11.27-y: let go in the same frame the album appears (the wash fading in covers it), not faded: a fade kept all four big layers alive through the opening's first frames, its memory peak (~500 MB est.) */
   /* 2026.11.28-b: more graphics memory given back while an album is open on a phone (nothing scrolls under it): the shelf rows'
      scroll-linked rise-in keeps every row its own layer for as long as the page lives, and the jacket's record held a layer per groove
      ring for effects that are off under the jacket (~15 rings, ~40 MB est. at 3x) */
@@ -4353,7 +4353,7 @@ html.pbstill *,html.pbstill *::before,html.pbstill *::after{animation-duration:.
      them layers, and the whole hero and shelf above them became page-tall layers too just to paint over them */
   html.gfsh :is(.tact,.hxback,.hcirc,.rseg,.rsel-b,.hxaddb,.simtg){-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
   html.gfsh .hero .hspin{will-change:auto}
-  html.gfsh nav.tabs{visibility:hidden}   /* 2026.11.27-y: let go in the same frame the album appears (the wash fading in covers it), not faded: a fade kept all four big layers alive through the opening's first frames, its memory peak (~500 MB est.) */
+  html.gfsh nav.tabs{visibility:hidden}   /* 2026.11.28-g: the tab bar is under the album; showing it made the z-1000 hero a page-sized layer to paint over it */
 }
 @keyframes flWobP{0%{scale:.94 1.05}50%{scale:1.04 .97}100%{scale:1.1 .92}}
 </style>
@@ -4951,6 +4951,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.28-h', note:'Small fixes from a review of tonight\'s work: the splatter records being prepared in the background are now painted one at a time (warming up several artists in the library could start several at once), and the slow-start report now times the app itself rather than how long the covers take to download.'},
   {v:'2026.11.28-g', note:'A LOT LESS MEMORY WITH AN ALBUM OPEN. While an album is open on your phone, the artist\'s spinning record behind it now pauses (and picks up where it left off when you close), the page\'s frosted buttons under the album stop blurring, and the bottom bar steps out of the way. Together those stopped the phone keeping the whole artist page as several page-sized pictures in graphics memory: an open album now needs about half what it did yesterday (≈500 → ≈240 MB est.), which is what the phone runs out of when it reloads the page.'},
   {v:'2026.11.28-f', note:'THE APP OPENS FASTER. Every time it started (including after the phone reloads it), the app re-tidied your whole log: matching artists filed twice, tidying MusicBrainz lists and applying waiting ratings, across ~2,000 releases. It now skips that when nothing has changed since the last time, so a normal start is about a third quicker. Any change you make, and every update, still runs it once.'},
   {v:'2026.11.28-e', note:'SMOOTHER WITH A BIG LIBRARY, PART 2. Saving your log (about 15 ms on the phone with your ~2,000 releases) now waits for a quiet moment instead of landing in the middle of a score\'s flight or the 7-inch\'s label turn, and cover colors are no longer worked out right after a tap or written to storage after every single cover.'},
@@ -11968,7 +11969,10 @@ let HSKIP=false;   /* 2026.11.27-x: set while the page is built off to the side 
 /* 2026.11.27-y: the splatter disc is drawn by a generator, so it can be drawn all at once (hSplat) or a slice at a time between
    frames (HSLOW, set by the repaint after closing an album on a phone: a ~70 ms freeze on the iPhone once the record had landed).
    While a slow repaint is in progress the old disc stays up; when it's done the hero is repainted from the cache. */
-let HSLOW=false;const HSJOB={};
+let HSLOW=false;const HSJOB={},HSQ=[];
+function hsRun(){const t=performance.now();
+  while(HSQ.length&&performance.now()-t<8){const j=HSQ[0],r=j.it.next();if(r.done){HSQ.shift();if(HSJOB[j.key]===j)delete HSJOB[j.key];heroPaint()}}
+  if(HSQ.length)setTimeout(()=>requestAnimationFrame(hsRun),0);else HSQ.on=0}
 function hSplat(songs,aid,tint,cap){
   if(HSKIP){const h=HSP[aid+'|'+(tint||'')+'|'+(cap?1:0)];return h?h.svg:''}
   let L=songs.slice().sort((x,y)=>y.r-x.r||(x.id<y.id?-1:1));if(cap&&L.length>cap)L=L.slice(0,cap);
@@ -11976,10 +11980,11 @@ function hSplat(songs,aid,tint,cap){
   /* 2026.11.27-z: on a phone the big disc is never drawn inside a tap: a new artist shows its record unpainted for a moment and the
      paint arrives a slice at a time (switching artist spent ~0.3 s at phone speed drawing it before the page could show) */
   if((HSLOW||(gfPh()&&READY))&&!cap){
-    if(!HSJOB[key]||HSJOB[key].sig!==sig){const it=hSplatGen(songs,aid,tint,cap,L,key,sig),job=HSJOB[key]={sig};
-      const step=()=>{if(HSJOB[key]!==job)return;const t=performance.now();let r;do{r=it.next()}while(!r.done&&performance.now()-t<8);
-        if(!r.done)return setTimeout(()=>requestAnimationFrame(step),0);delete HSJOB[key];heroPaint()};
-      requestAnimationFrame(step)}
+    /* 2026.11.28-h: one disc is painted at a time (warming several artists in the library used to start a painter each, all in the
+       same frames); the artist on screen goes to the front */
+    let job=HSJOB[key];if(!job||job.sig!==sig){if(job)HSQ.splice(HSQ.indexOf(job),1);job=HSJOB[key]={sig,key,it:hSplatGen(songs,aid,tint,cap,L,key,sig)};HSQ.push(job)}
+    const h=document.querySelector('.hero[data-aid]');if(h&&h.dataset.aid===String(aid)&&HSQ[0]!==job){HSQ.splice(HSQ.indexOf(job),1);HSQ.unshift(job)}
+    if(!HSQ.on){HSQ.on=1;requestAnimationFrame(hsRun)}
     return hit?hit.svg:''}
   const it=hSplatGen(songs,aid,tint,cap,L,key,sig);let r;do{r=it.next()}while(!r.done);return r.value}
 function* hSplatGen(songs,aid,tint,cap,L,key,sig){
@@ -14740,10 +14745,12 @@ document.addEventListener('click',ev=>{
   SPW.cur=e;SPW.until=performance.now()+2500;if(!SPW.raf){SPW.last=0;SPW.raf=requestAnimationFrame(spFrame)}
   requestAnimationFrame(()=>setTimeout(()=>{e.tap=Math.round(performance.now()-t0)},0));setTimeout(()=>spDone(e),2700)},true);
 addEventListener('pagehide',()=>{if(SPW.q.length&&Date.now()-SPW.sent>=600e3)spSend()});
-/* 2026.11.28-c: a slow start counts too: the time from opening the app to its first painted page, if over 2.5 s */
-addEventListener('load',()=>requestAnimationFrame(()=>setTimeout(()=>{try{if(!window.PB_OWNER||!matchMedia('(hover:none)').matches||document.hidden)return;
+/* 2026.11.28-c: a slow start counts too: the time from opening the app to its first painted page, if over 2.5 s. 2026.11.28-h: timed
+   from the page script's first paint, not the load event (which waits for every cover to download, so it measured the network) */
+{const go=()=>requestAnimationFrame(()=>setTimeout(()=>{try{if(!window.PB_OWNER||!matchMedia('(hover:none)').matches||document.hidden)return;
   const ms=Math.round(performance.now());if(ms<2500)return;
-  spDone({act:'start',ctx:spCtx(),t:Date.now(),tap:ms,worst:0,drops:0})}catch(e){}},0)));
+  spDone({act:'start',ctx:spCtx(),t:Date.now(),tap:ms,worst:0,drops:0})}catch(e){}},0));
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go()}
 /* 2026.11.21-f: WHERE IT DIED. Each step of opening an album is noted on the same note, with the time since the tap, so the
    next crash report says how far it got (built the page, placed the sheet, cover in the air, zooming, timed marks) instead of
    only which album it was. */
