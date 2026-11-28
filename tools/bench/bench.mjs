@@ -293,6 +293,9 @@ async function pages(browser, base) {
   await prof(cdp, 'restart', async () => { await page.goto(base + '/index.html', { waitUntil: 'commit' }); await page.waitForSelector('.hxsl[data-g]', { timeout: 30000 });
     again = await page.evaluate(() => new Promise(r => requestAnimationFrame(() => setTimeout(() => r(Math.round(performance.now())), 0)))); return {}; });
   out.steps.restart = { tap: again, block: again, renders: 0, renderMs: 0, worstFrame: 0 };
+  // the library sleeves' records after that restart: kept pictures come straight back, drawn ones are worked out again (2026.11.28-o)
+  { const recs = await page.evaluate(() => new Promise(r => { const t0 = performance.now(), f = () => (typeof TD !== 'undefined' && TD.ver && !TD.job) ? r(Math.round(performance.now() - t0)) : performance.now() - t0 > 15000 ? r(-1) : setTimeout(f, 20); f(); }));
+    out.steps['records back'] = { tap: recs, block: recs, renders: 0, renderMs: 0, worstFrame: 0 }; }
   // Skyler's own pages (owner mode): Movies & TV and the vinyl Collection. Network is blocked, so nothing is sent anywhere.
   await page.goto(base + '/index.html?owner=1', { waitUntil: 'load' }); await page.waitForSelector('.hxsl[data-g]', { timeout: 30000 }); await page.waitForTimeout(1200);
   for (const [name, sel] of [['movies & tv', '[data-act="tab"][data-v="screen"]'], ['tv: films', '[data-sc="seg"][data-v="films"]'], ['tv: open film', '[data-sc="open"]'], ['tv: close', '[data-sc="close"]'],
