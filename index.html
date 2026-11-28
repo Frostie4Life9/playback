@@ -4951,6 +4951,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.28-j', note:'A CRASH FIX FOR OPENING ALBUMS. The first time you opened an album whose song lengths Playback didn\'t have yet, Apple\'s answer arrived a few seconds later and the whole artist page was rebuilt behind the open album, which is what made your phone drop the page 3 to 5 seconds after opening mini mix vol. 2, Mercurial World and LONG.LIVE.A$AP (and why each one opened fine the next time). Now only the album itself is updated, and the page behind catches up when you close it. Going back to All artists is smoother too: the record flying home no longer makes the phone re-measure the whole page on every frame.'},
   {v:'2026.11.28-i', note:'Switching artists is a little quicker again: the first of the library\'s little sleeve records is no longer painted inside the page change itself.'},
   {v:'2026.11.28-h', note:'Small fixes from a review of tonight\'s work: the splatter records being prepared in the background are now painted one at a time (warming up several artists in the library could start several at once), and the slow-start report now times the app itself rather than how long the covers take to download.'},
   {v:'2026.11.28-g', note:'A LOT LESS MEMORY WITH AN ALBUM OPEN. While an album is open on your phone, the artist\'s spinning record behind it now pauses (and picks up where it left off when you close), the page\'s frosted buttons under the album stop blurring, and the bottom bar steps out of the way. Together those stopped the phone keeping the whole artist page as several page-sized pictures in graphics memory: an open album now needs about half what it did yesterday (≈500 → ≈240 MB est.), which is what the phone runs out of when it reloads the page.'},
@@ -7382,7 +7383,7 @@ async function akaBackfill(){
     akaSet(a,{name:a.name,aka:mbAkas(j)});a.akaAt=Date.now();n++}}
   catch(e){}
   finally{akaBusy=false}
-  if(n){rebuildAka();mergeSameArtists();touch();render()}
+  if(n){rebuildAka();mergeSameArtists();touch();renderSoon()}
 }
 const nTitle=x=>nrm(String(x).replace(/\s*[\(\[][^)\]]*(deluxe|remaster|edition|version|anniversary|expanded)[^)\]]*[\)\]]/ig,''));
 function parseCSV(t){
@@ -13296,10 +13297,12 @@ function flyBack(O){FLYBK=performance.now()+1100;
   if(!ok)w.animate([{opacity:1},{opacity:1,offset:A/TT},{opacity:0}],opt);
   /* 2026.11.27-d: scrolling while it flies home moves the sleeve, so the record and its mask ride along with the scroll */
   let sc=null;if(ok){for(let n=T.parentElement;n&&n!==document.body;n=n.parentElement){const s=getComputedStyle(n).overflowY;if((s==='auto'||s==='scroll')&&n.scrollHeight>n.clientHeight){sc=n;break}}}
-  const sTop=()=>sc?sc.scrollTop:scrollY,s0=ok?sTop():0;let live=ok;
-  const follow=()=>{if(!live)return;const d=s0-sTop();c.style.transform=d?'translateY('+d+'px)':'';requestAnimationFrame(follow)};
-  if(ok)requestAnimationFrame(follow);
-  an.onfinish=()=>{live=false;if(dc)dc.classList.remove('tuck');requestAnimationFrame(()=>c.remove())}}   /* the real record is back in the sleeve before the copy goes */
+  /* 2026.11.28-j: it follows the scroll from the scroll event itself. Asking the page where it was scrolled on every frame, right after
+     the library had redrawn, made the phone lay the whole page out on the first frames of the flight (the [slow] on All artists) */
+  const tg=sc||window,sTop=()=>sc?sc.scrollTop:scrollY,s0=ok?sTop():0;
+  const follow=()=>{const d=s0-sTop();c.style.transform=d?'translateY('+d+'px)':''};
+  if(ok)tg.addEventListener('scroll',follow,{passive:true});
+  an.onfinish=()=>{if(ok)tg.removeEventListener('scroll',follow);if(dc)dc.classList.remove('tuck');requestAnimationFrame(()=>c.remove())}}   /* the real record is back in the sleeve before the copy goes */
 
 /* ===== FROM THE ARTIST MENU TO THE ARTIST PAGE (2026.11.19-ag) =====
    The full-window artist menu used to vanish in one frame. Now a still copy of it stays on top for a moment: every other
@@ -14786,7 +14789,12 @@ function artistView(a){heroLook(a.id);
    finish; redraws you ask for with a tap still happen at once. */
 let GFP=null,RSOON=0;
 let BGR=false;
+/* 2026.11.28-j: A BACKGROUND REDRAW NEVER REBUILDS THE PAGE UNDER AN OPEN PHONE ALBUM. Song lengths arriving from Apple a few seconds
+   after an album opened (once per album, the first time) redrew the whole artist page behind the jacket: that is the [crash] 3-5 s
+   after opening mini mix vol. 2, Mercurial World and LONG.LIVE.A$AP, and why each opened fine the next time. Now only the open sleeve
+   is patched, and the page behind is redrawn once the album has closed (the album is gone by then). */
 function renderSoon(){
+  if(!GFP&&gfPhOpen()&&UI.alb){UI.gfM0=null;let ok=false;try{ok=jkPatch()}catch(e){}if(ok)try{clrPlay()}catch(e){}return}
   if(!GFP){BGR=true;render();return}
   if(RSOON)return;RSOON=1;
   GFP.then(()=>{RSOON=0;renderSoon()},()=>{RSOON=0;renderSoon()})}   /* if another motion took over meanwhile (the space closing up after a close), wait for that too */

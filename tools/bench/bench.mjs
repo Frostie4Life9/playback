@@ -102,12 +102,12 @@ async function makeCovers(browser) {
 // ---------- in-page probes ----------
 // Installed before the app runs: counts render(), records long tasks and frame gaps.
 const PROBE = () => {
-  window.__B = { long: [], frames: [], renders: 0, renderMs: 0, rec: false };
+  window.__B = { long: [], frames: [], renders: 0, renderMs: 0, rec: false, rlog: [] };
   try { new PerformanceObserver(l => { for (const e of l.getEntries()) __B.long.push([e.startTime, e.duration]); }).observe({ type: 'longtask', buffered: true }); } catch (e) {}
   let last = 0; const f = t => { if (__B.rec && last) __B.frames.push([t, t - last]); last = t; requestAnimationFrame(f); }; requestAnimationFrame(f);
   // counts full redraws of the page (renderFull; render() itself may just patch an open album)
   addEventListener('load', () => { const k = typeof window.renderFull === 'function' ? 'renderFull' : 'render', r = window[k]; if (typeof r !== 'function') return;
-    window[k] = function () { const t = performance.now(); __B.renders++; try { return r.apply(this, arguments); } finally { __B.renderMs += performance.now() - t; } }; });
+    window[k] = function () { const t = performance.now(); __B.renders++; if (document.querySelector('.group.sleeve.gf')) __B.rlog.push([Math.round(t), String(new Error().stack).split('\n').slice(2, 7).map(l => l.trim().replace(/\(?https?:[^)]*\/(index\.html)?/, '').replace(/\)$/, '')).join(' < ')]); try { return r.apply(this, arguments); } finally { __B.renderMs += performance.now() - t; } }; });
 };
 
 async function settle(page, ms = 4500) {
@@ -140,7 +140,7 @@ async function step(page, sel, { wait = true, tail = 0 } = {}) {
     __B.rec = false; const t0 = __T0;
     const long = __B.long.filter(([s]) => s >= t0 - 5);
     return { tasks: long.map(([s, d]) => [Math.round(s - t0), Math.round(d)]), tap: +__TAP.toFixed(1), block: +Math.max(__TAP, ...long.map(x => x[1])).toFixed(1), longN: long.length,
-      renders: __B.renders, renderMs: +__B.renderMs.toFixed(1), worstFrame: +Math.max(0, ...__B.frames.map(f => f[1])).toFixed(1), err: __ERR() };
+      renders: __B.renders, renderMs: +__B.renderMs.toFixed(1), worstFrame: +Math.max(0, ...__B.frames.map(f => f[1])).toFixed(1), err: __ERR(), why: __B.rlog.filter(x => x[0] >= t0 - 5).map(x => (Math.round(x[0] - t0)) + 'ms ' + x[1]) };
   });
 }
 
@@ -211,10 +211,13 @@ async function scenario(browser, base, kind) {
     await page.evaluate(t => { const e = document.querySelector(t); if (e) e.scrollIntoView({ block: 'center' }); }, tile);
     await page.waitForTimeout(300);
     // open, sampling layer memory through the opening
-    let lmax = 0;
+    let lmax = 0, late = 0; const tOpen = Date.now();
     const openP = prof(cdp, 'open', () => step(page, tile));
     if (cdp) for (let i = 0; i < 6; i++) { await page.waitForTimeout(220); const m = await layersMB(cdp, 3); if (m) lmax = Math.max(lmax, m); }
-    const open = await openP; open.layersMB = lmax || null; best('open', open);
+    const open = await openP;
+    // and on through the 5 s the phone's crash guard watches (deferred work lands after the motion)
+    if (cdp) while (Date.now() - tOpen < 5500) { const m = await layersMB(cdp, 3); if (m) late = Math.max(late, m); await page.waitForTimeout(350); }
+    open.layersMB = Math.max(lmax, late) || null; open.lateMB = late || null; best('open', open);
     const shot = async n => { if (process.env.SHOTS && run === 0) { await page.waitForTimeout(250); await page.screenshot({ path: path.join(OUT, `${kind}-${n}.png`) }); } };
     await shot('1-open');
     if (process.env.SHOT2 && run === 0) { await page.evaluate(process.env.SHOT2); await page.waitForTimeout(300); await page.screenshot({ path: path.join(OUT, kind + '-x.png') }); }
@@ -271,7 +274,7 @@ async function pages(browser, base) {
   const out = { kind: 'pages', sleeve: '-', steps: { start: { tap: boot, block: boot, renders: 0, renderMs: 0, worstFrame: 0 } } };
   const seq = [['stats', '[data-act="mmgo"][data-v="stats"]'], ['history', '[data-act="mmgo"][data-v="history"]'], ['settings', '[data-act="view"][data-v="settings"]'],
     ['account', '[data-act="view"][data-v="account"]'], ['artist', '[data-act="mmgo"][data-v="artists"]'], ['library', '[data-act="lib"]'],
-    ['other artist', `#lx [data-id="${lib.music[1].id}"], #lx [data-sel="${lib.music[1].id}"], #lx .entry:nth-child(2), #lx .tile:not(.add):nth-of-type(2)`], ['library 2', '[data-act="lib"]'], ['back', '[data-act="lib"]']];
+    ['other artist', `#lx [data-id="${lib.music[1].id}"], #lx [data-sel="${lib.music[1].id}"], #lx .entry:nth-child(2), #lx .tile:not(.add):nth-of-type(2)`], ['library 2', '[data-act="lib"]'], ['back', '[data-act="lib"]'], ['all artists', '[data-act="hback"]']];
   for (const [name, sel] of seq) {
     const r = await prof(cdp, name, () => step(page, sel));
     if (process.env.EVAL && process.env.EVALAT === name) console.log('  EVAL', JSON.stringify(await page.evaluate(process.env.EVAL)));
@@ -352,6 +355,11 @@ async function flows(browser, base) {
   if (await open('a0g4')) { await click('.group.sleeve.gf [data-act="grpall"]');
     need('Mark all heard checks every song', await page.evaluate(() => S.music[0].groups[4].items.every(i => (S.marks[i.id] || {}).done)));
     await close(); }
+  // things that finish in the background (song lengths from Apple, photos, sync) only patch an open album, never redraw the page under it
+  if (await open('a0g5')) { const r = await page.evaluate(async () => { const g = S.music[0].groups[5], rf = window.renderFull; let full = 0; window.renderFull = function () { full++; return rf.apply(this, arguments); };
+      g.items.forEach((i, k) => { i.ms = 180000 + k * 1000; }); renderSoon(); await new Promise(r => setTimeout(r, 400)); window.renderFull = rf; return { full, open: !!document.querySelector('.group.sleeve.gf') }; });
+    need('a background update under an open album patches it (no page redraw)', r.full === 0 && r.open, r);
+    need('the page catches up after closing', (await close()) && await page.evaluate(() => !document.querySelector('.group.sleeve.gf'))); }
   // the Deluxe edition shows its extra songs, and back
   if (await open('a0g7')) { const rows = () => page.evaluate(() => document.querySelectorAll('.group.sleeve.gf .gf-rs .track.sl-t').length);
     const std = await rows(); await click('.group.sleeve.gf [data-act="dxsel"][data-v="1"]'); await page.waitForTimeout(500); const dlx = await rows();
@@ -459,7 +467,8 @@ try {
       if (r.kind === 'stress') { console.log(`\nSTRESS  ${r.ok.length} steps (Deluxe and features albums opened, switched and closed 4 times)${r.fails.length ? ', FAILED' : ''}`); for (const f of r.fails) console.log('  x ' + f); continue; }
     if (r.kind === 'flows') { console.log(`\nFLOWS  ${r.ok.length} passed${r.fails.length ? ', ' + r.fails.length + ' FAILED' : ''}`); for (const f of r.fails) console.log('  x ' + f); continue; }
       console.log(`\n${r.kind.toUpperCase()}  (sleeve patchers: ${r.sleeve})`);
-      for (const [k, s] of Object.entries(r.steps)) console.log(`  ${k.padEnd(10)}${process.env.TASKS && s.tasks ? " tasks " + JSON.stringify(s.tasks) : ""} tap ${String(s.tap).padStart(6)} ms  block ${String(s.block).padStart(6)} ms  renders ${s.renders} (${s.renderMs} ms)  worst frame ${s.worstFrame} ms${s.layersMB ? `  layers ~${s.layersMB} MB` : ''}${s.spin ? `  label ${s.spin.turning ? 'turning ' + s.spin.rot : 'still'}${s.spin.old ? ', old score riding out' : ''}` : ''}${s.err ? '  ERR ' + s.err : ''}`);
+      for (const [k, s] of Object.entries(r.steps)) console.log(`  ${k.padEnd(10)}${process.env.TASKS && s.tasks ? " tasks " + JSON.stringify(s.tasks) : ""} tap ${String(s.tap).padStart(6)} ms  block ${String(s.block).padStart(6)} ms  renders ${s.renders} (${s.renderMs} ms)  worst frame ${s.worstFrame} ms${s.layersMB ? `  layers ~${s.layersMB} MB` : ''}${s.lateMB ? ` (after 1.3 s ~${s.lateMB})` : ''}${s.spin ? `  label ${s.spin.turning ? 'turning ' + s.spin.rot : 'still'}${s.spin.old ? ', old score riding out' : ''}` : ''}${s.err ? '  ERR ' + s.err : ''}`);
+      if (process.env.WHY) for (const [k, s] of Object.entries(r.steps)) for (const w of (s.why || [])) console.log(`    full redraw under the open album in ${k}: ${w}`);
     }
     console.log(fails.length ? `\nOVER BUDGET (do not push):\n  - ${fails.join('\n  - ')}` : '\nAll budgets met.');
   }
