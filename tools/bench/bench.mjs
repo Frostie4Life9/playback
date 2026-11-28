@@ -59,6 +59,10 @@ function library(base) {
       const gid = 'a' + a + 's' + s;
       groups.push({ id: gid, title: 'Single ' + (s + 1), year: String(2018 + s), kind: 'Single', img: base + '/__art/c' + (n++ % 24) + '.jpg', items: [{ id: gid + 't0', title: 'Single ' + (s + 1) }] });
     }
+    if (a === 0) {   // a Deluxe (like Mercurial World: 14 + 14 deluxe songs, its own cover) and an album with features (like LONG.LIVE.A$AP)
+      const dx = groups[7]; for (let t = 14; t < 28; t++) dx.items.push({ id: dx.id + 't' + t, title: 'Deluxe song ' + (t - 13), dx: true }); dx.dxImg = base + '/__art/c' + ((n++) % 24) + '.jpg';
+      groups[6].items.slice(0, 9).forEach((i, k) => { i.f = ['Guest Artist ' + (k + 1)]; });
+    }
     music.push({ id: aid, name: 'Bench Artist ' + (a + 1), groups });
   }
   const marks = {};
@@ -167,6 +171,7 @@ const BUILD = (fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').match(/CHA
 async function scenario(browser, base, kind) {
   if (kind === 'pages') return pages(browser, base);
   if (kind === 'flows') return flows(browser, base);
+  if (kind === 'stress') return stress(browser, base);
   const ctx = await browser.newContext({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 3, isMobile: !IS_WK, hasTouch: true, serviceWorkers: 'block',
     userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.7 Mobile/15E148 Safari/604.1', reducedMotion: 'no-preference' });
   const lib = library(base);
@@ -325,10 +330,33 @@ async function flows(browser, base) {
   return { kind: 'flows', sleeve: '-', steps: {}, errors, fails, ok };
 }
 
+async function stress(browser, base) {
+  const ctx = await browser.newContext({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 3, isMobile: !IS_WK, hasTouch: true, serviceWorkers: 'block' });
+  const lib = library(base);
+  await ctx.addInitScript(([st, sel]) => { if (sessionStorage.getItem('__seeded')) return; sessionStorage.setItem('__seeded', '1'); localStorage.clear();
+    localStorage.setItem('playback_v1', st); localStorage.setItem('playback_v1_tab', 'music'); localStorage.setItem('playback_v1_sel_music', sel); localStorage.setItem('playback_v1_tour', '1'); }, [JSON.stringify(lib), lib.music[0].id]);
+  await ctx.route('**/*', r => { const u = r.request().url(); return u.startsWith(base) || u.startsWith('data:') || u.startsWith('blob:') ? r.continue() : r.abort(); });
+  const page = await ctx.newPage(); const errors = []; page.on('pageerror', e => errors.push(String(e.message).slice(0, 160)));
+  let crashed = ''; page.on('crash', () => { crashed = 'page crashed'; });
+  const fails = [], done = [];
+  try {
+    await page.goto(base + '/index.html', { waitUntil: 'load' }); await page.waitForSelector('.hxsl[data-g]', { timeout: 20000 }); await page.waitForTimeout(1200);
+    const tap = async sel => { if (crashed) throw new Error(crashed); const f = await page.evaluate(sel => { const e = document.querySelector(sel); if (!e) return false; e.scrollIntoView({ block: 'center' }); e.click(); return true; }, sel); await settle(page); return f; };
+    for (let i = 0; i < 4; i++) for (const g of ['a0g7', 'a0g6']) {
+      if (!(await tap(`.hxsl[data-g="${g}"]`))) { fails.push('no tile ' + g); continue; }
+      if (g === 'a0g7') { const sw = await tap(`.group.sleeve.gf [data-act="dxsel"][data-v="${i % 2 ? 0 : 1}"]`); if (sw) done.push('edition ' + (i % 2 ? 'standard' : 'deluxe')); await page.waitForTimeout(400); }
+      await tap('.group.sleeve.gf [data-act="gfclose"]'); await page.waitForTimeout(300); done.push('open/close ' + g);
+    }
+  } catch (e) { fails.push((crashed || 'stopped') + ' after ' + (done[done.length - 1] || 'start') + (crashed ? '' : ': ' + String(e.message).split('\n')[0].slice(0, 120))); }
+  await ctx.close().catch(() => {});
+  return { kind: 'stress', sleeve: '-', steps: {}, errors, fails, ok: done };
+}
+
 function check(res) {
   const fails = [];
   for (const r of res) {
     if (r.err) fails.push(`${r.kind}: ${r.err}`);
+    if (r.kind === 'stress') { for (const f of r.fails) fails.push('stress: ' + f); if (r.errors.length) fails.push(`stress: page errors: ${r.errors.join(' | ')}`); continue; }
     if (r.kind === 'flows') { for (const f of r.fails) fails.push('flows: ' + f); if (r.errors.length) fails.push(`flows: page errors: ${r.errors.join(' | ')}`); continue; }
     if (r.kind === 'pages') { if (r.errors.length) fails.push(`pages: page errors: ${r.errors.join(' | ')}`); continue; }
     for (const k of ['rate:card', 'rate:set', 'rate:done']) { const s = r.steps[k]; if (!s) continue;
@@ -358,7 +386,7 @@ const base = 'http://127.0.0.1:' + srv.address().port;
 const browser = await ENGINE.launch(IS_WK ? {} : { executablePath: CHROME, args: ['--enable-gpu-benchmarking', '--disable-background-timer-throttling'] });
 try {
   await makeCovers(browser);
-  const kinds = ONLY ? [ONLY] : ['flows', 'album', 'single', 'safe', 'pages'];
+  const kinds = ONLY ? [ONLY] : ['flows', 'stress', 'album', 'single', 'safe', 'pages'];
   const res = [];
   for (const k of kinds) res.push(await scenario(browser, base, k));
   const fails = [...LINT.map(x => 'lint: ' + x), ...check(res)];
@@ -367,7 +395,8 @@ try {
   else {
     console.log(`Playback bench · build ${build} · ${IS_WK ? 'WebKit (no CPU throttle)' : 'Chrome 4x CPU'} · 430x932 @3x · best of ${RUNS}`);
     for (const r of res) {
-      if (r.kind === 'flows') { console.log(`\nFLOWS  ${r.ok.length} passed${r.fails.length ? ', ' + r.fails.length + ' FAILED' : ''}`); for (const f of r.fails) console.log('  x ' + f); continue; }
+      if (r.kind === 'stress') { console.log(`\nSTRESS  ${r.ok.length} steps (Deluxe and features albums opened, switched and closed 4 times)${r.fails.length ? ', FAILED' : ''}`); for (const f of r.fails) console.log('  x ' + f); continue; }
+    if (r.kind === 'flows') { console.log(`\nFLOWS  ${r.ok.length} passed${r.fails.length ? ', ' + r.fails.length + ' FAILED' : ''}`); for (const f of r.fails) console.log('  x ' + f); continue; }
       console.log(`\n${r.kind.toUpperCase()}  (sleeve patchers: ${r.sleeve})`);
       for (const [k, s] of Object.entries(r.steps)) console.log(`  ${k.padEnd(10)}${process.env.TASKS && s.tasks ? " tasks " + JSON.stringify(s.tasks) : ""} tap ${String(s.tap).padStart(6)} ms  block ${String(s.block).padStart(6)} ms  renders ${s.renders} (${s.renderMs} ms)  worst frame ${s.worstFrame} ms${s.layersMB ? `  layers ~${s.layersMB} MB` : ''}${s.spin ? `  label ${s.spin.turning ? 'turning ' + s.spin.rot : 'still'}${s.spin.old ? ', old score riding out' : ''}` : ''}${s.err ? '  ERR ' + s.err : ''}`);
     }
