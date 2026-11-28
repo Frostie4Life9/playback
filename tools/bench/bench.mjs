@@ -326,7 +326,30 @@ async function flows(browser, base) {
   await rate(t0, 7);
   const before = !!((await mark(t1)) || {}).done; const found = await click(`.group.sleeve.gf [data-act="tog"][data-id="${t1}"]`);
   need('heard toggles', !!((await mark(t1)) || {}).done !== before, { found, before, after: await mark(t1), st: await page.evaluate(() => ({ rOpen: UI.rOpen, rClosing: UI.rClosing, gfp: !!GFP })) });
+  // album score: the sticker on the jacket opens the album's own card
+  if (await click('.group.sleeve.gf .gfph-stk', false)) { await page.waitForTimeout(250);
+    await page.evaluate(() => { const el = document.querySelector('.rater .rt-s'); el.value = '8'; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true })); });
+    await page.waitForTimeout(150); await click('.rater [data-act="rclose"]');
+    const stk = await page.evaluate(() => { const b = document.querySelector('.group.sleeve.gf .gfph-stk b'); return b ? b.textContent.trim() : ''; });
+    need('album score saved and on the sticker', ((await mark(A)) || {}).r === 8 && stk === '8', { mark: await mark(A), stk }); }
+  else need('album score sticker is there', false);
+  // Leave out of avg, on and off again
+  await click(`.group.sleeve.gf .track.sl-t[data-id="${t0}"]`, false); await page.waitForTimeout(250);
+  await click('.rater [data-act="romit"]', false); const om1 = !!((await mark(t0)) || {}).x;
+  await click('.rater [data-act="romit"]', false); const om2 = !!((await mark(t0)) || {}).x;
+  await click('.rater [data-act="rclose"]');
+  need('Leave out of avg toggles', om1 && !om2, { om1, om2 });
   need('album closes', await close());
+  // Mark all heard on another album
+  if (await open('a0g4')) { await click('.group.sleeve.gf [data-act="grpall"]');
+    need('Mark all heard checks every song', await page.evaluate(() => S.music[0].groups[4].items.every(i => (S.marks[i.id] || {}).done)));
+    await close(); }
+  // the Deluxe edition shows its extra songs, and back
+  if (await open('a0g7')) { const rows = () => page.evaluate(() => document.querySelectorAll('.group.sleeve.gf .gf-rs .track.sl-t').length);
+    const std = await rows(); await click('.group.sleeve.gf [data-act="dxsel"][data-v="1"]'); await page.waitForTimeout(500); const dlx = await rows();
+    await click('.group.sleeve.gf [data-act="dxsel"][data-v="0"]'); await page.waitForTimeout(500); const back = await rows();
+    need('Deluxe shows its extra songs and switches back', std === 14 && dlx === 28 && back === 14, { std, dlx, back });
+    await close(); }
   await page.waitForTimeout(400);
   need('hero record spins again after closing', await page.evaluate(() => !!(HERO.wa || HERO.raf) || noMotion()));
   need('reopens with the rating', (await open(A)) && (await rowNum(t0)) === '7', await rowNum(t0));
