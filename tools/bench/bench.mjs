@@ -371,6 +371,15 @@ async function flows(browser, base) {
   else need('Next record link is there', false);
   await close();
   }
+  // library search: type a name, Enter opens that artist
+  if (await click('[data-act="lib"]')) {
+    const typed = await page.evaluate(() => { const q = document.getElementById('lq'); if (!q) return false; q.focus(); q.value = 'Artist 3'; q.dispatchEvent(new Event('input', { bubbles: true })); return true; });
+    await page.waitForTimeout(500);
+    if (typed) { await page.evaluate(() => document.getElementById('lq').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))); await page.waitForTimeout(1800); await settle(page); }
+    const sel = await page.evaluate(() => { const a = S.music.find(x => x.id === UI.sel.music); return a ? a.name : ''; });
+    need('library search opens the artist', typed && sel === 'Bench Artist 3', { typed, sel });
+    await page.evaluate(id => { UI.sel.music = id; UI.libOpen = false; render(); }, lib.music[0].id); await page.waitForTimeout(800);
+  } else need('library opens', false);
   const SG = process.env.SG || 'a0s0';
   need('7-inch opens', await open(SG));
   await rate(SG + 't0', 6.5); await page.waitForTimeout(1600);
