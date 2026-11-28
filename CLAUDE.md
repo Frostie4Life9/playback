@@ -24,7 +24,7 @@ Run the bench before every push that touches the album, rating, sleeves or the a
 - **No full redraw on rating taps** (opening the card, setting a score, Done): `renderFull()` calls = 0, for album, 7-inch and light-mode sheets.
 - **Rating tap < 50 ms** to the next painted frame, at 4× CPU.
 - **Close after rating < 150 ms** longest main-thread block, including the deferred hero repaint after it lands.
-- **Album opening < ~350 MB** estimated layer memory (full-size layer estimate; phone tiling is lower, but it tracks the reloads).
+- **Album opening < ~280 MB** estimated layer memory (was 350; ~240 since 2026.11.28-g) (full-size layer estimate; phone tiling is lower, but it tracks the reloads).
 - **Flows** (`ONLY=flows`): 15 end-to-end checks (rating sticks, shows, survives close/reopen and reload, Clear, heard, Next record, 7-inch label). Any miss fails.
 - **Lint**: no animated `filter: blur` / `backdrop-filter` in `@keyframes` or `.animate()` (an animated blur in the 7-inch's "Rated" line crashed WebKit's page every time; likely the iPhone reloads after rating singles).
 - **Safari engine**: also run `ENGINE=webkit PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers npm run bench` when the album, single or animations change (install once with `PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node node_modules/playwright-core/cli.js install webkit`). WebKit timings are meaningless headless, but a crash or a failed flow there is real. A page crash in WebKit is how the 7-inch crash was found.

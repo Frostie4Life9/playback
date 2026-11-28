@@ -21,7 +21,7 @@ export const BUDGET = {
   tapMs: 50,        // rating taps (open the card, set a score, Done): tap to the next painted frame
   closeMs: 150,     // closing after a rating: longest main-thread block from the tap until it has landed
   rateRenders: 0,   // full render() calls allowed during rating taps
-  layersMB: 350,    // estimated composited-layer memory, worst moment of the album opening
+  layersMB: 280,    // estimated composited-layer memory, worst moment of the album opening (was 350; ~240 after 2026.11.28-g)
 };
 
 const ENGINE = process.env.ENGINE === 'webkit' ? webkit : chromium;
@@ -327,6 +327,8 @@ async function flows(browser, base) {
   const before = !!((await mark(t1)) || {}).done; const found = await click(`.group.sleeve.gf [data-act="tog"][data-id="${t1}"]`);
   need('heard toggles', !!((await mark(t1)) || {}).done !== before, { found, before, after: await mark(t1), st: await page.evaluate(() => ({ rOpen: UI.rOpen, rClosing: UI.rClosing, gfp: !!GFP })) });
   need('album closes', await close());
+  await page.waitForTimeout(400);
+  need('hero record spins again after closing', await page.evaluate(() => !!(HERO.wa || HERO.raf) || noMotion()));
   need('reopens with the rating', (await open(A)) && (await rowNum(t0)) === '7', await rowNum(t0));
   await close(); await page.waitForTimeout(900);   // the save is debounced
   await page.evaluate(() => sessionStorage.setItem('__seeded', '1')); await load();

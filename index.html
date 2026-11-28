@@ -4348,7 +4348,12 @@ html.pbstill *,html.pbstill *::before,html.pbstill *::after{animation-duration:.
      scroll-linked rise-in keeps every row its own layer for as long as the page lives, and the jacket's record held a layer per groove
      ring for effects that are off under the jacket (~15 rings, ~40 MB est. at 3x) */
   html.gfsh .hxrow.eras>.hxera{animation:none}
-  html.gfsh .gf .sl-disc i{will-change:auto}   /* 2026.11.27-y: let go in the same frame the album appears (the wash fading in covers it), not faded: a fade kept all four big layers alive through the opening's first frames, its memory peak (~500 MB est.) */
+  html.gfsh .gf .sl-disc i{will-change:auto}
+  /* the frosted buttons on the page (top bar, back, hero circles, sort pills) are under the album's wash; their backdrop blur made
+     them layers, and the whole hero and shelf above them became page-tall layers too just to paint over them */
+  html.gfsh :is(.tact,.hxback,.hcirc,.rseg,.rsel-b,.hxaddb,.simtg){-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+  html.gfsh .hero .hspin{will-change:auto}
+  html.gfsh nav.tabs{visibility:hidden}   /* 2026.11.27-y: let go in the same frame the album appears (the wash fading in covers it), not faded: a fade kept all four big layers alive through the opening's first frames, its memory peak (~500 MB est.) */
 }
 @keyframes flWobP{0%{scale:.94 1.05}50%{scale:1.04 .97}100%{scale:1.1 .92}}
 </style>
@@ -4946,6 +4951,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.28-g', note:'A LOT LESS MEMORY WITH AN ALBUM OPEN. While an album is open on your phone, the artist\'s spinning record behind it now pauses (and picks up where it left off when you close), the page\'s frosted buttons under the album stop blurring, and the bottom bar steps out of the way. Together those stopped the phone keeping the whole artist page as several page-sized pictures in graphics memory: an open album now needs about half what it did yesterday (≈500 → ≈240 MB est.), which is what the phone runs out of when it reloads the page.'},
   {v:'2026.11.28-f', note:'THE APP OPENS FASTER. Every time it started (including after the phone reloads it), the app re-tidied your whole log: matching artists filed twice, tidying MusicBrainz lists and applying waiting ratings, across ~2,000 releases. It now skips that when nothing has changed since the last time, so a normal start is about a third quicker. Any change you make, and every update, still runs it once.'},
   {v:'2026.11.28-e', note:'SMOOTHER WITH A BIG LIBRARY, PART 2. Saving your log (about 15 ms on the phone with your ~2,000 releases) now waits for a quiet moment instead of landing in the middle of a score\'s flight or the 7-inch\'s label turn, and cover colors are no longer worked out right after a tap or written to storage after every single cover.'},
   {v:'2026.11.28-d', note:'FASTER WITH A BIG LIBRARY. The little splatter records on every artist\'s sleeve in the library used to be painted all at once the first time after you opened the app, which with your ~90 artists froze the artist page for about a second at phone speed (and made the first trip to the library lag). They\'re now painted a few at a time between frames, the artist you\'re on first. Opening the app is quicker too.'},
@@ -12233,13 +12239,13 @@ function hxEras(a,rl,sleeve,og,NEW){
 function hxOnMark(rel){if(!rel)return;const on=rel.querySelector('.hxsl.on'),era=on&&on.closest('.hxera');
   rel.querySelectorAll('.hxera.hxon').forEach(e=>{if(e!==era)e.classList.remove('hxon')});if(era&&!era.classList.contains('hxon'))era.classList.add('hxon')}
 function hxPlaceGf(){const rel=document.querySelector('.hx .hxrel'),gf=document.querySelector('.hx .group.sleeve.gf');hxOnMark(rel);
-  if(!gf){document.documentElement.classList.remove('gfsh');document.querySelectorAll('.gfscrim').forEach(s=>s.remove())}
+  if(!gf){document.documentElement.classList.remove('gfsh');heroHold(false);document.querySelectorAll('.gfscrim').forEach(s=>s.remove())}
   if(rel&&!gf){rel.classList.remove('gfov');rel.style.paddingBottom='';return}
   if(!rel||!gf)return;
   const on=rel.querySelector('.hxsl.on');if(!on)return;
   if(gf.parentElement!==rel)rel.appendChild(gf);
   if(gfPh()){gfPhPlace(rel,gf);return}
-  gf.classList.remove('phs');document.documentElement.classList.remove('gfsh');rel.querySelectorAll('.gfscrim').forEach(s=>s.remove());
+  gf.classList.remove('phs');document.documentElement.classList.remove('gfsh');heroHold(false);rel.querySelectorAll('.gfscrim').forEach(s=>s.remove());
   gf.classList.remove('inrow');gf.classList.add('ov');
   /* the shelf steps back: at once on a redraw, as a fade on the draw that opens the album */
   if(!rel.classList.contains('gfov')){if(HXSINK)requestAnimationFrame(()=>{if(rel.isConnected&&!UI.gfClosing)rel.classList.add('gfov')});else rel.classList.add('gfov')}
@@ -12252,7 +12258,7 @@ function hxPlaceGf(){const rel=document.querySelector('.hx .hxrel'),gf=document.
 const gfPh=()=>matchMedia('(max-width:760px)').matches;
 function gfPhPlace(rel,gf){
   gf.classList.add('ov','phs');gf.classList.remove('inrow');gf.style.top='';gf.style.left='';gf.style.width='';rel.style.paddingBottom='';
-  rel.classList.add('gfov');document.documentElement.classList.add('gfsh');
+  rel.classList.add('gfov');document.documentElement.classList.add('gfsh');heroHold(true);
   if(gf._ro){gf._ro.disconnect();gf._ro=null}
   let sc=rel.querySelector(':scope>.gfscrim');
   if(!sc){sc=document.createElement('div');sc.className='gfscrim';sc.setAttribute('aria-hidden','true');sc.addEventListener('click',()=>gfClose())}
@@ -13441,6 +13447,12 @@ function heroTick(t){
     HERO.wa0=a;HERO.wat=performance.now();return}
   if(!off){el.style.transform='rotate('+HERO.ang.toFixed(2)+'deg)';liqTick(dt,HERO.spd,t)}   /* scrolled away or tab hidden: keep time, skip the drawing */
   HERO.raf=requestAnimationFrame(heroTick)}
+/* 2026.11.28-g: while an album covers the page on a phone, the hero's record stops where it is and picks up again on close. Its
+   endless compositor spin made the browser treat everything painted after it as possibly overlapping it, so the whole hero, the
+   shelf and the album's wash were each kept as their own page-sized layers (~140 MB est. at 3x) the whole time an album was open. */
+function heroHold(on){
+  if(on){if(HERO.wa&&gfPh())heroUnhand();return}
+  if(!HERO.wa&&!HERO.raf&&HERO.el&&HERO.el.isConnected&&!noMotion()){HERO.last=0;HERO.raf=requestAnimationFrame(heroTick)}}
 /* where the record is right now, when the compositor is spinning it (200°/s = one turn in 1.8 s) */
 function heroAngNow(){if(HERO.wa)HERO.ang=(HERO.wa0+.2*(performance.now()-HERO.wat))%360;return HERO.ang}
 function heroUnhand(){if(!HERO.wa)return;const a=heroAngNow(),w=HERO.wa,tg=w.effect&&w.effect.target;HERO.wa=null;w.cancel();
