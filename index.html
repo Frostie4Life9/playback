@@ -4951,6 +4951,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.28-i', note:'Switching artists is a little quicker again: the first of the library\'s little sleeve records is no longer painted inside the page change itself.'},
   {v:'2026.11.28-h', note:'Small fixes from a review of tonight\'s work: the splatter records being prepared in the background are now painted one at a time (warming up several artists in the library could start several at once), and the slow-start report now times the app itself rather than how long the covers take to download.'},
   {v:'2026.11.28-g', note:'A LOT LESS MEMORY WITH AN ALBUM OPEN. While an album is open on your phone, the artist\'s spinning record behind it now pauses (and picks up where it left off when you close), the page\'s frosted buttons under the album stop blurring, and the bottom bar steps out of the way. Together those stopped the phone keeping the whole artist page as several page-sized pictures in graphics memory: an open album now needs about half what it did yesterday (≈500 → ≈240 MB est.), which is what the phone runs out of when it reloads the page.'},
   {v:'2026.11.28-f', note:'THE APP OPENS FASTER. Every time it started (including after the phone reloads it), the app re-tidied your whole log: matching artists filed twice, tidying MusicBrainz lists and applying waiting ratings, across ~2,000 releases. It now skips that when nothing has changed since the last time, so a normal start is about a third quicker. Any change you make, and every update, still runs it once.'},
@@ -12116,9 +12117,9 @@ function tdBlob(id,v){const m=/^url\("data:([^;,]+)(;base64)?,([\s\S]*)"\)$/.exe
 function tdPaint(){
   if(!READY||UI.view||UI.tab!=='music')return;
   const ver=(S.mtime||0)+':'+ACOLV+':'+TD.lv+':'+S.music.length;if(ver===TD.ver)return;TD.ver=ver;
-  const cur=UI.sel.music,L=S.music.slice().sort((x,y)=>(y.id===cur)-(x.id===cur)),job=TD.job={L,i:0};tdStep(job)}
+  const cur=UI.sel.music,L=S.music.slice().sort((x,y)=>(y.id===cur)-(x.id===cur)),job=TD.job={L,i:0};requestAnimationFrame(()=>tdStep(job))}   /* 2026.11.28-i: not inside the page draw at all (the first one could take ~30 ms on the phone) */
 function tdStep(job){if(TD.job!==job)return;const t=performance.now();
-  while(job.i<job.L.length&&(job.i===0||performance.now()-t<8))tdOne(job.L[job.i++]);
+  do tdOne(job.L[job.i++]);while(job.i<job.L.length&&performance.now()-t<8);
   if(job.i<job.L.length)setTimeout(()=>requestAnimationFrame(()=>tdStep(job)),0);else TD.job=null}
 function tdOne(a){{
     const n=hLook(a.id),clear=n===7,P=heroPalette(a,true),songs=hSplatty(n)?heroSongs(a,true):null,has=songs?songs.length:P.length;
