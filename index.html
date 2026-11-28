@@ -3934,6 +3934,22 @@ html.lite .pvdg{background:rgb(10 12 12 / .55)}
 .pvnoanim .hy-g i.hy-on{animation:none}
 .hy-m{display:flex;justify-content:space-between;font-size:10px;letter-spacing:.08em;color:rgb(255 255 255 / .7);max-width:calc(53 * 16px)}
 .hy-f{display:flex;gap:10px 22px;flex-wrap:wrap;align-items:center}.hy-f .pvsm{flex:1 1 260px}.hy-f .pvmono{font-size:12px}.hy-f b{font-size:15px}
+/* 2026.11.28-k: On this day: what you rated on today's date in other years */
+.otd{flex:1 1 100%;gap:12px;padding:18px 20px 16px;min-width:0}
+.otd-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.otd-h h3{flex:1;font-size:20px}
+.otd-r{display:flex;gap:30px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 4px;margin:0 -2px;scroll-snap-type:x proximity}
+.otd-r::-webkit-scrollbar{display:none}
+.otd-i{flex:0 0 auto;width:132px;display:flex;flex-direction:column;align-items:flex-start;gap:6px;border:0;background:none;padding:0;color:inherit;text-align:left;cursor:pointer;scroll-snap-align:start;
+  animation:otdIn .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i) * 70ms + 120ms)}
+.otd-i b{font:650 13px/1.2 var(--display);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.otd-i .pvsm{font-size:12px;margin-top:-3px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.otd-y{display:inline-flex;align-items:center;gap:6px;font:600 11px var(--mono);letter-spacing:.04em}
+.otd-y i{font-style:normal;padding:1px 7px;border-radius:999px;background:var(--c);color:var(--ci)}
+.otd-i .pvpack{transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.otd-i:hover .pvpack,.otd-i:focus-visible .pvpack{transform:translateY(-3px)}
+@keyframes otdIn{from{opacity:0;transform:translateY(10px)}}
+.pvnoanim .otd-i{animation:none}
+@media (prefers-reduced-motion:reduce){.otd-i{animation:none}.otd-i .pvpack{transition:none}}
 .htools{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 .htq{flex:1 1 300px;max-width:440px}
 .hsel{position:relative;padding:0 16px 0 20px;min-height:54px;gap:6px}
@@ -4951,6 +4967,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.28-k', note:'ON THIS DAY. History has a new card under Your rating year: the albums and singles you rated on today\'s date in earlier years ("a year ago", "2 years ago"), each as its sleeve with the record peeking out and your score. If nothing landed on the exact day, it shows the same week in other years. Tap one to open it. Also: the little records on the library\'s artist sleeves work out their colors ahead of time, so opening the library is a bit quicker with your whole collection.'},
   {v:'2026.11.28-j', note:'A CRASH FIX FOR OPENING ALBUMS. The first time you opened an album whose song lengths Playback didn\'t have yet, Apple\'s answer arrived a few seconds later and the whole artist page was rebuilt behind the open album, which is what made your phone drop the page 3 to 5 seconds after opening mini mix vol. 2, Mercurial World and LONG.LIVE.A$AP (and why each one opened fine the next time). Now only the album itself is updated, and the page behind catches up when you close it. Going back to All artists is smoother too: the record flying home no longer makes the phone re-measure the whole page on every frame.'},
   {v:'2026.11.28-i', note:'Switching artists is a little quicker again: the first of the library\'s little sleeve records is no longer painted inside the page change itself.'},
   {v:'2026.11.28-h', note:'Small fixes from a review of tonight\'s work: the splatter records being prepared in the background are now painted one at a time (warming up several artists in the library could start several at once), and the slow-start report now times the app itself rather than how long the covers take to download.'},
@@ -9119,6 +9136,21 @@ function hYear(every){
     <div class="hy-g" role="img" aria-label="${days} days in ${Y} with an album rated">${cols.join('')}</div>
     <div class="hy-m pvmono" aria-hidden="true">${['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'].map(m=>`<span>${m}</span>`).join('')}</div>
     <div class="hy-f"><span class="pvsm">Each dot is a day; a lit dot is an album you rated that day, in its color.</span><span class="pvmono"><b>${days}</b> day${days===1?'':'s'} with a rating</span><span class="pvmono"><b>${best}</b>-day best run</span></div></div>`}
+/* 2026.11.28-k: ON THIS DAY. What you rated on today's date in an earlier year, newest year first; when nothing landed on the
+   exact day, the same week in other years. Tapping one opens it like a History row. */
+function hOnDay(every){
+  const now=new Date(),Y=now.getFullYear(),dated=every.filter(e=>e.d&&hYmd(e.d)&&+e.d.slice(0,4)<Y);if(!dated.length)return '';
+  const off=e=>{const d=hYmd(e.d);return Math.round((d-new Date(d.getFullYear(),now.getMonth(),now.getDate()))/864e5)};
+  let L=dated.filter(e=>off(e)===0),wk=false;if(!L.length){L=dated.filter(e=>Math.abs(off(e))<=3);wk=true}
+  if(!L.length)return '';
+  L.sort((x,y)=>(+y.d.slice(0,4))-(+x.d.slice(0,4))||y.r-x.r||x.title.localeCompare(y.title));L=L.slice(0,8);
+  const ago=e=>{const n=Y-+e.d.slice(0,4);return n===1?'a year ago':n+' years ago'};
+  const items=L.map((e,i)=>{const c=pvECol(e),its=e.g.items||[],lit=its.length?its.filter(x=>rating(x.id)).length/its.length*100:0;
+    return `<button type="button" class="otd-i" style="--i:${i}" data-act="hgo" data-a="${esc(e.a.id)}" data-g="${esc(e.g.id)}" data-dx="${e.dx?1:''}" aria-label="${esc(e.title)} by ${esc(e.a.name)}, rated ${esc(fmtRd(e.d))}, ${e.sg?'songs average':'rated'} ${fmt(e.r)}">
+      ${pvPack(118,e.art,c,e.title,lit,true)}<b>${esc(e.title)}</b><span class="pvsm">${esc(e.a.name)}</span>
+      <span class="otd-y" style="--c:${c};--ci:${pvInk(c)}"><i>${esc(fmt(e.r))}</i>${esc(wk?fmtRd(e.d):ago(e))}</span></button>`}).join('');
+  return `<div class="pvdg pvcard otd pvrise" style="--d:2"><div class="otd-h"><h3 class="pvh3">${wk?'This week, other years':'On this day'}</h3><span class="pvmono pvmut">${esc(now.toLocaleDateString([],{month:'long',day:'numeric'}))}</span></div>
+    <div class="otd-r">${items}</div></div>`}
 function hStamp(e){const dd=hYmd(e.d),c=pvECol(e),eid=esc(e.id);
   return dd?`<button type="button" class="hst" data-act="hedit" data-id="${eid}" aria-label="Rated ${esc(fmtRd(e.d))}. Change the day"><span style="--c:${c};color:${pvInk(c)}"><b>${String(dd.getDate()).padStart(2,'0')}</b><i>${esc(dd.toLocaleDateString([],{month:'short'}).toUpperCase())}</i></span></button>`
     :`<button type="button" class="hst none" data-act="hedit" data-id="${eid}" aria-label="No day yet. Add the day you rated it"><span><b>+</b><i>DAY</i></span></button>`}
@@ -9164,7 +9196,7 @@ function historyView(){
   return `<section class="pv pvhist${anim?'':' pvnoanim'}" aria-labelledby="hist-h">${pvBg(cols.length?cols:['#3d5048','#5a6e78','#7a6650'])}
     <div class="pvhero"><div class="pvht pvrise"><span class="pvk">${sgs.length?'Albums &amp; singles you rated':'Albums you rated'}</span><h2 id="hist-h" class="pvh">History</h2><p class="pvsub">${esc(line)}</p>
       <div class="pvset-sb">${und?`<button class="pvb pvg" data-act="hsort" data-v="none">+ Add the ${und} missing day${und===1?'':'s'}</button>`:''}<button class="pvb pvg" data-act="expalbums">↓ Export CSV</button></div></div>
-      ${hYear(every)}</div>
+      ${hYear(every)}${hOnDay(every)}</div>
     <div class="htools pvrise" style="--d:3"><label class="pvin pvg htq"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="pvsr">Search rated albums</span><input id="hq" type="search" autocomplete="off" placeholder="Search albums &amp; artists" value="${esc(UI.hq||'')}"></label>
       ${pvSeg('hkind',UI.hk,kinds,'Show',false)}
       <label class="pvb pvg hsel"><span class="pvsr">Sort</span><select id="hsortsel" aria-label="Sort">${[['new','Newest'],['old','Oldest'],['high','Highest'],['none','No day first']].map(([v,t])=>`<option value="${v}"${UI.hs===v?' selected':''}>${t}</option>`).join('')}</select><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></label></div>
@@ -12054,10 +12086,20 @@ const D=180/Math.PI;
     +Lq.u.map(x=>'<g class="lu" transform="translate('+hf(HC+Math.cos(x.an0)*x.r0)+' '+hf(HC+Math.sin(x.an0)*x.r0)+')"><circle r="'+x.r+'" fill="rgba(255,255,255,.10)" stroke="rgba(255,255,255,.55)" stroke-width=".7"/><circle cx="'+hf(-x.r*.3)+'" cy="'+hf(-x.r*.35)+'" r="'+hf(x.r*.28)+'" fill="rgba(255,255,255,.85)"/></g>').join('')+'</g>'+glass+'</svg>'}
 function hLiquid(P,aid){return liqSvg(liqParts(P,aid),'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 280" width="280" height="280">')}
 function hSvgUrl(svg){return 'url("data:image/svg+xml,'+encodeURIComponent(svg)+'")'}
+/* 2026.11.28-k: the records' colors are worked out here once instead of as color-mix() in the CSS: ~90 library sleeves each carrying
+   a stack of color-mix gradients made every style pass over the library resolve them all again (~0.2 s at phone speed on opening it) */
+function hMixK(c,k){const v=hRgb(c);return v?hHex(v.map(q=>q*k)):'color-mix(in srgb,'+c+' '+Math.round(k*100)+'%,#000)'}
+function hMixLab(a,b){const x=hRgb(a),y=hRgb(b);if(!x||!y)return 'color-mix(in oklab,'+a+' 50%,'+b+')';
+  const lin=v=>{v/=255;return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4)},gam=v=>{v=v<=.0031308?12.92*v:1.055*Math.pow(v,1/2.4)-.055;return Math.round(Math.max(0,Math.min(1,v))*255)};
+  const lab=c=>{const[r,g,bb]=c.map(lin),l=Math.cbrt(.4122214708*r+.5363325363*g+.0514459929*bb),m=Math.cbrt(.2119034982*r+.6806995451*g+.1073969566*bb),s=Math.cbrt(.0883024619*r+.2817188376*g+.6299787005*bb);
+    return[.2104542553*l+.793617785*m-.0040720468*s,1.9779984951*l-2.428592205*m+.4505937099*s,.0259040371*l+.7827717662*m-.808675766*s]};
+  const p=lab(x),q=lab(y),L=(p[0]+q[0])/2,A=(p[1]+q[1])/2,B=(p[2]+q[2])/2;
+  const l=(L+.3963377774*A+.2158037573*B)**3,m=(L-.1055613458*A-.0638541728*B)**3,s=(L-.0894841775*A-1.291485548*B)**3;
+  return hHex([gam(4.0767416621*l-3.3077115913*m+.2309699292*s),gam(-1.2684380046*l+2.6097574011*m-.3413193965*s),gam(-.0041960863*l-.7034186147*m+1.707614701*s)])}
 function hDisc(P,n,aid,songs,cap,anim){
   const dark=!!(P[0]&&(hRgb(P[0].col)||[255]).reduce((a,b)=>Math.max(a,b))<120);   /* a dark artist: its colors are lifted and not darkened further */
   P=P.map(x=>({...x,col:hLift(x.col)}));
-  const tot=P.reduce((q,x)=>q+x.w,0),dk=(c,k)=>dark?c:'color-mix(in srgb,'+c+' '+(k||76)+'%,#000)';
+  const tot=P.reduce((q,x)=>q+x.w,0),dk=(c,k)=>dark?c:hMixK(c,(k||76)/100);
   if(n===7||n===8){const top=P[0]?P[0].col:songs&&songs.length?songs.slice().sort((x,y)=>y.r-x.r)[0].col:'';return hSplat(songs||[],aid,n===8&&top?hDark(top,22):'',cap)}   /* no base: the splatter sits on clear vinyl */
   if(!P.length)return '';
   if(n===9)return hSvgUrl(hLiquid(P,aid));
@@ -12066,7 +12108,7 @@ function hDisc(P,n,aid,songs,cap,anim){
       return 'radial-gradient(circle at '+Math.round(50+Math.cos(an)*rad)+'% '+Math.round(50+Math.sin(an)*rad)+'%,'+dk(x.col,88)+' 0,transparent '+Math.round(28+x.w*34)+'%)'});
     const base=dark?sp[0].col:dk(sp[0].col,40);return bl.join(',')+',linear-gradient('+base+','+base+')'}
   let acc=0;const st=P.map(x=>{const m=(acc+x.w/2)/tot*100;acc+=x.w;return dk(x.col)+' '+m.toFixed(2)+'%'});
-  const wrap='color-mix(in oklab,'+dk(P[P.length-1].col)+' 50%,'+dk(P[0].col)+')';
+  const wrap=hMixLab(dk(P[P.length-1].col),dk(P[0].col));
   return 'conic-gradient(in oklab from -30deg,'+wrap+' 0%,'+st.join(',')+','+wrap+' 100%)'}
 function heroBlobs(P,off,sx,sy,boost){
   return P.map((x,i)=>{const ang=(i*137.5+off)*Math.PI/180,rad=i?8+Math.min(22,i*3.5):0;

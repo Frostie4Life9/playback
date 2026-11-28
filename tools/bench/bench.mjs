@@ -69,6 +69,9 @@ function library(base) {
   const marks = {};
   // some history so rings, grooves and averages have something to draw
   for (const g of music[0].groups.slice(0, 4)) g.items.slice(0, 9).forEach((i, k) => { marks[i.id] = { done: true, r: 5 + (k % 5) }; });
+  // album scores with rated days, so History has months, the rating year and On this day (two of them a year and two years ago today)
+  { const day = (y, m, d) => { const t = new Date(); t.setFullYear(t.getFullYear() - y); t.setMonth(t.getMonth() - m); t.setDate(t.getDate() - d); return t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0'); };
+    [[1, 0, 0, 8.5], [2, 0, 0, 7], [0, 1, 3, 9], [0, 2, 10, 6.5]].forEach(([y, m, d, r], k) => { const g = music[0].groups[k]; marks[g.id] = { r, rd: day(y, m, d) }; }); }
   if (process.env.BIG) music.slice(1).forEach((a, x) => a.groups.slice(0, 5).forEach(g => g.items.forEach((i, k) => { if ((k + x) % 3) marks[i.id] = { done: true, r: 4 + ((k * 7 + x) % 13) / 2 }; })));
   // Movies & TV: 4 shows (2 seasons of 8) and 6 films, some watched and rated
   const screen = [];
@@ -260,6 +263,7 @@ async function scenario(browser, base, kind) {
 async function pages(browser, base) {
   const ctx = await browser.newContext({ viewport: { width: 430, height: 932 }, deviceScaleFactor: 3, isMobile: !IS_WK, hasTouch: true, serviceWorkers: 'block' });
   const lib = library(base);
+  if (process.env.NOTD) await ctx.addInitScript(() => { window.__NOTD = 1; });
   await ctx.addInitScript(([st, sel]) => { if (sessionStorage.getItem('__seeded')) return; sessionStorage.setItem('__seeded', '1'); localStorage.clear();
     localStorage.setItem('playback_v1', st); localStorage.setItem('playback_v1_tab', 'music'); localStorage.setItem('playback_v1_sel_music', sel); localStorage.setItem('playback_v1_tour', '1'); }, [JSON.stringify(lib), lib.music[0].id]);
   await ctx.addInitScript(PROBE);
@@ -278,6 +282,7 @@ async function pages(browser, base) {
   for (const [name, sel] of seq) {
     const r = await prof(cdp, name, () => step(page, sel));
     if (process.env.EVAL && process.env.EVALAT === name) console.log('  EVAL', JSON.stringify(await page.evaluate(process.env.EVAL)));
+    if (process.env.SHOTS) { await page.waitForTimeout(600); await page.screenshot({ path: path.join(OUT, 'page-' + name.replace(/\W+/g, '-') + '.png') }); }
     out.steps[name] = r.err ? { tap: 0, block: 0, renders: 0, renderMs: 0, worstFrame: 0, err: r.err } : r;
     if (r.err) out.steps[name].skip = true;
   }
@@ -379,6 +384,14 @@ async function flows(browser, base) {
   else need('Next record link is there', false);
   await close();
   }
+  // On this day: an album rated on today's date last year shows on History, and opens from there
+  { const r = await page.evaluate(async () => { const g = S.music[0].groups[3], d = new Date(); d.setFullYear(d.getFullYear() - 1);
+      const k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      S.marks[g.id] = Object.assign({}, S.marks[g.id], { r: 9, rd: k }); UI.view = 'history'; render(); await new Promise(r => setTimeout(r, 900));
+      const b = document.querySelector('.otd-i[data-g="' + g.id + '"]'); return { shown: !!b, gid: String(g.id) }; });
+    need('On this day shows last year\'s rating on History', r.shown, r);
+    if (r.shown) { await click(`.otd-i[data-g="${r.gid}"]`); await page.waitForTimeout(1500);
+      need('On this day opens the album', await page.evaluate(g => !UI.view && !!(UI.alb && String(UI.alb.g) === g), r.gid)); await close(); } }
   // library search: type a name, Enter opens that artist
   if (await click('[data-act="lib"]')) {
     const typed = await page.evaluate(() => { const q = document.getElementById('lq'); if (!q) return false; q.focus(); q.value = 'Artist 3'; q.dispatchEvent(new Event('input', { bubbles: true })); return true; });
