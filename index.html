@@ -4967,6 +4967,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.28-l', note:'READY FOR A FLIGHT. Settings → Your data has a new Save art for offline button: it saves every album and EP cover (Deluxe ones too) and each artist\'s photos, so your whole library shows its art on a plane, not just the albums you happened to open lately. It shows its progress, can be stopped, and remembers when you last did it. Ratings already save on the phone offline and sync once you\'re back online.'},
   {v:'2026.11.28-k', note:'ON THIS DAY. History has a new card under Your rating year: the albums and singles you rated on today\'s date in earlier years ("a year ago", "2 years ago"), each as its sleeve with the record peeking out and your score. If nothing landed on the exact day, it shows the same week in other years. Tap one to open it. Also: the little records on the library\'s artist sleeves work out their colors ahead of time, so opening the library is a bit quicker with your whole collection.'},
   {v:'2026.11.28-j', note:'A CRASH FIX FOR OPENING ALBUMS. The first time you opened an album whose song lengths Playback didn\'t have yet, Apple\'s answer arrived a few seconds later and the whole artist page was rebuilt behind the open album, which is what made your phone drop the page 3 to 5 seconds after opening mini mix vol. 2, Mercurial World and LONG.LIVE.A$AP (and why each one opened fine the next time). Now only the album itself is updated, and the page behind catches up when you close it. Going back to All artists is smoother too: the record flying home no longer makes the phone re-measure the whole page on every frame.'},
   {v:'2026.11.28-i', note:'Switching artists is a little quicker again: the first of the library\'s little sleeve records is no longer painted inside the page change itself.'},
@@ -11631,6 +11632,33 @@ function setHero(){
     <div class="pvset-st"><span class="pvlab" style="color:${lc}">● ${lab}</span><b>${esc(big)}</b><span class="pvsm">${line}</span>
       ${SYS.msg?`<span class="pvsm" style="color:#ffc9cd">${esc(SYS.msg)}</span>`:''}
       <div class="pvset-sb">${on?`<button class="pvb sm w" data-act="pushnow">Save now</button><button class="pvb sm" data-act="pullnow">Check for newer</button>`:`<button class="pvb sm w" data-act="pvsec" data-v="sync">Set up sync</button>`}</div></div></div>`}
+/* 2026.11.28-l: READY FOR A FLIGHT. Saves every album/EP cover (both editions) and each artist's photos into the offline picture
+   cache the service worker already keeps, so the whole library has its art with no connection. Pictures load as plain images
+   (the service worker files them), six at a time, skipping any it already has; the progress line is updated in place. */
+const OFF={busy:false,stop:false,n:0,of:0,bad:0},OFF_K='pb_offart';
+function offUrls(){const u=new Set(),add=x=>{if(x&&/^https?:/.test(x))u.add(x)};
+  for(const a of S.music||[]){try{add(lxArt0(a));add(amPhoto(a));add(spPhoto(a))}catch(e){}
+    for(const g of a.groups||[]){if(g.kind==='Single')continue;add(gArt(g));add(g.dxImg)}}
+  return[...u]}
+function offLast(){try{return JSON.parse(localStorage.getItem(OFF_K)||'null')}catch(e){return null}}
+function offRow(){const L=offLast();
+  if(!('caches' in window)||!navigator.serviceWorker)return '<span class="pvsm">Not available in this browser</span>';
+  if(OFF.busy)return `<span class="pvmono offp" id="offp">${offTxt()}</span><button class="pvb sm" data-act="offstop">Stop</button>`;
+  return `${L?`<span class="pvmono pvmut offp">Saved ${esc(fmtRd(L.d))}${L.bad?' · '+L.bad+' missing':''}</span>`:''}<button class="pvb sm w" data-act="offgo">${L?'Save again':'Save art for offline'}</button>`}
+function offTxt(){return OFF.of?`Saving ${OFF.n} of ${OFF.of}`:'Checking what is saved\u2026'}
+async function offGo(){if(OFF.busy)return;Object.assign(OFF,{busy:true,stop:false,n:0,of:0,bad:0});render();
+  const put=()=>{const el=document.getElementById('offp');if(el)el.textContent=offTxt()};
+  let todo=[];try{const c=await caches.open('playback-img'),all=offUrls();
+    for(const u of all)if(!(await c.match(u)))todo.push(u);OFF.n=all.length-todo.length;OFF.of=all.length}catch(e){todo=offUrls();OFF.of=todo.length}
+  put();
+  const one=u=>new Promise(res=>{const i=new Image();i.decoding='async';let t=setTimeout(()=>{OFF.bad++;res()},20000);
+    i.onload=()=>{clearTimeout(t);res()};i.onerror=()=>{clearTimeout(t);OFF.bad++;res()};i.src=u});
+  let k=0;const lane=async()=>{while(k<todo.length&&!OFF.stop&&navigator.onLine!==false){await one(todo[k++]);OFF.n++;put()}};
+  await Promise.all([lane(),lane(),lane(),lane(),lane(),lane()]);
+  const done=!OFF.stop&&k>=todo.length;OFF.busy=false;
+  if(done)try{localStorage.setItem(OFF_K,JSON.stringify({d:todayISO(),n:OFF.of,bad:OFF.bad}))}catch(e){}
+  pbToast(esc(done?(OFF.bad?`Art saved for offline (${OFF.bad} picture${OFF.bad===1?'':'s'} couldn\u2019t be reached)`:'Art saved. Your whole library\u2019s covers will show offline.'):navigator.onLine===false?'Stopped: you went offline':'Stopped saving art'));
+  if(UI.view==='settings')render()}
 function settingsView(){
   const anim=UI.setAnim!==false;UI.setAnim=false;
   const own=!!window.PB_OWNER,sec=[['conn','Connections'],['look','Look &amp; playback'],['acct','Account &amp; friends'],['sync','Sync &amp; backup'],['data','Your data'],['help','Help &amp; feedback']].concat(own?[['own','Owner tools']]:[]);
@@ -11700,6 +11728,7 @@ function settingsView(){
   let L={n:0,rel:0,heard:0};try{L=lxStats()}catch(e){}
   const plays=PL.d&&PL.d.ts?PL.d.ts.length:0;
   const data=`<section id="pvs-data" class="pvcard pvdg pvrise" data-sec="data" style="--d:4"><div class="pvch"><h2 class="pvh2">Your data</h2><span class="pvmono pvmut">the numbers behind your log</span></div>
+    ${pvRow('offline plane flight art covers photos download','Ready for a flight','Ratings save on this device and sync when you land. This saves every cover and artist photo so your whole library looks right with no connection',offRow())}
     <div class="pvset-num">${[[L.n,'artists'],[L.rel,'releases'],[L.heard,'songs rated'],[plays,'plays kept']].map(([n,t],i)=>`<div class="pvtile pvrise" style="--d:${i}"><b>${stN(n||0)}</b><span class="pvsm">${t}</span></div>`).join('')}</div>
     ${pvRow('export ratings csv spreadsheet','Export ratings','Spreadsheets (CSV). They double as a backup, since RYM has no import',`<button class="pvb sm" data-act="expalbums">Albums</button><button class="pvb sm" data-act="expsongs">Songs</button>${own?'<button class="pvb sm" data-act="expscreen">Shows &amp; films</button>':''}${pvMoreBtn('exp','More')}`,pvPanel('exp',(EXP.open=true,sfe('expSide',expSide))))}
     ${pvRow('original release dates reissue mixtape streaming year era','Original release dates',ORF.all&&ORF.busy?`Checking ${ORF.n} of ${ORF.of} artists on MusicBrainz\u2026`:'Moves records that reached streaming years later (like a free mixtape) back to the year they first came out. Each artist page also checks itself once a month',
@@ -15573,6 +15602,8 @@ document.addEventListener('click',ev=>{
   else if(act==='keeplocal'){if(!UI.keepArm&&logSum(SYS.remote).r>logSum(S).r){UI.keepArm=true;render();return}UI.keepArm=false;SYS.remote=null;push(true);return}
   else if(act==='keepremote'){UI.keepArm=false;const j=SYS.remote;SYS.remote=null;if(j)adopt(j);return}
   else if(act==='unsync'){SY={url:'',key:'',last:0,at:0};saveSync();SYS.status='off';SYS.msg=''}
+  else if(act==='offgo'){offGo();return}
+  else if(act==='offstop'){OFF.stop=true;return}
   else if(act==='expalbums'){dlCSV('playback-albums.csv',csvAlbums());return}
   else if(act==='expsongs'){dlCSV('playback-songs.csv',csvSongs());return}
   else if(act==='expscreen'){dlCSV('playback-shows-films.csv',csvScreen());return}

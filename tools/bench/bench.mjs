@@ -392,6 +392,12 @@ async function flows(browser, base) {
     need('On this day shows last year\'s rating on History', r.shown, r);
     if (r.shown) { await click(`.otd-i[data-g="${r.gid}"]`); await page.waitForTimeout(1500);
       need('On this day opens the album', await page.evaluate(g => !UI.view && !!(UI.alb && String(UI.alb.g) === g), r.gid)); await close(); } }
+  // Ready for a flight: Settings saves every cover for offline and remembers when
+  { await page.evaluate(() => { UI.view = 'settings'; UI.setSec = 'data'; render(); }); await page.waitForTimeout(700);
+    const there = await click('[data-act="offgo"]', false); let rec = null;
+    for (let i = 0; i < 40 && !rec; i++) { await page.waitForTimeout(250); rec = await page.evaluate(() => { try { return JSON.parse(localStorage.getItem('pb_offart') || 'null'); } catch (e) { return null; } }); }
+    need('Save art for offline saves every cover', there && rec && rec.n > 0 && !rec.bad, { there, rec });
+    await page.evaluate(() => { UI.view = null; render(); }); await page.waitForTimeout(600); }
   // library search: type a name, Enter opens that artist
   if (await click('[data-act="lib"]')) {
     const typed = await page.evaluate(() => { const q = document.getElementById('lq'); if (!q) return false; q.focus(); q.value = 'Artist 3'; q.dispatchEvent(new Event('input', { bubbles: true })); return true; });
