@@ -14,7 +14,7 @@ Playback is Skyler's music + movie/TV app, live at https://frostie4life9.github.
 
 ## Usage and testing
 - Keep usage lean. For performance or animation work, **measure once before and once after**, not repeatedly.
-- Measure in headless Chrome at iPhone size: 430×932, touch, 3× pixels, 4× CPU slowdown. Use a synthetic library seeded into localStorage (`playback_v1`, plus `_tab=music` and `_sel_music`). Report main-thread time (`render()` and long tasks) and the worst frame. Also check in Playwright WebKit when iPhone rendering matters (setup notes are in the Project doc `claude/phone-jacket-built-2026-11-27.md`, under Testing setup). Use real bitmap covers.
+- Measure with `tools/bench` (see Budgets): headless Chrome at iPhone size (430×932, touch, 3× pixels, 4× CPU), a synthetic library seeded into localStorage, real JPEG covers. `PROF=<step>` shows where a step's time goes, `LAYERS=1` what holds graphics memory, `SHOTS=1` settled screenshots. Don't write one-off harnesses; add an option to the bench instead.
 - Headless Chrome isn't his iPhone. Say so when a fix can only be confirmed on the phone.
 - He tests on an iPhone (Safari and Brave). Crash and reload notes land in the Suggest box: Cloudflare KV namespace `123626e20f3e4780ba3064ff22077e7e`, key `suggestions` (newest first). Look for `[crash]`, `[dropped]` and `[slow]` (Speed watch: taps over 100 ms or frames over 100 ms on his phone, with what was tapped) there after phone releases. Crash-safe (light mode) lasts only until the next build, so each release gets one full try at albums that crashed before. Once a crash is fixed, remove the notes relating to it from that key (leave his friends' real suggestions alone).
 
@@ -25,7 +25,7 @@ Run the bench before every push that touches the album, rating, sleeves or the a
 - **Rating tap < 50 ms** to the next painted frame, at 4× CPU.
 - **Close after rating < 150 ms** longest main-thread block, including the deferred hero repaint after it lands.
 - **Album opening < ~280 MB** estimated layer memory (was 350; ~240 since 2026.11.28-g) (full-size layer estimate; phone tiling is lower, but it tracks the reloads).
-- **Flows** (`ONLY=flows`): 15 end-to-end checks (rating sticks, shows, survives close/reopen and reload, Clear, heard, Next record, 7-inch label). Any miss fails.
+- **Flows** (`ONLY=flows`, or `npm run quick`): end-to-end checks (rating sticks, shows, survives close/reopen and reload, Clear, heard, Next record, 7-inch label, hero spins again after close). Any miss fails. When you add a feature, add its check here.
 - **Lint**: no animated `filter: blur` / `backdrop-filter` in `@keyframes` or `.animate()` (an animated blur in the 7-inch's "Rated" line crashed WebKit's page every time; likely the iPhone reloads after rating singles).
 - **Safari engine**: also run `ENGINE=webkit PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers npm run bench` when the album, single or animations change (install once with `PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers node node_modules/playwright-core/cli.js install webkit`). WebKit timings are meaningless headless, but a crash or a failed flow there is real. A page crash in WebKit is how the 7-inch crash was found.
 For anything that scales with the library (artist page, library, saving, colors), also run `BIG=1` (about Skyler's size: 90 artists, ~2,000 releases); the small default library hides those costs.
@@ -36,7 +36,8 @@ If a step is over, fix it or say why before pushing. Tap times jitter ±15 ms on
 - `jkPatch()` picks the sleeve's patcher from `SLEEVE` (album jacket `jk2`, 7-inch `s7`); any other sleeve falls back to `gfPatchAny`, which patches the whole sleeve in place. A new sleeve type is fast by default; only add a `SLEEVE` entry if parts of it must not be touched, and add its build class to `SLEEVE_FAM`. `GENERIC=1 npm run bench` proves the shared path alone stays in budget.
 - Opening/closing on phones: `gfOpenQuick` / `gfCloseQuick` / `gfClosePatch` accept any `.phs` sleeve.
 - Never read layout (`scrollTop`, `scrollWidth`, `getBoundingClientRect`, `offset*`) after changing the DOM in a tap handler; read before, or defer to the next frame.
-- Work that can wait (hero repaint, saves, place notes) runs after the motion lands, in slices (`HSLOW`), never in the tap.
+- Work that can wait (hero repaint, saves, place notes, cover colours, library sleeve records) runs after the motion lands, in slices (`HSLOW`, `tdStep`, `acolIdle`), never in the tap.
+- Under an open phone album (`html.gfsh`) the page behind is covered: anything on it that keeps a layer alive (endless animations, `will-change`, backdrop blurs) is paused or switched off there, the way `heroHold` pauses the hero's spin. An endless compositor animation makes everything painted after it a layer too.
 
 ## Design rules
 - Match the approved mockups exactly (album mockups canvas: https://claude.ai/artifact/J5MTCXBMo4nz1Mi4vUBMH5).
