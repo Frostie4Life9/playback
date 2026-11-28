@@ -3426,11 +3426,15 @@ html.lite .hx .hxfp{-webkit-backdrop-filter:none;backdrop-filter:none;background
     html.gfsh .track.sl-t.landed .check{animation:none}
     html.gfsh .track.sl-t.landed .check svg{animation:none}   /* 2026.11.27-r: rgBump set the ring's own scale(1.27) back to 1, so the ring shrank inside the record and jumped back out */
     html.gfsh .track.sl-t.landed .rg-n,html.gfsh .track.sl-t.landed .check{animation:none}
-    html.gfsh .track.sl-t.landed .rg-v{transition:stroke-dasharray .42s cubic-bezier(.2,.85,.25,1) .04s}
+    html.gfsh .track.sl-t.landed .rg-v{transition:stroke-dasharray .6s cubic-bezier(.3,.7,.25,1) .1s}
     @keyframes rgLab2{0%{opacity:0;transform:scale(.55)}70%{opacity:1;transform:scale(1.04)}100%{transform:scale(1)}}}
   /* 2026.11.27-q: on the phone jacket the label is already on the little record when the number arrives (it used to blink out
      and grow back after the landing, so the record went blank for a beat) */
   html.gfsh .track.sl-t.landing .check.check::after{opacity:1;transform:none}
+  html.gfsh .gf.jk2 .track.sl-t{isolation:isolate;position:relative}
+  .track.sl-t>.rg-wash{position:absolute;inset:0;z-index:-1;pointer-events:none;transform-origin:0 50%;background:linear-gradient(90deg,color-mix(in srgb,var(--rcl,#c9a) 34%,transparent),color-mix(in srgb,var(--rcl,#c9a) 14%,transparent));will-change:transform,opacity}
+  .track.sl-t .check>.rg-roll{position:absolute;inset:12px;z-index:3;border-radius:50%;overflow:hidden;display:grid;place-items:center;pointer-events:none}
+  .track.sl-t .check>.rg-roll>b{display:block;font:700 12px/1 Archivo,var(--display);font-variant-numeric:tabular-nums;color:#1b1511;will-change:transform}
   .track.sl-t .check>.rg-burst{position:absolute;inset:3px;z-index:0;border-radius:50%;border:2px solid var(--rcl,#f3eadb);pointer-events:none;opacity:0;will-change:transform,opacity}
   .track.sl-t .check>.rg-ghost{position:absolute;inset:0;z-index:3;display:grid;place-items:center;pointer-events:none;will-change:transform,opacity}
   .track.sl-t .check>.rg-ghost::before{content:"";position:absolute;inset:12px;border-radius:50%;background:var(--lc,#f3eadb)}
@@ -4865,6 +4869,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.27-t', note:'A NEW SONG RATING MOMENT. Nothing flies across the album any more. When you tap Done, the score sinks away on the card as it tucks back in, a band of the album\u2019s color sweeps across that song\u2019s row, and the score rolls up into the little record\u2019s label while its ring sweeps round to your rating, finishing with one small pop.'},
   {v:'2026.11.27-s', note:'CALMER RECORDS, A FULL SWING, NO SNAP ON THE SHELF. Rating a song lands with a softer pop and a smaller ring, and the score on the little record no longer blinks out for a moment as it lands (the record\u2019s spin was drawing over it on the iPhone, so the spin is gone). Marking a song heard or not heard and clearing a rating are gentler too, and Mark all heard drops the records on one after another. Opening an album now shows the whole swing: the view follows the cover as it opens past upright, so you see its printed back before it settles on the songs (it used to swing off the left edge halfway through), and closing does the same in reverse. When an album is put back, its record slides back out of the sleeve smoothly instead of freezing and snapping into place at the end, and tucking it in on open is smoother too. Tapping another record while one is still closing now opens it once the first is put away (before, nothing ended up open).'},
   {v:'2026.11.27-r', note:'ALBUM AND RATING POLISH FROM YOUR RECORDING. The artist page now stays in view behind an open album (dimmed slightly, no more solid color) with the album lifted in front of it. Opening an album no longer jumps: the cover used to snap from its sleeve to full size because its flight ran while the album was still being built; now the flight waits for the album and plays all the way. Rating a song is punchier: the number flies off the card as a little paper label, arcs over, stamps onto the song\u2019s record, which pops and spins as a ring of the album\u2019s color bursts off it (before, it flew as dark ink you could barely see, and the record\u2019s ring shrank and jumped back). Clearing a rating spins the score off the record, and marking a song heard drops a record onto it with a spin (not heard lifts it off to a ghost), without redrawing the whole page. The Done button on the rating card is a light pill like the others instead of a dark slab.'},
   {v:'2026.11.27-q', note:'RATING LANDING, LESS LAG. Tapping Done used to redraw the whole album on the same frame, so the screen froze and the number seemed to jump straight onto the little record. Now the number lifts first, the album only updates the song you rated and the lines that changed, and then the number flies. The record keeps its label while the number lands, so it no longer goes blank for a beat before the ring draws.'},
@@ -13616,8 +13621,14 @@ function jkStamp(ck,kind,old,lc){
   const sp=(e,kf,o)=>{try{return e.animate(kf,o)}catch(x){return null}},burst=sc=>{const r=document.createElement('i');r.className='rg-burst';r.setAttribute('aria-hidden','true');ck.appendChild(r);
     const an=sp(r,[{transform:'scale(.8)',opacity:.7},{transform:'scale('+sc+')',opacity:0}],{duration:460,easing:'cubic-bezier(.2,.7,.3,1)'});if(an)an.finished.then(()=>r.remove(),()=>r.remove());else r.remove()};
   if(kind==='land'){
-    sp(ck,[{transform:'scale(.94)'},{transform:'scale(1.16)',offset:.38},{transform:'scale(1)'}],{duration:420,easing:'cubic-bezier(.3,.7,.3,1)'});
-    burst(1.7)}
+    const row=ck.closest('.track.sl-t'),n=ck.querySelector('.rg-n');
+    if(row){const w=document.createElement('i');w.className='rg-wash';w.setAttribute('aria-hidden','true');row.appendChild(w);
+      const an=sp(w,[{transform:'scaleX(0)',opacity:1},{transform:'scaleX(1)',opacity:1,offset:.45},{transform:'scaleX(1)',opacity:0}],{duration:620,easing:'cubic-bezier(.3,.6,.3,1)'});
+      if(an)an.finished.then(()=>w.remove(),()=>w.remove());else w.remove()}
+    if(n){const r=document.createElement('span');r.className='rg-roll';r.setAttribute('aria-hidden','true');r.innerHTML='<b>'+esc(n.textContent)+'</b>';ck.appendChild(r);n.style.opacity='0';
+      const an=sp(r.firstChild,[{transform:'translateY(115%)'},{transform:'translateY(-12%)',offset:.7},{transform:'translateY(0)'}],{duration:360,delay:110,easing:'cubic-bezier(.25,.8,.35,1)',fill:'backwards'});
+      const fin=()=>{n.style.opacity='';r.remove()};if(an)an.finished.then(fin,fin);else fin()}
+    sp(ck,[{transform:'scale(1)'},{transform:'scale(1.1)',offset:.5},{transform:'scale(1)'}],{duration:280,delay:380,easing:'ease-out'})}
   else if(kind==='heard'){
     sp(ck,[{transform:'scale(.72)',opacity:.4},{transform:'scale(1.08)',opacity:1,offset:.6},{transform:'scale(1)',opacity:1}],{duration:380,easing:'cubic-bezier(.25,.8,.3,1)'});burst(1.5)}
   else if(kind==='unheard'){
@@ -13651,13 +13662,12 @@ function rtFlyGo(p){
     /* 2026.11.27-r: on the phone jacket the number flies as the little record's paper label (a cream disc with the score
        printed on it), so it stays visible over the dark panel, arcs up and over, and stamps onto the record at the label's size.
        It used to fly as bare dark ink, already shrunk, and was all but invisible on the way. */
+    /* 2026.11.27-t: on the phone jacket nothing flies any more. The score sinks away on the card as it tucks back in, and the
+       song's row picks it up (see jkStamp 'land'): a band of the album's color sweeps across the row, then the score rolls up
+       into the record's label while its ring sweeps round. */
     const ck=d.closest&&d.closest('.track.sl-t .check');
     if(ck&&document.documentElement.classList.contains('gfsh')){
-      const cb=ck.getBoundingClientRect(),lab=getComputedStyle(ck,'::after'),lw=Math.max(14,cb.width-24),
-        z=Math.max(p.r.width,p.r.height)*1.3,cx=p.r.left+p.r.width/2,cy=p.r.top+p.r.height/2;
-      Object.assign(p.el.style,{left:(cx-z/2)+'px',top:(cy-z/2)+'px',width:z+'px',height:z+'px',borderRadius:'50%',background:lab.backgroundColor||'#f3eadb',color:'#1b1511',boxShadow:'0 10px 22px rgb(0 0 0 / .45),inset 0 0 0 1px rgb(0 0 0 / .12)'});
-      const dx=cb.left+cb.width/2-cx,dy=cb.top+cb.height/2-cy,k=lw/z,lift=Math.min(70,Math.abs(dy)*.35+24);
-      p.el.animate([{transform:'translate(0,-6px) scale(1.14)'},{transform:'translate('+(dx*.45).toFixed(1)+'px,'+(dy*.45-lift).toFixed(1)+'px) scale(.9) rotate(-14deg)',offset:.5},{transform:'translate('+dx.toFixed(1)+'px,'+dy.toFixed(1)+'px) scale('+(k*1.12).toFixed(4)+') rotate(0deg)',offset:.86},{transform:'translate('+dx.toFixed(1)+'px,'+dy.toFixed(1)+'px) scale('+k.toFixed(4)+')'}],{duration:460,easing:'cubic-bezier(.45,0,.25,1)',fill:'forwards'}).finished.then(done,done);return}
+      p.el.animate([{transform:'translate(0,-6px) scale(1.14)',opacity:1},{transform:'translate(0,4px) scale(.72)',opacity:0}],{duration:170,easing:'cubic-bezier(.5,0,.75,0)',fill:'forwards'}).finished.then(done,done);return}
     const b=d.getBoundingClientRect(),dc=getComputedStyle(d),
       dx=b.left+b.width/2-(p.r.left+p.r.width/2),dy=b.top+b.height/2-(p.r.top+p.r.height/2),sc=(d.classList.contains('check')?13:parseFloat(dc.fontSize)||13)/p.fs;
     if(!d.classList.contains('check'))p.el.style.color=dc.color;   /* 2026.11.27-o: transform only, so the flight runs off the main thread */
