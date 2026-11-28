@@ -255,9 +255,13 @@ async function pages(browser, base) {
   await ctx.addInitScript(PROBE);
   await ctx.route('**/*', r => { const u = r.request().url(); return u.startsWith(base) || u.startsWith('data:') || u.startsWith('blob:') ? r.continue() : r.abort(); });
   const page = await ctx.newPage(); const errors = []; page.on('pageerror', e => errors.push(String(e.message).slice(0, 160)));
-  await page.goto(base + '/index.html', { waitUntil: 'load' }); await page.waitForSelector('.hxsl[data-g]', { timeout: 20000 }); await page.waitForTimeout(1200);
   let cdp = null; if (!IS_WK) { cdp = await ctx.newCDPSession(page); await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 }); }
-  const out = { kind: 'pages', sleeve: '-', steps: {} };
+  let boot;
+  const go = async () => { await page.goto(base + '/index.html', { waitUntil: 'commit' }); await page.waitForSelector('.hxsl[data-g]', { timeout: 30000 });
+    boot = await page.evaluate(() => new Promise(r => requestAnimationFrame(() => setTimeout(() => r(Math.round(performance.now())), 0)))); return {}; };
+  await prof(cdp, 'start', go);
+  await page.waitForTimeout(1500);
+  const out = { kind: 'pages', sleeve: '-', steps: { start: { tap: boot, block: boot, renders: 0, renderMs: 0, worstFrame: 0 } } };
   const seq = [['stats', '[data-act="mmgo"][data-v="stats"]'], ['history', '[data-act="mmgo"][data-v="history"]'], ['settings', '[data-act="view"][data-v="settings"]'],
     ['account', '[data-act="view"][data-v="account"]'], ['artist', '[data-act="mmgo"][data-v="artists"]'], ['library', '[data-act="lib"]'],
     ['other artist', `#lx [data-id="${lib.music[1].id}"], #lx [data-sel="${lib.music[1].id}"], #lx .entry:nth-child(2), #lx .tile:not(.add):nth-of-type(2)`], ['library 2', '[data-act="lib"]'], ['back', '[data-act="lib"]']];
