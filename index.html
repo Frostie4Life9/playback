@@ -2026,7 +2026,7 @@ body:has(.head.hero.hx) .top .label{color:rgb(255 255 255 / .82)}
 .gf .rt-foot{gap:8px;margin-top:8px}
 .gf .rt-foot .link{min-height:36px;padding:0 14px;border-radius:999px;color:var(--ink);font:600 13px var(--body);text-decoration:none;border:1px solid color-mix(in srgb,var(--ink) 22%,transparent);background:transparent}
 .gf .rt-foot .rt-done{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.gf.jk2>.rater.jkins .rt-foot .rt-done{background:color-mix(in srgb,var(--acsw,#8a5a4a) 30%,#fff7f0);color:#2b1a20;border:1px solid color-mix(in srgb,#2b1a20 22%,transparent);box-shadow:0 1px 0 #fff inset}   /* 2026.11.27-r: Done on the jacket's cream card is a light pill like the others (it was a near-black slab) */
+.gf:is(.jk2,.s7)>.rater.jkins .rt-foot .rt-done{background:color-mix(in srgb,var(--acsw,#8a5a4a) 30%,#fff7f0);color:#2b1a20;border:1px solid color-mix(in srgb,#2b1a20 22%,transparent);box-shadow:0 1px 0 #fff inset}   /* 2026.11.27-r: Done on the jacket's cream card is a light pill like the others (it was a near-black slab) */
 .gf .rt-om{min-height:36px;padding:0 14px;border-color:color-mix(in srgb,var(--ink) 22%,transparent)}
 @media (max-width:520px){.gf .rt-foot{gap:6px}.gf .rt-foot .link,.gf .rt-om{padding:0 11px;white-space:nowrap}.gf .rt-om{margin-right:0;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}}   /* 2026.11.24-b: the three rater buttons stay on one line on a phone */
 .gf .rt-om[aria-pressed="true"]{background:color-mix(in srgb,var(--rc) 45%,transparent);border-color:color-mix(in srgb,var(--rc) 70%,#fff)}
@@ -3515,15 +3515,78 @@ html.lite .hx .hxfp{-webkit-backdrop-filter:none;backdrop-filter:none;background
   html.gfsh .group.sleeve .sl-disc::before,html.gfsh .group.sleeve .sl-disc::after,html.gfsh .group.sleeve .sl-lab,html.gfsh .group.sleeve .sl-disc i,html.gfsh .vgr i{animation:none!important}
   html.gfsh .track.sl-t.landed .check .rg-v{filter:none}
   /* 2026.11.27-n: the insert card sits in the open space under the jacket (lifted out of the songs panel by gfInsLift) */
-  .gf.jk2>.rater.jkins{--ink:#2b1a20;position:absolute;z-index:5;left:28px;right:28px;top:calc(100% + 14px);bottom:auto;margin:0;padding:16px 18px 12px;border:0;border-radius:6px;color:#2b1a20;
+  .gf:is(.jk2,.s7)>.rater.jkins{--ink:#2b1a20;position:absolute;z-index:5;left:28px;right:28px;top:calc(100% + 14px);bottom:auto;margin:0;padding:16px 18px 12px;border:0;border-radius:6px;color:#2b1a20;
     max-height:calc(100dvh - max(calc(env(safe-area-inset-top,0px) + 60px),calc((100dvh - var(--jw)) / 2 - 80px)) - var(--jw) - 40px - env(safe-area-inset-bottom,0px));overflow:auto;overscroll-behavior:contain;
     background:linear-gradient(170deg,color-mix(in srgb,var(--acsw) 10%,#fbf1ea),color-mix(in srgb,var(--acsw) 18%,#efe0d6));box-shadow:0 14px 34px rgb(0 0 0 / .38),inset 0 1px 0 #fff;animation:none}
   @media (prefers-reduced-motion:no-preference){
-    .gf.jk2>.rater.jkins:not(.jkst){animation:jkOut .4s cubic-bezier(.2,.85,.25,1) both}
-    .gf.jk2>.rater.jkins.rt-out{animation:jkBack .22s cubic-bezier(.4,0,.8,.4) both}
+    .gf:is(.jk2,.s7)>.rater.jkins:not(.jkst){animation:jkOut .4s cubic-bezier(.2,.85,.25,1) both}
+    .gf:is(.jk2,.s7)>.rater.jkins.rt-out{animation:jkBack .22s cubic-bezier(.4,0,.8,.4) both}
     @keyframes jkOut{from{translate:0 -40px;opacity:0;clip-path:inset(0 0 100% 0)}to{translate:0 0;opacity:1;clip-path:inset(0 0 -40px 0)}}
     @keyframes jkBack{to{translate:0 -40px;opacity:0;clip-path:inset(0 0 100% 0)}}}
 }
+/* ===== 2026.11.27-w: A SINGLE ON A PHONE IS A 7-INCH IN ITS PICTURE SLEEVE (board 5) ===== */
+@media (max-width:760px){
+  .hxrel>.group.sleeve.gf.ov.phs.s7{top:calc(env(safe-area-inset-top,0px) + 60px);bottom:0;height:auto;max-height:none;background:none;border-radius:0;box-shadow:none;overflow:visible}
+  .gf.s7{--S:clamp(190px,min(60vw,calc(100dvh - 470px)),262px);--t:34px;color:#fff}
+  .gf.phs.s7>.gfgrab{position:absolute;left:0;right:0;top:-50px;height:0}
+  .gf.s7>.gfgrab>i,.gf.s7>.gfgrab::before{display:none}
+  .gf.s7>.gfgrab>.gf-x{color:#fff;background:rgb(255 255 255 / .14);-webkit-backdrop-filter:none;backdrop-filter:none}
+  .gf.s7 .s7-sl{position:relative;width:var(--S);height:var(--S);margin:var(--t) 0 0 calc((100% - var(--S) * 1.49) / 2);transform-origin:0 0}
+  .gf.s7 .s7-rec{position:absolute;left:0;top:1.75%;width:96.5%;height:96.5%;z-index:1;border-radius:50%;translate:50.4% 0;
+    background:radial-gradient(circle,transparent 46%,rgb(255 255 255 / .05) 46.5% 47%,transparent 47.5%),repeating-radial-gradient(circle,#1c1d1f 0 1px,#0b0c0d 1px 3px);box-shadow:0 8px 20px rgb(0 0 0 / .5)}
+  .gf.s7 .s7-lab{position:absolute;inset:27.5%;border-radius:50%;background:var(--acs,#888);box-shadow:inset 0 0 0 1px rgb(0 0 0 / .18)}
+  .gf.s7 .s7-lab::before{content:"";position:absolute;inset:31%;border-radius:50%;background:#0d0e10;box-shadow:inset 0 1px 2px rgb(0 0 0 / .6)}   /* the big 7-inch center hole */
+  .gf.s7 .s7-n{position:absolute;right:5%;top:50%;height:1.3em;margin-top:-.65em;overflow:hidden;font:700 calc(var(--S) * .062)/1.3em var(--display);color:#151515;mix-blend-mode:normal}
+  .gf.s7 .s7-n b{display:block;font:inherit}
+  .gf.s7 .s7-f{position:absolute;inset:0;z-index:3;border-radius:2px;overflow:hidden;background:var(--acs,#555);box-shadow:0 14px 34px rgb(0 0 0 / .4);opacity:0;pointer-events:none;transform-origin:50% 50%}
+  .gf.s7 .s7-f img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+  .gf.s7 .s7-f span{position:absolute;left:14px;bottom:12px;right:14px;font:800 22px/1.05 var(--display);color:rgb(255 255 255 / .8)}
+  .gf.s7 .s7-b{--ink:#1d252b;position:absolute;inset:0;z-index:2;box-sizing:border-box;border-radius:2px;overflow:auto;overscroll-behavior:contain;scrollbar-width:none;padding:13px 12px 10px;color:var(--ink);transform-origin:50% 50%;
+    background:linear-gradient(200deg,color-mix(in srgb,var(--acs,#999) 9%,#f5f2ed),color-mix(in srgb,var(--acs,#999) 22%,#ded7cd));box-shadow:inset -2px 0 0 rgb(0 0 0 / .12),0 14px 34px rgb(0 0 0 / .4)}
+  .gf.s7 .s7-b::-webkit-scrollbar{display:none}
+  .gf.s7 .s7-b::before{content:"";position:absolute;inset:0;z-index:0;background:var(--art,none) 30% 30%/cover no-repeat;opacity:.11;filter:saturate(.7);pointer-events:none}   /* the cover printed faintly on the card */
+  .gf.s7 .s7-b>*{position:relative;z-index:1}
+  .gf.s7 .s7-k{margin:0;font:500 9.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:color-mix(in srgb,var(--acs,#357) 60%,#1d252b)}
+  .gf.s7 .s7-b h3{margin:2px 0 0;font:800 clamp(18px,calc(var(--S) * .1),25px)/1.02 var(--display);letter-spacing:-.01em;overflow-wrap:anywhere}
+  .gf.s7 .s7-s,.gf.s7 .s7-b .sl-rd,.gf.s7 .s7-b .sl-orig,.gf.s7 .s7-b>p{margin:3px 0 0;font-size:11px;line-height:1.35;color:color-mix(in srgb,var(--ink) 70%,transparent)}
+  .gf.s7 .s7-b .tlist{margin-top:9px;padding:0}
+  .gf.s7 .s7-b .track.sl-t{min-height:36px;margin:0;padding-left:4px;padding-right:0;border-radius:3px;background:none;border-top:1px solid color-mix(in srgb,var(--ink) 18%,transparent);isolation:isolate;position:relative}
+  .gf.s7 .s7-b .track.sl-t:last-child{border-bottom:1px solid color-mix(in srgb,var(--ink) 18%,transparent)}
+  .gf.s7 .s7-b .track.sl-t.ropen{background:color-mix(in srgb,var(--ink) 9%,transparent)}
+  .gf.s7 .s7-b .track.sl-t>.wash{top:auto;bottom:-1px;height:2px;background:var(--rcl,var(--acs));opacity:.85}
+  .gf.s7 .s7-b .track.sl-t .num{font:500 10px var(--mono);min-width:20px}
+  .gf.s7 .s7-b .track.sl-t .ttl{font-size:12.5px;font-weight:600}
+  .gf.s7 .s7-b .sl-wf{margin-top:8px}
+  .gf.s7>.s7-hint{margin:16px 0 0;text-align:center;font:500 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:rgb(255 255 255 / .8);transition:opacity .2s}
+  .gf.s7>.s7-act{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;margin:12px 18px 0;transition:opacity .2s}
+  .gf.s7>.s7-act>.sl-bar{position:static;display:flex;gap:8px}
+  .gf.s7>.s7-act .sl-ic{position:relative;top:auto;right:auto;left:auto}
+  .gf.s7>.s7-act>.sl-foot{display:flex;align-items:center;gap:8px;margin:0;padding:0;border:0}
+  .gf.s7>.s7-act>.fr-strip,.gf.s7>.s7-act>.lsp{flex-basis:100%;display:flex;justify-content:center}
+  .gf.s7:has(>.rater) :is(.s7-hint,.s7-act){opacity:0;pointer-events:none}
+  .gf.s7>.rater.jkins{top:calc(var(--t) + var(--S) + 14px);left:20px;right:20px;max-height:calc(100dvh - env(safe-area-inset-top,0px) - 60px - var(--t) - var(--S) - 36px - env(safe-area-inset-bottom,0px))}
+  @media (prefers-reduced-motion:reduce){.gf.s7 .s7-rec,.gf.s7 .s7-lab b{animation:none}}
+}
+/* ===== 2026.11.27-w: DESKTOP GATEFOLD, BOARDS 1 AND 2B. The left record is tucked behind the inside left and peeks half out of its
+   outer edge; the right one is pulled about two thirds out so its grooves and label read while it is still in the jacket. A yellow
+   hype sticker carries the score on the inside left. */
+@media (min-width:761px){
+  .gf:not(.sg7) .gf-sp{--P:min(calc(100cqw / 3.15),calc(100vh - 170px),840px)}
+  .gf:not(.sg7) .gf-pk.l{--pk:.5}
+  .gf:not(.sg7) .gf-pk.r{--pk:.68}
+  @media (hover:hover){.gf:not(.sg7) .gf-r:hover .gf-pk.r .gf-vr{translate:12% 0}}
+  .gf-vr.vgr i.sel{--rw:3px;--rc:#fff;filter:drop-shadow(0 0 5px var(--gv,#fff))}
+  .gf-vl span.t{max-width:86%;justify-self:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .gfd-stk{position:absolute;z-index:5;right:9%;bottom:7%;width:calc(var(--P) * .27);aspect-ratio:1;border-radius:50%;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:#ffd34d;color:#3b1724;rotate:-8deg;box-shadow:0 6px 14px rgb(0 0 0 / .3);pointer-events:none}
+  .gfd-stk b{font:800 calc(var(--P) * .072)/1 var(--display)}
+  .gfd-stk span{margin-top:5px;font:700 calc(var(--P) * .019) var(--body);letter-spacing:.06em;text-transform:uppercase}
+  @media (prefers-reduced-motion:no-preference){
+    .gf.gfopen .gfd-stk{animation:gfdStk .55s calc(.9s / 1.4) cubic-bezier(.3,1.6,.5,1) both}
+    .gfd-stk.stamp b{animation:gfdStk .55s .15s cubic-bezier(.3,1.6,.5,1) both}
+    @keyframes gfdStk{from{scale:2.2;rotate:-14deg;opacity:0}}}
+}
+@media (max-width:760px){.gfd-stk{display:none}}
 .gfr-songs em.gfr-nil{display:none}
 /* 2026.11.27-j: the back of the swinging cover is printed card with the album's title, drawn in plain text */
 .gfh-b .gfh-bt{position:absolute;left:0;right:0;top:0;padding:18px 20px;color:inherit}
@@ -4869,6 +4932,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.27-w', note:'SINGLES ARE 7-INCHES, AND THE DESKTOP ALBUM MATCHES THE MOCKUPS. On your phone a single now opens as a 7-inch in its picture sleeve: the sleeve flies out of the row, flips over to its printed back (year, 45 RPM, the A-side and B-sides), and the record slides out of the edge with your score on its label. Tapping a song pulls the same rating card out of the bottom as an album, and the new score rolls onto the label. On a computer, the right-hand record now sits about two thirds out of the jacket so its label shows, the label shows the song you are rating with its groove lit, and the score is on a yellow sticker on the inside left that stamps on when it changes.'},
   {v:'2026.11.27-v', note:'DELUXE CRASH FIX (TRY). Reopening an album you had closed on its Deluxe edition could crash the page on iPhone. Closing on the Deluxe now does the full page refresh it used to, so the phone frees memory before you open it again. The Deluxe sleeve still stays in front.'},
   {v:'2026.11.27-u', note:'DELUXE STAYS PUT, AND A LIGHTER CLOSE. Closing an album you had on its Deluxe edition now leaves the Deluxe sleeve in front of the row, where the cover lands; it no longer trades places with the Standard sleeve right after, which is what looked like the Deluxe cover flashing. It goes back to Standard when you leave the artist. Closing an album after rating, marking heard or adding a listen no longer rebuilds the whole artist page: only the progress record, its lines and the grooves on the sleeves are updated, so the moment the cover lands is about a sixth of a second lighter on a slowed phone.'},
   {v:'2026.11.27-t', note:'A NEW SONG RATING MOMENT. Nothing flies across the album any more. When you tap Done, the score sinks away on the card as it tucks back in, a band of the album\u2019s color sweeps across that song\u2019s row, and the score rolls up into the little record\u2019s label while its ring sweeps round to your rating, finishing with one small pop.'},
@@ -9803,7 +9867,7 @@ function gfMorph(a,b){
   if(a.tagName==='DETAILS')a.open=b.open;
   if((a.tagName==='INPUT'||a.tagName==='TEXTAREA'||a.tagName==='SELECT')&&a!==document.activeElement&&a.value!==b.value)a.value=b.value;
   /* 2026.11.20-p: the phone's page header and Details/Ratings switch are added after the build, so a redraw keeps them (the rating record in them is patched by gfPgPlace) */
-  const ac=[...a.childNodes].filter(n=>!(n.nodeType===1&&n.classList&&(n.classList.contains('gfph-h')||n.classList.contains('gfpg')||n.classList.contains('gfnx')))),bc=[...b.childNodes];   /* 2026.11.27-q: the Next record links too */
+  const ac=[...a.childNodes].filter(n=>!(n.nodeType===1&&n.classList&&(n.classList.contains('gfph-h')||n.classList.contains('gfpg')||n.classList.contains('gfnx')||n.classList.contains('gfgrab')||n.classList.contains('jkins')))),bc=[...b.childNodes];   /* 2026.11.27-q: the Next record links too */
   let j=0;   /* walk both lists; an old child with no match in the new list is dropped, a new one with no match is put in */
   for(const n of bc){let k=j;while(k<ac.length&&!gfSame(ac[k],n))k++;
     if(k<ac.length){while(j<k)ac[j++].remove();gfMorph(ac[j++],n)}else a.insertBefore(n,ac[j]||null)}
@@ -12259,10 +12323,11 @@ function gfPhPlace(rel,gf){
   if(!sc){sc=document.createElement('div');sc.className='gfscrim';sc.setAttribute('aria-hidden','true');sc.addEventListener('click',()=>gfClose())}
   if(sc.nextElementSibling!==gf)rel.insertBefore(sc,gf);
   /* 2026.11.27-h: an album warms the page to its own color instead of dimming it to grey (and skips the costly blur) */
-  {const al=!gf.classList.contains('sg7');sc.classList.toggle('jkw',al);if(al){const wc=getComputedStyle(gf).getPropertyValue('--acsw').trim();if(wc)sc.style.setProperty('--wc',wc)}}
+  {const al=!gf.classList.contains('sg7')||gf.classList.contains('s7');sc.classList.toggle('jkw',al);if(al){const cs=getComputedStyle(gf),wc=cs.getPropertyValue('--acsw').trim()||cs.getPropertyValue('--acs').trim();if(wc)sc.style.setProperty('--wc',wc)}}
   if(!gf.querySelector(':scope>.gfgrab')){const lbl=gf.querySelector('.gf-x')?gf.querySelector('.gf-x').getAttribute('aria-label'):'Close';
     const gb=document.createElement('div');gb.className='gfgrab';gb.innerHTML=`<i aria-hidden="true"></i><button type="button" class="gf-x" data-act="gfclose" aria-label="${esc(lbl)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>`;gf.insertBefore(gb,gf.firstChild)}
   /* one pack at the top: the cover with its record behind it */
+  if(gf.classList.contains('s7')){gf.classList.remove('pg');gfInsLift(gf);gfS7Lab(gf);if(!gf._phd)gfPhDrag(gf);return}
   const sg=gf.classList.contains('sg7');
   let pk=gf.querySelector('.sl-pack');
   if(!pk&&sg){const rs=gf.querySelector('.gf-rs');if(rs){pk=document.createElement('div');pk.className='sl-pack';rs.insertBefore(pk,rs.firstChild)}}
@@ -12339,6 +12404,50 @@ function gfRunPh(el,back){
   done.then(()=>{if(!back&&el._gfo&&el._gfo.rev)return;if(!back){el._gfo=null;if(cv)cv.style.visibility='';if(fly)fly.remove();a.forEach(x=>{try{x.cancel()}catch(e){}})}
     else if(fly){requestAnimationFrame(()=>requestAnimationFrame(()=>fly.remove()))}});
   return done}
+/* 2026.11.27-w: the 7-inch's motion. Open: the sleeve flies out of the row, turns over on its middle (the faces switch edge-on, as
+   WebKit can't be trusted with backface-visibility), then the record slides out of the outer edge. Close plays it backwards and the
+   sleeve drops home onto its spot in the row. At rest nothing is transformed, so the insert card can sit on the page. */
+function gfRunS7(el,back){
+  if(GFPRE){try{GFPRE.fly.remove();GFPRE.wash.remove()}catch(e){}GFPRE=null}
+  const sc=el.parentElement&&el.parentElement.querySelector(':scope>.gfscrim'),sl=el.querySelector('.s7-sl'),fr=el.querySelector('.s7-f'),bk=el.querySelector('.s7-b'),rec=el.querySelector('.s7-rec');
+  if(!sl||!fr||!bk||!rec)return null;
+  const ex=[...el.querySelectorAll(':scope>.s7-hint,:scope>.s7-act,:scope>.gfgrab,:scope>.rater')],tile=document.querySelector('.hxsl.on .hxc'),a=[];
+  const drag=back?(new DOMMatrixReadOnly(getComputedStyle(el).transform).m42||0):0;
+  let T=null;if(tile){const ps=tile.style.cssText;tile.style.animation='none';tile.style.transition='none';tile.style.transform='none';const r=tile.getBoundingClientRect();tile.style.cssText=ps;if(r.width)T=r}
+  if(drag||!T){el.style.transform='';
+    if(sc)a.push(sc.animate([{opacity:sc.style.opacity||(back?1:0)},{opacity:back?0:1}],{duration:back?380:300,easing:'ease-out',fill:back?'forwards':'both'}));
+    a.push(el.animate(back?[{transform:`translateY(${drag.toFixed(1)}px)`,opacity:1},{transform:`translateY(${(drag+160).toFixed(0)}px)`,opacity:0}]:[{opacity:0,transform:'translateY(30px)'},{opacity:1,transform:'none'}],{duration:back?300:420,easing:'cubic-bezier(.2,.8,.2,1)',fill:back?'forwards':'both'}))}
+  else{
+    const S=sl.getBoundingClientRect(),k=T.width/S.width,at=(x,y,s)=>`translate(${x.toFixed(1)}px,${y.toFixed(1)}px) scale(${s.toFixed(4)})`;
+    const home=at(T.left-S.left,T.top-S.top,k),mid=at((T.left-S.left)*.45,(T.top-S.top)*.45-30,(k+1)/2*1.04);
+    if(!fr.querySelector('canvas')){const ti=tile.querySelector('img');if(ti&&ti.complete&&ti.naturalWidth){const c=gfArtCanvas(ti,S.width,S.height,getComputedStyle(fr).backgroundColor);c.style.zIndex='2';fr.appendChild(c)}}
+    const P='perspective(900px) ',E='cubic-bezier(.45,0,.2,1)';
+    const face=(on,t0,t1,from,to,tot,ease)=>[{transform:P+from,opacity:on[0],offset:0},{transform:P+from,opacity:on[0],offset:t0/tot},{transform:P+to,opacity:on[0],offset:Math.min(.999,t1/tot)},{transform:P+to,opacity:on[1],offset:Math.min(1,t1/tot+.001)},{transform:P+to,opacity:on[1],offset:1}];
+    if(!back){const D=1560;
+      if(sc)a.push(sc.animate([{opacity:0},{opacity:1}],{duration:340,easing:'ease-out',fill:'both'}));
+      a.push(sl.animate([{transform:home,offset:0},{transform:mid,offset:.5,easing:'cubic-bezier(.3,0,.2,1)'},{transform:'none',offset:1}],{duration:540,easing:'cubic-bezier(.4,0,.2,1)',fill:'both'}));
+      a.push(fr.animate(face([1,0],480,780,'rotateY(0deg)','rotateY(-90deg)',D),{duration:D,easing:'linear',fill:'both'}));
+      a.push(bk.animate([{transform:P+'rotateY(90deg)',opacity:0,offset:0},{transform:P+'rotateY(90deg)',opacity:0,offset:780/D},{transform:P+'rotateY(90deg)',opacity:1,offset:781/D,easing:'cubic-bezier(.2,.7,.3,1)'},{transform:P+'rotateY(0deg)',opacity:1,offset:1080/D},{transform:'none',opacity:1,offset:1}],{duration:D,easing:'linear',fill:'both'}));
+      a.push(rec.animate([{translate:'0 0'},{translate:'50.4% 0'}],{duration:520,delay:1040,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'}));
+      ex.forEach(x=>a.push(x.animate([{opacity:0},{opacity:1}],{duration:300,delay:1120,easing:'ease-out',fill:'backwards'})))}
+    else{const D=1300;
+      ex.forEach(x=>a.push(x.animate([{opacity:getComputedStyle(x).opacity},{opacity:0}],{duration:150,easing:'ease-in',fill:'forwards'})));
+      a.push(rec.animate([{translate:'50.4% 0'},{translate:'0 0'}],{duration:300,easing:'cubic-bezier(.4,0,.6,1)',fill:'forwards'}));
+      a.push(bk.animate(face([1,0],240,520,'rotateY(0deg)','rotateY(90deg)',D),{duration:D,easing:'linear',fill:'forwards'}));
+      a.push(fr.animate([{transform:P+'rotateY(-90deg)',opacity:0,offset:0},{transform:P+'rotateY(-90deg)',opacity:0,offset:520/D},{transform:P+'rotateY(-90deg)',opacity:1,offset:521/D,easing:'cubic-bezier(.2,.7,.3,1)'},{transform:P+'rotateY(0deg)',opacity:1,offset:800/D},{transform:P+'rotateY(0deg)',opacity:1,offset:1}],{duration:D,easing:'linear',fill:'forwards'}));
+      a.push(sl.animate([{transform:'none',offset:0},{transform:mid,offset:.5,easing:'cubic-bezier(.3,0,.2,1)'},{transform:home,offset:1}],{duration:500,delay:800,easing:E,fill:'forwards'}));
+      if(sc)a.push(sc.animate([{opacity:sc.style.opacity||1},{opacity:0}],{duration:420,delay:860,easing:'ease-in',fill:'forwards'}));
+      const hs=tile.closest('.hxsl');if(hs)setTimeout(()=>hs.classList.add('up'),1240/GFS)}}
+  gfSpeed(el,a);
+  const done=Promise.all(a.map(x=>x.finished)).then(()=>{},()=>{});
+  const mine=GFP=done.then(()=>new Promise(r=>setTimeout(r,30)));mine.then(()=>{if(GFP===mine)GFP=null});
+  if(!back)done.then(()=>a.forEach(x=>{try{x.cancel()}catch(e){}}));
+  return done}
+/* a new score rolls up onto the 7-inch's label, and the record gives a little turn */
+function gfS7Lab(gf){const b=gf.querySelector('.s7-lab b');if(!b)return;const v=b.textContent;
+  if(gf._lab!=null&&gf._lab!==v&&v&&!noMotion()){b.animate([{transform:'translateY(115%)'},{transform:'none'}],{duration:380,delay:520,easing:'cubic-bezier(.3,1.5,.5,1)',fill:'backwards'});
+    const r=gf.querySelector('.s7-rec');if(r)r.animate([{rotate:'0deg'},{rotate:'-24deg',offset:.55},{rotate:'0deg'}],{duration:900,delay:420,easing:'cubic-bezier(.2,.8,.2,1)'})}
+  gf._lab=v}
 /* ON A PHONE THE ALBUM OPENS LIKE A GATEFOLD (2026.11.20-m). The sheet holds the two inside pages of the jacket side by
    side, swiped between like turning the cover: inside right (Ratings) is where it opens, inside left (Details) is the
    back of the cover. The page you are on is kept through a redraw. Singles keep their one-page 7-inch sheet. */
@@ -12393,7 +12502,7 @@ function gfPgPlace(gf,keep){
    panel into the open space below the square jacket, and only slides out when it first opens; changing a rating or switching
    to another song swaps it in place. */
 function gfInsLift(gf){
-  const old=gf.querySelector(':scope>.rater.jkins'),nw=gf.querySelector('.gf-rs .rater');
+  const old=gf.querySelector(':scope>.rater.jkins'),nw=gf.querySelector('.gf-rs .rater,.s7-b .rater');
   if(nw){nw.classList.add('jkins');
     if(old){nw.classList.remove('rt-in');nw.classList.add('jkst');old.replaceWith(nw)}else gf.appendChild(nw);return}
   if(old&&!UI.rOpen){if((old.classList.contains('rt-out')||old.classList.contains('jkhold'))&&!noMotion()){if(!old._bye){old._bye=1;setTimeout(()=>old.remove(),old.classList.contains('jkhold')?900:240)}}else old.remove()}}
@@ -14487,13 +14596,18 @@ function gfHtml(a,g){return lsWith(g,()=>{
         <button class="check" data-act="tog" data-id="${i.id}" aria-pressed="${dn}" aria-label="${r?'Rated '+fmt(r)+'. ':''}${dn?'Heard':'Not heard'}: ${esc(i.title)}"><svg viewBox="0 0 44 44" aria-hidden="true"><circle class="rg-t" cx="22" cy="22" r="16"/>${r?`<circle class="rg-v" cx="22" cy="22" r="16" stroke-dasharray="${dash}"/>`:''}</svg>${r?`<span class="rg-n">${fmt(r)}</span>`:dn?'<span class="rg-d"></span>':''}</button></div>
         ${UI.rOpen===i.id?rateMeter(i.id,s.t,simSong(a,i,s.t),{a:a.id,g:g.id}):''}`}).join('');
     const anim=UI.gfAnim===String(g.id),rid=dx?dxId(g):g.id,ar=RATEABLE.includes(g.kind)?rating(rid):0,sr=shown.map(i=>avgR(i.id)).filter(Boolean),sav=sr.length?sr.reduce((x,y)=>x+y,0)/sr.length:0;
-    const vrLab=ar?`<b>${fmt(ar)}</b><span>rated</span>`:sav?`<b>${sav.toFixed(1)}</b><span>song avg</span>`:`<b>${shown.length?gd+'/'+shown.length:'\u2013'}</b><span>heard</span>`;
-    const vgr=rings.map((st,j)=>`<i class="${st===2?'on':st===1?'on fade':''}" style="--d:${(96-j*(52/Math.max(R,1))).toFixed(1)}%;--o:${R-1-j}"></i>`).join('');
+    /* 2026.11.27-w (board 2B, desktop): the song you're rating lifts its groove, and the label shows that song and its score */
+    const dk=!gfPh(),ok=dk&&UI.rOpen?shown.findIndex(i=>i.id===UI.rOpen):-1,oj=ok<0?-1:Math.min(R-1,Math.floor(ok*R/Math.max(shown.length,1)));
+    const vrLab=ok>=0?(()=>{const i=shown[ok],r=rating(i.id);return `<b>${r?fmt(r):'\u2013'}</b><span class="t">${esc(songShow(i).t)}</span>`})():ar?`<b>${fmt(ar)}</b><span>rated</span>`:sav?`<b>${sav.toFixed(1)}</b><span>song avg</span>`:`<b>${shown.length?gd+'/'+shown.length:'\u2013'}</b><span>heard</span>`;
+    const vgr=rings.map((st,j)=>`<i class="${st===2?'on':st===1?'on fade':''}${j===oj?' sel':''}" style="--d:${(96-j*(52/Math.max(R,1))).toFixed(1)}%;--o:${R-1-j}"></i>`).join('');
+    /* 2026.11.27-w (board 1, desktop): the score is a yellow hype sticker on the inside left; a new score stamps on */
+    const stv=RATEABLE.includes(g.kind)&&g.kind!=='Single'?(ar?fmt(ar):sav?sav.toFixed(1):''):'',stk=dk&&stv?(()=>{const k=String(g.id),was=STKV.get(k);STKV.set(k,stv);
+      return `<div class="gfd-stk${was!=null&&was!==stv?' stamp':''}" aria-hidden="true"><b>${stv}</b><span>${ar?'Your album':'Song avg'}</span></div>`})():'';
     if(g.kind==='Single')return gfSingleHtml(a,g,{art,sArt,col,colD,dx,gd,shown,full,vgr,vrLab,trackRows,rows,anim});
     return `<div class="group sleeve gf${lsCls(g)}${gfSafe(g.id)?' gfsafe':''} ${dx?'dxon':''} ${UI.dxAnim===g.id?'dxanim':''} ${SLIN.has(String(g.id))?'in':''}${anim?' gfopen':''}" data-acol="${g.id}" style="--acs:${col};--acd:${colD}${art?`;--art:url(&quot;${esc(art)}&quot;)`:''}">
       <div class="gf-sp">
       <div class="gf-l">
-        <div class="gf-lf"><i class="gf-sh" aria-hidden="true"></i>
+        <div class="gf-lf"><i class="gf-sh" aria-hidden="true"></i>${stk}
           <div class="gf-pk l"><div class="sl-disc" role="img" aria-label="${gfLsLab(g)?'Listen '+gfLsLab(g):gd+' of '+shown.length+' songs heard'}">${ringHtml}${gfLsLab(g)?`<span class="sl-lab sl-lsn"><b>${gfLsLab(g)}</b><i>Listen</i></span>`:`<span class="sl-lab">${shown.length?gd+'/'+shown.length:'–'}</span>`}</div></div>
           <div class="gf-ls">
           <div class="sl-hero">
@@ -14524,7 +14638,7 @@ function gfHtml(a,g){return lsWith(g,()=>{
    record sliding out of the open edge, wearing the song average on its label. Inside: the title and its song or two with
    their ratings. Opening flies the cover down out of the row like an album, then the record slides out instead of a
    gatefold swinging open (see gfRun). */
-function gfSingleHtml(a,g,v){const {sArt,col,colD,dx,gd,shown,vgr,vrLab,trackRows,rows,anim}=v;
+function gfSingleHtml(a,g,v){if(gfS7(g))return gfS7Html(a,g,v);const {sArt,col,colD,dx,gd,shown,vgr,vrLab,trackRows,rows,anim}=v;
   return `<div class="group sleeve gf sg7${lsCls(g)}${gfSafe(g.id)?' gfsafe':''} ${SLIN.has(String(g.id))?'in':''}${anim?' gfopen':''}" data-acol="${g.id}" style="--acs:${col};--acd:${colD}${sArt?`;--art:url(&quot;${esc(sArt)}&quot;)`:''}">
     <div class="gf-sp">
     <div class="gf-r"><i class="gf-sh" aria-hidden="true"></i>
@@ -14541,6 +14655,35 @@ function gfSingleHtml(a,g,v){const {sArt,col,colD,dx,gd,shown,vgr,vrLab,trackRow
       </div>
     </div>
     </div>
+  </div>`}
+/* 2026.11.27-w: ON A PHONE A SINGLE IS A 7-INCH IN ITS PICTURE SLEEVE (board 5 of the album mockups). The sleeve flies out of the row
+   to about two thirds of the album jacket's size, flips over on its middle to its printed back (kind, year, 45 RPM, the A-side and
+   B-sides as printed rows, where else the song lives), and the 7-inch slides out of its outer edge with the cover's color on its
+   label and your score on it. Rating pulls the same insert card out of the bottom edge as an album. Crash-safe singles and a zoomed
+   screen keep the old sheet. */
+const STKV=new Map();
+const gfS7=g=>!!g&&g.kind==='Single'&&gfPh()&&!gfSafe(g.id)&&!gfZoomed();
+function gfS7Html(a,g,v){const {sArt,col,colD,dx,gd,shown,trackRows,anim}=v;
+  const rid=dx?dxId(g):g.id,ar=RATEABLE.includes(g.kind)?rating(rid):0,sr=shown.map(i=>avgR(i.id)).filter(Boolean),sav=sr.length?sr.reduce((x,y)=>x+y,0)/sr.length:0;
+  const lab=ar?fmt(ar):sav?String(Math.round(sav*10)/10):'',L=lsList(g.id).length,yr=(String(dtShow(g)||'').match(/\d{4}/)||[''])[0];
+  const side=n=>n===1?'A':'B'+(shown.length>2?n-1:'');
+  const rows=trackRows.replace(/<span class="num">(\d+)<\/span>/g,(m,n)=>`<span class="num">${side(+n)}</span>`);
+  const sub=[shown.length+' song'+(shown.length===1?'':'s'),gd===shown.length&&shown.length?'heard':gd?gd+' heard':'',L?'played '+L+' time'+(L===1?'':'s'):''].filter(Boolean).join(' · ');
+  return `<div class="group sleeve gf sg7 s7${lsCls(g)} ${SLIN.has(String(g.id))?'in':''}${anim?' gfopen':''}" data-acol="${g.id}" style="--acs:${col};--acd:${colD}${sArt?`;--art:url(&quot;${esc(sArt)}&quot;)`:''}">
+    <div class="s7-sl">
+      <div class="s7-rec" aria-hidden="true"><div class="s7-lab"><span class="s7-n"><b>${lab}</b></span></div></div>
+      <div class="s7-b">
+        <p class="s7-k">${esc([g.kind,yr,'45 RPM'].filter(Boolean).join(' · '))}</p>
+        <h3>${esc(g.title)}</h3>
+        <p class="s7-s">${esc(sub)}</p>${g.w&&g.w.length?`<p class="s7-s">with ${esc(g.w.join(' & '))}</p>`:''}${origLine(g,a)}${rdLine(g,dx)}
+        ${g.items.length?'':'<p class="note">No songs listed yet. Tap the details button (i) to fill them in.</p>'}
+        <div class="tlist">${rows}</div>
+        ${UI.wEdit===g.id?`<form class="sl-wf" data-form="gwith" data-a="${a.id}" data-g="${g.id}"><input name="w" value="${esc((g.w||[]).join(' & '))}" placeholder="Other artist, like Kenny Beats" aria-label="Collab with" autocomplete="off" autocapitalize="words"><button>Save</button></form>`:''}
+      </div>
+      <div class="s7-f" aria-hidden="true">${sArt?`<img src="${esc(sArt)}" alt="" decoding="async" onerror="this.remove()">`:''}<span>${esc(g.title||'')}</span></div>
+    </div>
+    <p class="s7-hint">${g.items.length?(shown.length===1?'Tap the song to rate it':'Tap a song to rate it'):''}</p>
+    <div class="s7-act">${albBar(g,a)}${lsPager(g)}${friendStrip(g,a,dx)}<div class="sl-foot">${shareBtn(g,a)}<details class="gmore"${UI.armed===g.id?' open':''}><summary aria-label="More for this single">⋯</summary>${moreBtns(g,dx)}${delGBtn(g,a)}</details></div></div>
   </div>`}
 /* 2026.11.21-a: OPENING AN ALBUM CAN NEVER LOOP A CRASH. On an iPhone one album (Imaginal Disk) made the browser drop the page the
    moment it was tapped, so the app reloaded, and the next tap did it again. Before an album opens, a note goes into this device's
@@ -14720,6 +14863,7 @@ function gfReverse(el){const o=el._gfo;if(!o||o.rev||!o.a.length)return null;
   return done}
 function gfRun(el,back){
   if(back){const rv=gfReverse(el);if(rv)return rv}
+  if(el.classList.contains('s7'))return gfRunS7(el,back);
   if(el.classList.contains('phs'))return el.classList.contains('pg')?(el.classList.contains('jk2')?gfRunJk(el,back):gfRunPg(el,back)):gfRunPh(el,back);
   const sp=el.querySelector('.gf-sp'),l=el.querySelector('.gf-l'),r=el.querySelector('.gf-r'),sg=el.classList.contains('sg7');
   if(!sp||!r||(!l&&!sg))return null;
