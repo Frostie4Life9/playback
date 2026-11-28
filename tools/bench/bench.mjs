@@ -198,12 +198,17 @@ async function scenario(browser, base, kind) {
     await page.waitForTimeout(300);
     // open, sampling layer memory through the opening
     let lmax = 0;
-    const openP = step(page, tile);
+    const openP = prof(cdp, 'open', () => step(page, tile));
     if (cdp) for (let i = 0; i < 6; i++) { await page.waitForTimeout(220); const m = await layersMB(cdp, 3); if (m) lmax = Math.max(lmax, m); }
     const open = await openP; open.layersMB = lmax || null; best('open', open);
+    const shot = async n => { if (process.env.SHOTS && run === 0) { await page.waitForTimeout(250); await page.screenshot({ path: path.join(OUT, `${kind}-${n}.png`) }); } };
+    await shot('1-open');
+    if (process.env.SHOT2 && run === 0) { await page.evaluate(process.env.SHOT2); await page.waitForTimeout(300); await page.screenshot({ path: path.join(OUT, kind + '-x.png') }); }
+    if (process.env.EVAL && run === 0) console.log('  EVAL', JSON.stringify(await page.evaluate(process.env.EVAL)));   // EVAL='js expression' after the album opens
     if (!(await page.$('.group.sleeve.gf'))) { out.err = 'album did not open'; break; }
     const row = `.group.sleeve.gf .track.sl-t[data-id="${song}"]`;
     best('rate:card', await prof(cdp, 'rate:card', () => step(page, row, { wait: false })));
+    await shot('2-card');
     await page.waitForTimeout(300);
     // set a score the way the slider does: input then change
     const setR = await page.evaluate(async v => {
@@ -226,6 +231,7 @@ async function scenario(browser, base, kind) {
     } else best('rate:done', await prof(cdp, 'rate:done', () => step(page, '.rater [data-act="rclose"]')));
     best('close', await prof(cdp, 'close', () => step(page, '.group.sleeve.gf [data-act="gfclose"]', { tail: 1600 })));
     await page.waitForTimeout(900);   // the hero repaint deferred after a close
+    await shot('4-closed');
   }
   out.errors = errors;
   await ctx.close();
