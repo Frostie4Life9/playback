@@ -4869,6 +4869,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.27-u', note:'DELUXE STAYS PUT, AND A LIGHTER CLOSE. Closing an album you had on its Deluxe edition now leaves the Deluxe sleeve in front of the row, where the cover lands; it no longer trades places with the Standard sleeve right after, which is what looked like the Deluxe cover flashing. It goes back to Standard when you leave the artist. Closing an album after rating, marking heard or adding a listen no longer rebuilds the whole artist page: only the progress record, its lines and the grooves on the sleeves are updated, so the moment the cover lands is about a sixth of a second lighter on a slowed phone.'},
   {v:'2026.11.27-t', note:'A NEW SONG RATING MOMENT. Nothing flies across the album any more. When you tap Done, the score sinks away on the card as it tucks back in, a band of the album\u2019s color sweeps across that song\u2019s row, and the score rolls up into the little record\u2019s label while its ring sweeps round to your rating, finishing with one small pop.'},
   {v:'2026.11.27-s', note:'CALMER RECORDS, A FULL SWING, NO SNAP ON THE SHELF. Rating a song lands with a softer pop and a smaller ring, and the score on the little record no longer blinks out for a moment as it lands (the record\u2019s spin was drawing over it on the iPhone, so the spin is gone). Marking a song heard or not heard and clearing a rating are gentler too, and Mark all heard drops the records on one after another. Opening an album now shows the whole swing: the view follows the cover as it opens past upright, so you see its printed back before it settles on the songs (it used to swing off the left edge halfway through), and closing does the same in reverse. When an album is put back, its record slides back out of the sleeve smoothly instead of freezing and snapping into place at the end, and tucking it in on open is smoother too. Tapping another record while one is still closing now opens it once the first is put away (before, nothing ended up open).'},
   {v:'2026.11.27-r', note:'ALBUM AND RATING POLISH FROM YOUR RECORDING. The artist page now stays in view behind an open album (dimmed slightly, no more solid color) with the album lifted in front of it. Opening an album no longer jumps: the cover used to snap from its sleeve to full size because its flight ran while the album was still being built; now the flight waits for the album and plays all the way. Rating a song is punchier: the number flies off the card as a little paper label, arcs over, stamps onto the song\u2019s record, which pops and spins as a ring of the album\u2019s color bursts off it (before, it flew as dark ink you could barely see, and the record\u2019s ring shrank and jumped back). Clearing a rating spins the score off the record, and marking a song heard drops a record onto it with a spin (not heard lifts it off to a ghost), without redrawing the whole page. The Done button on the rating card is a light pill like the others instead of a dark slab.'},
@@ -9880,11 +9881,28 @@ function gfCloseQuick(el){
   rel.querySelectorAll('.hxsl.on').forEach(x=>{x.classList.remove('on','sink');x.setAttribute('aria-pressed','false');const l=x.getAttribute('aria-label');if(l)x.setAttribute('aria-label',l.replace(/^Close /,'Open '))});
   {const h=rel.querySelector('.hxhint');if(h){h.classList.remove('off');h.removeAttribute('aria-hidden')}HXHINT.off=false}
   hxPlaceGf();heroPaint();return true}
+/* 2026.11.27-u: CLOSING AFTER RATING PATCHES THE PAGE. Rating, heard and listens inside the album only move a few numbers on the
+   artist page (the progress ring and its lines, the subtitle, the grooves on the sleeves), so instead of rebuilding the page (~60-90 ms
+   on a slowed phone) the page is built off to the side, those few things are copied over, and the album is put away like a quick close.
+   Anything that can reorder or hide releases (rating or heard sorts, Still to hear, the details panel) still gets the full redraw. */
+function gfClosePatch(el){
+  if(!el||!el.isConnected||!el.classList.contains('jk2')||!gfPh()||UI.dxSw||UI.gfM0==null||UI.view||UI.tab!=='music'||UI.filter==='open'||UI.hinfo||UI.libOpen||!['old','new'].includes(relSort()))return false;
+  const rel=el.closest('.hxrel'),hero=document.querySelector('.hero.hx[data-aid]');if(!rel||!hero)return false;
+  let T;try{const e=current();if(!e)return false;const t=document.createElement('template');t.innerHTML=mainSheet0(e);T=t.content}catch(e){return false}
+  const th=T.querySelector('.hero.hx[data-aid]');if(!th||th.dataset.aid!==hero.dataset.aid)return false;
+  const live=[...rel.querySelectorAll('.hxrow .hxsl[data-g]')],tl=new Map([...th.querySelectorAll('.hxrow .hxsl[data-g]')].map(x=>[x.dataset.g,x]));
+  if(live.length!==tl.size||live.some(x=>!tl.has(x.dataset.g)))return false;   /* a release came or went: redraw */
+  const cp=(sel,how)=>{const a=hero.querySelector(sel),b=th.querySelector(sel);if(a&&b)how(a,b)};
+  cp('.hxsub',(a,b)=>{if(a.textContent!==b.textContent)a.textContent=b.textContent});
+  cp('.hxprog .hring',(a,b)=>{const p=b.style.getPropertyValue('--p');if(a.style.getPropertyValue('--p')!==p)a.style.setProperty('--p',p)});
+  cp('.hxprog .hlab b',(a,b)=>{if(a.outerHTML!==b.outerHTML){a.textContent=b.textContent;a.className=b.className}});
+  cp('.hxprog .hxpt .hxy',(a,b)=>{if(a.textContent!==b.textContent)a.textContent=b.textContent});
+  for(const x of live){const y=tl.get(x.dataset.g),a=x.querySelector('.hxv.vgr'),b=y.querySelector('.hxv.vgr');if(a&&b&&a.innerHTML!==b.innerHTML)a.innerHTML=b.innerHTML}
+  UI.gfM0=CHG;return gfCloseQuick(el)}
 function gfOpenQuick(gid){
   if(!gfPh()||UI.view||UI.tab!=='music'||(UI.libOpen&&lxEl())||document.querySelector('.group.sleeve.gf'))return false;
   const hero=document.querySelector('.hero.hx[data-aid]'),rel=document.querySelector('.hx .hxrel'),tile=rel&&rel.querySelector('.hxsl[data-g="'+(window.CSS&&CSS.escape?CSS.escape(gid):gid)+'"]');if(!hero||!tile)return false;
   const a=S.music.find(x=>String(x.id)===hero.dataset.aid),g=a&&a.groups.find(x=>String(x.id)===String(gid));if(!a||!g||g.kind==='Single'||a.id!==UI.sel.music)return false;
-  for(const k of Object.keys(UI.dxOpen))if(String(k)!==String(gid))delete UI.dxOpen[k];
   UI.toAlb=null;UI.alb={aid:a.id,g:String(gid)};UI.gfAnim=String(gid);gfGuard(a,g);
   let el;try{const t=document.createElement('template');t.innerHTML=gfHtml(a,g).trim();el=t.content.firstElementChild}finally{UI.gfAnim=null;UI.dxAnim=null}
   if(!el){UI.alb=null;return false}
@@ -14578,7 +14596,6 @@ function gfStep(s){try{const o=JSON.parse(localStorage.getItem(GFG_K)||'null');i
 function gfCrashLog(){try{return JSON.parse(localStorage.getItem(GFC_K)||'[]')}catch(e){return[]}}
 function artistView(a){heroLook(a.id);
   if(UI.alb&&UI.alb.aid!==a.id)delete UI.dxOpen[UI.alb.g];   /* left an album behind on its deluxe by changing artist: it goes back to Standard */
-  if(UI.toAlb)for(const k of Object.keys(UI.dxOpen))if(String(k)!==String(UI.toAlb))delete UI.dxOpen[k];   /* opening an album: any other album left on its deluxe goes back to Standard */
   if(UI.toAlb&&a.groups.some(g=>String(g.id)===String(UI.toAlb))){UI.alb={aid:a.id,g:String(UI.toAlb)};UI.gfAnim=String(UI.toAlb);gfGuard(a,a.groups.find(g=>String(g.id)===String(UI.toAlb)))}
   const all=artistItems(a),done=all.filter(i=>isDone(i.id)).length,rated=all.filter(i=>rating(i.id)).length,p=pct(all.map(i=>i.id));
   const og=gfOpenId(a),og2=og&&a.groups.find(g=>String(g.id)===og),gf=og2?gfHtml(a,og2):'';
@@ -14767,8 +14784,9 @@ function gfRun(el,back){
 /* fold the open album shut, then drop it from the page */
 function gfClose(keep){const el=document.querySelector('.group.sleeve.gf');
   const done=()=>{const rw=document.querySelector('.hx .hxrow'),sl=rw?rw.scrollLeft:0;   /* the row is redrawn: keep it scrolled to where it was, not back at the start */
-    if(!UI.dxSw&&UI.alb&&UI.dxOpen[UI.alb.g])UI.dxSw={gid:String(UI.alb.g),to:false,stay:1};   /* closing an album on its deluxe plays the edition swap back to Standard (the sleeves trade places) and leaves the album shut */
-    UI.alb=null;UI.gfClosing=false;if(!gfCloseQuick(el))render();placeSave();
+    /* 2026.11.27-u: closing on the Deluxe leaves the Deluxe sleeve in front (board 4: the row keeps the edition you were on). It no
+       longer trades back to Standard after landing, which read as the Deluxe cover flashing. It goes back to Standard when you leave the artist. */
+    UI.alb=null;UI.gfClosing=false;if(!gfCloseQuick(el)&&!gfClosePatch(el))render();placeSave();
     if(sl){const n=document.querySelector('.hx .hxrow');if(n)n.scrollLeft=sl}
     if(UI.dxSw){const x=UI.dxSw;UI.dxSw=null;UI.gfNext=null;requestAnimationFrame(()=>gfDxReopen(x))}
     else if(UI.gfNext){const gid=UI.gfNext;UI.gfNext=null;requestAnimationFrame(()=>{const t=document.querySelector('.hx .hxsl[data-g="'+CSS.escape(gid)+'"]');if(t&&!document.querySelector('.group.sleeve.gf'))t.click()})}};
