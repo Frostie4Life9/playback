@@ -4946,6 +4946,7 @@ window.coverErr=function(im){const n=+im.dataset.rt||0;
   im.dataset.rt=n+1;const u=im.currentSrc||im.src;
   setTimeout(()=>{if(im.isConnected){im.removeAttribute('src');im.src=u}},900*(n+1))};
 const CHANGELOG=[
+  {v:'2026.11.28-f', note:'THE APP OPENS FASTER. Every time it started (including after the phone reloads it), the app re-tidied your whole log: matching artists filed twice, tidying MusicBrainz lists and applying waiting ratings, across ~2,000 releases. It now skips that when nothing has changed since the last time, so a normal start is about a third quicker. Any change you make, and every update, still runs it once.'},
   {v:'2026.11.28-e', note:'SMOOTHER WITH A BIG LIBRARY, PART 2. Saving your log (about 15 ms on the phone with your ~2,000 releases) now waits for a quiet moment instead of landing in the middle of a score\'s flight or the 7-inch\'s label turn, and cover colors are no longer worked out right after a tap or written to storage after every single cover.'},
   {v:'2026.11.28-d', note:'FASTER WITH A BIG LIBRARY. The little splatter records on every artist\'s sleeve in the library used to be painted all at once the first time after you opened the app, which with your ~90 artists froze the artist page for about a second at phone speed (and made the first trip to the library lag). They\'re now painted a few at a time between frames, the artist you\'re on first. Opening the app is quicker too.'},
   {v:'2026.11.28-c', note:'Speed watch now also notes when the app takes more than 2.5 seconds to open on your phone, so slow starts show up in your Suggest box alongside slow taps.'},
@@ -5304,10 +5305,16 @@ function seedAll(){
         const nk=mbKeyOf(i.title);if(nk&&nk!==k&&!have.has(nk)){have.add(nk);i.k=nk}}}
     S.flags.key2=true;
   }
+  /* 2026.11.28-f: the tidy-up below (merging the same artist filed twice, MusicBrainz tidying, pending ratings) gives the same result
+     for the same log, so it is skipped when the log hasn't changed since it last ran on this build (it was ~0.2 s at every start on
+     the phone with ~2,000 releases, plus a full save). Any change, and every new build, runs it again. */
+  const tidyKey=(S.mtime||0)+'|'+BUILD+'|'+S.music.length;
+  if(S.flags.tidy===tidyKey&&!(S.pendingR&&Object.keys(S.pendingR).length)){S.sp=S.sp||{after:0,miss:[]};return}
   mergeSameArtists();
   S.music.forEach(x=>{if(x.mbid)mbTidy(x)});
   S.music.forEach(x=>applyPending(x));
   S.sp=S.sp||{after:0,miss:[]};
+  S.flags.tidy=tidyKey;seedAll.ran=true;
   save();
 }
 
@@ -8849,6 +8856,7 @@ const tmPoster=x=>x.poster?`<img class="poster" src="${TM_IMG}w154${esc(x.poster
 let S=load();
 function boot(){
   seedAll();READY=true;
+  if(seedAll.ran)setTimeout(saveSoon,4000);   /* 2026.11.28-f: notes that the tidy-up ran (boot's own save is skipped before READY), off the start path */
   if(!S.flags.r10){for(const k in S.marks){if(S.marks[k].r)S.marks[k].r=S.marks[k].r*2}S.flags.r10=true;save()}
   setTimeout(akaBackfill,3000);
   setTimeout(()=>{try{if(!bkGet().first)bkSet({first:Date.now()})}catch(e){}},0);   /* bkGet is defined further down the page: when a log is already in localStorage boot() runs before it exists */

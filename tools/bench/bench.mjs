@@ -273,6 +273,11 @@ async function pages(browser, base) {
     out.steps[name] = r.err ? { tap: 0, block: 0, renders: 0, renderMs: 0, worstFrame: 0, err: r.err } : r;
     if (r.err) out.steps[name].skip = true;
   }
+  // a second start of the same log (what every app open and every reload after a crash is)
+  await page.waitForTimeout(4600);
+  await page.goto(base + '/index.html', { waitUntil: 'commit' }); await page.waitForSelector('.hxsl[data-g]', { timeout: 30000 });
+  const again = await page.evaluate(() => new Promise(r => requestAnimationFrame(() => setTimeout(() => r(Math.round(performance.now())), 0))));
+  out.steps.restart = { tap: again, block: again, renders: 0, renderMs: 0, worstFrame: 0 };
   out.errors = errors; await ctx.close(); return out;
 }
 
